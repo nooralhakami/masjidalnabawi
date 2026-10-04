@@ -55,10 +55,17 @@ export function createMap(el: HTMLElement): MapHandle {
   // Layer toggle + locate (inline-end column) and zoom (inline-start column).
   const tools = new L.Control({ position: 'bottomleft' });
   const zoom = new L.Control({ position: 'bottomright' });
+  const rotate = new L.Control({ position: 'bottomright' });
   let layerBtn!: HTMLButtonElement;
   let locBtn!: HTMLButtonElement;
   let zin!: HTMLButtonElement;
   let zout!: HTMLButtonElement;
+
+  let bearing = 0;
+  const applyBearing = () => {
+    const pane = map.getPane('mapPane');
+    if (pane) pane.style.transform = `rotate(${bearing}deg)`;
+  };
 
   tools.onAdd = () => {
     const box = L.DomUtil.create('div', 'mc');
@@ -69,6 +76,25 @@ export function createMap(el: HTMLElement): MapHandle {
     L.DomEvent.disableClickPropagation(box);
     return box;
   };
+  rotate.onAdd = () => {
+    const box = L.DomUtil.create('div', 'mc mc-rotate');
+    const left = button(box, 'rotate-left');
+    const reset = button(box, 'rotate-reset');
+    const right = button(box, 'rotate-right');
+    left.setAttribute('aria-label', 'تدوير الخريطة عكس عقارب الساعة');
+    reset.setAttribute('aria-label', 'إعادة اتجاه الخريطة');
+    right.setAttribute('aria-label', 'تدوير الخريطة مع عقارب الساعة');
+    left.title = left.getAttribute('aria-label')!;
+    reset.title = reset.getAttribute('aria-label')!;
+    right.title = right.getAttribute('aria-label')!;
+    left.addEventListener('click', () => { bearing = (bearing - 15 + 360) % 360; applyBearing(); });
+    reset.addEventListener('click', () => { bearing = 0; applyBearing(); });
+    right.addEventListener('click', () => { bearing = (bearing + 15) % 360; applyBearing(); });
+    L.DomEvent.disableClickPropagation(box);
+    return box;
+  };
+  rotate.addTo(map);
+
   zoom.onAdd = () => {
     const box = L.DomUtil.create('div', 'mc');
     const grp = L.DomUtil.create('div', 'mc-zoom', box);

@@ -177,6 +177,16 @@
 .mc-btn.is-locate {
   color: #0277bd;
 }
+.mc-rotate {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.mc-rotate .mc-btn {
+  width: 40px;
+  height: 40px;
+  box-shadow: var(--shadow-sm);
+}
 .mc-zoom {
   display: flex;
   flex-direction: column;
