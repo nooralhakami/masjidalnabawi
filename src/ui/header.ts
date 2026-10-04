@@ -34,13 +34,13 @@ export class Header {
       <div class="hdr-row">
         <div class="brand">${brandStar(24)}</div>
         <div class="hdr-titles"><h1 class="hdr-title" data-i="title"></h1><div class="hdr-sub" id="hdr-sub"></div></div>
+  <button type="button" class="pill-btn" id="lang-btn" aria-haspopup="true" aria-expanded="false">
+  ${icon('globe', 18)}<span id="lang-short"></span>${icon('chevdown', 14)}
+  </button>
   <div class="map-quick-actions" aria-label="إجراءات التطبيق">
   <a class="map-quick-action" href="./" aria-label="العودة إلى الصفحة الرئيسية">${icon('home', 18)}</a>
   <button class="map-quick-action" id="map-share" type="button" aria-label="مشاركة التطبيق">${icon('share', 18)}</button>
   </div>
-  <button type="button" class="pill-btn" id="lang-btn" aria-haspopup="true" aria-expanded="false">
-  ${icon('globe', 18)}<span id="lang-short"></span>${icon('chevdown', 14)}
-  </button>
 
       </div>
       <ul class="lang-menu" id="lang-menu" hidden></ul>

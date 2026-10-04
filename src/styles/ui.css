@@ -20,7 +20,11 @@
   gap: 5px;
   direction: rtl;
   pointer-events: auto;
+  order: 3;
 }
+.hdr-row > .pill-btn { order: 4; }
+.hdr-row > .map-quick-actions { margin-inline-start: 0; }
+
 .map-quick-action {
   width: 34px;
   height: 34px;
@@ -110,9 +114,11 @@
   box-shadow: inset 0 0 0 1px rgb(201 161 91 / 0.35);
 }
 .hdr-titles {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
-}
+  overflow: hidden;
+  }
+
 .hdr-title {
   margin: 0;
   font-size: 15.5px;
