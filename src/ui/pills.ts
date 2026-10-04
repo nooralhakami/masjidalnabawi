@@ -45,6 +45,7 @@ export class Pills {
       if (!b) return;
       this.filter = b.dataset.f as FilterId;
       if (this.filter !== 'toilets') this.toiletSub = 'all';
+      this.hidden = false;
       this.render();
       b.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
       this.onChange(this.filter, this.toiletSub, this.hidden);
@@ -53,6 +54,7 @@ export class Pills {
       const b = (e.target as HTMLElement).closest<HTMLElement>('[data-s]');
       if (!b) return;
       this.toiletSub = b.dataset.s as ToiletSub;
+      this.hidden = false;
       this.render();
       this.onChange(this.filter, this.toiletSub, this.hidden);
     });
