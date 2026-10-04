@@ -21,6 +21,8 @@ import { Locator } from './locate';
 import { RouteLayer } from './route-layer';
 import { createMap } from './setup';
 import { NavigationTracker } from '../navigation/NavigationTracker';
+import { icon } from '../ui/icons';
+import { toast } from '../ui/toast';
 
 applyLang(initialLang());
 document.title = t('title');
@@ -31,6 +33,10 @@ const app = document.getElementById('app')!;
 app.innerHTML = `
   <div id="map" class="map-root" style="position:fixed;inset:0" role="application"></div>
   <div class="ui-top" id="ui-top"></div>
+  <div class="map-quick-actions" aria-label="إجراءات التطبيق">
+    <a class="map-quick-action" href="./" aria-label="العودة إلى صفحة التطبيق">${icon('arrowleft', 17)}<span>الرئيسية</span></a>
+    <button class="map-quick-action" id="map-share" type="button" aria-label="مشاركة التطبيق">${icon('share', 17)}<span>مشاركة</span></button>
+  </div>
   <div class="ui-bottom" id="ui-bottom"></div>`;
 
 const fac = new Facilities();
@@ -122,6 +128,19 @@ async function drawRoute(p: Poi) {
     maxZoom: 19,
   });
 }
+
+document.getElementById('map-share')?.addEventListener('click', async () => {
+  const shareData = { title: t('title'), text: 'دليل زوار المسجد النبوي', url: new URL('./', location.href).href };
+  try {
+    if (navigator.share) await navigator.share(shareData);
+    else {
+      await navigator.clipboard.writeText(shareData.url);
+      toast('تم نسخ رابط التطبيق');
+    }
+  } catch {
+    // The user may dismiss the native share sheet.
+  }
+});
 
 document.getElementById('map')!.addEventListener('locate-request', async () => {
   const ll = await locator.locate();
