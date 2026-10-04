@@ -9,6 +9,45 @@
 }
 .ui-top > * {
   pointer-events: auto;
+  }
+
+/* Keep the map visible when a selected destination is open. */
+.ui-top.is-route-compact {
+  padding-top: calc(6px + env(safe-area-inset-top));
+}
+.ui-top.is-route-compact .hdr {
+  max-height: 10dvh;
+  overflow: hidden;
+  padding: 6px 10px;
+  gap: 4px;
+  border-radius: 18px;
+}
+.ui-top.is-route-compact .hdr-row {
+  min-height: 32px;
+}
+.ui-top.is-route-compact .brand {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+.ui-top.is-route-compact .hdr-title {
+  font-size: 13px;
+  line-height: 17px;
+}
+.ui-top.is-route-compact .hdr-sub {
+  font-size: 10px;
+  line-height: 12px;
+}
+.ui-top.is-route-compact .search-box {
+  height: 30px;
+  border-radius: 10px;
+}
+.ui-top.is-route-compact .search-box input {
+  font-size: 12px;
+}
+.ui-top.is-route-compact .pills {
+  transform: translateY(-4px) scale(0.88);
+  transform-origin: top center;
 }
 .hdr {
   max-width: 560px;

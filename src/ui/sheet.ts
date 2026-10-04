@@ -79,7 +79,7 @@ export class Sheet {
   }
 
   private halfHeight(): number {
-    const routeHeight = this.route ? Math.min(380, Math.round(window.innerHeight * 0.36)) : Math.round(window.innerHeight * 0.55);
+    const routeHeight = this.route ? Math.min(220, Math.round(window.innerHeight * 0.1)) : Math.round(window.innerHeight * 0.55);
     return Math.min(this.root.offsetHeight, routeHeight);
   }
 
