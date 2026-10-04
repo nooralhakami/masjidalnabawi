@@ -22,7 +22,7 @@ interface Live {
 
 /**
  * Live open/closed state of facilities. Starts from pois.json (which already holds the demo state
- * from rules.json: maintenance 212/233/236, elevator works at 215 closing 216) and is changed by the admin panel.
+ * from pois.json) and is changed by the admin panel.
  */
 export class Facilities {
   private live = new Map<number, Live>();

@@ -53,11 +53,10 @@ describe('filters', () => {
     expect(w.some((p) => p.subCategory === 'toilet_men' || p.subCategory === 'gate_outer')).toBe(false);
   });
 
-  it('toilet sub-filters: open now / closed (maintenance + works)', () => {
+  it('toilet sub-filters: all five previously closed facilities are open', () => {
     expect(shown('toilets')).toHaveLength(38);
-    const closed = shown('toilets', 'closed').map((p) => p.id).sort();
-    expect(closed).toEqual([212, 215, 216, 233, 236]);
-    expect(shown('toilets', 'open')).toHaveLength(33);
+    expect(shown('toilets', 'closed')).toHaveLength(0);
+    expect(shown('toilets', 'open')).toHaveLength(38);
   });
 
   it('category pills match their category', () => {
