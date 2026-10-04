@@ -55,10 +55,52 @@ export function createMap(el: HTMLElement): MapHandle {
   // Layer toggle + locate (inline-end column) and zoom (inline-start column).
   const tools = new L.Control({ position: 'bottomleft' });
   const zoom = new L.Control({ position: 'bottomright' });
+  const rotate = new L.Control({ position: 'bottomright' });
   let layerBtn!: HTMLButtonElement;
   let locBtn!: HTMLButtonElement;
   let zin!: HTMLButtonElement;
   let zout!: HTMLButtonElement;
+
+  let bearing = 0;
+  let touchStartAngle: number | null = null;
+  let touchStartBearing = 0;
+  const applyBearing = () => {
+    const pane = map.getPane('mapPane');
+    if (pane) {
+      pane.style.transformOrigin = 'center center';
+      pane.style.transform = `rotate(${bearing}deg)`;
+    }
+  };
+
+  // Two-finger rotation: keep the first finger pair as the gesture anchor so
+  // normal one-finger panning and pinch zoom continue to work as usual.
+  const touchAngle = (touches: TouchList): number => {
+    const a = touches[0];
+    const b = touches[1];
+    return (Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX) * 180) / Math.PI;
+  };
+  const onTouchStart = (event: TouchEvent) => {
+    if (event.touches.length === 2) {
+      touchStartAngle = touchAngle(event.touches);
+      touchStartBearing = bearing;
+    }
+  };
+  const onTouchMove = (event: TouchEvent) => {
+    if (event.touches.length !== 2 || touchStartAngle === null) return;
+    event.preventDefault();
+    let delta = touchAngle(event.touches) - touchStartAngle;
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
+    bearing = (touchStartBearing + delta + 360) % 360;
+    applyBearing();
+  };
+  const onTouchEnd = (event: TouchEvent) => {
+    if (event.touches.length < 2) touchStartAngle = null;
+  };
+  el.addEventListener('touchstart', onTouchStart, { passive: true });
+  el.addEventListener('touchmove', onTouchMove, { passive: false });
+  el.addEventListener('touchend', onTouchEnd, { passive: true });
+  el.addEventListener('touchcancel', onTouchEnd, { passive: true });
 
   tools.onAdd = () => {
     const box = L.DomUtil.create('div', 'mc');
@@ -69,6 +111,25 @@ export function createMap(el: HTMLElement): MapHandle {
     L.DomEvent.disableClickPropagation(box);
     return box;
   };
+  rotate.onAdd = () => {
+    const box = L.DomUtil.create('div', 'mc mc-rotate');
+    const left = button(box, 'rotate-left');
+    const reset = button(box, 'rotate-reset');
+    const right = button(box, 'rotate-right');
+    left.setAttribute('aria-label', 'تدوير الخريطة عكس عقارب الساعة');
+    reset.setAttribute('aria-label', 'إعادة اتجاه الخريطة');
+    right.setAttribute('aria-label', 'تدوير الخريطة مع عقارب الساعة');
+    left.title = left.getAttribute('aria-label')!;
+    reset.title = reset.getAttribute('aria-label')!;
+    right.title = right.getAttribute('aria-label')!;
+    left.addEventListener('click', () => { bearing = (bearing - 15 + 360) % 360; applyBearing(); });
+    reset.addEventListener('click', () => { bearing = 0; applyBearing(); });
+    right.addEventListener('click', () => { bearing = (bearing + 15) % 360; applyBearing(); });
+    L.DomEvent.disableClickPropagation(box);
+    return box;
+  };
+  rotate.addTo(map);
+
   zoom.onAdd = () => {
     const box = L.DomUtil.create('div', 'mc');
     const grp = L.DomUtil.create('div', 'mc-zoom', box);
