@@ -78,11 +78,23 @@ export function createMap(el: HTMLElement): MapHandle {
     }
     originalSetPosition(element, position);
   };
+  let appliedTransform = '';
+  let applyingTransform = false;
   const applyBearing = () => {
     if (!mapPane) return;
     mapPane.style.transformOrigin = 'center center';
-    mapPane.style.transform = `${panePosition ? `translate3d(${panePosition.x}px, ${panePosition.y}px, 0)` : ''} rotate(${bearing}deg) scale(${bearing === 0 ? 1 : 1.42})`;
+    appliedTransform = `${panePosition ? `translate3d(${panePosition.x}px, ${panePosition.y}px, 0)` : ''} rotate(${bearing}deg) scale(${bearing === 0 ? 1 : 1.42})`;
+    applyingTransform = true;
+    mapPane.style.transform = appliedTransform;
+    queueMicrotask(() => { applyingTransform = false; });
   };
+  const transformObserver = new MutationObserver(() => {
+    if (!mapPane || applyingTransform || mapPane.style.transform === appliedTransform) return;
+    const matrix = new DOMMatrixReadOnly(getComputedStyle(mapPane).transform);
+    panePosition = new L.Point(matrix.e, matrix.f);
+    applyBearing();
+  });
+  transformObserver.observe(mapPane!, { attributes: true, attributeFilter: ['style'] });
 
   // Two-finger rotation: keep the first finger pair as the gesture anchor so
   // normal one-finger panning and pinch zoom continue to work as usual.
