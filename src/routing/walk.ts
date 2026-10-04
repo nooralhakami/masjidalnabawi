@@ -1,6 +1,7 @@
 import { ROUTING } from '../data';
 import type { LatLng } from '../data/types';
 import { haversine } from '../domain/geo';
+import { WALKWAY_EDGES } from './walkways';
 
 /**
  * Walking routes along the plaza walkway ring, ported from the reference app.
@@ -77,8 +78,6 @@ export function segmentHits(a: XY, b: XY, r: Rect): boolean {
   return false;
 }
 
-const hitsAny = (a: XY, b: XY, N: Network) => N.obstacles.some((r) => segmentHits(a, b, r));
-
 /** Nearest point on the ring, with its distance along the ring. */
 export function projectOnRing(p: XY, N: Network): { d: number; p: XY; t: number } {
   let best: { d: number; p: XY; t: number } | null = null;
@@ -128,49 +127,28 @@ export function roundCorners(P: XY[], r: number): XY[] {
  * Route from a to b. Short trips (< 150 m) take a right-angle "L" if it clears every obstacle;
  * otherwise both ends snap to the ring and the route follows it the shorter way round.
  */
+function nearestWalkway(point: LatLng): { edge: number; point: LatLng; distance: number } {
+  let best = { edge: 0, point: WALKWAY_EDGES[0].points[0], distance: Infinity };
+  WALKWAY_EDGES.forEach((edge, edgeIndex) => edge.points.forEach((candidate) => {
+    const distance = haversine(point, candidate);
+    if (distance < best.distance) best = { edge: edgeIndex, point: candidate, distance };
+  }));
+  return best;
+}
+
+/** Route over the editable indoor walkway graph, rather than the outer plaza boundary. */
 export function walkPath(a: LatLng, b: LatLng): LatLng[] {
-  const N = network();
-  const { short_L_route_max_m, corner_radius_m } = ROUTING.rules;
-  const A = toM(a);
-  const B = toM(b);
-  let pts: XY[] | null = null;
-
-  if (Math.hypot(A[0] - B[0], A[1] - B[1]) < short_L_route_max_m) {
-    for (const c of [
-      [B[0], A[1]],
-      [A[0], B[1]],
-    ] as XY[]) {
-      if (!hitsAny(A, c, N) && !hitsAny(c, B, N)) {
-        pts = [A, c, B];
-        break;
-      }
-    }
+  const start = nearestWalkway(a);
+  const end = nearestWalkway(b);
+  const points: LatLng[] = [a, start.point];
+  const step = start.edge <= end.edge ? 1 : -1;
+  for (let i = start.edge; i !== end.edge; i += step) {
+    const edge = WALKWAY_EDGES[i];
+    points.push(...(step > 0 ? edge.points.slice(1) : [...edge.points].reverse().slice(1)));
   }
-
-  if (!pts) {
-    const qa = projectOnRing(A, N);
-    const qb = projectOnRing(B, N);
-    const P = N.P;
-    let df = (((qb.t - qa.t) % P) + P) % P;
-    const fwd = df <= P / 2;
-    if (!fwd) df = P - df;
-    pts = [A, qa.p];
-    const mid: [number, XY][] = [];
-    N.seg.forEach((sg, i) => {
-      const d = fwd ? (((sg.t0 - qa.t) % P) + P) % P : (((qa.t - sg.t0) % P) + P) % P;
-      if (d > 0.5 && d < df - 0.5) mid.push([d, N.ring[i]]);
-    });
-    mid.sort((x, y) => x[0] - y[0]).forEach((m) => pts!.push(m[1]));
-    pts.push(qb.p, B);
-  }
-
-  // Drop near-duplicate points before rounding.
-  const clean: XY[] = [pts[0]];
-  for (let i = 1; i < pts.length; i++) {
-    const l = clean[clean.length - 1];
-    if (Math.hypot(pts[i][0] - l[0], pts[i][1] - l[1]) > 0.5) clean.push(pts[i]);
-  }
-  return roundCorners(clean, corner_radius_m).map(fromM);
+  const destination = WALKWAY_EDGES[end.edge].points;
+  points.push(...(step > 0 ? destination : [...destination].reverse()), b);
+  return points.filter((point, index, all) => index === 0 || haversine(point, all[index - 1]) > 0.5);
 }
 
 /** Path length in metres. */
