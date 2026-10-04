@@ -64,37 +64,25 @@ export function createMap(el: HTMLElement): MapHandle {
   let bearing = 0;
   let touchStartAngle: number | null = null;
   let touchStartBearing = 0;
-  let panePosition: L.Point | null = null;
+  let panePosition = new L.Point(0, 0);
   const mapPane = map.getPane('mapPane');
   const originalSetPosition = L.DomUtil.setPosition;
-  // Leaflet updates the map pane transform while dragging. Compose the rotation
-  // with Leaflet's translate so a one-finger pan cannot reset the bearing.
-  (L.DomUtil as typeof L.DomUtil).setPosition = (element: HTMLElement, position: L.Point) => {
-    if (element === mapPane) {
-      panePosition = position;
-      originalSetPosition(element, position);
-      applyBearing();
-      return;
-    }
-    originalSetPosition(element, position);
-  };
-  let appliedTransform = '';
-  let applyingTransform = false;
+  // Leaflet owns the map pane translation during panning. Reapply the rotation
+  // after each translation so a one-finger drag moves the already-rotated map
+  // instead of replacing its transform and snapping the bearing back.
   const applyBearing = () => {
     if (!mapPane) return;
     mapPane.style.transformOrigin = 'center center';
-    appliedTransform = `${panePosition ? `translate3d(${panePosition.x}px, ${panePosition.y}px, 0)` : ''} rotate(${bearing}deg) scale(${bearing === 0 ? 1 : 1.42})`;
-    applyingTransform = true;
-    mapPane.style.transform = appliedTransform;
-    queueMicrotask(() => { applyingTransform = false; });
+    const rotation = bearing === 0 ? '' : ` rotate(${bearing}deg) scale(1.42)`;
+    mapPane.style.transform = `translate3d(${panePosition.x}px, ${panePosition.y}px, 0)${rotation}`;
   };
-  const transformObserver = new MutationObserver(() => {
-    if (!mapPane || applyingTransform || mapPane.style.transform === appliedTransform) return;
-    const matrix = new DOMMatrixReadOnly(getComputedStyle(mapPane).transform);
-    panePosition = new L.Point(matrix.e, matrix.f);
-    applyBearing();
-  });
-  transformObserver.observe(mapPane!, { attributes: true, attributeFilter: ['style'] });
+  (L.DomUtil as typeof L.DomUtil).setPosition = (element: HTMLElement, position: L.Point) => {
+    originalSetPosition(element, position);
+    if (element === mapPane) {
+      panePosition = position;
+      applyBearing();
+    }
+  };
 
   // Two-finger rotation: keep the first finger pair as the gesture anchor so
   // normal one-finger panning and pinch zoom continue to work as usual.
