@@ -61,6 +61,7 @@ export class Sheet {
   /** Show (or clear) the walking-route summary for the current POI. */
   setRoute(r: { meters: number; minutes: number } | null): void {
     this.route = r;
+    this.root.dataset.route = r ? 'active' : 'inactive';
     this.render();
     if (r) this.setState('half');
   }
@@ -165,7 +166,10 @@ export class Sheet {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-act]');
     if (!b || !this.poi) return;
     const act = b.dataset.act;
-    if (act === 'close') this.on.close();
+    if (act === 'close') {
+      if (this.route) this.on.endRoute();
+      this.on.close();
+    }
     else if (act === 'grab') this.setState(this.state === 'full' ? 'half' : 'full');
     else if (act === 'route') this.on.route(this.poi);
     else if (act === 'endroute') this.on.endRoute();

@@ -484,6 +484,33 @@
 .sheet[data-state='half'] .sheet-body {
   overflow: hidden;
 }
+/* Keep the route summary visible while leaving most of the map unobstructed. */
+.sheet[data-route='active'][data-state='half'] {
+  --half: min(42dvh, 430px);
+}
+.sheet[data-route='active'][data-state='half'] .sheet-body {
+  padding-block: 0 10px;
+  gap: 8px;
+}
+.sheet[data-route='active'] .route-box {
+  padding: 10px;
+  gap: 8px;
+}
+.sheet[data-route='active'] .route-box .fact {
+  padding: 8px 6px;
+}
+.sheet[data-route='active'] .route-box .fact-v.big {
+  font-size: 1rem;
+}
+.sheet[data-route='active'] .route-box .note {
+  font-size: 0.75rem;
+}
+.sheet[data-route='active'] .sheet-foot {
+  padding-block: 8px calc(10px + env(safe-area-inset-bottom));
+}
+.sheet[data-route='active'] .sheet-foot .btn {
+  min-height: 42px;
+}
 .sheet-foot {
   flex: none;
   padding: 12px 18px calc(16px + env(safe-area-inset-bottom));
