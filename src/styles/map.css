@@ -1,0 +1,305 @@
+/* Map surface, markers and controls. */
+.map-root {
+  position: fixed;
+  inset: 0;
+  background: #e9e4d8;
+}
+.leaflet-container {
+  font-family: var(--font-ui);
+  background: #e9e4d8;
+}
+/* Tailwind's preflight (img max-width/height:auto) breaks Leaflet tiles. */
+.leaflet-container img,
+.leaflet-container svg {
+  max-width: none !important;
+  max-height: none !important;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .map-root,
+  :root:not([data-theme='light']) .leaflet-container {
+    background: #141d1a;
+  }
+}
+
+/* ---------- markers ---------- */
+.leaflet-marker-icon.mk {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+/* Leaflet sets display:block on the icon box; spans must still size themselves. */
+.mk > span:not(.mk-dot) {
+  display: block;
+}
+.mk > span {
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.mk-dot {
+  position: relative;
+  width: var(--d);
+  height: var(--d);
+  border-radius: 50%;
+  background: var(--c);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgb(30 42 38 / 0.35);
+}
+.mk-dot svg {
+  width: 64%;
+  height: 64%;
+  stroke-width: 2.2;
+}
+.mk-mixed {
+  background: linear-gradient(90deg, var(--cat-men) 50%, var(--cat-women) 50%);
+}
+.mk.is-closed .mk-dot::after {
+  content: '';
+  position: absolute;
+  inset-block-start: -2px;
+  inset-inline-start: -2px;
+  width: max(6px, calc(var(--d) * 0.42));
+  height: max(6px, calc(var(--d) * 0.42));
+  border-radius: 50%;
+  background: #f2a62e;
+  box-shadow: 0 0 0 1.5px #fff;
+}
+.mk-s.is-closed .mk-dot::after {
+  display: none;
+}
+.mk-gdot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 0 1px #fff, 0 1px 2px rgb(30 42 38 / 0.35);
+}
+.mk-gdot-in {
+  width: 8px;
+  height: 8px;
+}
+.mk-chip {
+  min-width: 26px;
+  height: 18px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border-radius: 9px;
+  border: 1.5px solid var(--c);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: 700 10.5px/15px var(--font-ui);
+  text-align: center;
+  box-shadow: 0 1px 3px rgb(30 42 38 / 0.25);
+}
+.mk-m .mk-chip {
+  font-size: 9.5px;
+  height: 16px;
+  line-height: 13px;
+  min-width: 22px;
+}
+.mk-inum {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--c);
+  color: #fff;
+  font: 700 9.5px/18px var(--font-ui);
+  text-align: center;
+  box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgb(30 42 38 / 0.3);
+}
+.mk-park {
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 6px;
+  background: var(--cat-men);
+  color: #fff;
+  font: 700 10px/18px var(--font-ui);
+  box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgb(30 42 38 / 0.3);
+}
+.mk.is-selected > span {
+  transform: scale(1.35);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 5px rgb(201 161 91 / 0.65), 0 4px 10px rgb(30 42 38 / 0.35);
+  animation: mk-pulse 1.8s var(--ease) infinite;
+}
+@keyframes mk-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 5px rgb(201 161 91 / 0.65), 0 0 0 5px rgb(201 161 91 / 0.35), 0 4px 10px rgb(30 42 38 / 0.35);
+  }
+  60% {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 5px rgb(201 161 91 / 0.65), 0 0 0 14px rgb(201 161 91 / 0), 0 4px 10px rgb(30 42 38 / 0.35);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk.is-selected > span {
+    animation: none;
+  }
+}
+.mk:focus-visible {
+  outline: none;
+}
+.mk:focus-visible > span {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ---------- controls ---------- */
+.mc {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 12px calc(16px + env(safe-area-inset-bottom)) !important;
+}
+.mc-btn {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--dur) var(--ease), background var(--dur);
+}
+.mc-btn:active {
+  transform: scale(0.94);
+}
+.mc-btn[aria-pressed='true'] {
+  background: var(--primary);
+  color: #fff;
+}
+.mc-btn.is-locate {
+  color: #0277bd;
+}
+.mc-zoom {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.mc-zoom .mc-btn {
+  box-shadow: none;
+  border-radius: 0;
+  background: transparent;
+}
+.mc-zoom hr {
+  margin: 0 8px;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+.leaflet-control-scale {
+  margin: 0 12px calc(16px + env(safe-area-inset-bottom)) !important;
+}
+.leaflet-control-scale-line {
+  background: rgb(255 255 255 / 0.85);
+  border-color: #4e5a54;
+  color: #1e2a26;
+  font: 600 10.5px var(--font-ui);
+}
+.leaflet-control-attribution {
+  font: 10px var(--font-ui);
+  background: rgb(255 255 255 / 0.8) !important;
+}
+.leaflet-tooltip {
+  font: 600 12.5px var(--font-ui);
+  border-radius: 10px;
+  border: 0;
+  box-shadow: var(--shadow-sm);
+  padding: 4px 9px;
+}
+
+/* ---------- visitor location ---------- */
+.me {
+  position: relative;
+}
+.me-dot,
+.me-pulse {
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+}
+.me-dot {
+  background: #0288d1;
+  box-shadow: 0 0 0 3px #fff, 0 2px 6px rgb(2 136 209 / 0.5);
+}
+.me-pulse {
+  background: rgb(2 136 209 / 0.35);
+  animation: me-pulse 2s var(--ease) infinite;
+}
+@keyframes me-pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+.me-accuracy {
+  fill: #0288d1;
+  fill-opacity: 0.12;
+  stroke: #0288d1;
+  stroke-opacity: 0.35;
+}
+
+/* ---------- walking route ---------- */
+.route-casing {
+  stroke: #fff;
+  stroke-opacity: 0.95;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+.route-line {
+  stroke: var(--green-700);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+.route-line.is-drawing {
+  transition: stroke-dashoffset 900ms var(--ease);
+}
+.route-flow {
+  stroke: var(--gold);
+  stroke-dasharray: 1 12;
+  stroke-linecap: round;
+  fill: none;
+  animation: route-flow 1.2s linear infinite;
+}
+@keyframes route-flow {
+  to {
+    stroke-dashoffset: -13;
+  }
+}
+.route-start {
+  fill: #0288d1;
+  stroke: #fff;
+  fill-opacity: 1;
+}
+.route-end {
+  fill: var(--gold);
+  stroke: #fff;
+  fill-opacity: 1;
+}
+.route-arrow {
+  pointer-events: none;
+}
+.route-arrow svg {
+  display: block;
+  filter: drop-shadow(0 0 1px rgb(14 77 58 / 0.6));
+}
+@media (prefers-reduced-motion: reduce) {
+  .me-pulse,
+  .route-flow {
+    animation: none;
+  }
+}

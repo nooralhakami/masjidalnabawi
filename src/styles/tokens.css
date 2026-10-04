@@ -1,0 +1,94 @@
+/* Design tokens — mirrors the design canvas (light + dark). */
+:root {
+  --green-900: #0e4d3a;
+  --green-700: #17785a;
+  --green-300: #8fd3b4;
+  --gold: #c9a15b;
+  --gold-ink: #2a1f08;
+
+  --bg: #f4f1ea;
+  --surface: #fbfaf6;
+  --surface-2: #ffffff;
+  --field: #f1eee6;
+  --line: #ece7dc;
+  --line-strong: #dcd3c0;
+  --ink: #1e2a26;
+  --muted: #55635d;
+  --primary: var(--green-900);
+  --primary-ink: #ffffff;
+  --heading: var(--green-900);
+  --tint-gold: #f2e8d4;
+  --tint-green: #e5efe9;
+
+  --dir-south: #2e7d32;
+  --dir-west: #ef6c00;
+  --dir-north: #c2185b;
+  --dir-east: #0288d1;
+  --cat-men: #1565c0;
+  --cat-women: #8e24aa;
+  --cat-acc: #00897b;
+  --cat-gray: #9aa19d;
+  --cat-hotel: #5d4037;
+  --cat-food: #e65100;
+  --cat-land: #4a148c;
+  --cat-emg: #c62828;
+
+  --radius-sm: 12px;
+  --radius: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --shadow-sm: 0 4px 12px rgb(14 77 58 / 0.12), 0 1px 3px rgb(30 42 38 / 0.08);
+  --shadow: 0 10px 28px rgb(14 77 58 / 0.14), 0 2px 6px rgb(30 42 38 / 0.08);
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur: 200ms;
+
+  --font-ui: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --font-display: 'Noto Kufi Arabic', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --font-urdu: 'Noto Naskh Arabic', 'IBM Plex Sans Arabic', serif;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0f1714;
+    --surface: #18231f;
+    --surface-2: #22302b;
+    --field: #26352f;
+    --line: #2c3a35;
+    --line-strong: #3a4a43;
+    --ink: #ece8df;
+    --muted: #a3b2ab;
+    --primary: var(--green-700);
+    --heading: var(--green-300);
+    --tint-gold: #3a3122;
+    --tint-green: #1b3a2f;
+    --shadow-sm: 0 4px 12px rgb(0 0 0 / 0.3), 0 1px 3px rgb(0 0 0 / 0.2);
+    --shadow: 0 10px 28px rgb(0 0 0 / 0.4), 0 2px 6px rgb(0 0 0 / 0.25);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #0f1714;
+  --surface: #18231f;
+  --surface-2: #22302b;
+  --field: #26352f;
+  --line: #2c3a35;
+  --line-strong: #3a4a43;
+  --ink: #ece8df;
+  --muted: #a3b2ab;
+  --primary: var(--green-700);
+  --heading: var(--green-300);
+  --tint-gold: #3a3122;
+  --tint-green: #1b3a2f;
+  --shadow-sm: 0 4px 12px rgb(0 0 0 / 0.3), 0 1px 3px rgb(0 0 0 / 0.2);
+  --shadow: 0 10px 28px rgb(0 0 0 / 0.4), 0 2px 6px rgb(0 0 0 / 0.25);
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur: 0ms;
+  }
+}
