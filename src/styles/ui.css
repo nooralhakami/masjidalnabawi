@@ -41,19 +41,26 @@
 .map-quick-action:active { transform: scale(0.97); }
 @media (max-width: 699px) {
   .map-quick-actions {
-    top: calc(144px + env(safe-area-inset-top));
-    inset-inline: auto 14px;
+    top: calc(18px + env(safe-area-inset-top));
+    inset-inline: auto clamp(150px, 27vw, 250px);
+    flex-direction: column;
+    gap: 5px;
   }
   .map-quick-action {
-    min-height: 32px;
-    padding-inline: 9px;
+    min-height: 29px;
+    padding-inline: 8px;
     font-size: 10px;
+    white-space: nowrap;
   }
 }
 @media (min-width: 700px) {
-  .map-quick-actions { top: 16px; inset-inline-start: 18px; }
+  .map-quick-actions {
+    top: 18px;
+    inset-inline-start: 248px;
+    flex-direction: column;
+    gap: 5px;
+  }
 }
-
 /* Keep the map visible when a selected destination is open. */
 .ui-top.is-route-compact {
   padding-top: calc(6px + env(safe-area-inset-top));
