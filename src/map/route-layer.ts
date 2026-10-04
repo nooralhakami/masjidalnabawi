@@ -27,6 +27,10 @@ export class RouteLayer {
     return this.path.length > 0;
   }
 
+  get latLngs(): L.LatLng[] {
+    return this.path.map((p) => L.latLng(p));
+  }
+
   show(from: LatLng, to: LatLng): RouteInfo {
     this.clear();
     this.path = walkPath(from, to);

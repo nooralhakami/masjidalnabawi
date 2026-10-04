@@ -8,6 +8,14 @@
   font-family: var(--font-ui);
   background: #e9e4d8;
 }
+.navigation-marker { border: 0; background: transparent; transform: rotate(var(--heading, 0deg)); transform-origin: center; }
+.navigation-marker span { display: block; width: 24px; height: 24px; border-radius: 50%; background: #087fbd; border: 3px solid #fff; box-shadow: 0 2px 8px rgb(0 0 0 / .35); }
+.navigation-marker i { position: absolute; inset: -3px 9px auto; width: 0; height: 0; border-inline: 5px solid transparent; border-bottom: 9px solid #fff; }
+.navigation-accuracy { fill: #168bc2; fill-opacity: .12; stroke: #168bc2; stroke-opacity: .45; }
+.navigation-status { position: fixed; z-index: 1200; inset-inline: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); max-width: 360px; margin-inline: auto; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: var(--surface-2); color: var(--ink); box-shadow: var(--shadow-md); font: 14px var(--font-ui); }
+.navigation-status strong { flex: 1; }
+.navigation-status span { white-space: nowrap; }
+.navigation-status button { border: 0; border-radius: 10px; padding: 7px 10px; background: var(--primary); color: #fff; font: inherit; }
 /* Tailwind's preflight (img max-width/height:auto) breaks Leaflet tiles. */
 .leaflet-container img,
 .leaflet-container svg {
