@@ -64,12 +64,24 @@ export function createMap(el: HTMLElement): MapHandle {
   let bearing = 0;
   let touchStartAngle: number | null = null;
   let touchStartBearing = 0;
-  const applyBearing = () => {
-    const pane = map.getPane('mapPane');
-    if (pane) {
-      pane.style.transformOrigin = 'center center';
-      pane.style.transform = `rotate(${bearing}deg)`;
+  let panePosition: L.Point | null = null;
+  const mapPane = map.getPane('mapPane');
+  const originalSetPosition = L.DomUtil.setPosition;
+  // Leaflet updates the map pane transform while dragging. Compose the rotation
+  // with Leaflet's translate so a one-finger pan cannot reset the bearing.
+  (L.DomUtil as typeof L.DomUtil).setPosition = (element: HTMLElement, position: L.Point) => {
+    if (element === mapPane) {
+      panePosition = position;
+      originalSetPosition(element, position);
+      applyBearing();
+      return;
     }
+    originalSetPosition(element, position);
+  };
+  const applyBearing = () => {
+    if (!mapPane) return;
+    mapPane.style.transformOrigin = 'center center';
+    mapPane.style.transform = `${panePosition ? `translate3d(${panePosition.x}px, ${panePosition.y}px, 0)` : ''} rotate(${bearing}deg) scale(${bearing === 0 ? 1 : 1.42})`;
   };
 
   // Two-finger rotation: keep the first finger pair as the gesture anchor so
