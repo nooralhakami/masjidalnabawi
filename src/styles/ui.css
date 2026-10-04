@@ -11,6 +11,37 @@
   pointer-events: auto;
   }
 
+.map-quick-actions {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top));
+  inset-inline-start: 14px;
+  z-index: 30;
+  display: flex;
+  gap: 6px;
+  direction: rtl;
+}
+.map-quick-action {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgb(201 161 91 / 0.35);
+  border-radius: 17px;
+  background: rgb(9 35 29 / 0.92);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 700 11px var(--font-ui);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 5px 16px rgb(0 0 0 / 0.18);
+  backdrop-filter: blur(8px);
+}
+.map-quick-action svg { color: var(--gold); }
+.map-quick-action:active { transform: scale(0.97); }
+@media (min-width: 700px) {
+  .map-quick-actions { top: 16px; inset-inline-start: 18px; }
+}
+
 /* Keep the map visible when a selected destination is open. */
 .ui-top.is-route-compact {
   padding-top: calc(6px + env(safe-area-inset-top));
