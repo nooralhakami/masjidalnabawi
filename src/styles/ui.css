@@ -486,7 +486,7 @@
 }
 /* Keep the route summary visible while leaving most of the map unobstructed. */
 .sheet[data-route='active'][data-state='half'] {
-  --half: min(42dvh, 430px);
+  --half: min(36dvh, 380px);
 }
 .sheet[data-route='active'][data-state='half'] .sheet-body {
   padding-block: 0 10px;
