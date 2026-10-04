@@ -26,7 +26,7 @@ import { toast } from '../ui/toast';
 applyLang(initialLang());
 document.title = t('title');
 
-const state = { filter: 'all' as FilterId, toiletSub: 'all' as ToiletSub, query: '', selected: null as number | null };
+const state = { filter: 'all' as FilterId, toiletSub: 'all' as ToiletSub, query: '', selected: null as number | null, markersHidden: false };
 
 const app = document.getElementById('app')!;
 app.innerHTML = `
@@ -51,9 +51,10 @@ const header = new Header({
   onLang: (l) => applyLang(l),
   status: (id) => fac.status(id),
 });
-const pills = new Pills(state.filter, state.toiletSub, (f, s) => {
+const pills = new Pills(state.filter, state.toiletSub, (f, s, hidden) => {
   state.filter = f;
   state.toiletSub = s;
+  state.markersHidden = hidden;
   refresh();
 });
 const top = document.getElementById('ui-top')!;
@@ -91,7 +92,7 @@ if (new URLSearchParams(location.search).get('admin') === '1') {
 /** Recompute visible POIs for the filter + query, then update map, count and results. */
 function refresh() {
   const vis = visiblePois(state.filter, state.toiletSub, state.query, fac);
-  layer.set(vis, state.filter);
+  layer.set(vis, state.filter, state.markersHidden);
   header.setCount(vis.length);
   header.showResults(vis, vis.length);
 }

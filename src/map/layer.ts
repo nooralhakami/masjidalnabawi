@@ -14,6 +14,7 @@ export class PoiLayer {
   private pois: readonly Poi[] = [];
   private filter: FilterId = 'all';
   private selected: number | null = null;
+  private hidden = false;
 
   constructor(
     private map: L.Map,
@@ -25,9 +26,10 @@ export class PoiLayer {
     fac.onChange(() => this.draw());
   }
 
-  set(pois: readonly Poi[], filter: FilterId): void {
+  set(pois: readonly Poi[], filter: FilterId, hidden = false): void {
     this.pois = pois;
     this.filter = filter;
+    this.hidden = hidden;
     this.draw();
   }
 
@@ -38,6 +40,7 @@ export class PoiLayer {
 
   draw(): void {
     this.group.clearLayers();
+    if (this.hidden) return;
     const bounds = this.map.getBounds().pad(0.25);
     const tier = tierOf(this.map.getZoom());
     // Gate chips are placed first so the selected one and lower numbers win ties.
