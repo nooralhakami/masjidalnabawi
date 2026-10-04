@@ -74,7 +74,10 @@ const sheet = new Sheet(fac, {
     route.clear();
     sheet.setRoute(null);
   },
-  state: (s) => bottom.classList.toggle('is-hidden', s !== 'closed'),
+  state: (s) => {
+    bottom.classList.toggle('is-hidden', s !== 'closed');
+    top.classList.toggle('is-route-compact', s !== 'closed' && sheet.current !== null);
+  },
 });
 document.body.append(sheet.root);
 
