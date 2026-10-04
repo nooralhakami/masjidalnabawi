@@ -10,13 +10,13 @@ import{_ as e,a as t,b as n,c as r,d as i,f as a,g as o,h as s,i as c,l,m as u,n
       <div class="hdr-row">
         <div class="brand">${g(24)}</div>
         <div class="hdr-titles"><h1 class="hdr-title" data-i="title"></h1><div class="hdr-sub" id="hdr-sub"></div></div>
+  <button type="button" class="pill-btn" id="lang-btn" aria-haspopup="true" aria-expanded="false">
+  ${d(`globe`,18)}<span id="lang-short"></span>${d(`chevdown`,14)}
+  </button>
   <div class="map-quick-actions" aria-label="إجراءات التطبيق">
   <a class="map-quick-action" href="./" aria-label="العودة إلى الصفحة الرئيسية">${d(`home`,18)}</a>
   <button class="map-quick-action" id="map-share" type="button" aria-label="مشاركة التطبيق">${d(`share`,18)}</button>
   </div>
-  <button type="button" class="pill-btn" id="lang-btn" aria-haspopup="true" aria-expanded="false">
-  ${d(`globe`,18)}<span id="lang-short"></span>${d(`chevdown`,14)}
-  </button>
 
       </div>
       <ul class="lang-menu" id="lang-menu" hidden></ul>
