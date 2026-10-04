@@ -20,6 +20,7 @@ import { PoiLayer } from './layer';
 import { Locator } from './locate';
 import { RouteLayer } from './route-layer';
 import { createMap } from './setup';
+import { NavigationTracker } from '../navigation/NavigationTracker';
 
 applyLang(initialLang());
 document.title = t('title');
@@ -38,6 +39,7 @@ const map = handle.map;
 const layer = new PoiLayer(map, fac, (p) => select(p, false));
 const locator = new Locator(map);
 const route = new RouteLayer(map);
+const navigation = new NavigationTracker(map, () => route.latLngs);
 
 const header = new Header({
   onQuery(q) {
@@ -68,6 +70,7 @@ const sheet = new Sheet(fac, {
   goTo: (p) => select(p, true),
   route: (p) => void drawRoute(p),
   endRoute: () => {
+    navigation.stop();
     route.clear();
     sheet.setRoute(null);
   },
@@ -108,6 +111,7 @@ async function drawRoute(p: Poi) {
   if (!from || state.selected !== p.id) return;
   const info = route.show(from, [p.lat, p.lng]);
   sheet.setRoute(info);
+  await navigation.start();
   const topH = top.getBoundingClientRect().bottom;
   map.fitBounds(info.bounds, {
     paddingTopLeft: [40, topH + 24],
@@ -130,6 +134,7 @@ function select(p: Poi, fly: boolean) {
 }
 
 function deselect() {
+  navigation.stop();
   route.clear();
   state.selected = null;
   layer.select(null);
