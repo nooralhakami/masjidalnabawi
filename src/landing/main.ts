@@ -37,6 +37,14 @@ function fillLive(): void {
 }
 
 function bind(): void {
+  const themeToggle = document.getElementById('theme-toggle');
+  themeToggle?.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = next;
+    themeToggle.setAttribute('aria-pressed', String(next === 'light'));
+    themeToggle.querySelector('.theme-toggle-label')!.textContent = next === 'dark' ? 'الوضع النهاري' : 'الوضع الليلي';
+  });
+
   const btn = document.getElementById('lang-btn')!;
   const menu = document.getElementById('lang-menu')!;
   const toggle = (open = menu.hidden) => {
@@ -128,6 +136,7 @@ window.addEventListener('appinstalled', () => {
   toast(t('installed'));
 });
 
+document.documentElement.dataset.theme = 'dark';
 applyLang(initialLang());
 render();
 document.addEventListener('langchange', render);

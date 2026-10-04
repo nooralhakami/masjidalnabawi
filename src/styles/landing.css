@@ -83,6 +83,40 @@ body {
   align-items: center;
   gap: 10px;
 }
+.theme-toggle {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 22px;
+  background: var(--surface-2);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 600 13px var(--font-ui);
+  cursor: pointer;
+}
+.theme-toggle svg {
+  color: var(--gold);
+}
+.haramain-logo {
+  width: min(180px, 42vw);
+  height: auto;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  filter: sepia(0.12) saturate(0.9);
+  margin-block-end: 18px;
+}
+:root[data-theme='dark'] .haramain-logo {
+  mix-blend-mode: screen;
+  filter: invert(1) sepia(0.12) saturate(0.7);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .haramain-logo {
+    mix-blend-mode: screen;
+    filter: invert(1) sepia(0.12) saturate(0.7);
+  }
+}
 .lang {
   position: relative;
 }
