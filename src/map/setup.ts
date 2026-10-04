@@ -62,10 +62,45 @@ export function createMap(el: HTMLElement): MapHandle {
   let zout!: HTMLButtonElement;
 
   let bearing = 0;
+  let touchStartAngle: number | null = null;
+  let touchStartBearing = 0;
   const applyBearing = () => {
     const pane = map.getPane('mapPane');
-    if (pane) pane.style.transform = `rotate(${bearing}deg)`;
+    if (pane) {
+      pane.style.transformOrigin = 'center center';
+      pane.style.transform = `rotate(${bearing}deg)`;
+    }
   };
+
+  // Two-finger rotation: keep the first finger pair as the gesture anchor so
+  // normal one-finger panning and pinch zoom continue to work as usual.
+  const touchAngle = (touches: TouchList): number => {
+    const a = touches[0];
+    const b = touches[1];
+    return (Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX) * 180) / Math.PI;
+  };
+  const onTouchStart = (event: TouchEvent) => {
+    if (event.touches.length === 2) {
+      touchStartAngle = touchAngle(event.touches);
+      touchStartBearing = bearing;
+    }
+  };
+  const onTouchMove = (event: TouchEvent) => {
+    if (event.touches.length !== 2 || touchStartAngle === null) return;
+    event.preventDefault();
+    let delta = touchAngle(event.touches) - touchStartAngle;
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
+    bearing = (touchStartBearing + delta + 360) % 360;
+    applyBearing();
+  };
+  const onTouchEnd = (event: TouchEvent) => {
+    if (event.touches.length < 2) touchStartAngle = null;
+  };
+  el.addEventListener('touchstart', onTouchStart, { passive: true });
+  el.addEventListener('touchmove', onTouchMove, { passive: false });
+  el.addEventListener('touchend', onTouchEnd, { passive: true });
+  el.addEventListener('touchcancel', onTouchEnd, { passive: true });
 
   tools.onAdd = () => {
     const box = L.DomUtil.create('div', 'mc');
