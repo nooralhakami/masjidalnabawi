@@ -66,6 +66,9 @@ export function landingHtml(url: string): string {
       <a href="#features">${e('nav_features')}</a><a href="#qr">${e('nav_qr')}</a><a href="#install">${e('nav_install')}</a>
     </nav>
     <div class="nav-actions">
+      <button type="button" class="theme-toggle" id="theme-toggle" aria-label="تبديل الوضع الليلي والنهاري" title="تبديل الوضع الليلي والنهاري">
+        ${icon('sun', 18)}<span class="theme-toggle-label">الوضع النهاري</span>
+      </button>
       <div class="lang">
         <button type="button" class="pill-btn" id="lang-btn" aria-haspopup="true" aria-expanded="false" aria-label="${e('lang_title')}: ${esc(pack(l).n)}">
           ${icon('globe', 18)}<span>${esc(pack(l).n)}</span>${icon('chevdown', 14)}
@@ -83,6 +86,7 @@ export function landingHtml(url: string): string {
     <div class="hero-pattern" aria-hidden="true"></div>
     <div class="wrap hero-grid">
       <div class="hero-text">
+        <img class="haramain-logo" src="./haramain-logo.png" width="220" height="220" alt="شعار الحرمين" decoding="async" />
         <span class="tag">${icon('phone', 16)}${e('l_tag')}</span>
         <h1>${e('title')}</h1>
         <p class="lead">${e('hero_p')}</p>
