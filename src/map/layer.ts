@@ -45,6 +45,9 @@ export class PoiLayer {
     const order = [...this.pois].sort((a, b) => Number(b.id === this.selected) - Number(a.id === this.selected));
     for (const p of order) {
       const sel = p.id === this.selected;
+      // Once a destination is selected, keep the map focused on it and hide
+      // every other POI until the selection is closed.
+      if (this.selected !== null && !sel) continue;
       if (!sel && !bounds.contains([p.lat, p.lng])) continue;
       if (!visibleAtZoom(p, tier, this.filter, sel)) continue;
       let compact = false;
