@@ -15,10 +15,11 @@
   position: fixed;
   top: calc(12px + env(safe-area-inset-top));
   inset-inline-start: 14px;
-  z-index: 30;
+  z-index: 1100;
   display: flex;
   gap: 6px;
   direction: rtl;
+  pointer-events: auto;
 }
 .map-quick-action {
   min-height: 34px;
@@ -38,6 +39,17 @@
 }
 .map-quick-action svg { color: var(--gold); }
 .map-quick-action:active { transform: scale(0.97); }
+@media (max-width: 699px) {
+  .map-quick-actions {
+    top: calc(144px + env(safe-area-inset-top));
+    inset-inline: auto 14px;
+  }
+  .map-quick-action {
+    min-height: 32px;
+    padding-inline: 9px;
+    font-size: 10px;
+  }
+}
 @media (min-width: 700px) {
   .map-quick-actions { top: 16px; inset-inline-start: 18px; }
 }
