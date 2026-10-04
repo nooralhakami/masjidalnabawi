@@ -377,7 +377,20 @@
 }
 .pill svg {
   color: var(--c);
-}
+  }
+.visibility-pill {
+  width: 38px;
+  padding: 0;
+  justify-content: center;
+  }
+.visibility-pill svg {
+  color: var(--muted);
+  }
+.visibility-pill[aria-pressed='true'] {
+  background: var(--green-900);
+  border-color: var(--green-900);
+  }
+
 .pill[aria-pressed='true'] {
   background: var(--green-900);
   border-color: var(--green-900);

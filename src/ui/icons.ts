@@ -17,6 +17,7 @@ const PATHS = {
   toilets:
     '<circle cx="7" cy="5" r="1.8"/><circle cx="17" cy="5" r="1.8"/><path d="M5 21v-6H4v-4.5A1.5 1.5 0 0 1 5.5 9h3a1.5 1.5 0 0 1 1.5 1.5V15H9v6"/><path d="M15.5 21v-4h-2l2-8h3l2 8h-2v4"/><path d="M12 3v18"/>',
   grid: '<rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>',
+  'eye-off': '<path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 4.3A10.8 10.8 0 0 1 21 12a10.8 10.8 0 0 1-3.2 5.5M6.2 6.2A10.8 10.8 0 0 0 3 12a10.8 10.8 0 0 0 9 7.7 10.8 10.8 0 0 0 3.1-.5"/>',
   search: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
   locate: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22"/>',
   layers: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>',
