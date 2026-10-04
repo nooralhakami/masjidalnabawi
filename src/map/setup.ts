@@ -1,4 +1,5 @@
 import L from 'leaflet';
+import 'leaflet-rotate';
 import { POIS, RULES } from '../data';
 import type { Poi } from '../data/types';
 import { SITE } from '../config/site.config';
@@ -28,6 +29,12 @@ export function createMap(el: HTMLElement): MapHandle {
     attributionControl: true,
     zoomSnap: 1,
     tapTolerance: 12,
+    rotate: true,
+    bearing: 0,
+    touchRotate: true,
+    touchZoom: true,
+    shiftKeyRotate: false,
+    rotateControl: false,
   });
 
   const satellite = L.tileLayer(cfg.tiles.satellite, {
@@ -61,58 +68,6 @@ export function createMap(el: HTMLElement): MapHandle {
   let zin!: HTMLButtonElement;
   let zout!: HTMLButtonElement;
 
-  let bearing = 0;
-  let touchStartAngle: number | null = null;
-  let touchStartBearing = 0;
-  let panePosition = new L.Point(0, 0);
-  const mapPane = map.getPane('mapPane');
-  const originalSetPosition = L.DomUtil.setPosition;
-  // Leaflet owns the map pane translation during panning. Reapply the rotation
-  // after each translation so a one-finger drag moves the already-rotated map
-  // instead of replacing its transform and snapping the bearing back.
-  const applyBearing = () => {
-    if (!mapPane) return;
-    mapPane.style.transformOrigin = 'center center';
-    const rotation = bearing === 0 ? '' : ` rotate(${bearing}deg) scale(1.42)`;
-    mapPane.style.transform = `translate3d(${panePosition.x}px, ${panePosition.y}px, 0)${rotation}`;
-  };
-  (L.DomUtil as typeof L.DomUtil).setPosition = (element: HTMLElement, position: L.Point) => {
-    originalSetPosition(element, position);
-    if (element === mapPane) {
-      panePosition = position;
-      applyBearing();
-    }
-  };
-
-  // Two-finger rotation: keep the first finger pair as the gesture anchor so
-  // normal one-finger panning and pinch zoom continue to work as usual.
-  const touchAngle = (touches: TouchList): number => {
-    const a = touches[0];
-    const b = touches[1];
-    return (Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX) * 180) / Math.PI;
-  };
-  const onTouchStart = (event: TouchEvent) => {
-    if (event.touches.length === 2) {
-      touchStartAngle = touchAngle(event.touches);
-      touchStartBearing = bearing;
-    }
-  };
-  const onTouchMove = (event: TouchEvent) => {
-    if (event.touches.length !== 2 || touchStartAngle === null) return;
-    event.preventDefault();
-    let delta = touchAngle(event.touches) - touchStartAngle;
-    if (delta > 180) delta -= 360;
-    if (delta < -180) delta += 360;
-    bearing = (touchStartBearing + delta + 360) % 360;
-    applyBearing();
-  };
-  const onTouchEnd = (event: TouchEvent) => {
-    if (event.touches.length < 2) touchStartAngle = null;
-  };
-  el.addEventListener('touchstart', onTouchStart, { passive: true });
-  el.addEventListener('touchmove', onTouchMove, { passive: false });
-  el.addEventListener('touchend', onTouchEnd, { passive: true });
-  el.addEventListener('touchcancel', onTouchEnd, { passive: true });
 
   tools.onAdd = () => {
     const box = L.DomUtil.create('div', 'mc');
@@ -134,9 +89,9 @@ export function createMap(el: HTMLElement): MapHandle {
     left.title = left.getAttribute('aria-label')!;
     reset.title = reset.getAttribute('aria-label')!;
     right.title = right.getAttribute('aria-label')!;
-    left.addEventListener('click', () => { bearing = (bearing - 15 + 360) % 360; applyBearing(); });
-    reset.addEventListener('click', () => { bearing = 0; applyBearing(); });
-    right.addEventListener('click', () => { bearing = (bearing + 15) % 360; applyBearing(); });
+    left.addEventListener('click', () => map.setBearing(map.getBearing() - 15));
+    reset.addEventListener('click', () => map.setBearing(0));
+    right.addEventListener('click', () => map.setBearing(map.getBearing() + 15));
     L.DomEvent.disableClickPropagation(box);
     return box;
   };
