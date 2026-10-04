@@ -30,6 +30,7 @@ const PATHS = {
   chevdown: '<path d="M6 9l6 6 6-6"/>',
   chevleft: '<path d="M15 6l-6 6 6 6"/>',
   arrowleft: '<path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/>',
+  home: '<path d="M3 11.5L12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5M9.5 20v-5h5v5"/>',
   route: '<circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5"/>',
   link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
   works: '<path d="M12 3l7 17H5z"/><path d="M8.2 13h7.6M9.8 9h4.4"/><path d="M3 20h18"/>',
