@@ -302,6 +302,7 @@ export class Sheet {
           <div class="sh-kicker">${esc(t(CATEGORY_LABEL[p.category]))}</div>
           <h2 class="sh-title" tabindex="-1">${esc(nm(p))}</h2>
           <p class="sh-desc">${esc(ds(p))}</p>
+          ${p.subCategory === 'gate_inner' && p.name_ar !== `باب رقم ${p.id}` ? `<div class="gate-about"><div class="gate-about-k">${esc(t('gate_about'))}</div><p>${esc(ds(p))}</p></div>` : ''}
         </div>
         <button type="button" class="icon-btn lg" data-act="close" aria-label="${esc(t('l_close'))}">${icon('close', 18)}</button>
       </div>

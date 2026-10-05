@@ -3,7 +3,8 @@ import type { Poi } from '../data/types';
 import type { Facilities } from '../domain/facilities';
 import type { FilterId } from '../domain/filters';
 import { nm } from '../i18n';
-import { HIT, chipSize, markerSpec, overlaps, tierOf, visibleAtZoom } from './markers';
+import { esc } from '../ui/dom';
+import { HIT, chipSize, gateLabelVisible, markerSpec, overlaps, tierOf, visibleAtZoom } from './markers';
 
 /**
  * Draws the visible POIs. Only markers inside the viewport (+25%) are created,
@@ -83,6 +84,22 @@ export class PoiLayer {
       });
       m.on('click', () => this.onPick(p));
       this.group.addLayer(m);
+      if (gateLabelVisible(p, this.map.getZoom())) {
+        const pt = this.map.latLngToContainerPoint([p.lat, p.lng]);
+        const label = nm(p);
+        const w = Math.max(44, Math.min(190, label.length * 7 + 18));
+        const box = { x: pt.x + 26 + w / 2, y: pt.y, w, h: 24 };
+        if (!placed.some((b) => overlaps(b, box))) {
+          placed.push(box);
+          const labelMarker = L.marker([p.lat, p.lng], {
+            icon: L.divIcon({ html: `<span class="gate-label" dir="auto">${esc(label)}</span>`, className: 'gate-label-wrap', iconSize: [w, 24], iconAnchor: [-26, 12] }),
+            zIndexOffset: sel ? 1001 : 51,
+            keyboard: false,
+            interactive: false,
+          });
+          this.group.addLayer(labelMarker);
+        }
+      }
     }
   }
 }

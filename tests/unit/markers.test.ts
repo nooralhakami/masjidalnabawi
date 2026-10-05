@@ -1,13 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { POIS, POI_BY_ID } from '../../src/data';
-import { FACILITY_SIZE, markerSpec, tierOf, visibleAtZoom } from '../../src/map/markers';
+import { FACILITY_SIZE, gateLabelVisible, markerSpec, tierOf, visibleAtZoom } from '../../src/map/markers';
 
 const P = (id: number) => POI_BY_ID.get(id)!;
 
 describe('markers', () => {
   it('zoom tiers', () => {
-    expect([15, 16, 17, 18, 19].map(tierOf)).toEqual(['s', 's', 'm', 'l', 'l']);
+    expect([15, 16, 17, 18, 19].map(tierOf)).toEqual(['s', 's', 'm', 'm', 'l']);
     expect(FACILITY_SIZE).toEqual({ s: 10, m: 14, l: 20 });
+  });
+
+  it('shows named inner-gate labels only at zoom 19+', () => {
+    expect(gateLabelVisible(P(1), 18)).toBe(false);
+    expect(gateLabelVisible(P(1), 19)).toBe(true);
+    expect(gateLabelVisible(P(10), 19)).toBe(false);
   });
 
   it('no emoji in any marker', () => {

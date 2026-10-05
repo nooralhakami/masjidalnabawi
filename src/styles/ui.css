@@ -340,6 +340,24 @@
   color: var(--muted);
   font-size: 14px;
 }
+.gate-label-wrap {
+  background: transparent;
+  border: 0;
+  pointer-events: none;
+}
+.gate-label {
+  display: block;
+  width: max-content;
+  max-width: 190px;
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--surface-2) 88%, transparent);
+  box-shadow: var(--shadow-sm);
+  color: var(--ink);
+  font: 600 11px/16px var(--font-ui);
+  white-space: nowrap;
+}
 .res .mk-chip,
 .res .mk-inum,
 .res .mk-park,
