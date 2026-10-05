@@ -5,6 +5,7 @@ node_modules/
 */snapshots/
 */.hyperframes/
 out/*.mp4
+out/final/*.mp4
 out/*.png
 out/work-*/
 out/.*transaction*/

@@ -53,8 +53,10 @@ MOTION SYSTEM (single language, from the app)
 AUDIO
 - Option A (owner's choice): soft effects, no music — room tone, soft taps, a card-slide whisper, a low bell
   shimmer on the logo moments, a light shimmer when the route appears.
-- Voice-over: one calm MALE Modern Standard Arabic voice for both films (owner's choice), scripts with full
-  diacritics in video/docs/04-asset-prompts.md (A: 11 lines, C: 7 lines). English track optional.
+- Voice-over: one calm MALE Modern Standard Arabic voice for both films — Fish Audio voice
+  10c0871d4b944b3cb0d8d94bd74c251e («عربي وثائقي», owner's choice); takes in video/assets/audio/vo/.
+  Scripts with full diacritics in video/docs/04-asset-prompts.md (A: 11 lines, C: 7 lines).
+- Timing is driven by the takes: official 90.0 s, guide 43.5 s (timeMap/retime in kit.js).
 - Mix: VO −6 to −12 dB, effects 18–20 dB under VO; master −14 LUFS integrated, true peak ≤ −1 dBTP.
 
 STORY — OFFICIAL (16:9, 80 s; message: "every gate, every door, every women's facility — one tap away,

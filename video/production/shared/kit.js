@@ -161,3 +161,23 @@ function captions(tl, host, cues) {
 function vars() {
   try { return window.__hyperframes?.getVariables?.() ?? {}; } catch { return {}; }
 }
+
+/* ---------------- retiming to the voice-over ---------------- */
+
+/** Piecewise-linear time map: old scene boundaries → new (voice-driven) boundaries. */
+function timeMap(oldPts, newPts) {
+  return (t) => {
+    for (let i = 1; i < oldPts.length; i++) {
+      if (t <= oldPts[i] || i === oldPts.length - 1) {
+        const a = oldPts[i - 1], b = oldPts[i], A = newPts[i - 1], B = newPts[i];
+        return A + ((t - a) / (b - a)) * (B - A);
+      }
+    }
+    return t;
+  };
+}
+
+/** Move every tween/set already on the timeline to its new position (durations are kept). */
+function retime(tl, map) {
+  for (const child of tl.getChildren(false, true, true)) child.startTime(map(child.startTime()));
+}
