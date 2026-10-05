@@ -35,7 +35,7 @@ export class Sheet {
   private foot: HTMLElement;
   private state: SheetState = 'closed';
   private poi: Poi | null = null;
-  private route: { meters: number; minutes: number } | null = null;
+  private route: { meters: number; minutes: number; nearestEntrance?: number } | null = null;
 
   constructor(
     private fac: Facilities,
@@ -225,6 +225,10 @@ export class Sheet {
     else if (status === 'maintenance') chips.push(`<span class="chip warn"><span class="dot"></span>${esc(t('maint'))}</span>`);
     else if (status === 'works') chips.push(`<span class="chip warn"><span class="dot"></span>${esc(t('a_works'))}</span>`);
     chips.push(`<span class="chip">${esc(t('num_label', { id: p.id }))}</span>`);
+    if (p.category === 'parking') {
+      const sub = p.access === 'subscribers';
+      chips.push(`<span class="chip park-access${sub ? ' is-sub' : ''}">${sub ? icon('lock', 13) : ''}${esc(t(sub ? 'park_sub' : 'park_public'))}</span>`);
+    }
     const eb = elevatorBadge(p);
     if (eb && !closed) chips.push(`<span class="chip info">${icon('works', 14)}${esc(t('elev'))}</span>`);
 
@@ -279,6 +283,7 @@ export class Sheet {
             <div class="fact"><span class="fact-k">${esc(t('r_time'))}</span><span class="fact-v big">${esc(t('r_min', { t: r.minutes }))}</span></div>
             <div class="fact"><span class="fact-k"><span class="dot" style="--c:${dirVar(p)}"></span>${esc(t('side', { d: '' }).trim())}</span><span class="fact-v">${esc(dirName(p.direction))}</span></div>
           </div>
+          ${r.nearestEntrance ? `<div class="route-nearest">${esc(t('park_nearest', { n: r.nearestEntrance }))}</div>` : ''}
         </div>`
       : '';
 

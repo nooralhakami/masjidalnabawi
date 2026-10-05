@@ -1,5 +1,6 @@
 import type { Poi } from '../data/types';
-import { ds, enName, latinDigits, nm } from '../i18n';
+import { ds, enName, latinDigits, nm, t } from '../i18n';
+import { parkingAccess } from './parking';
 
 /** Lower-case with Latin digits, collapsed spaces. */
 export function normalize(s: string): string {
@@ -17,7 +18,9 @@ export function matchRank(p: Poi, query: string): number {
   if (id === q) return 100;
   const tags = (p.alias ?? '').toLowerCase().split(' ').filter(Boolean);
   if (tags.some((w) => w === q)) return 90;
-  const names = normalize(`${p.name_ar} ${nm(p)} ${enName(p)}`);
+  const access = p.category === 'parking' ? parkingAccess(p) : '';
+  const accessText = p.category === 'parking' ? `${t(access === 'subscribers' ? 'park_sub' : 'park_public')} subscribers public مشتركين للجميع بالساعة` : '';
+  const names = normalize(`${p.name_ar} ${nm(p)} ${enName(p)} ${access} ${accessText}`);
   if (id.startsWith(q)) return 80;
   if (names.split(' ').some((w) => w.startsWith(q))) return 60;
   if (names.includes(q)) return 50;

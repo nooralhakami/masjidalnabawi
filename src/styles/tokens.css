@@ -32,6 +32,7 @@
   --cat-food: #c0601c;
   --cat-land: #5a3e9c;
   --cat-emg: #c3362c;
+  --cat-park-sub: #9f1239;
 
   --radius-sm: 12px;
   --radius: 16px;
@@ -65,6 +66,7 @@
     --muted: #a3b2ab;
     --primary: var(--green-700);
     --heading: var(--green-300);
+    --cat-park-sub: #e11d48;
     --tint-gold: #3a3122;
     --tint-green: #1b3a2f;
     --glass: rgb(16 24 21 / 0.78);

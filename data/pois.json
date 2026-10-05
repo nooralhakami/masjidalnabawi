@@ -2259,7 +2259,8 @@
   "lng": 39.612098,
   "direction": "south",
   "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 201/202 ومرفقي 203/204.",
-  "alias": "1A 1B P1 parking"
+  "alias": "1A 1B P1 parking",
+  "access": "public"
  },
  {
   "id": 902,
@@ -2270,7 +2271,8 @@
   "lng": 39.6111728,
   "direction": "south",
   "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 203/204 ومرفقي 205/206.",
-  "alias": "2A 2B P2 parking"
+  "alias": "2A 2B P2 parking",
+  "access": "subscribers"
  },
  {
   "id": 903,
@@ -2281,7 +2283,8 @@
   "lng": 39.610266,
   "direction": "south",
   "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 205/206 ومرفقي 207/208.",
-  "alias": "3A 3B P3 parking"
+  "alias": "3A 3B P3 parking",
+  "access": "public"
  },
  {
   "id": 904,
@@ -2292,7 +2295,8 @@
   "lng": 39.609363,
   "direction": "south",
   "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 207/208 ومرفقي 209/210.",
-  "alias": "4A 4B P4 parking"
+  "alias": "4A 4B P4 parking",
+  "access": "public"
  },
  {
   "id": 905,
@@ -2303,7 +2307,8 @@
   "lng": 39.6086376,
   "direction": "west",
   "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 211/212 ومرفقي 213/214.",
-  "alias": "5A 5B P5 parking"
+  "alias": "5A 5B P5 parking",
+  "access": "public"
  },
  {
   "id": 906,
@@ -2314,7 +2319,8 @@
   "lng": 39.6086376,
   "direction": "west",
   "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 213/214 ومرفقي 215/216.",
-  "alias": "6A 6B P6 parking"
+  "alias": "6A 6B P6 parking",
+  "access": "subscribers"
  },
  {
   "id": 907,
@@ -2325,7 +2331,8 @@
   "lng": 39.6086376,
   "direction": "west",
   "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 215/216 ومرفقي 217/218.",
-  "alias": "7A 7B P7 parking"
+  "alias": "7A 7B P7 parking",
+  "access": "public"
  },
  {
   "id": 908,
@@ -2336,7 +2343,8 @@
   "lng": 39.6093408,
   "direction": "north",
   "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 221/222 ومرفقي 223/224.",
-  "alias": "8A 8B P8 parking"
+  "alias": "8A 8B P8 parking",
+  "access": "subscribers"
  },
  {
   "id": 909,
@@ -2347,7 +2355,8 @@
   "lng": 39.6102475,
   "direction": "north",
   "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 223/224 ومرفقي 225/226.",
-  "alias": "9A 9B P9 parking"
+  "alias": "9A 9B P9 parking",
+  "access": "public"
  },
  {
   "id": 910,
@@ -2358,7 +2367,8 @@
   "lng": 39.6111654,
   "direction": "north",
   "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 225/226 ومرفقي 227/228.",
-  "alias": "10A 10B P10 parking"
+  "alias": "10A 10B P10 parking",
+  "access": "subscribers"
  },
  {
   "id": 911,
@@ -2369,7 +2379,8 @@
   "lng": 39.612098,
   "direction": "north",
   "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 227/228 ومرفقي 229/230.",
-  "alias": "11A 11B P11 parking"
+  "alias": "11A 11B P11 parking",
+  "access": "public"
  },
  {
   "id": 912,
@@ -2380,7 +2391,8 @@
   "lng": 39.6136895,
   "direction": "east",
   "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 231/232 ومرفقي 233/234.",
-  "alias": "12A 12B P12 parking"
+  "alias": "12A 12B P12 parking",
+  "access": "public"
  },
  {
   "id": 913,
@@ -2391,6 +2403,7 @@
   "lng": 39.6136895,
   "direction": "east",
   "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 233/234 ومرفقي 235/236.",
-  "alias": "13A 13B P13 parking"
+  "alias": "13A 13B P13 parking",
+  "access": "public"
  }
 ]

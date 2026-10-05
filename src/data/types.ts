@@ -54,6 +54,7 @@ export interface Poi {
   /** Closed because works on this paired facility block the shared restrooms. */
   worksBy?: number;
   rawdah?: boolean;
+  access?: 'public' | 'subscribers';
 }
 
 export type LatLng = [number, number];

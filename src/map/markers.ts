@@ -77,8 +77,8 @@ export const PIN_ANCHOR: [number, number] = [24, 57];
 /** Approximate on-screen size of an outer-gate chip, for decluttering. */
 export function chipSize(p: Poi, tier: Tier): [number, number] {
   const digits = String(p.id).length;
-  // Includes the side-colour dot (6px + 3px gap) before the number.
-  return tier === 'm' ? [digits * 6.2 + 22, 17] : [digits * 7 + 24, 19];
+  const lock = p.category === 'parking' && p.access === 'subscribers' ? 14 : 0;
+  return tier === 'm' ? [digits * 6.2 + 22 + lock, 17] : [digits * 7 + 24 + lock, 19];
 }
 
 /** Axis-aligned overlap test for screen boxes centred on points. */
@@ -114,7 +114,9 @@ export function markerSpec(p: Poi, tier: Tier, status: Status | undefined, selec
         : `<span class="mk-gdot mk-gdot-in" style="--c:${c}"></span>`;
     z = 50;
   } else if (p.category === 'parking') {
-    inner = `<span class="mk-park">P${p.id - 900}</span>`;
+    const subscriber = p.access === 'subscribers';
+    const title = subscriber ? 'Subscribers only' : 'Open to all';
+    inner = `<span class="mk-park${subscriber ? ' is-sub' : ''}" title="${title}" aria-label="${title}">${subscriber ? icon('lock', 10) : ''}P${p.id - 900}</span>`;
     z = 200;
   } else {
     const d = FACILITY_SIZE[tier];

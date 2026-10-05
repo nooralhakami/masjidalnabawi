@@ -198,6 +198,9 @@
   box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgb(30 42 38 / 0.3);
 }
 .mk-park {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   height: 20px;
   padding: 0 6px;
   border-radius: 7px;
@@ -206,6 +209,30 @@
   font: 700 10.5px/20px var(--font-ui);
   box-shadow: 0 0 0 2px #fff, 0 3px 8px color-mix(in srgb, var(--cat-men) 40%, transparent);
 }
+.mk-park.is-sub {
+  background: var(--cat-park-sub);
+}
+.mk-park svg {
+  flex: 0 0 auto;
+}
+
+.parking-entrance {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--c) 18%, white);
+  border: 2px solid white;
+  color: var(--c);
+  font-size: 17px;
+  font-weight: 800;
+  box-shadow: 0 1px 4px rgb(0 0 0 / .3);
+}
+.parking-entrance.is-nearest {
+  border-color: var(--gold);
+  animation: entrance-pulse 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { .parking-entrance.is-nearest { animation: none; } }
+@keyframes entrance-pulse { 50% { transform: scale(1.12); } }
 
 /* ---------- selected place: a dropped pin ---------- */
 .leaflet-marker-icon.mk.mk-pinwrap {
