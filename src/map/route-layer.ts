@@ -1,6 +1,8 @@
 import L from 'leaflet';
 import type { LatLng, Poi } from '../data/types';
 import { parkingAccess } from '../domain/parking';
+import { nm } from '../i18n';
+import { esc } from '../ui/dom';
 import { pathLength, walkMinutes, walkPath } from '../routing/walk';
 
 export interface RouteInfo {
@@ -53,6 +55,20 @@ export class RouteLayer {
           keyboard: false,
         });
         this.group.addLayer(marker);
+        if (nearest) {
+          const label = L.marker([entrance.lat, entrance.lng], {
+            icon: L.divIcon({
+              className: 'parking-entrance-label-wrap',
+              html: `<span class="parking-entrance-label" dir="auto">${esc(nm(entrance))}</span>`,
+              iconSize: [180, 22],
+              iconAnchor: [90, 39],
+            }),
+            interactive: false,
+            keyboard: false,
+            zIndexOffset: 1002,
+          });
+          this.group.addLayer(label);
+        }
       }
     }
     // Progressive draw: dash the line by its own length and animate the offset to 0.
