@@ -34,8 +34,8 @@ describe('inner gate names and descriptions', () => {
 
 describe('pois.json', () => {
   it('has 213 POIs with unique ids (accessible restrooms 409/410 removed, landmark 604 added)', () => {
-    expect(POIS).toHaveLength(213);
-    expect(POI_BY_ID.size).toBe(213);
+    expect(POIS).toHaveLength(212);
+    expect(POI_BY_ID.size).toBe(212);
     expect(POI_BY_ID.has(409)).toBe(false);
     expect(POI_BY_ID.has(410)).toBe(false);
     expect(POI_BY_ID.get(604)?.category).toBe('landmarks');
@@ -49,7 +49,7 @@ describe('pois.json', () => {
     ['wheelchair', 8],
     ['emergency', 2],
     ['women', 2],
-    ['hotels', 8],
+    ['hotels', 7],
     ['food', 12],
   ] as const)('category %s has %i POIs', (cat, n) => {
     expect(count((p) => p.category === cat)).toBe(n);

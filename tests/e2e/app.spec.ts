@@ -31,7 +31,7 @@ test.describe('filters', () => {
     ['gates', 112],
     ['women', 33],
     ['toilets', 36],
-    ['hotels', 8],
+    ['hotels', 7],
     ['food', 12],
     ['landmarks', 20],
     ['wheelchair', 8],

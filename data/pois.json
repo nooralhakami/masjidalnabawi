@@ -2070,16 +2070,7 @@
   "direction": "north",
   "description_ar": "فندق قريب من المسجد النبوي."
  },
- {
-  "id": 703,
-  "name_ar": "أوبروي المدينة",
-  "category": "hotels",
-  "subCategory": "hotel",
-  "lat": 24.4703363,
-  "lng": 39.6132614,
-  "direction": "north",
-  "description_ar": "فندق قريب من المسجد النبوي."
- },
+
  {
   "id": 704,
   "name_ar": "موفنبيك أنوار المدينة",
