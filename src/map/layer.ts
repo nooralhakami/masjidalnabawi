@@ -27,10 +27,20 @@ export class PoiLayer {
   }
 
   set(pois: readonly Poi[], filter: FilterId, hidden = false): void {
+    // A new filter (or showing markers again) pops the markers in; plain panning doesn't.
+    if (filter !== this.filter || hidden !== this.hidden) this.pop();
     this.pois = pois;
     this.filter = filter;
     this.hidden = hidden;
     this.draw();
+  }
+
+  private popTimer = 0;
+  private pop(): void {
+    const el = this.map.getContainer();
+    el.classList.add('mk-pop');
+    clearTimeout(this.popTimer);
+    this.popTimer = window.setTimeout(() => el.classList.remove('mk-pop'), 400);
   }
 
   select(id: number | null): void {
@@ -40,7 +50,6 @@ export class PoiLayer {
 
   draw(): void {
     this.group.clearLayers();
-    if (this.hidden) return;
     const bounds = this.map.getBounds().pad(0.25);
     const tier = tierOf(this.map.getZoom());
     // Gate chips are placed first so the selected one and lower numbers win ties.
@@ -51,6 +60,8 @@ export class PoiLayer {
       // Once a destination is selected, keep the map focused on it and hide
       // every other POI until the selection is closed.
       if (this.selected !== null && !sel) continue;
+      // "Hide markers" hides everything except a place the visitor has just chosen.
+      if (this.hidden && !sel) continue;
       if (!sel && !bounds.contains([p.lat, p.lng])) continue;
       if (!visibleAtZoom(p, tier, this.filter, sel)) continue;
       let compact = false;
@@ -63,7 +74,7 @@ export class PoiLayer {
       }
       const spec = markerSpec(p, tier, this.fac.status(p.id), sel, compact);
       const m = L.marker([p.lat, p.lng], {
-        icon: L.divIcon({ html: spec.html, className: spec.className, iconSize: [HIT, HIT], iconAnchor: [HIT / 2, HIT / 2] }),
+        icon: L.divIcon({ html: spec.html, className: spec.className, iconSize: spec.size ?? [HIT, HIT], iconAnchor: spec.anchor ?? [HIT / 2, HIT / 2] }),
         zIndexOffset: spec.zIndex,
         keyboard: true,
         title: nm(p),

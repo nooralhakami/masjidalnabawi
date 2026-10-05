@@ -23,7 +23,7 @@ const shown = (filter: FilterId, toiletSub: 'all' | 'open' | 'closed' = 'all') =
 describe('filters', () => {
   it('"all" shows everything except parking', () => {
     const all = shown('all');
-    expect(all).toHaveLength(214 - 13);
+    expect(all).toHaveLength(213 - 13);
     expect(all.some((p) => p.category === 'parking')).toBe(false);
   });
 
@@ -38,7 +38,7 @@ describe('filters', () => {
 
   it('landmarks exclude wheelchair zones, which have their own pill', () => {
     expect(shown('landmarks').some((p) => p.subCategory === 'wheelchair_zone')).toBe(false);
-    expect(shown('landmarks')).toHaveLength(19);
+    expect(shown('landmarks')).toHaveLength(20);
     expect(shown('wheelchair')).toHaveLength(8);
     expect(shown('wheelchair').every((p) => p.subCategory === 'wheelchair_zone')).toBe(true);
   });
@@ -53,10 +53,14 @@ describe('filters', () => {
     expect(w.some((p) => p.subCategory === 'toilet_men' || p.subCategory === 'gate_outer')).toBe(false);
   });
 
-  it('toilet sub-filters: all five previously closed facilities are open', () => {
-    expect(shown('toilets')).toHaveLength(38);
+  it('toilet sub-filters: everything starts open; closed = maintenance + works', () => {
+    expect(shown('toilets')).toHaveLength(36);
     expect(shown('toilets', 'closed')).toHaveLength(0);
-    expect(shown('toilets', 'open')).toHaveLength(38);
+    expect(shown('toilets', 'open')).toHaveLength(36);
+    fac.toggleMaintenance(212);
+    fac.toggleElevatorWorks(215);
+    expect(shown('toilets', 'closed').map((p) => p.id).sort()).toEqual([212, 215, 216]);
+    expect(shown('toilets', 'open')).toHaveLength(33);
   });
 
   it('category pills match their category', () => {
@@ -69,6 +73,7 @@ describe('filters', () => {
 
 describe('facilities: alternatives by gender', () => {
   it('a closed women facility suggests the nearest open women/mixed one', () => {
+    fac.toggleElevatorWorks(215); // closes 215 and its pair 216
     const alt = fac.nearestOpen(P(215))!;
     expect(alt.poi.id).toBe(217);
     expect(['toilet_women', 'toilet_mixed']).toContain(alt.poi.subCategory);
@@ -87,10 +92,9 @@ describe('facilities: alternatives by gender', () => {
     expect(['toilet_men', 'toilet_women', 'toilet_mixed']).toContain(alt.poi.subCategory);
   });
 
-  it('elderly/accessible → the same group', () => {
+  it('elderly restrooms have no alternative of the same group since 409/410 were removed', () => {
     fac.toggleMaintenance(204);
-    const alt = fac.nearestOpen(P(204))!;
-    expect(['toilet_elderly', 'toilet_accessible']).toContain(alt.poi.subCategory);
+    expect(fac.nearestOpen(P(204))).toBeNull();
   });
 
   it('never suggests a closed facility', () => {
@@ -102,7 +106,8 @@ describe('facilities: alternatives by gender', () => {
 });
 
 describe('facilities: elevator works on pairs', () => {
-  it('initial demo: works at 215 close 216 with it', () => {
+  it('works at 215 close 216 with it', () => {
+    fac.toggleElevatorWorks(215);
     expect(fac.status(215)).toBe('works');
     expect(fac.status(216)).toBe('works');
     expect(fac.worksBy(216)).toBe(215);
@@ -129,6 +134,7 @@ describe('facilities: elevator works on pairs', () => {
   });
 
   it('maintenance toggle on a works site ends the works for the pair', () => {
+    fac.toggleElevatorWorks(215);
     fac.toggleMaintenance(216);
     expect(fac.status(215)).toBe('open');
     expect(fac.status(216)).toBe('open');
@@ -181,6 +187,12 @@ describe('search', () => {
     const r = search(POIS, '33');
     expect(r[0].id).toBe(33);
     expect(r.slice(1, 11).map((p) => p.id)).toEqual([330, 331, 332, 333, 334, 335, 336, 337, 338, 339]);
+  });
+
+  it('the exhibition above restrooms 204 is findable by its description', () => {
+    for (const q of ['متحف', 'معرض', 'مخطوطات']) expect(search(POIS, q).map((p) => p.id), q).toContain(204);
+    setLang('en');
+    expect(search(POIS, 'manuscripts').map((p) => p.id)).toContain(204);
   });
 
   it('returns nothing for gibberish', () => {

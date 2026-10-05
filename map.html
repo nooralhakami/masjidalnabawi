@@ -11,6 +11,36 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="description" content="خريطة تفاعلية للبوابات ودورات المياه والمواقف والخدمات حول المسجد النبوي، بحث سريع ومسارات مشي بست لغات." />
     <link rel="preconnect" href="https://server.arcgisonline.com" />
+    <script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+    <script>
+      /* Start downloading the first satellite tiles before any JS library loads (same fit as setup.ts:
+         outer-gate bounds, 16px padding, zoom 14–19). Leaflet later finds them in the browser cache. */
+      (function () {
+        try {
+          // A shared place link (?poi=) zooms straight to that place, so these overview tiles would go unused.
+          if (/[?&]poi=/.test(location.search)) return;
+          var S = 24.4659727, N = 24.470891, W = 39.608038, E = 39.6142706, pad = 32, ts = 256;
+          var w = innerWidth, h = innerHeight;
+          function px(lat, lng, z) {
+            var s = ts * Math.pow(2, z), r = (lat * Math.PI) / 180;
+            return [((lng + 180) / 360) * s, (0.5 - Math.log((1 + Math.sin(r)) / (1 - Math.sin(r))) / (4 * Math.PI)) * s];
+          }
+          var a = px(N, W, 0), b = px(S, E, 0);
+          var scale = Math.min((w - pad) / (b[0] - a[0]), (h - pad) / (b[1] - a[1]));
+          var z = Math.max(14, Math.min(19, Math.floor(Math.log(scale) / Math.LN2)));
+          var nw = px(N, W, z), se = px(S, E, z), cx = (nw[0] + se[0]) / 2, cy = (nw[1] + se[1]) / 2;
+          for (var y = Math.floor((cy - h / 2) / ts); y <= Math.floor((cy + h / 2) / ts); y++)
+            for (var x = Math.floor((cx - w / 2) / ts); x <= Math.floor((cx + w / 2) / ts); x++) {
+              var l = document.createElement('link');
+              l.rel = 'preload';
+              l.as = 'image';
+              l.setAttribute('fetchpriority', 'high');
+              l.href = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + z + '/' + y + '/' + x;
+              document.head.appendChild(l);
+            }
+        } catch (e) {}
+      })();
+    </script>
     <title>الخريطة — دليل زوار المسجد النبوي</title>
   </head>
   <body>

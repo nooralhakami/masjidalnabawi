@@ -72,7 +72,7 @@ describe('names and descriptions', () => {
     expect(nm(P(301), 'en')).toBe('Gate 301');
     expect(nm(P(905), 'en')).toBe('Parking No. 5');
     expect(nm(P(401), 'en')).toContain('1');
-    expect(nm(P(409), 'en')).toContain('1');
+    expect(nm(P(604), 'en')).toMatch(/Rawdah/);
     expect(nm(P(37), 'en')).toBe('Gate 37 – Rawdah Entrance');
     expect(nm(P(215), 'ur')).toMatch(/215/);
   });

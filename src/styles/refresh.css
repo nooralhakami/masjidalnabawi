@@ -1,0 +1,264 @@
+/* «نور المدينة» refresh: frosted panels over the map, display type, deeper buttons, calm motion. */
+
+/* ---------- frosted glass ---------- */
+.hdr,
+.pill:not([aria-pressed='true']),
+.mc-btn,
+.mc-zoom,
+.rawdah-card,
+.map-quick-action,
+.navigation-status {
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-line);
+}
+.mc-zoom .mc-btn {
+  background: transparent;
+  border: 0;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .hdr,
+  .pill:not([aria-pressed='true']),
+  .mc-btn,
+  .mc-zoom,
+  .rawdah-card,
+  .map-quick-action,
+  .navigation-status {
+    background: var(--surface);
+  }
+}
+.hdr {
+  border-radius: 24px;
+}
+.map-quick-action {
+  color: var(--heading);
+}
+.map-quick-action svg {
+  color: var(--heading);
+}
+#map-theme svg {
+  color: var(--gold);
+}
+.search-box {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+/* ---------- type ---------- */
+.hdr-title,
+.sh-title,
+.rawdah-title,
+.alt-n {
+  font-family: var(--font-display);
+}
+.sh-title {
+  font-size: 19px;
+  line-height: 28px;
+}
+.sh-kicker {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c, var(--heading));
+}
+
+/* ---------- filter pills: tinted icon + count ---------- */
+.pill {
+  padding-inline: 6px 12px;
+}
+.pill-ic {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--c) 13%, transparent);
+}
+.pill[aria-pressed='true'] .pill-ic {
+  background: rgb(255 255 255 / 0.14);
+}
+.pill-n {
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.7;
+}
+.pill[aria-pressed='true'] {
+  box-shadow: 0 6px 14px rgb(11 74 55 / 0.35);
+}
+.visibility-pill {
+  padding: 0;
+}
+
+/* ---------- buttons ---------- */
+.btn.block:not(.ghost):not(.danger) {
+  background: linear-gradient(180deg, var(--green-700), var(--green-900));
+  box-shadow: 0 10px 22px rgb(11 74 55 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.18);
+}
+.btn.danger {
+  background: #fbe9e6;
+  color: #8e2a1e;
+}
+.btn.danger svg {
+  color: #8e2a1e;
+}
+:root[data-theme='dark'] .btn.danger {
+  background: #3a1d1a;
+  color: #ffb4a8;
+}
+:root[data-theme='dark'] .btn.danger svg {
+  color: #ffb4a8;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .btn.danger {
+    background: #3a1d1a;
+    color: #ffb4a8;
+  }
+  :root:not([data-theme='light']) .btn.danger svg {
+    color: #ffb4a8;
+  }
+}
+.btn-square {
+  width: 52px;
+  min-height: 52px;
+  flex: none;
+  padding: 0;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--green-700);
+}
+.sheet-foot {
+  display: flex;
+  gap: 10px;
+}
+.sheet-foot .btn.block {
+  flex: 1;
+  width: auto;
+}
+
+/* ---------- place card: category tint ---------- */
+.sheet::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 84px;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c, var(--green-700)) 16%, transparent), transparent);
+  pointer-events: none;
+}
+.sheet > * {
+  position: relative;
+}
+.sh-icon {
+  background: var(--c);
+  color: #fff;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--c) 35%, transparent);
+}
+
+/* ---------- Rawdah card: progress through the current turn ---------- */
+.rawdah-card {
+  flex-wrap: wrap;
+}
+.rawdah-progress {
+  flex-basis: 100%;
+  display: block;
+  height: 5px;
+  margin-top: 10px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--c) 16%, transparent);
+  overflow: hidden;
+}
+.rawdah-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--c);
+  transition: width 600ms var(--ease);
+}
+.rawdah-card .tile {
+  background: linear-gradient(160deg, var(--green-700), var(--green-900));
+  color: var(--gold);
+  box-shadow: inset 0 0 0 1px rgb(201 161 91 / 0.4);
+}
+
+/* ---------- live navigation: big numbers + progress ---------- */
+.navigation-status {
+  flex-wrap: wrap;
+  row-gap: 8px;
+  border-radius: 20px;
+}
+.nav-big {
+  font: 700 26px/1 var(--font-ui);
+  color: var(--ink);
+}
+.nav-big small {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.nav-progress {
+  flex-basis: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--ink) 9%, transparent);
+  overflow: hidden;
+}
+.nav-progress > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #2bb383, var(--gold));
+  transition: width 500ms var(--ease);
+}
+
+/* ---------- motion ---------- */
+.sheet {
+  transition-timing-function: var(--spring);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet {
+    transition-timing-function: linear;
+  }
+}
+
+/* backdrop-filter gives the header its own stacking context: keep it (and its language menu,
+   search results) above the filter row that follows it. */
+.ui-top .hdr {
+  position: relative;
+  z-index: 3;
+}
+.ui-top .pills,
+.ui-top .subpills {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- visitor marker: direction cone ---------- */
+.me .me-cone {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 72px;
+  height: 72px;
+  margin: -36px 0 0 -36px;
+  border-radius: 50%;
+  background: conic-gradient(from -28deg, rgb(2 136 209 / 0.42) 0deg 56deg, transparent 56deg 360deg);
+  -webkit-mask: radial-gradient(circle, #000 0 30%, transparent 70%);
+  mask: radial-gradient(circle, #000 0 30%, transparent 70%);
+  transform: rotate(var(--heading, 0deg));
+  transition: transform 250ms linear, opacity 250ms;
+  opacity: 0;
+  pointer-events: none;
+}
+.me.has-heading .me-cone {
+  opacity: 1;
+}
+.navigation-status[data-state='away'] strong,
+.navigation-status[data-state='low-accuracy'] strong {
+  color: #b45309;
+}
+:root[data-theme='dark'] .navigation-status[data-state='away'] strong,
+:root[data-theme='dark'] .navigation-status[data-state='low-accuracy'] strong {
+  color: #f0c46a;
+}

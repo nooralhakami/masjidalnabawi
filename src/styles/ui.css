@@ -18,7 +18,6 @@
   flex: none;
   align-items: center;
   gap: 5px;
-  direction: rtl;
   pointer-events: auto;
   order: 3;
 }
@@ -26,13 +25,13 @@
 .hdr-row > .map-quick-actions { margin-inline-start: 0; }
 
 .map-quick-action {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border: 1px solid rgb(201 161 91 / 0.35);
   border-radius: 50%;
-  background: rgb(9 35 29 / 0.92);
-  color: var(--ink);
+  background: var(--green-900);
+  color: var(--gold);
   display: inline-grid;
   place-items: center;
   font: 700 11px var(--font-ui);
@@ -42,10 +41,11 @@
   backdrop-filter: blur(8px);
 }
 .map-quick-action svg { color: var(--gold); }
+.map-quick-action:hover { filter: brightness(1.15); }
 .map-quick-action:active { transform: scale(0.97); }
 @media (max-width: 699px) {
   .map-quick-actions { gap: 4px; }
-  .map-quick-action { width: 31px; height: 31px; }
+  .map-quick-action { width: 40px; height: 40px; }
 }
 /* Keep the map visible when a selected destination is open. */
 .ui-top.is-route-compact {
@@ -123,10 +123,16 @@
   margin: 0;
   font-size: 15.5px;
   font-weight: 700;
-  line-height: 22px;
-  white-space: nowrap;
+  line-height: 20px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+}
+@media (max-width: 420px) {
+  .hdr-title {
+    font-size: 14px;
+  }
 }
 .hdr-sub {
   font-size: 12px;
@@ -515,9 +521,20 @@
     color: #e3b6ef;
   }
 }
+/* One offset per map corner (Leaflet stacks a corner's controls, so per-control margins would add up). */
+.leaflet-bottom.leaflet-left,
+.leaflet-bottom.leaflet-right {
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  transition: bottom 280ms var(--ease);
+}
 .leaflet-bottom .mc,
 .leaflet-bottom .leaflet-control-scale {
-  margin-bottom: calc(108px + env(safe-area-inset-bottom)) !important;
+  margin-bottom: 10px !important;
+}
+/* During live navigation the controls rise above the sheet and the navigation bar. */
+body.is-navigating .leaflet-bottom.leaflet-left,
+body.is-navigating .leaflet-bottom.leaflet-right {
+  bottom: calc(var(--sheet-h, 0px) + 76px);
 }
 
 /* bottom sheet */
@@ -549,7 +566,7 @@
   flex: none;
   display: flex;
   justify-content: center;
-  padding: 10px 0 6px;
+  padding: 12px 0 10px;
   cursor: grab;
   border: 0;
   background: transparent;
@@ -575,9 +592,6 @@
   overflow: hidden;
 }
 /* Keep the route summary visible while leaving most of the map unobstructed. */
-.sheet[data-route='active'][data-state='half'] {
-  --half: min(20dvh, 220px);
-}
 .sheet[data-route='active'][data-state='half'] .sheet-body {
   padding-block: 0 10px;
   gap: 8px;
@@ -960,4 +974,76 @@
 }
 .fact-v.big {
   font-size: 19px;
+}
+
+/* Searching or opening the language menu during a route restores the full header. */
+.ui-top.is-route-compact .hdr:focus-within,
+.ui-top.is-route-compact .hdr:has(.lang-menu:not([hidden])) {
+  max-height: none;
+  overflow: visible;
+}
+/* Compact destination row in route mode */
+.sh-head-route {
+  align-items: center;
+}
+.sh-head-route .sh-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+}
+.sh-head-route .sh-title {
+  font-size: 16px;
+  line-height: 22px;
+}
+.sh-kicker {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--heading);
+}
+/* Nothing to follow until a position is known. */
+.navigation-status[data-state='error'] button,
+.navigation-status[data-state='locating'] button {
+  display: none;
+}
+
+/* Compact header (route mode): one-line title and smaller quick actions. */
+.ui-top.is-route-compact .hdr-title {
+  -webkit-line-clamp: 1;
+}
+.ui-top.is-route-compact .map-quick-action {
+  width: 32px;
+  height: 32px;
+}
+.ui-top.is-route-compact .pill-btn {
+  height: 32px;
+}
+
+/* Attribution stays at the very bottom even though the corner's controls are lifted. */
+.leaflet-bottom.leaflet-right .leaflet-control-attribution {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  margin: 0;
+}
+/* Messages appear above the bottom sheet when it is open. */
+.toast {
+  bottom: calc(max(110px, var(--sheet-h, 0px) + 16px) + env(safe-area-inset-bottom));
+}
+.hdr-sub {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Narrow phones: room for the title next to four header buttons. */
+@media (max-width: 480px) {
+  .hdr-row > .brand {
+    display: none;
+  }
+  .hdr-row > .pill-btn {
+    padding: 0 10px;
+    gap: 5px;
+  }
+  .hdr-row > .pill-btn svg:last-child {
+    display: none;
+  }
 }

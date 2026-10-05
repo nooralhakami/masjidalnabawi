@@ -3,6 +3,9 @@ import type { LangCode } from '../data/types';
 /** Landing-page strings added by the rebuild (all six languages; enforced by tests). */
 export const LANDING_UI: Record<LangCode, Record<string, string>> = {
   ar: {
+    theme_toggle: 'تبديل الوضع الليلي والنهاري',
+    theme_day: 'الوضع النهاري',
+    theme_night: 'الوضع الليلي',
     nav_features: 'المزايا',
     nav_qr: 'الباركود',
     nav_install: 'التثبيت',
@@ -43,6 +46,9 @@ export const LANDING_UI: Record<LangCode, Record<string, string>> = {
     preview_alt: 'معاينة شاشة الخريطة على الجوال',
   },
   en: {
+    theme_toggle: 'Toggle dark and light mode',
+    theme_day: 'Light mode',
+    theme_night: 'Dark mode',
     nav_features: 'Features',
     nav_qr: 'QR code',
     nav_install: 'Install',
@@ -83,6 +89,9 @@ export const LANDING_UI: Record<LangCode, Record<string, string>> = {
     preview_alt: 'Preview of the map screen on a phone',
   },
   tr: {
+    theme_toggle: 'Koyu ve açık mod arasında geç',
+    theme_day: 'Açık mod',
+    theme_night: 'Koyu mod',
     nav_features: 'Özellikler',
     nav_qr: 'QR kod',
     nav_install: 'Kurulum',
@@ -123,6 +132,9 @@ export const LANDING_UI: Record<LangCode, Record<string, string>> = {
     preview_alt: 'Telefonda harita ekranı önizlemesi',
   },
   ur: {
+    theme_toggle: 'ڈارک اور لائٹ موڈ بدلیں',
+    theme_day: 'لائٹ موڈ',
+    theme_night: 'ڈارک موڈ',
     nav_features: 'خصوصیات',
     nav_qr: 'کیو آر کوڈ',
     nav_install: 'انسٹال',
@@ -163,6 +175,9 @@ export const LANDING_UI: Record<LangCode, Record<string, string>> = {
     preview_alt: 'فون پر نقشے کی اسکرین کا پیش منظر',
   },
   id: {
+    theme_toggle: 'Ganti mode gelap dan terang',
+    theme_day: 'Mode terang',
+    theme_night: 'Mode gelap',
     nav_features: 'Fitur',
     nav_qr: 'Kode QR',
     nav_install: 'Pasang',
@@ -203,6 +218,9 @@ export const LANDING_UI: Record<LangCode, Record<string, string>> = {
     preview_alt: 'Pratinjau layar peta di ponsel',
   },
   uz: {
+    theme_toggle: 'Tungi va kunduzgi rejimni almashtirish',
+    theme_day: 'Kunduzgi rejim',
+    theme_night: 'Tungi rejim',
     nav_features: 'Imkoniyatlar',
     nav_qr: 'QR kod',
     nav_install: 'O‘rnatish',

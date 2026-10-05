@@ -63,12 +63,20 @@ export interface MarkerSpec {
   html: string;
   className: string;
   zIndex: number;
+  /** Icon box size and anchor; defaults to the 32px hit area centred on the point. */
+  size?: [number, number];
+  anchor?: [number, number];
 }
+
+/** Selected facility pin: 48×60 box whose tip sits on the point. */
+export const PIN_SIZE: [number, number] = [48, 60];
+export const PIN_ANCHOR: [number, number] = [24, 57];
 
 /** Approximate on-screen size of an outer-gate chip, for decluttering. */
 export function chipSize(p: Poi, tier: Tier): [number, number] {
   const digits = String(p.id).length;
-  return tier === 'm' ? [Math.max(22, digits * 6.2 + 13), 16] : [Math.max(26, digits * 7 + 15), 18];
+  // Includes the side-colour dot (6px + 3px gap) before the number.
+  return tier === 'm' ? [digits * 6.2 + 22, 17] : [digits * 7 + 24, 19];
 }
 
 /** Axis-aligned overlap test for screen boxes centred on points. */
@@ -109,9 +117,22 @@ export function markerSpec(p: Poi, tier: Tier, status: Status | undefined, selec
   } else {
     const d = FACILITY_SIZE[tier];
     const bg = closed ? 'var(--cat-gray)' : look.color;
-    const mixed = bg === 'mixed' ? ' mk-mixed' : '';
-    const glyph = d >= 13 || selected ? icon(look.icon, 24) : '';
-    inner = `<span class="mk-dot${mixed}" style="--d:${d}px;--c:${bg}">${glyph}</span>`;
+    const isMixed = bg === 'mixed';
+    const mixed = isMixed ? ' mk-mixed' : '';
+    // The glow needs a real colour: mixed restrooms glow purple.
+    const c = isMixed ? 'var(--cat-women)' : bg;
+    if (selected) {
+      cls.push('mk-pinwrap');
+      return {
+        html: `<span class="mk-pin${mixed}" style="--c:${c}">${icon(look.icon, 24)}</span>`,
+        className: cls.join(' '),
+        zIndex: 1000,
+        size: PIN_SIZE,
+        anchor: PIN_ANCHOR,
+      };
+    }
+    const glyph = d >= 13 ? icon(look.icon, 24) : '';
+    inner = `<span class="mk-dot${mixed}" style="--d:${d}px;--c:${c}">${glyph}</span>`;
     z = 300;
   }
   return { html: inner, className: cls.join(' '), zIndex: selected ? 1000 : z };

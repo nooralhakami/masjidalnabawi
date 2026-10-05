@@ -28,7 +28,7 @@ const brand = (size = 44) => `<span class="brand" style="width:${size}px;height:
 const e = (k: string, v?: Record<string, string | number>) => esc(t(k, v));
 
 function qrBlock(url: string): string {
-  if (SITE.QR_IMAGE) return `<img src="${esc(SITE.QR_IMAGE)}" width="216" height="216" alt="${e('qr_alt')}" />`;
+  if (SITE.QR_IMAGE) return `<img class="qr-image" src="${esc(SITE.QR_IMAGE)}" width="216" height="216" alt="${e('qr_alt')}" />`;
   return `<div class="qr-code" id="qr-code" aria-label="${e('qr_alt')}" role="img">${url ? qrSvg(url, 216) : ''}<span class="qr-logo">${brand(36)}</span></div>`;
 }
 
@@ -66,8 +66,8 @@ export function landingHtml(url: string): string {
       <a href="#features">${e('nav_features')}</a><a href="#qr">${e('nav_qr')}</a><a href="#install">${e('nav_install')}</a>
     </nav>
     <div class="nav-actions">
-      <button type="button" class="theme-toggle" id="theme-toggle" aria-label="تبديل الوضع الليلي والنهاري" title="تبديل الوضع الليلي والنهاري">
-        ${icon('sun', 18)}<span class="theme-toggle-label">الوضع النهاري</span>
+      <button type="button" class="theme-toggle" id="theme-toggle" aria-label="${e('theme_toggle')}" title="${e('theme_toggle')}">
+        ${icon('sun', 18)}<span class="theme-toggle-label">${e('theme_day')}</span>
       </button>
       <div class="lang">
         <button type="button" class="pill-btn" id="lang-btn" aria-haspopup="true" aria-expanded="false" aria-label="${e('lang_title')}: ${esc(pack(l).n)}">

@@ -75,3 +75,13 @@ describe('walking routes', () => {
     expect(walkMinutes(161)).toBe(3);
   });
 });
+
+describe('walkway ring', () => {
+  it('no ring segment passes through the mosque or Al-Baqi’', async () => {
+    const { segmentHits } = await import('../../src/routing/walk');
+    const N = network();
+    for (const s of N.seg) {
+      for (const r of N.obstacles) expect(segmentHits(s.a, s.b, r), `segment starting at ${s.a}`).toBe(false);
+    }
+  });
+});

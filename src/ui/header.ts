@@ -1,6 +1,7 @@
 import type { LangCode, Poi } from '../data/types';
 import { LANGS, getLang, pack, t } from '../i18n';
 import { brandStar, icon } from './icons';
+import { applyTheme, currentTheme } from './theme';
 import { $, esc } from './dom';
 import { poiBadge, poiName, sideLabel } from './poi-view';
 
@@ -37,9 +38,10 @@ export class Header {
   <button type="button" class="pill-btn" id="lang-btn" aria-haspopup="true" aria-expanded="false">
   ${icon('globe', 18)}<span id="lang-short"></span>${icon('chevdown', 14)}
   </button>
-  <div class="map-quick-actions" aria-label="إجراءات التطبيق">
-  <a class="map-quick-action" href="./" aria-label="العودة إلى الصفحة الرئيسية">${icon('home', 18)}</a>
-  <button class="map-quick-action" id="map-share" type="button" aria-label="مشاركة التطبيق">${icon('share', 18)}</button>
+  <div class="map-quick-actions" data-aria="app_actions" role="group">
+  <button class="map-quick-action" id="map-theme" type="button"></button>
+  <a class="map-quick-action" href="./" data-aria="go_home">${icon('home', 18)}</a>
+  <button class="map-quick-action" id="map-share" type="button" data-aria="share_app">${icon('share', 18)}</button>
   </div>
 
       </div>
@@ -100,6 +102,10 @@ export class Header {
     });
 
     this.langBtn.addEventListener('click', () => this.toggleMenu());
+    $('#map-theme', this.root).addEventListener('click', () => {
+      applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+      this.paintTheme();
+    });
     this.menu.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>('[data-lang]');
       if (!b) return;
@@ -183,9 +189,24 @@ export class Header {
     } else this.input.removeAttribute('aria-activedescendant');
   }
 
+  /** The theme button shows (and names) the mode it switches to. */
+  private paintTheme(): void {
+    const b = $('#map-theme', this.root);
+    const dark = currentTheme() === 'dark';
+    b.innerHTML = icon(dark ? 'sun' : 'moon', 18);
+    b.setAttribute('aria-label', t(dark ? 'theme_day' : 'theme_night'));
+    b.title = t(dark ? 'theme_day' : 'theme_night');
+    b.setAttribute('aria-pressed', String(dark));
+  }
+
   /** Re-apply all translated text (after a language change). */
   relabel(): void {
+    this.paintTheme();
     this.root.querySelectorAll<HTMLElement>('[data-i]').forEach((e) => (e.textContent = t(e.dataset.i!)));
+    this.root.querySelectorAll<HTMLElement>('[data-aria]').forEach((e) => {
+      e.setAttribute('aria-label', t(e.dataset.aria!));
+      e.title = t(e.dataset.aria!);
+    });
     this.input.placeholder = t('ph');
     this.input.setAttribute('aria-label', t('ph'));
     $('#q-clear', this.root).setAttribute('aria-label', t('clear'));

@@ -62,11 +62,13 @@ export function createMap(el: HTMLElement): MapHandle {
   // Layer toggle + locate (inline-end column) and zoom (inline-start column).
   const tools = new L.Control({ position: 'bottomleft' });
   const zoom = new L.Control({ position: 'bottomright' });
-  const rotate = new L.Control({ position: 'bottomright' });
   let layerBtn!: HTMLButtonElement;
   let locBtn!: HTMLButtonElement;
   let zin!: HTMLButtonElement;
   let zout!: HTMLButtonElement;
+  let rotLeft: HTMLButtonElement | undefined;
+  let rotReset: HTMLButtonElement | undefined;
+  let rotRight: HTMLButtonElement | undefined;
 
 
   tools.onAdd = () => {
@@ -78,33 +80,32 @@ export function createMap(el: HTMLElement): MapHandle {
     L.DomEvent.disableClickPropagation(box);
     return box;
   };
-  rotate.onAdd = () => {
-    const box = L.DomUtil.create('div', 'mc mc-rotate');
-    const left = button(box, 'rotate-left');
-    const reset = button(box, 'rotate-reset');
-    const right = button(box, 'rotate-right');
-    left.setAttribute('aria-label', 'تدوير الخريطة عكس عقارب الساعة');
-    reset.setAttribute('aria-label', 'إعادة اتجاه الخريطة');
-    right.setAttribute('aria-label', 'تدوير الخريطة مع عقارب الساعة');
-    left.title = left.getAttribute('aria-label')!;
-    reset.title = reset.getAttribute('aria-label')!;
-    right.title = right.getAttribute('aria-label')!;
-    left.addEventListener('click', () => map.setBearing(map.getBearing() - 15));
-    reset.addEventListener('click', () => map.setBearing(0));
-    right.addEventListener('click', () => map.setBearing(map.getBearing() + 15));
-    L.DomEvent.disableClickPropagation(box);
-    return box;
-  };
-  rotate.addTo(map);
-
+  // One column: zoom (+/−), then rotation (↺ · compass · ↻). The compass needle always points to true north.
   zoom.onAdd = () => {
-    const box = L.DomUtil.create('div', 'mc');
+    const box = L.DomUtil.create('div', 'mc mc-right');
     const grp = L.DomUtil.create('div', 'mc-zoom', box);
     zin = button(grp, 'plus');
     grp.appendChild(document.createElement('hr'));
     zout = button(grp, 'minus');
     zin.addEventListener('click', () => map.zoomIn());
     zout.addEventListener('click', () => map.zoomOut());
+
+    const rot = L.DomUtil.create('div', 'mc-zoom mc-rotate', box);
+    rotRight = button(rot, 'rotate-right');
+    rot.appendChild(document.createElement('hr'));
+    rotReset = button(rot, 'rotate-reset', 'mc-compass');
+    rot.appendChild(document.createElement('hr'));
+    rotLeft = button(rot, 'rotate-left');
+    rotLeft.addEventListener('click', () => map.setBearing(map.getBearing() - 15));
+    rotRight.addEventListener('click', () => map.setBearing(map.getBearing() + 15));
+    rotReset.addEventListener('click', () => map.setBearing(0));
+    const syncCompass = () => {
+      const bearing = map.getBearing?.() ?? 0;
+      rotReset!.style.setProperty('--bearing', `${-bearing}deg`);
+      rotReset!.classList.toggle('is-rotated', Math.abs(((bearing % 360) + 360) % 360) > 0.5);
+    };
+    map.on('rotate', syncCompass);
+    syncCompass();
     L.DomEvent.disableClickPropagation(box);
     return box;
   };
@@ -118,6 +119,11 @@ export function createMap(el: HTMLElement): MapHandle {
     locBtn.title = t('gps');
     zin.setAttribute('aria-label', t('zoom_in'));
     zout.setAttribute('aria-label', t('zoom_out'));
+    for (const [b, k] of [[rotLeft, 'rot_left'], [rotReset, 'rot_reset'], [rotRight, 'rot_right']] as const) {
+      if (!b) continue;
+      b.setAttribute('aria-label', t(k));
+      b.title = t(k);
+    }
   }
   syncLabels();
 

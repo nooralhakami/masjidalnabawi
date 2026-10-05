@@ -921,3 +921,34 @@ body {
     background: #050908;
   }
 }
+
+/* Phones: theme button shows only its icon (label stays for screen readers); CTAs never wrap. */
+.btn-cta,
+.btn-sec,
+.theme-toggle {
+  white-space: nowrap;
+}
+@media (max-width: 560px) {
+  .theme-toggle {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+  .theme-toggle-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .nav-actions {
+    flex-wrap: wrap;
+  }
+}
+
+.qr-image {
+  display: block;
+  width: 216px;
+  height: 216px;
+  image-rendering: pixelated;
+}
