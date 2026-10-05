@@ -1267,7 +1267,7 @@
   "lat": 24.4662422,
   "lng": 39.6125681,
   "direction": "south",
-  "description_ar": "مجمع مشترك: الدور العلوي للنساء ويُوصل إليه بالدرج العادي 🟣، والأدوار ا������سفلية للرجال ويُوصل إليها بالسلم الكهربائي المتحرك 🔵",
+  "description_ar": "مجمع مشترك: الدور العلوي للنساء ويُوصل إليه بالدرج العادي 🟣، والأدوار السفلية للرجال ويُوصل إليها بالسلم الكهربائي المتحرك 🔵",
   "status": "open",
   "pairWith": 201,
   "gender": "mixed"
@@ -1293,7 +1293,7 @@
   "lat": 24.4662422,
   "lng": 39.611628,
   "direction": "south",
-  "description_ar": "دورات مياه لكبار السن وذوي الاحتياجات الخاصة، ويتوفر فيها مصعد كهربائي ♿. يوجد في أحد أدواره معرض الحرمين الشريفين، ويضم نسخًا نادرة من المخطوطات القرآنية القديمة وأدوات الكتابة التي كانت تُستخدم قديمًا مثل الحجارة والجلود وغيرها.",
+  "description_ar": "دورات مياه لكبار السن وذوي الاحتياجات الخاصة في الدور السفلي، ويتوفر فيها مصعد كهربائي ♿. وفي الدور العلوي معرض الحرمين الشريفين (متحف) ويضم مخطوطات أثرية ونادرة للقرآن الكريم، وأدوات من عهد النبي ﷺ والصحابة والتابعين.",
   "status": "open",
   "pairWith": 203,
   "elevatorAvailable": true,
@@ -1407,15 +1407,15 @@
   "gender": "men"
  },
  {
-"id": 212,
-    "name_ar": "مجمع دورات الرجال 212",
-    "category": "toilets",
-    "subCategory": "toilet_men",
-    "lat": 24.4673202,
-    "lng": 39.6083341,
-    "direction": "west",
-    "description_ar": "مجمع دورات مياه مخصص للرجال 🔵",
-    "status": "open",
+  "id": 212,
+  "name_ar": "مجمع دورات الرجال 212",
+  "category": "toilets",
+  "subCategory": "toilet_men",
+  "lat": 24.4673202,
+  "lng": 39.6083341,
+  "direction": "west",
+  "description_ar": "مجمع دورات مياه مخصص للرجال 🔵",
+  "status": "open",
   "pairWith": 211,
   "gender": "men"
  },
@@ -1447,30 +1447,30 @@
   "gender": "men"
  },
  {
-"id": 215,
-    "name_ar": "مجمع دورات النساء 215",
-    "category": "toilets",
-    "subCategory": "toilet_women",
-    "lat": 24.4689911,
-    "lng": 39.6089411,
-    "direction": "west",
-    "description_ar": "مجمع دورات مياه مخصص للنساء 🟣",
-    "status": "open",
-    "elev": true,
-    "pairWith": 216,
+  "id": 215,
+  "name_ar": "مجمع دورات النساء 215",
+  "category": "toilets",
+  "subCategory": "toilet_women",
+  "lat": 24.4689911,
+  "lng": 39.6089411,
+  "direction": "west",
+  "description_ar": "مجمع دورات مياه مخصص للنساء 🟣",
+  "status": "open",
+  "elev": true,
+  "pairWith": 216,
   "gender": "women"
  },
  {
-"id": 216,
-    "name_ar": "مجمع دورات النساء 216",
-    "category": "toilets",
-    "subCategory": "toilet_women",
-    "lat": 24.4689911,
-    "lng": 39.6083341,
-    "direction": "west",
-    "description_ar": "مجمع دورات مياه مخصص للنساء 🟣",
-    "status": "open",
-    "pairWith": 215,
+  "id": 216,
+  "name_ar": "مجمع دورات النساء 216",
+  "category": "toilets",
+  "subCategory": "toilet_women",
+  "lat": 24.4689911,
+  "lng": 39.6083341,
+  "direction": "west",
+  "description_ar": "مجمع دورات مياه مخصص للنساء 🟣",
+  "status": "open",
+  "pairWith": 215,
   "gender": "women"
  },
  {
@@ -1515,7 +1515,7 @@
  },
  {
   "id": 219,
-  "name_ar": "مجمع ������ورات النساء 219",
+  "name_ar": "مجمع دورات النساء 219",
   "category": "toilets",
   "subCategory": "toilet_women",
   "lat": 24.4702981,
@@ -1662,15 +1662,15 @@
   "gender": "women"
  },
  {
-"id": 236,
-    "name_ar": "مجمع دورات الرجال 236",
-    "category": "toilets",
-    "subCategory": "toilet_men",
-    "lat": 24.4686609,
-    "lng": 39.6139597,
-    "direction": "east",
-    "description_ar": "مجمع دورات مياه مخصص للرجال 🔵",
-    "status": "open",
+  "id": 236,
+  "name_ar": "مجمع دورات الرجال 236",
+  "category": "toilets",
+  "subCategory": "toilet_men",
+  "lat": 24.4686609,
+  "lng": 39.6139597,
+  "direction": "east",
+  "description_ar": "مجمع دورات مياه مخصص للرجال 🔵",
+  "status": "open",
   "pairWith": 235,
   "gender": "men"
  },
@@ -1701,15 +1701,15 @@
   "gender": "men"
  },
  {
-"id": 233,
-    "name_ar": "مجمع دورات النساء 233",
-    "category": "toilets",
-    "subCategory": "toilet_women",
-    "lat": 24.4692875,
-    "lng": 39.6134193,
-    "direction": "east",
-    "description_ar": "مجمع دورات مياه مخصص للنساء 🟣",
-    "status": "open",
+  "id": 233,
+  "name_ar": "مجمع دورات النساء 233",
+  "category": "toilets",
+  "subCategory": "toilet_women",
+  "lat": 24.4692875,
+  "lng": 39.6134193,
+  "direction": "east",
+  "description_ar": "مجمع دورات مياه مخصص للنساء 🟣",
+  "status": "open",
   "pairWith": 234,
   "gender": "women"
  },
@@ -1781,7 +1781,7 @@
  },
  {
   "id": 405,
-  "name_ar": "منط��ة عربات كبار السن وذوي الاحتياجات الخاصة 5",
+  "name_ar": "منطقة عربات كبار السن وذوي الاحتياجات الخاصة 5",
   "category": "wheelchair",
   "subCategory": "wheelchair_zone",
   "lat": 24.4698265,
@@ -1819,7 +1819,6 @@
   "direction": "north",
   "description_ar": "منطقة مخصصة داخل المسجد بجانب الأبواب لعربات كبار السن وذوي الاحتياجات الخاصة، حتى يجدوا مكاناً لهم دون ازدحام ♿"
  },
-
  {
   "id": 601,
   "name_ar": "مصلى القسم النسائي الشرقي",
@@ -1889,7 +1888,7 @@
   "lat": 24.4656628,
   "lng": 39.6124324,
   "direction": "south",
-  "description_ar": "استلام وتسل��م المفقودات."
+  "description_ar": "استلام وتسليم المفقودات."
  },
  {
   "id": 505,
@@ -1969,7 +1968,7 @@
   "lat": 24.470891,
   "lng": 39.610229,
   "direction": "north",
-  "description_ar": "مركز خدمات الحجاج والمعتمرين شمال، يقع بين بوابة 330 وبوابة 331 في الجهة الشمالية من ساحات المسجد ��لنبوي، وليس بجان�� باب 21."
+  "description_ar": "مركز خدمات الحجاج والمعتمرين شمال، يقع بين بوابة 330 وبوابة 331 في الجهة الشمالية من ساحات المسجد النبوي، وليس بجانب باب 21."
  },
  {
   "id": 513,
@@ -2259,7 +2258,7 @@
   "lat": 24.4665488,
   "lng": 39.612098,
   "direction": "south",
-  "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع ب��ن مرفقي 201/202 ومرفقي 203/204.",
+  "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 201/202 ومرفقي 203/204.",
   "alias": "1A 1B P1 parking"
  },
  {
@@ -2281,7 +2280,7 @@
   "lat": 24.4665488,
   "lng": 39.610266,
   "direction": "south",
-  "description_ar": "موا��ف تحت الساحة بدورين (A وB)، تقع بين مرفقي 205/206 ومرفقي 207/208.",
+  "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 205/206 ومرفقي 207/208.",
   "alias": "3A 3B P3 parking"
  },
  {
@@ -2314,7 +2313,7 @@
   "lat": 24.4686171,
   "lng": 39.6086376,
   "direction": "west",
-  "description_ar": "مواقف تحت الساحة بدو��ين (A وB)، تقع بين مرفقي 213/214 ومرفقي 215/216.",
+  "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 213/214 ومرفقي 215/216.",
   "alias": "6A 6B P6 parking"
  },
  {

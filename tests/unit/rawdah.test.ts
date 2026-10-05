@@ -44,6 +44,10 @@ describe('rawdah schedule (Gate 37)', () => {
     const s = rawdahState(mad(`${day}T09:15:00`));
     expect(s.turn).toBe('women');
     expect(s.minutesLeft).toBe(45);
+    // Women's morning turn runs Fajr → 10:00; at 09:15 most of it has passed.
+    expect(s.since.getTime()).toBe(fajr.getTime());
+    expect(s.progress).toBeGreaterThan(0.8);
+    expect(s.progress).toBeLessThan(1);
     expect(splitDuration(125)).toEqual({ h: 2, m: 5 });
   });
 });

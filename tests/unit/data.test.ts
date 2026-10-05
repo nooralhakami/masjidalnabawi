@@ -9,16 +9,19 @@ const ids = (pred: (p: Poi) => boolean) => POIS.filter(pred).map((p) => p.id).so
 const range = (a: number, b: number) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 
 describe('pois.json', () => {
-  it('has 214 POIs with unique ids', () => {
-    expect(POIS).toHaveLength(214);
-    expect(POI_BY_ID.size).toBe(214);
+  it('has 213 POIs with unique ids (accessible restrooms 409/410 removed, landmark 604 added)', () => {
+    expect(POIS).toHaveLength(213);
+    expect(POI_BY_ID.size).toBe(213);
+    expect(POI_BY_ID.has(409)).toBe(false);
+    expect(POI_BY_ID.has(410)).toBe(false);
+    expect(POI_BY_ID.get(604)?.category).toBe('landmarks');
   });
 
   it.each([
     ['gates', 112],
-    ['toilets', 38],
+    ['toilets', 36],
     ['parking', 13],
-    ['landmarks', 19],
+    ['landmarks', 20],
     ['wheelchair', 8],
     ['emergency', 2],
     ['women', 2],
@@ -38,7 +41,7 @@ describe('pois.json', () => {
     expect(count((p) => p.subCategory === 'toilet_women')).toBe(12);
     expect(ids((p) => p.subCategory === 'toilet_mixed')).toEqual([202, 210, 221]);
     expect(ids((p) => p.subCategory === 'toilet_elderly')).toEqual([204]);
-    expect(count((p) => p.subCategory === 'toilet_accessible')).toBe(2);
+    expect(count((p) => p.subCategory === 'toilet_accessible')).toBe(0);
   });
 
   it('toilet facilities 201–236 pair up (201↔202 … 235↔236)', () => {
@@ -113,5 +116,15 @@ describe('supporting data', () => {
     expect(langs).toEqual(['ar', 'en', 'tr', 'ur', 'id', 'uz']);
     const keys = Object.keys(I18N.ar.ui).sort();
     for (const l of langs) expect(Object.keys(I18N[l as keyof typeof I18N].ui).sort()).toEqual(keys);
+  });
+});
+
+describe('data integrity', () => {
+  it('no damaged characters (U+FFFD) in any data file', async () => {
+    const { readFileSync } = await import('node:fs');
+    for (const f of ['pois', 'i18n', 'routing', 'rules', 'overrides']) {
+      const text = readFileSync(new URL(`../../data/${f}.json`, import.meta.url), 'utf8');
+      expect(text.includes('�'), `${f}.json`).toBe(false);
+    }
   });
 });

@@ -6,8 +6,9 @@ import { SITE } from '../config/site.config';
 import type { LangCode } from '../data/types';
 import { getLang, t } from '../i18n';
 import { applyLang, initialLang } from '../i18n/dom';
+import { applyTheme, currentTheme, savedTheme } from '../ui/theme';
 import { toast } from '../ui/toast';
-import { mapUrl, qrPng, qrSvg } from './qr';
+import { imageToPng, mapUrl, qrPng, qrSvg } from './qr';
 import { landingHtml } from './view';
 
 interface InstallPromptEvent extends Event {
@@ -38,11 +39,17 @@ function fillLive(): void {
 
 function bind(): void {
   const themeToggle = document.getElementById('theme-toggle');
+  const paintTheme = () => {
+    const dark = currentTheme() === 'dark';
+    themeToggle?.setAttribute('aria-pressed', String(!dark));
+    // The label names the mode the button switches to.
+    const label = themeToggle?.querySelector('.theme-toggle-label');
+    if (label) label.textContent = t(dark ? 'theme_day' : 'theme_night');
+  };
+  paintTheme();
   themeToggle?.addEventListener('click', () => {
-    const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
-    document.documentElement.dataset.theme = next;
-    themeToggle.setAttribute('aria-pressed', String(next === 'light'));
-    themeToggle.querySelector('.theme-toggle-label')!.textContent = next === 'dark' ? 'الوضع النهاري' : 'الوضع الليلي';
+    applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+    paintTheme();
   });
 
   const btn = document.getElementById('lang-btn')!;
@@ -89,7 +96,8 @@ function bind(): void {
   });
 
   document.getElementById('download')!.addEventListener('click', async () => {
-    const blob = await qrPng(url);
+    // A ready-made code is exported as-is (rasterised), so the PNG is exactly what is printed elsewhere.
+    const blob = SITE.QR_IMAGE ? await imageToPng(SITE.QR_IMAGE) : await qrPng(url);
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'masjid-nabawi-map-qr.png';
@@ -136,7 +144,8 @@ window.addEventListener('appinstalled', () => {
   toast(t('installed'));
 });
 
-document.documentElement.dataset.theme = 'dark';
+// Dark by default on the landing page; a visitor's choice is remembered and shared with the map.
+applyTheme(savedTheme() ?? 'dark', false);
 applyLang(initialLang());
 render();
 document.addEventListener('langchange', render);

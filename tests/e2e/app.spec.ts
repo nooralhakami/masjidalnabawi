@@ -4,8 +4,11 @@ test.describe('landing', () => {
   test('opens the map from the hero button', async ({ page, errors: _ }) => {
     await page.goto('./');
     await expect(page.locator('h1')).toHaveText('دليل زوار المسجد النبوي');
-    await expect(page.locator('.qr-code > svg')).toBeVisible();
-    await expect(page.locator('#map-link')).toHaveValue(/map\.html$/);
+    // The adopted printed code, and a link that matches what it encodes.
+    const qr = page.locator('img.qr-image');
+    await expect(qr).toBeVisible();
+    expect(await qr.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBe(true);
+    await expect(page.locator('#map-link')).toHaveValue('https://almasjidalnabawi.vercel.app');
     await page.getByRole('link', { name: 'ابدأ استخدام الخريطة' }).click();
     await expect(page).toHaveURL(/map\.html$/);
     await expect(page.locator('.hdr')).toBeVisible();
@@ -24,13 +27,13 @@ test.describe('landing', () => {
 
 test.describe('filters', () => {
   const EXPECTED: [string, number][] = [
-    ['all', 201],
+    ['all', 200],
     ['gates', 112],
     ['women', 33],
-    ['toilets', 38],
+    ['toilets', 36],
     ['hotels', 8],
     ['food', 12],
-    ['landmarks', 19],
+    ['landmarks', 20],
     ['wheelchair', 8],
     ['parking', 13],
     ['emergency', 2],
@@ -54,15 +57,21 @@ test.describe('filters', () => {
 
     await page.locator('.pill[data-f="toilets"]').click();
     await page.locator('.subpill[data-s="open"]').click();
-    await expect.poll(() => count(page)).toBe(33);
+    await expect.poll(() => count(page)).toBe(36);
     await page.locator('.subpill[data-s="closed"]').click();
-    await expect.poll(() => count(page)).toBe(5);
+    await expect.poll(() => count(page)).toBe(0);
   });
 });
 
 test.describe('search and sheet', () => {
   test('Arabic digits, Enter picks the first result and opens its card', async ({ page, errors: _ }) => {
-    await openMap(page);
+    // Close 215 for elevator works first (everything starts open).
+    await openMap(page, 'ar', '?admin=1');
+    const admin = page.locator('.admin');
+    await admin.locator('summary').click();
+    await admin.locator('select').selectOption('215');
+    await admin.locator('[data-act="works"]').click();
+    await admin.locator('summary').click();
     await search(page, '٢١٥');
     await expect(page.locator('.res').first()).toContainText('215');
     await page.getByRole('combobox').press('Enter');
@@ -146,9 +155,9 @@ test.describe('languages', () => {
       await page.locator(`#lang-menu [data-lang="${code}"]`).click();
       await expect(page.locator('html')).toHaveAttribute('lang', code);
       await expect(page.locator('html')).toHaveAttribute('dir', dir);
-      await expect.poll(() => count(page)).toBe(201);
+      await expect.poll(() => count(page)).toBe(200);
       // Digits stay Latin in every language.
-      await expect(page.locator('#hdr-sub')).toContainText('201');
+      await expect(page.locator('#hdr-sub')).toContainText('200');
     }
   });
 });
@@ -166,10 +175,10 @@ test.describe('admin simulator', () => {
     const select = admin.locator('select');
     await select.selectOption('215');
     await admin.locator('[data-act="works"]').click();
-    await expect(select.locator('option[value="215"]')).toContainText('مفتوح');
-    await expect(select.locator('option[value="216"]')).toContainText('مفتوح');
-    await admin.locator('[data-act="works"]').click();
+    await expect(select.locator('option[value="215"]')).toContainText('أعمال مصعد');
     await expect(select.locator('option[value="216"]')).toContainText('أعمال مصعد');
+    await admin.locator('[data-act="works"]').click();
+    await expect(select.locator('option[value="216"]')).toContainText('مفتوح');
   });
 });
 
@@ -196,5 +205,140 @@ test.describe('PWA', () => {
     expect(m.start_url).toBe('./map.html');
     expect(m.icons.map((i: { sizes: string }) => i.sizes)).toEqual(expect.arrayContaining(['192x192', '512x512']));
     expect(m.icons.some((i: { purpose: string }) => i.purpose === 'maskable')).toBe(true);
+  });
+});
+
+test.describe('regressions', () => {
+  test('searching while a card is open shows the full results list', async ({ page, errors: _ }) => {
+    await openMap(page);
+    await page.locator('.rawdah-card').click();
+    await expect(page.locator('.sheet')).toHaveAttribute('data-state', 'half');
+    await search(page, '33');
+    await expect(page.locator('#ui-top')).not.toHaveClass(/is-route-compact/);
+    await expect(page.locator('.res')).toHaveCount(8);
+    for (const r of await page.locator('.res').all()) await expect(r).toBeInViewport();
+  });
+
+  test('a place picked while markers are hidden is still marked on the map', async ({ page, errors: _ }) => {
+    await openMap(page);
+    await page.locator('[data-visibility]').click();
+    await expect(page.locator('.mk')).toHaveCount(0);
+    await search(page, '215');
+    await page.getByRole('combobox').press('Enter');
+    await expect(page.locator('.mk.is-selected')).toHaveCount(1);
+  });
+});
+
+test.describe('route summary without live tracking', () => {
+  test.use({ geolocation: { latitude: 24.4685, longitude: 39.6084, accuracy: 15 }, permissions: ['geolocation'] });
+
+  test('distance and time stay on screen above the end button', async ({ page, errors: _ }) => {
+    await openMap(page);
+    await search(page, '204');
+    await page.getByRole('combobox').press('Enter');
+    await page.locator('[data-act="route"]').click();
+    const box = page.locator('.route-box');
+    await expect(box).toBeInViewport({ ratio: 1 });
+    await expect(page.locator('[data-act="endroute"]')).toBeInViewport();
+    // The navigation bar never covers the sheet.
+    await expect(page.locator('.navigation-status')).toBeVisible();
+    const nav = (await page.locator('.navigation-status').boundingBox())!;
+    const sheet = (await page.locator('.sheet').boundingBox())!;
+    expect(nav.y + nav.height).toBeLessThanOrEqual(sheet.y + 1);
+  });
+});
+
+test.describe('walking robustness', () => {
+  test.use({ geolocation: { latitude: 24.4685, longitude: 39.6084, accuracy: 15 }, permissions: ['geolocation'] });
+
+  test('a stray tap on the map does not end the route; a new destination stops navigation', async ({ page, errors: _ }) => {
+    await openMap(page);
+    await search(page, '204');
+    await page.getByRole('combobox').press('Enter');
+    await page.locator('[data-act="route"]').click();
+    await expect(page.locator('path.route-line')).toHaveCount(1);
+    await page.mouse.click(60, 300); // empty map area
+    await expect(page.locator('path.route-line')).toHaveCount(1);
+    await expect(page.locator('.navigation-status')).toBeVisible();
+
+    await search(page, '215');
+    await page.getByRole('combobox').press('Enter');
+    await expect(page.locator('.sheet .sh-title')).toContainText('215');
+    await expect(page.locator('path.route-line')).toHaveCount(0);
+    await expect(page.locator('.navigation-status')).toHaveCount(0);
+    await expect(page.locator('body')).not.toHaveClass(/is-navigating/);
+  });
+});
+
+test('map header theme button switches and remembers the theme', async ({ page, errors: _ }) => {
+  await page.addInitScript(() => localStorage.setItem('theme', 'light'));
+  await openMap(page);
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await page.locator('#map-theme').click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  expect(await page.evaluate(() => localStorage.getItem('theme'))).toBe('dark');
+  await expect(page.locator('#map-theme')).toHaveAttribute('aria-label', 'الوضع النهاري');
+});
+
+test('the QR download is a PNG of the printed code', async ({ page, errors: _ }) => {
+  await page.goto('./');
+  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('#download').click()]);
+  const path = await download.path();
+  const { readFileSync } = await import('node:fs');
+  const bytes = readFileSync(path!);
+  expect(bytes.subarray(1, 4).toString()).toBe('PNG');
+  expect(bytes.length).toBeGreaterThan(2000);
+});
+
+test('a shared place link (?poi=) opens that place, and the share button builds such a link', async ({ page, context, errors: _ }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.addInitScript(() => Object.defineProperty(navigator, 'share', { value: undefined }));
+  await page.goto('map.html?poi=204');
+  await expect(page.locator('.sheet .sh-title')).toContainText('204');
+  await expect(page.locator('.mk-pin')).toHaveCount(1);
+  await page.locator('[data-act="share"]').click();
+  await expect(page.locator('.toast')).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/map\.html\?poi=204$/);
+});
+
+test.describe('live location while walking', () => {
+  test.use({ geolocation: { latitude: 24.4685, longitude: 39.60849, accuracy: 10 }, permissions: ['geolocation'] });
+  const step = (n: number) => ({ latitude: 24.4685 - (n * 2.5) / 111_320, longitude: 39.60849, accuracy: 10 });
+
+  test('"my location" keeps following the visitor (it used to read once and stop)', async ({ page, context, errors: _ }) => {
+    await openMap(page);
+    await page.locator('.mc-btn.is-locate').click();
+    const dot = page.locator('.me');
+    await expect(dot).toBeVisible();
+    await page.waitForTimeout(1500); // fly-to settles
+    const before = (await dot.boundingBox())!;
+    for (let i = 1; i <= 8; i++) {
+      await context.setGeolocation(step(i));
+      await page.waitForTimeout(1000);
+    }
+    const after = (await dot.boundingBox())!;
+    // 20 m south at zoom ≥ 18 is well over 15 screen pixels.
+    expect(after.y - before.y).toBeGreaterThan(15);
+  });
+
+  test('navigation: remaining distance falls walking on, rises walking back, and warns', async ({ page, context, errors: _ }) => {
+    await page.goto('map.html?poi=204');
+    await expect(page.locator('.sheet .sh-title')).toContainText('204');
+    await page.locator('[data-act="route"]').click();
+    const metresLeft = async () => Number((await page.locator('.navigation-status .nav-big').nth(1).textContent())!.match(/\d+/)![0]);
+    await expect(page.locator('.navigation-status .nav-big')).toHaveCount(2);
+    const start = await metresLeft();
+    for (let i = 1; i <= 8; i++) {
+      await context.setGeolocation(step(i));
+      await page.waitForTimeout(1000);
+    }
+    const mid = await metresLeft();
+    expect(mid).toBeLessThan(start - 10);
+    for (let i = 7; i >= 0; i--) {
+      await context.setGeolocation(step(i));
+      await page.waitForTimeout(1000);
+    }
+    expect(await metresLeft()).toBeGreaterThan(mid + 10);
+    await expect(page.locator('.navigation-status')).toHaveAttribute('data-state', 'away');
   });
 });

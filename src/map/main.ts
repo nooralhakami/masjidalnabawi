@@ -4,12 +4,13 @@ import { initPwa } from '../pwa';
 import '../styles/main.css';
 import '../styles/map.css';
 import '../styles/ui.css';
+import '../styles/refresh.css';
 import { POI_BY_ID, RULES } from '../data';
 import type { Poi } from '../data/types';
 import { Facilities } from '../domain/facilities';
-import type { FilterId, ToiletSub } from '../domain/filters';
+import { FILTERS, type FilterId, type ToiletSub } from '../domain/filters';
 import { visiblePois } from '../domain/visible';
-import { t } from '../i18n';
+import { nm, t } from '../i18n';
 import { applyLang, initialLang } from '../i18n/dom';
 import { AdminPanel } from '../ui/admin';
 import { Header } from '../ui/header';
@@ -17,12 +18,15 @@ import { Pills } from '../ui/pills';
 import { RawdahCard } from '../ui/rawdah-card';
 import { Sheet } from '../ui/sheet';
 import { PoiLayer } from './layer';
-import { Locator } from './locate';
+import { LocationService } from '../location/LocationService';
+import { MeMarker } from '../location/MeMarker';
 import { RouteLayer } from './route-layer';
 import { createMap } from './setup';
 import { NavigationTracker } from '../navigation/NavigationTracker';
+import { applyTheme, savedTheme } from '../ui/theme';
 import { toast } from '../ui/toast';
 
+applyTheme(savedTheme(), false);
 applyLang(initialLang());
 document.title = t('title');
 
@@ -38,9 +42,32 @@ const fac = new Facilities();
 const handle = createMap(document.getElementById('map')!);
 const map = handle.map;
 const layer = new PoiLayer(map, fac, (p) => select(p, false));
-const locator = new Locator(map);
+// One live location for the whole app: the "my location" button and navigation share it.
+const geo = new LocationService();
+const me = new MeMarker(map);
+geo.onFix((f) => {
+  // During navigation the tracker draws the marker (snapped to the route when close).
+  if (!navigation.active) me.update(f.lat, f.lng, f.accuracy, f.heading);
+});
+geo.onStatus((s, extra) => {
+  if (s === 'locating') toast(t('locating'), 2500);
+  else if (s === 'denied') toast(t('geo_deny'), 6000);
+  else if (s === 'unsupported') toast(t('geo_unsup'), 6000);
+  else if (s === 'far' && extra) toast(t('geo_far', { k: extra.km < 10 ? extra.km.toFixed(1) : String(Math.round(extra.km)) }), 6000);
+  if (s === 'idle' || s === 'denied' || s === 'far') me.remove();
+});
 const route = new RouteLayer(map);
-const navigation = new NavigationTracker(map, () => route.latLngs);
+const navigation = new NavigationTracker(map, geo, me, () => route.latLngs, (from) => {
+  // Left the route: redraw it from where the visitor actually is.
+  const dest = state.selected !== null ? POI_BY_ID.get(state.selected) : undefined;
+  if (!dest || !route.active) return;
+  const info = route.show([from.lat, from.lng], [dest.lat, dest.lng]);
+  navigation.routeChanged();
+  sheet.setRoute(info);
+  toast(t('rerouted'));
+});
+
+navigation.onChange((s) => document.body.classList.toggle('is-navigating', s.state !== 'stopped'));
 
 const header = new Header({
   onQuery(q) {
@@ -51,12 +78,17 @@ const header = new Header({
   onLang: (l) => applyLang(l),
   status: (id) => fac.status(id),
 });
-const pills = new Pills(state.filter, state.toiletSub, (f, s, hidden) => {
-  state.filter = f;
-  state.toiletSub = s;
-  state.markersHidden = hidden;
-  refresh();
-});
+const pills = new Pills(
+  state.filter,
+  state.toiletSub,
+  (f, s, hidden) => {
+    state.filter = f;
+    state.toiletSub = s;
+    state.markersHidden = hidden;
+    refresh();
+  },
+  () => Object.fromEntries(FILTERS.map(({ id }) => [id, visiblePois(id, 'all', '', fac).length])),
+);
 const top = document.getElementById('ui-top')!;
 top.append(header.root, pills.root);
 
@@ -71,6 +103,7 @@ const sheet = new Sheet(fac, {
   close: () => deselect(),
   goTo: (p) => select(p, true),
   route: (p) => void drawRoute(p),
+  share: (p) => void sharePlace(p),
   endRoute: () => {
     navigation.stop();
     route.clear();
@@ -78,10 +111,21 @@ const sheet = new Sheet(fac, {
   },
   state: (s) => {
     bottom.classList.toggle('is-hidden', s !== 'closed');
-    top.classList.toggle('is-route-compact', s !== 'closed' && sheet.current !== null);
+    // Lets the live-navigation bar sit just above the sheet.
+    requestAnimationFrame(syncSheetHeight);
+    // Compact header only while walking a route (it would hide search results otherwise).
+    top.classList.toggle('is-route-compact', s !== 'closed' && sheet.hasRoute);
   },
 });
 document.body.append(sheet.root);
+
+/** Visible sheet height as a CSS variable, from its real position once it has settled. */
+function syncSheetHeight() {
+  const top = sheet.root.dataset.state === 'closed' ? window.innerHeight : sheet.root.getBoundingClientRect().top;
+  document.body.style.setProperty('--sheet-h', `${Math.max(0, Math.round(window.innerHeight - top))}px`);
+}
+sheet.root.addEventListener('transitionend', (e) => e.propertyName === 'transform' && syncSheetHeight());
+window.addEventListener('resize', syncSheetHeight);
 
 if (new URLSearchParams(location.search).get('admin') === '1') {
   const admin = new AdminPanel(fac);
@@ -112,9 +156,9 @@ function focus(p: Poi, zoom: number, fly: boolean) {
 
 /** Location is requested only now, on demand. */
 async function drawRoute(p: Poi) {
-  const from = locator.position ?? (await locator.locate());
-  if (!from || state.selected !== p.id) return;
-  const info = route.show(from, [p.lat, p.lng]);
+  const fix = geo.fresh() ?? (await geo.start());
+  if (!fix || state.selected !== p.id) return;
+  const info = route.show([fix.lat, fix.lng], [p.lat, p.lng]);
   sheet.setRoute(info);
   await navigation.start();
   const topH = top.getBoundingClientRect().bottom;
@@ -125,13 +169,29 @@ async function drawRoute(p: Poi) {
   });
 }
 
+/** Share a link that opens this exact place (map.html?poi=ID). */
+async function sharePlace(p: Poi) {
+  const url = new URL('./map.html', location.href);
+  url.searchParams.set('poi', String(p.id));
+  const data = { title: nm(p), text: `${nm(p)} — ${t('title')}`, url: url.href };
+  try {
+    if (navigator.share) await navigator.share(data);
+    else {
+      await navigator.clipboard.writeText(url.href);
+      toast(t('place_link_copied'));
+    }
+  } catch {
+    // Dismissed share sheet or blocked clipboard.
+  }
+}
+
 document.getElementById('map-share')?.addEventListener('click', async () => {
-  const shareData = { title: t('title'), text: 'دليل زوار المسجد النبوي', url: new URL('./', location.href).href };
+  const shareData = { title: t('title'), text: t('title'), url: new URL('./', location.href).href };
   try {
     if (navigator.share) await navigator.share(shareData);
     else {
       await navigator.clipboard.writeText(shareData.url);
-      toast('تم نسخ رابط التطبيق');
+      toast(t('app_link_copied'));
     }
   } catch {
     // The user may dismiss the native share sheet.
@@ -139,12 +199,16 @@ document.getElementById('map-share')?.addEventListener('click', async () => {
 });
 
 document.getElementById('map')!.addEventListener('locate-request', async () => {
-  const ll = await locator.locate();
-  if (ll) map.flyTo(ll, Math.max(map.getZoom(), 18), { duration: 0.8 });
+  const f = await geo.start();
+  if (f) map.flyTo([f.lat, f.lng], Math.max(map.getZoom(), 18), { duration: 0.8 });
 });
 
 function select(p: Poi, fly: boolean) {
-  if (state.selected !== p.id) route.clear();
+  if (state.selected !== p.id) {
+    // A new destination ends the current walk entirely (GPS watch, wake lock, status bar).
+    navigation.stop();
+    route.clear();
+  }
   state.selected = p.id;
   layer.select(p.id);
   sheet.show(p);
@@ -160,7 +224,8 @@ function deselect() {
 }
 
 map.on('click', () => {
-  if (state.selected !== null) deselect();
+  // While walking a route, a stray tap on the map must not end it (use «إنهاء المسار»).
+  if (state.selected !== null && !route.active) deselect();
 });
 
 document.addEventListener('langchange', () => {
@@ -175,7 +240,14 @@ document.addEventListener('langchange', () => {
 
 refresh();
 
+// Deep link: map.html?poi=215 opens that place directly (shared links, printed signs).
+{
+  const id = Number(new URLSearchParams(location.search).get('poi'));
+  const p = Number.isInteger(id) ? POI_BY_ID.get(id) : undefined;
+  if (p) map.whenReady(() => setTimeout(() => select(p, true), 50));
+}
+
 // Dev-only handles for debugging in the browser console.
-if (import.meta.env.DEV) Object.assign(window, { __map: map, __layer: layer, __fac: fac, __route: route });
+if (import.meta.env.DEV) Object.assign(window, { __map: map, __layer: layer, __fac: fac, __route: route, __geo: geo, __me: me });
 
 initPwa();

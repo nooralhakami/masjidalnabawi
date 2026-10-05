@@ -30,9 +30,12 @@ export class RawdahCard {
   }
 
   render(): void {
+    const s = rawdahState();
+    const c = s.turn === 'women' ? 'var(--cat-women)' : 'var(--cat-men)';
     this.root.innerHTML = `<span class="tile">${icon('dome', 24)}</span>
       <span style="flex:1;min-width:0"><span class="rawdah-title">${esc(t('ro_title'))} · ${esc(t('gate_n', { id: 37 }))}</span>
       <span class="rawdah-meta">${rawdahNowHtml()}</span></span>
-      <span class="flip" style="color:var(--muted)">${icon('chevleft', 20)}</span>`;
+      <span class="flip" style="color:var(--muted)">${icon('chevleft', 20)}</span>
+      <span class="rawdah-progress" style="--c:${c}" aria-hidden="true"><span style="width:${Math.round(s.progress * 100)}%"></span></span>`;
   }
 }

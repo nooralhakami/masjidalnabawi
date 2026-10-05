@@ -8,14 +8,84 @@
   font-family: var(--font-ui);
   background: #e9e4d8;
 }
-.navigation-marker { border: 0; background: transparent; transform: rotate(var(--heading, 0deg)); transform-origin: center; }
-.navigation-marker span { display: block; width: 24px; height: 24px; border-radius: 50%; background: #087fbd; border: 3px solid #fff; box-shadow: 0 2px 8px rgb(0 0 0 / .35); }
-.navigation-marker i { position: absolute; inset: -3px 9px auto; width: 0; height: 0; border-inline: 5px solid transparent; border-bottom: 9px solid #fff; }
-.navigation-accuracy { fill: #168bc2; fill-opacity: .12; stroke: #168bc2; stroke-opacity: .45; }
-.navigation-status { position: fixed; z-index: 1200; inset-inline: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); max-width: 360px; margin-inline: auto; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: var(--surface-2); color: var(--ink); box-shadow: var(--shadow-md); font: 14px var(--font-ui); }
-.navigation-status strong { flex: 1; }
-.navigation-status span { white-space: nowrap; }
-.navigation-status button { border: 0; border-radius: 10px; padding: 7px 10px; background: var(--primary); color: #fff; font: inherit; }
+/* ---------- live navigation ---------- */
+.navigation-marker {
+  border: 0;
+  background: transparent;
+}
+/* Leaflet positions the outer element with an inline transform, so the arrow rotates inside it. */
+.nav-arrow {
+  position: relative;
+  display: block;
+  width: 34px;
+  height: 34px;
+  transform: rotate(var(--heading, 0deg));
+  transition: transform var(--dur) var(--ease);
+}
+.nav-arrow span {
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: #087fbd;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
+}
+.nav-arrow i {
+  position: absolute;
+  top: -2px;
+  left: 12px;
+  width: 0;
+  height: 0;
+  border-inline: 5px solid transparent;
+  border-bottom: 9px solid #087fbd;
+}
+.navigation-accuracy {
+  fill: #168bc2;
+  fill-opacity: 0.12;
+  stroke: #168bc2;
+  stroke-opacity: 0.45;
+}
+.navigation-status {
+  position: fixed;
+  z-index: 1200;
+  inset-inline: 16px;
+  /* Sits just above the bottom sheet (main.ts keeps --sheet-h in sync). */
+  bottom: calc(var(--sheet-h, 0px) + 12px + env(safe-area-inset-bottom));
+  max-width: 420px;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: var(--surface-2);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  font: 14px var(--font-ui);
+  transition: bottom 280ms var(--ease);
+}
+.navigation-status strong {
+  flex: 1;
+}
+.navigation-status[data-state='off-route'] strong,
+.navigation-status[data-state='signal-lost'] strong,
+.navigation-status[data-state='error'] strong {
+  color: #b45309;
+}
+.navigation-status span {
+  white-space: nowrap;
+  color: var(--muted);
+}
+.navigation-status button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 10px;
+  padding: 0 12px;
+  background: var(--primary);
+  color: #fff;
+  font: 600 13px var(--font-ui);
+  cursor: pointer;
+}
 /* Tailwind's preflight (img max-width/height:auto) breaks Leaflet tiles. */
 .leaflet-container img,
 .leaflet-container svg {
@@ -55,26 +125,24 @@
   color: #fff;
   display: grid;
   place-items: center;
-  box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgb(30 42 38 / 0.35);
+  /* White ring + a soft glow in the category colour. */
+  box-shadow: 0 0 0 2px #fff, 0 3px 8px color-mix(in srgb, var(--c) 45%, transparent);
 }
 .mk-dot svg {
-  width: 64%;
-  height: 64%;
-  stroke-width: 2.2;
+  width: 62%;
+  height: 62%;
+  stroke-width: 2.4;
 }
 .mk-mixed {
   background: linear-gradient(90deg, var(--cat-men) 50%, var(--cat-women) 50%);
 }
 .mk.is-closed .mk-dot::after {
+  /* Closed: grey with a white strike across it. */
   content: '';
   position: absolute;
-  inset-block-start: -2px;
-  inset-inline-start: -2px;
-  width: max(6px, calc(var(--d) * 0.42));
-  height: max(6px, calc(var(--d) * 0.42));
+  inset: 0;
   border-radius: 50%;
-  background: #f2a62e;
-  box-shadow: 0 0 0 1.5px #fff;
+  background: linear-gradient(135deg, transparent 45%, #fff 45%, #fff 55%, transparent 55%);
 }
 .mk-s.is-closed .mk-dot::after {
   display: none;
@@ -91,23 +159,33 @@
   height: 8px;
 }
 .mk-chip {
-  min-width: 26px;
-  height: 18px;
-  padding: 0 5px;
+  /* Number chip with a dot in the side colour (calmer than a coloured border). */
+  display: flex !important;
+  align-items: center;
+  gap: 3px;
+  height: 19px;
+  padding: 0 6px 0 5px;
   box-sizing: border-box;
-  border-radius: 9px;
-  border: 1.5px solid var(--c);
+  border-radius: 10px;
   background: var(--surface-2);
   color: var(--ink);
-  font: 700 10.5px/15px var(--font-ui);
-  text-align: center;
-  box-shadow: 0 1px 3px rgb(30 42 38 / 0.25);
+  font: 700 10.5px/1 var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.22);
+}
+.mk-chip::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--c);
 }
 .mk-m .mk-chip {
   font-size: 9.5px;
-  height: 16px;
-  line-height: 13px;
-  min-width: 22px;
+  height: 17px;
+  padding: 0 5px 0 4px;
 }
 .mk-inum {
   width: 18px;
@@ -120,13 +198,86 @@
   box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgb(30 42 38 / 0.3);
 }
 .mk-park {
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 6px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 7px;
   background: var(--cat-men);
   color: #fff;
-  font: 700 10px/18px var(--font-ui);
-  box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgb(30 42 38 / 0.3);
+  font: 700 10.5px/20px var(--font-ui);
+  box-shadow: 0 0 0 2px #fff, 0 3px 8px color-mix(in srgb, var(--cat-men) 40%, transparent);
+}
+
+/* ---------- selected place: a dropped pin ---------- */
+.leaflet-marker-icon.mk.mk-pinwrap {
+  display: block;
+}
+.mk-pin {
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50% 50% 50% 4px;
+  transform: rotate(-45deg);
+  background: var(--c);
+  display: grid !important;
+  place-items: center;
+  box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--gold), 0 10px 20px rgb(0 0 0 / 0.3);
+  animation: pin-drop 320ms var(--spring) both, pin-pulse 1.8s ease-out 320ms infinite;
+}
+.mk-pin.mk-mixed {
+  background: linear-gradient(45deg, var(--cat-men) 50%, var(--cat-women) 50%);
+}
+.mk-pin svg {
+  width: 22px;
+  height: 22px;
+  color: #fff;
+  stroke-width: 2.2;
+  transform: rotate(45deg);
+}
+.mk-pinwrap::after {
+  /* Ground shadow under the tip. */
+  content: '';
+  position: absolute;
+  left: 15px;
+  bottom: 0;
+  width: 18px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.28);
+  filter: blur(1.5px);
+}
+@keyframes pin-drop {
+  from {
+    transform: translateY(-26px) rotate(-45deg);
+    opacity: 0;
+  }
+}
+@keyframes pin-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--gold), 0 0 0 6px rgb(201 161 91 / 0.45), 0 10px 20px rgb(0 0 0 / 0.3);
+  }
+  60% {
+    box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--gold), 0 0 0 16px rgb(201 161 91 / 0), 0 10px 20px rgb(0 0 0 / 0.3);
+  }
+}
+
+/* ---------- markers pop in when the filter changes ---------- */
+.mk-pop .mk:not(.mk-pinwrap) > span {
+  animation: mk-in 200ms var(--ease) both;
+}
+@keyframes mk-in {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk-pin,
+  .mk-pop .mk > span {
+    animation: none;
+  }
 }
 .mk.is-selected > span {
   transform: scale(1.35);
@@ -185,15 +336,27 @@
 .mc-btn.is-locate {
   color: #0277bd;
 }
-.mc-rotate {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 8px;
+.mc-right {
+  gap: 10px;
 }
 .mc-rotate .mc-btn {
-  width: 40px;
   height: 40px;
-  box-shadow: var(--shadow-sm);
+}
+/* Compass: red north half turns with the map so it always points to true north. */
+.mc-compass svg {
+  width: 24px;
+  height: 24px;
+  transform: rotate(var(--bearing, 0deg));
+  transition: transform 120ms linear;
+}
+.mc-compass .needle-n {
+  color: #c62828;
+}
+.mc-compass .needle-s {
+  color: var(--muted);
+}
+.mc-compass.is-rotated {
+  background: var(--tint-green) !important;
 }
 .mc-zoom {
   display: flex;
@@ -320,4 +483,9 @@
   .route-flow {
     animation: none;
   }
+}
+
+:root[data-theme='dark'] .map-root,
+:root[data-theme='dark'] .leaflet-container {
+  background: #141d1a;
 }

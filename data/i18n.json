@@ -235,7 +235,11 @@
    "سقيفة بني ساعدة": "Historic site west of the mosque.",
    "مسجد الغمامة": "Historic mosque.",
    "مسجد أبو بكر الصديق": "Historic mosque.",
-   "مسجد علي بن أبي طالب": "Historic mosque."
+   "مسجد علي بن أبي طالب": "Historic mosque.",
+   "مدخل منطقة خلف الروضة للنساء (أمام باب 21)": "Women's entrance to the area behind the Rawdah, after Isha prayer until 12:00 midnight. This is not the Rawdah entrance: the Rawdah is entered through Gate 37 with a Nusuk permit.",
+   "مركز خدمات الحجاج والمعتمرين (جنوب)": "Pilgrims & Umrah visitors services center, between Gates 306 and 307 on the south side of the mosque plazas.",
+   "مركز خدمات الحجاج والمعتمرين (شمال)": "Pilgrims & Umrah visitors services center (north), between Gates 330 and 331 on the north side of the mosque plazas — not next to Gate 21.",
+   "دورات كبار السن وذوي الاحتياجات الخاصة 204": "Restrooms for the elderly and people with special needs on the lower floor, with an elevator. The upper floor houses the Two Holy Mosques Exhibition (a museum) of rare, historic Quran manuscripts and artefacts from the time of the Prophet ﷺ, his Companions and their Followers."
   },
   "names": {
    "مركز صحي الصافية": "Al-Safiyah Health Center",
@@ -280,7 +284,8 @@
    "مطعم عربسك": "Arabesque Restaurant",
    "مطعم الروضة": "Al Rawdah Restaurant",
    "مطعم كورال": "Coral Restaurant",
-   "مطعم زيتون": "Zaitoon Restaurant"
+   "مطعم زيتون": "Zaitoon Restaurant",
+   "مدخل منطقة خلف الروضة للنساء (أمام باب 21)": "Women's entrance to the area behind the Rawdah (facing Gate 21)"
   }
  },
  "tr": {
@@ -422,7 +427,11 @@
    "سقيفة بني ساعدة": "Mescidin batısında tarihî alan.",
    "مسجد الغمامة": "Tarihî mescit.",
    "مسجد أبو بكر الصديق": "Tarihî mescit.",
-   "مسجد علي بن أبي طالب": "Tarihî mescit."
+   "مسجد علي بن أبي طالب": "Tarihî mescit.",
+   "مدخل منطقة خلف الروضة للنساء (أمام باب 21)": "Yatsı namazından gece 12:00'ye kadar Ravza'nın arkasındaki alana kadınlara özel giriş. Bu Ravza girişi değildir: Ravza'ya Nusuk izniyle 37. kapıdan girilir.",
+   "مركز خدمات الحجاج والمعتمرين (جنوب)": "Hacı ve umreci hizmet merkezi; mescit meydanlarının güneyinde, 306 ve 307 numaralı kapılar arasında.",
+   "مركز خدمات الحجاج والمعتمرين (شمال)": "Hacı ve umreci hizmet merkezi (kuzey); mescit meydanlarının kuzeyinde, 330 ve 331 numaralı kapılar arasında — 21. kapının yanında değil.",
+   "دورات كبار السن وذوي الاحتياجات الخاصة 204": "Alt katta yaşlılar ve özel ihtiyaç sahipleri için asansörlü tuvaletler. Üst katta nadir ve tarihî Kur'an yazmaları ile Hz. Peygamber ﷺ, sahabe ve tâbiîn dönemine ait eşyaların sergilendiği Harameyn Sergisi (müze) bulunur."
   },
   "names": {
    "مركز صحي الصافية": "Safiye Sağlık Merkezi",
@@ -467,7 +476,8 @@
    "مطعم عربسك": "Arabesque Restoran",
    "مطعم الروضة": "Al Rawdah Restoran",
    "مطعم كورال": "Coral Restoran",
-   "مطعم زيتون": "Zaitoon Restoran"
+   "مطعم زيتون": "Zaitoon Restoran",
+   "مدخل منطقة خلف الروضة للنساء (أمام باب 21)": "Ravza'nın arkasındaki alana kadınlar girişi (21. kapının karşısı)"
   }
  },
  "ur": {
@@ -609,7 +619,11 @@
    "سقيفة بني ساعدة": "مسجد کے مغرب میں تاریخی مقام۔",
    "مسجد الغمامة": "تاریخی مسجد۔",
    "مسجد أبو بكر الصديق": "تاریخی مسجد۔",
-   "مسجد علي بن أبي طالب": "تاریخی مسجد۔"
+   "مسجد علي بن أبي طالب": "تاریخی مسجد۔",
+   "مدخل منطقة خلف الروضة للنساء (أمام باب 21)": "عشاء کی نماز کے بعد رات 12:00 بجے تک ریاض الجنہ کے پیچھے والے حصے میں خواتین کے لیے مخصوص داخلہ۔ یہ ریاض الجنہ کا داخلہ نہیں؛ ریاض الجنہ میں داخلہ نسک پرمٹ کے ساتھ دروازہ 37 سے ہوتا ہے۔",
+   "مركز خدمات الحجاج والمعتمرين (جنوب)": "حجاج و معتمرین سروس سینٹر، مسجد کے صحن کی جنوبی جانب دروازہ 306 اور 307 کے درمیان۔",
+   "مركز خدمات الحجاج والمعتمرين (شمال)": "حجاج و معتمرین سروس سینٹر (شمال)، مسجد کے صحن کی شمالی جانب دروازہ 330 اور 331 کے درمیان — دروازہ 21 کے پاس نہیں۔",
+   "دورات كبار السن وذوي الاحتياجات الخاصة 204": "نچلی منزل پر بزرگوں اور خصوصی ضروریات والے افراد کے لیے لفٹ والے واش روم۔ اوپری منزل پر حرمین شریفین نمائش (میوزیم) ہے جس میں قرآن کریم کے نایاب اور تاریخی مخطوطات، اور نبی کریم ﷺ، صحابہ اور تابعین کے زمانے کی اشیاء رکھی گئی ہیں۔"
   },
   "names": {
    "مركز صحي الصافية": "صافیہ صحت مرکز",
@@ -654,7 +668,8 @@
    "مطعم عربسك": "عربسک ریستوران",
    "مطعم الروضة": "الروضہ ریستوران",
    "مطعم كورال": "کورل ریستوران",
-   "مطعم زيتون": "زیتون ریستوران"
+   "مطعم زيتون": "زیتون ریستوران",
+   "مدخل منطقة خلف الروضة للنساء (أمام باب 21)": "ریاض الجنہ کے پیچھے والے حصے میں خواتین کا داخلہ (دروازہ 21 کے سامنے)"
   }
  },
  "id": {
@@ -796,7 +811,11 @@
    "سقيفة بني ساعدة": "Situs bersejarah di sebelah barat masjid.",
    "مسجد الغمامة": "Masjid bersejarah.",
    "مسجد أبو بكر الصديق": "Masjid bersejarah.",
-   "مسجد علي بن أبي طالب": "Masjid bersejarah."
+   "مسجد علي بن أبي طالب": "Masjid bersejarah.",
+   "مدخل منطقة خلف الروضة للنساء (أمام باب 21)": "Pintu masuk khusus wanita ke area di belakang Raudhah setelah salat Isya hingga pukul 12.00 malam. Ini bukan pintu masuk Raudhah: Raudhah dimasuki melalui Pintu 37 dengan izin Nusuk.",
+   "مركز خدمات الحجاج والمعتمرين (جنوب)": "Pusat layanan jemaah haji dan umrah, di antara Gerbang 306 dan 307 di sisi selatan pelataran masjid.",
+   "مركز خدمات الحجاج والمعتمرين (شمال)": "Pusat layanan jemaah haji dan umrah (utara), di antara Gerbang 330 dan 331 di sisi utara pelataran masjid — bukan di samping Pintu 21.",
+   "دورات كبار السن وذوي الاحتياجات الخاصة 204": "Toilet untuk lansia dan penyandang kebutuhan khusus di lantai bawah, dilengkapi lift. Lantai atas menampung Pameran Dua Masjid Suci (museum) naskah Al-Qur’an bersejarah yang langka serta benda-benda dari masa Nabi ﷺ, para sahabat, dan tabi’in."
   },
   "names": {
    "مركز صحي الصافية": "Pusat Kesehatan Ash-Shafiyah",
@@ -841,7 +860,8 @@
    "مطعم عربسك": "Restoran Arabesque",
    "مطعم الروضة": "Restoran Al Rawdah",
    "مطعم كورال": "Restoran Coral",
-   "مطعم زيتون": "Restoran Zaitoon"
+   "مطعم زيتون": "Restoran Zaitoon",
+   "مدخل منطقة خلف الروضة للنساء (أمام باب 21)": "Pintu masuk wanita ke area di belakang Raudhah (di depan Pintu 21)"
   }
  },
  "uz": {
@@ -983,7 +1003,11 @@
    "سقيفة بني ساعدة": "Masjidning g‘arbidagi tarixiy joy.",
    "مسجد الغمامة": "Tarixiy masjid.",
    "مسجد أبو بكر الصديق": "Tarixiy masjid.",
-   "مسجد علي بن أبي طالب": "Tarixiy masjid."
+   "مسجد علي بن أبي طالب": "Tarixiy masjid.",
+   "مدخل منطقة خلف الروضة للنساء (أمام باب 21)": "Xufton namozidan keyin tungi 12:00 gacha Ravza ortidagi hududga ayollar uchun maxsus kirish joyi. Bu Ravzaga kirish joyi emas: Ravzaga Nusuk ruxsatnomasi bilan 37-eshikdan kiriladi.",
+   "مركز خدمات الحجاج والمعتمرين (جنوب)": "Hojilar va umra ziyoratchilari xizmat markazi; masjid hovlilarining janubida, 306 va 307-darvozalar orasida.",
+   "مركز خدمات الحجاج والمعتمرين (شمال)": "Hojilar va umra ziyoratchilari xizmat markazi (shimol); masjid hovlilarining shimolida, 330 va 331-darvozalar orasida — 21-eshik yonida emas.",
+   "دورات كبار السن وذوي الاحتياجات الخاصة 204": "Pastki qavatda keksalar va alohida ehtiyojli insonlar uchun liftli hojatxonalar. Yuqori qavatda Qur’oni Karimning noyob va qadimiy qo‘lyozmalari hamda Payg‘ambar ﷺ, sahobalar va tobeinlar davriga oid buyumlar — Ikki Muqaddas Masjid ko‘rgazmasi (muzeyi) joylashgan."
   },
   "names": {
    "مركز صحي الصافية": "Safiya tibbiyot markazi",
@@ -1028,7 +1052,8 @@
    "مطعم عربسك": "Arabesque restorani",
    "مطعم الروضة": "Al Rawdah restorani",
    "مطعم كورال": "Coral restorani",
-   "مطعم زيتون": "Zaitoon restorani"
+   "مطعم زيتون": "Zaitoon restorani",
+   "مدخل منطقة خلف الروضة للنساء (أمام باب 21)": "Ravza ortidagi hududga ayollar kirish joyi (21-eshik qarshisida)"
   }
  }
 }

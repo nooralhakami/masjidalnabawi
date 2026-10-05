@@ -7,6 +7,8 @@
 }
 
 html {
+  /* Latin digits of equal width: distances and times don't jitter as they update. */
+  font-variant-numeric: tabular-nums;
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-ui);

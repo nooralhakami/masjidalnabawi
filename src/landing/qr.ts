@@ -27,6 +27,25 @@ export function qrSvg(text: string, size = 216, color = '#0E4D3A'): string {
   return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" aria-hidden="true" shape-rendering="crispEdges"><rect width="${size}" height="${size}" fill="#fff"/><path d="${d}" fill="${color}"/></svg>`;
 }
 
+/** Rasterise a same-origin QR image (e.g. an SVG) to a 1024px PNG with crisp modules. */
+export function imageToPng(src: string, px = 1024): Promise<Blob> {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = px;
+      const ctx = canvas.getContext('2d')!;
+      ctx.imageSmoothingEnabled = false;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, px, px);
+      ctx.drawImage(img, 0, 0, px, px);
+      canvas.toBlob((b) => (b ? res(b) : rej(new Error('PNG failed'))), 'image/png');
+    };
+    img.onerror = () => rej(new Error(`Cannot load ${src}`));
+    img.src = src;
+  });
+}
+
 /** Print-ready PNG (4-module quiet zone, black on white) as a Blob. */
 export function qrPng(text: string, px = 1024): Promise<Blob> {
   const { n, dark } = matrix(text);

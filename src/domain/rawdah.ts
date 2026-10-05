@@ -9,8 +9,11 @@ export type RawdahTurn = 'women' | 'men';
 
 export interface RawdahState {
   turn: RawdahTurn;
-  /** When the current turn ends. */
+  /** When the current turn started and ends. */
+  since: Date;
   until: Date;
+  /** Share of the current turn already elapsed, 0–1. */
+  progress: number;
   /** Minutes left in the current turn (rounded up). */
   minutesLeft: number;
   isha: Date;
@@ -47,22 +50,29 @@ export function rawdahState(now: Date = new Date()): RawdahState {
   const nextMidnight = new Date(midnightStart.getTime() + 24 * HOUR);
 
   let turn: RawdahTurn;
+  let since: Date;
   let until: Date;
   const t = now.getTime();
   if (t < fajr.getTime()) {
     turn = 'men';
+    since = midnightStart;
     until = fajr;
   } else if (t < ten.getTime()) {
     turn = 'women';
+    since = fajr;
     until = ten;
   } else if (t < isha.getTime()) {
     turn = 'men';
+    since = ten;
     until = isha;
   } else {
     turn = 'women';
+    since = isha;
     until = nextMidnight;
   }
-  return { turn, until, minutesLeft: Math.max(0, Math.ceil((until.getTime() - t) / 60_000)), isha, fajr };
+  const span = until.getTime() - since.getTime();
+  const progress = span > 0 ? Math.min(1, Math.max(0, (t - since.getTime()) / span)) : 0;
+  return { turn, since, until, progress, minutesLeft: Math.max(0, Math.ceil((until.getTime() - t) / 60_000)), isha, fajr };
 }
 
 /** Split minutes into hours and minutes for display. */

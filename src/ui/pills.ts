@@ -27,6 +27,8 @@ export class Pills {
     private filter: FilterId,
     private toiletSub: ToiletSub,
     private onChange: (f: FilterId, s: ToiletSub, hidden: boolean) => void,
+    /** How many places each pill shows (displayed as a small count). */
+    private counts: () => Partial<Record<FilterId, number>> = () => ({}),
   ) {
     this.root = document.createElement('div');
     this.root.innerHTML = '<nav class="pills" id="pills"></nav><div class="subpills" id="subpills" role="group" hidden></div>';
@@ -65,9 +67,10 @@ export class Pills {
     this.bar.setAttribute('aria-label', t('filters'));
     const filters = FILTERS.map(({ id, label }) => {
       const [ic, c] = LOOK[id];
-      return `<button type="button" class="pill" data-f="${id}" aria-pressed="${id === this.filter}" style="--c:${c}">${icon(ic, 17)}${esc(t(label))}</button>`;
+      const n = this.counts()[id];
+      return `<button type="button" class="pill" data-f="${id}" aria-pressed="${id === this.filter}" style="--c:${c}"><span class="pill-ic">${icon(ic, 15)}</span>${esc(t(label))}${n !== undefined ? `<span class="pill-n">${n}</span>` : ''}</button>`;
     }).join('');
-    const visibility = `<button type="button" class="pill visibility-pill" data-visibility aria-pressed="${this.hidden}" aria-label="${this.hidden ? 'إظهار العلامات' : 'إخفاء العلامات'}">${icon('eye-off', 16)}</button>`;
+    const visibility = `<button type="button" class="pill visibility-pill" data-visibility aria-pressed="${this.hidden}" aria-label="${esc(t(this.hidden ? 'markers_show' : 'markers_hide'))}" title="${esc(t(this.hidden ? 'markers_show' : 'markers_hide'))}">${icon('eye-off', 16)}</button>`;
     this.bar.innerHTML = filters + visibility;
     this.sub.hidden = this.filter !== 'toilets';
     this.sub.setAttribute('aria-label', t('toilet_filter'));
