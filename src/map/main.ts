@@ -8,7 +8,7 @@ import '../styles/refresh.css';
 import { POI_BY_ID, RULES } from '../data';
 import type { Poi } from '../data/types';
 import { Facilities } from '../domain/facilities';
-import { FILTERS, type FilterId, type ToiletSub } from '../domain/filters';
+import { FILTERS, type FilterId, type ParkingSub, type ToiletSub } from '../domain/filters';
 import { visiblePois } from '../domain/visible';
 import { nm, t } from '../i18n';
 import { applyLang, initialLang } from '../i18n/dom';
@@ -25,12 +25,13 @@ import { createMap } from './setup';
 import { NavigationTracker } from '../navigation/NavigationTracker';
 import { applyTheme, savedTheme } from '../ui/theme';
 import { toast } from '../ui/toast';
+import { nearestEntrance, parkingEntrances } from '../domain/parking';
 
 applyTheme(savedTheme(), false);
 applyLang(initialLang());
 document.title = t('title');
 
-const state = { filter: 'all' as FilterId, toiletSub: 'all' as ToiletSub, query: '', selected: null as number | null, markersHidden: false };
+const state = { filter: 'all' as FilterId, toiletSub: 'all' as ToiletSub, parkingSub: 'all' as ParkingSub, query: '', selected: null as number | null, markersHidden: false };
 
 const app = document.getElementById('app')!;
 app.innerHTML = `
@@ -61,7 +62,9 @@ const navigation = new NavigationTracker(map, geo, me, () => route.latLngs, (fro
   // Left the route: redraw it from where the visitor actually is.
   const dest = state.selected !== null ? POI_BY_ID.get(state.selected) : undefined;
   if (!dest || !route.active) return;
-  const info = route.show([from.lat, from.lng], [dest.lat, dest.lng]);
+  const parking = dest.category === 'parking' ? nearestEntrance([from.lat, from.lng], dest) : null;
+  const target = parking?.entrance ?? dest;
+  const info = route.show([from.lat, from.lng], [target.lat, target.lng], parking ? { entrances: parkingEntrances(dest), nearest: parking.entrance } : undefined);
   navigation.routeChanged();
   sheet.setRoute(info);
   toast(t('rerouted'));
@@ -81,13 +84,14 @@ const header = new Header({
 const pills = new Pills(
   state.filter,
   state.toiletSub,
-  (f, s, hidden) => {
+  (f, s, hidden, parkingSub) => {
     state.filter = f;
     state.toiletSub = s;
+    state.parkingSub = parkingSub;
     state.markersHidden = hidden;
     refresh();
   },
-  () => Object.fromEntries(FILTERS.map(({ id }) => [id, visiblePois(id, 'all', '', fac).length])),
+  () => Object.fromEntries(FILTERS.map(({ id }) => [id, visiblePois(id, 'all', '', fac, undefined, id === 'parking' ? 'all' : undefined).length])),
 );
 const top = document.getElementById('ui-top')!;
 top.append(header.root, pills.root);
@@ -135,7 +139,7 @@ if (new URLSearchParams(location.search).get('admin') === '1') {
 
 /** Recompute visible POIs for the filter + query, then update map, count and results. */
 function refresh() {
-  const vis = visiblePois(state.filter, state.toiletSub, state.query, fac);
+  const vis = visiblePois(state.filter, state.toiletSub, state.query, fac, undefined, state.parkingSub);
   layer.set(vis, state.filter, state.markersHidden);
   header.setCount(vis.length);
   header.showResults(vis, vis.length);
@@ -158,7 +162,9 @@ function focus(p: Poi, zoom: number, fly: boolean) {
 async function drawRoute(p: Poi) {
   const fix = geo.fresh() ?? (await geo.start());
   if (!fix || state.selected !== p.id) return;
-  const info = route.show([fix.lat, fix.lng], [p.lat, p.lng]);
+  const parking = p.category === 'parking' ? nearestEntrance([fix.lat, fix.lng], p) : null;
+  const target = parking?.entrance ?? p;
+  const info = route.show([fix.lat, fix.lng], [target.lat, target.lng], parking ? { entrances: parkingEntrances(p), nearest: parking.entrance } : undefined);
   sheet.setRoute(info);
   await navigation.start();
   const topH = top.getBoundingClientRect().bottom;

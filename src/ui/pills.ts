@@ -1,4 +1,4 @@
-import { FILTERS, TOILET_SUBS, type FilterId, type ToiletSub } from '../domain/filters';
+import { FILTERS, PARKING_SUBS, TOILET_SUBS, type FilterId, type ParkingSub, type ToiletSub } from '../domain/filters';
 import { t } from '../i18n';
 import { esc } from './dom';
 import { icon, type IconName } from './icons';
@@ -22,11 +22,12 @@ export class Pills {
   private bar: HTMLElement;
   private sub: HTMLElement;
   private hidden = false;
+  private parkingSub: ParkingSub = 'all';
 
   constructor(
     private filter: FilterId,
     private toiletSub: ToiletSub,
-    private onChange: (f: FilterId, s: ToiletSub, hidden: boolean) => void,
+    private onChange: (f: FilterId, s: ToiletSub, hidden: boolean, parkingSub: ParkingSub) => void,
     /** How many places each pill shows (displayed as a small count). */
     private counts: () => Partial<Record<FilterId, number>> = () => ({}),
   ) {
@@ -40,25 +41,27 @@ export class Pills {
       if (visibility) {
         this.hidden = !this.hidden;
         this.render();
-        this.onChange(this.filter, this.toiletSub, this.hidden);
+        this.onChange(this.filter, this.toiletSub, this.hidden, this.parkingSub);
         return;
       }
       const b = target.closest<HTMLElement>('[data-f]');
       if (!b) return;
       this.filter = b.dataset.f as FilterId;
       if (this.filter !== 'toilets') this.toiletSub = 'all';
+      if (this.filter !== 'parking') this.parkingSub = 'all';
       this.hidden = false;
       this.render();
       b.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
-      this.onChange(this.filter, this.toiletSub, this.hidden);
+      this.onChange(this.filter, this.toiletSub, this.hidden, this.parkingSub);
     });
     this.sub.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>('[data-s]');
       if (!b) return;
-      this.toiletSub = b.dataset.s as ToiletSub;
+      if (this.filter === 'parking') this.parkingSub = b.dataset.s as ParkingSub;
+      else this.toiletSub = b.dataset.s as ToiletSub;
       this.hidden = false;
       this.render();
-      this.onChange(this.filter, this.toiletSub, this.hidden);
+      this.onChange(this.filter, this.toiletSub, this.hidden, this.parkingSub);
     });
     this.render();
   }
@@ -72,10 +75,12 @@ export class Pills {
     }).join('');
     const visibility = `<button type="button" class="pill visibility-pill" data-visibility aria-pressed="${this.hidden}" aria-label="${esc(t(this.hidden ? 'markers_show' : 'markers_hide'))}" title="${esc(t(this.hidden ? 'markers_show' : 'markers_hide'))}">${icon('eye-off', 16)}</button>`;
     this.bar.innerHTML = filters + visibility;
-    this.sub.hidden = this.filter !== 'toilets';
-    this.sub.setAttribute('aria-label', t('toilet_filter'));
-    this.sub.innerHTML = TOILET_SUBS.map(
-      ({ id, label }) => `<button type="button" class="subpill" data-s="${id}" aria-pressed="${id === this.toiletSub}">${esc(t(label))}</button>`,
+    this.sub.hidden = this.filter !== 'toilets' && this.filter !== 'parking';
+    this.sub.setAttribute('aria-label', t(this.filter === 'parking' ? 'parking_filter' : 'toilet_filter'));
+    const subs = this.filter === 'parking' ? PARKING_SUBS : TOILET_SUBS;
+    const active = this.filter === 'parking' ? this.parkingSub : this.toiletSub;
+    this.sub.innerHTML = subs.map(
+      ({ id, label }) => `<button type="button" class="subpill" data-s="${id}" aria-pressed="${id === active}">${esc(t(label))}</button>`,
     ).join('');
   }
 }

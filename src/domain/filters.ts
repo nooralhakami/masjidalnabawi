@@ -1,9 +1,11 @@
 import type { Category, Poi } from '../data/types';
 import type { Facilities } from './facilities';
 import { isClosed } from './facilities';
+import { parkingAccess } from './parking';
 
 export type FilterId = 'all' | 'gates' | 'women' | 'toilets' | 'hotels' | 'food' | 'landmarks' | 'wheelchair' | 'parking' | 'emergency';
 export type ToiletSub = 'all' | 'open' | 'closed';
+export type ParkingSub = 'all' | 'public' | 'subscribers';
 
 /** Filter pills in display order, with their i18n.json label keys. */
 export const FILTERS: readonly { id: FilterId; label: string }[] = [
@@ -19,6 +21,12 @@ export const FILTERS: readonly { id: FilterId; label: string }[] = [
   { id: 'emergency', label: 'p_emergency' },
 ];
 
+export const PARKING_SUBS: readonly { id: ParkingSub; label: string }[] = [
+  { id: 'all', label: 'park_f_all' },
+  { id: 'public', label: 'park_f_public' },
+  { id: 'subscribers', label: 'park_f_sub' },
+];
+
 export const TOILET_SUBS: readonly { id: ToiletSub; label: string }[] = [
   { id: 'all', label: 's_all' },
   { id: 'open', label: 's_open' },
@@ -28,6 +36,7 @@ export const TOILET_SUBS: readonly { id: ToiletSub; label: string }[] = [
 export interface FilterState {
   filter: FilterId;
   toiletSub: ToiletSub;
+  parkingSub?: ParkingSub;
   /** A non-empty search query makes parking visible under any filter. */
   searching: boolean;
 }
@@ -38,7 +47,7 @@ const SAME_CATEGORY: readonly Category[] = ['hotels', 'food', 'landmarks', 'emer
 export function passesFilter(p: Poi, s: FilterState, fac: Facilities): boolean {
   const f = s.filter;
   // Parking only ever shows with its own pill or while searching.
-  if (p.category === 'parking') return f === 'parking' || s.searching;
+  if (p.category === 'parking') return (f === 'parking' && ((s.parkingSub ?? 'all') === 'all' || parkingAccess(p) === (s.parkingSub ?? 'all'))) || s.searching;
   switch (f) {
     case 'all':
       return true;

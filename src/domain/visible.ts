@@ -1,13 +1,13 @@
 import { POIS } from '../data';
 import type { Poi } from '../data/types';
 import type { Facilities } from './facilities';
-import { passesFilter, type FilterId, type ToiletSub } from './filters';
+import { passesFilter, type FilterId, type ParkingSub, type ToiletSub } from './filters';
 import { matchRank } from './search';
 
 /** POIs shown on the map for the current filter + query; ranked when searching. */
-export function visiblePois(filter: FilterId, toiletSub: ToiletSub, query: string, fac: Facilities, pois: readonly Poi[] = POIS): Poi[] {
+export function visiblePois(filter: FilterId, toiletSub: ToiletSub, query: string, fac: Facilities, pois: readonly Poi[] = POIS, parkingSub: ParkingSub = 'all'): Poi[] {
   const q = query.trim();
-  const state = { filter, toiletSub, searching: q.length > 0 };
+  const state = { filter, toiletSub, parkingSub, searching: q.length > 0 };
   const passing = pois.filter((p) => passesFilter(p, state, fac));
   if (!q) return passing;
   return passing

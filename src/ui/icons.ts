@@ -9,6 +9,7 @@ const PATHS = {
   accessible: '<circle cx="11" cy="4" r="1.8"/><path d="M11 7.5V13h5l2.5 6"/><path d="M8 10.5a5.5 5.5 0 1 0 7.5 7"/>',
   cart: '<circle cx="9" cy="16.5" r="4"/><circle cx="18" cy="19" r="1.5"/><path d="M5 4h2l2 8.5h7l2 6.5"/><path d="M9 8.5h6"/>',
   parking: '<rect x="4" y="3" width="16" height="18" rx="3"/><path d="M9.5 17V7h3.5a3 3 0 0 1 0 6H9.5"/>',
+  lock: '<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
   hotel: '<path d="M3 19V6"/><path d="M3 15h18v4"/><path d="M21 15v-3a3 3 0 0 0-3-3h-7v6"/><circle cx="7" cy="11.5" r="1.8"/>',
   food: '<path d="M7 3v18"/><path d="M4.5 3v5a2.5 2.5 0 0 0 5 0V3"/><path d="M17 21V3c-2.2 1.2-3.5 4-3.5 8H17"/>',
   landmark: '<path d="M12 3l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.3 6.8 19l1-5.8L3.6 9.1l5.8-.8z"/>',
