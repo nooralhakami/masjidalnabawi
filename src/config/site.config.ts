@@ -6,11 +6,11 @@ import type { LangCode } from '../data/types';
  * QR_IMAGE: path to a ready-made QR image (relative to the site root); when set it replaces the generated code.
  */
 export const SITE = {
-  QR_URL: '',
-  QR_IMAGE: '',
-  ORG_NAME: '[ORG_NAME]',
+  QR_URL: 'https://almasjidalnabawi.vercel.app',
+  QR_IMAGE: '/almasjidalnabawi-qr.svg',
+  ORG_NAME: 'دليل زوار المسجد النبوي',
   DEFAULT_LANG: 'ar' as LangCode,
-  SITE_URL: '',
+  SITE_URL: 'https://almasjidalnabawi.vercel.app',
   /**
    * Light base map. rules.json's CARTO URL now needs an API key, so OpenStreetMap's standard tiles are used.
    * For heavy traffic, follow https://operations.osmfoundation.org/policies/tiles/ or switch to a keyed provider.
