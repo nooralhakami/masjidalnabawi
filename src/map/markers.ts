@@ -116,7 +116,7 @@ export function markerSpec(p: Poi, tier: Tier, status: Status | undefined, selec
   } else if (p.category === 'parking') {
     const subscriber = p.access === 'subscribers';
     const title = subscriber ? 'Subscribers only' : 'Open to all';
-    inner = `<span class="mk-park${subscriber ? ' is-sub' : ''}" title="${title}" aria-label="${title}">${subscriber ? icon('lock', 10) : ''}P${p.id - 900}</span>`;
+    inner = `<span class="mk-park-wrap${subscriber ? ' is-sub' : ''}" title="${title}" aria-label="${title}"><span class="mk-park">P${p.id - 900}</span>${subscriber ? `<span class="mk-park-lock" aria-hidden="true">${icon('lock', 10)}</span>` : ''}</span>`;
     z = 200;
   } else {
     const d = FACILITY_SIZE[tier];
