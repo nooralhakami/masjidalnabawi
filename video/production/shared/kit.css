@@ -1,0 +1,153 @@
+/* Shared look for both films — values copied from the app (src/styles/tokens.css, dark theme). */
+:root {
+  --green-900: #0e4d3a;
+  --green-700: #17785a;
+  --green-300: #8fd3b4;
+  --gold: #c9a15b;
+  --night: #0f1714;
+  --surface: #18231f;
+  --surface-2: #22302b;
+  --line: #2c3a35;
+  --ink: #ece8df;
+  --muted: #a3b2ab;
+  --cat-women: #83409b;
+  --cat-women-soft: #c58fdb;
+  --cat-men: #1f64a8;
+  --dir-south: #2f7d4f;
+  --dir-west: #c96f1e;
+  --dir-north: #b03f66;
+  --dir-east: #2a77b5;
+  --glass: rgb(16 24 21 / 0.78);
+  --glass-line: rgb(255 255 255 / 0.08);
+  --f-ui: 'IBM Plex Sans Arabic', sans-serif;
+  --f-display: 'Noto Kufi Arabic', 'IBM Plex Sans Arabic', sans-serif;
+  --f-urdu: 'Noto Naskh Arabic', 'IBM Plex Sans Arabic', serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { overflow: hidden; background: var(--night); }
+#root {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: var(--night);
+  color: var(--ink);
+  font-family: var(--f-ui);
+  font-variant-numeric: tabular-nums;
+  direction: rtl;
+}
+.clip { position: absolute; inset: 0; }
+.ltr { direction: ltr; }
+.kufi { font-family: var(--f-display); font-weight: 700; }
+.muted { color: var(--muted); }
+.gold { color: var(--gold); }
+.w, .ch { display: inline-block; }
+
+/* Background: night green + the app's eight-point pattern (landing .hero-pattern), and a soft vignette. */
+.bg { background: radial-gradient(1200px 800px at 70% 30%, #13221d 0%, var(--night) 60%); }
+.pattern {
+  position: absolute;
+  inset: -40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Cg fill='none' stroke='%23C9A15B' stroke-width='1'%3E%3Crect x='21' y='21' width='30' height='30'/%3E%3Crect x='21' y='21' width='30' height='30' transform='rotate(45 36 36)'/%3E%3Ccircle cx='36' cy='36' r='7'/%3E%3Cpath d='M0 0L15 15M72 0L57 15M0 72L15 57M72 72L57 57M36 0V8M36 72V64M0 36H8M72 36H64'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 96px 96px;
+  opacity: 0;
+}
+.vignette { position: absolute; inset: 0; background: radial-gradient(closest-side at 50% 50%, transparent 55%, rgb(5 9 8 / 0.55) 100%); pointer-events: none; }
+
+/* Glass panels and chips — the app's frosted surfaces. */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: 28px;
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-weight: 600;
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+}
+.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--c, var(--gold)); flex: none; }
+.tile {
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  background: linear-gradient(160deg, var(--green-700), var(--green-900));
+  color: var(--gold);
+  box-shadow: inset 0 0 0 1px rgb(201 161 91 / 0.4);
+}
+
+/* Phone mockup: plain dark body, no device branding. Screens are the real app screenshots. */
+.phone { position: absolute; }
+.ph-body {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--ph-r, 64px);
+  background: #0b100e;
+  box-shadow: 0 0 0 2px #2c3a35, 0 40px 90px rgb(0 0 0 / 0.5), 0 0 120px rgb(201 161 91 / 0.06);
+}
+.ph-screen {
+  position: absolute;
+  inset: var(--ph-b, 14px);
+  border-radius: var(--ph-ri, 50px);
+  overflow: hidden;
+  background: #0f1714;
+}
+.ph-cam { position: absolute; inset: 0; }
+.ph-cam img.shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; opacity: 0; }
+.tap {
+  position: absolute;
+  width: 88px;
+  height: 88px;
+  margin: -44px 0 0 -44px;
+  border-radius: 50%;
+  border: 3px solid var(--gold);
+  background: rgb(201 161 91 / 0.16);
+  opacity: 0;
+}
+.hilite {
+  position: absolute;
+  border: 3px solid var(--gold);
+  border-radius: 24px;
+  box-shadow: 0 0 0 9999px rgb(5 9 8 / 0.0);
+  opacity: 0;
+}
+
+/* Satellite credit: kept visible whenever Esri imagery is on screen (owner's decision). */
+.credit {
+  position: absolute;
+  font: 500 15px/1 var(--f-ui);
+  color: rgb(236 232 223 / 0.62);
+  direction: ltr;
+  letter-spacing: 0.01em;
+}
+
+/* Captions (burned-in version). Toggled off with the "captions" variable for the clean master. */
+.captions { position: absolute; inset: 0; pointer-events: none; }
+.captions.off { display: none; }
+.cue {
+  position: absolute;
+  left: 50%;
+  bottom: var(--cue-b, 46px);
+  width: max-content;
+  max-width: var(--cue-w, 1300px);
+  margin-left: calc(var(--cue-w, 1300px) / -2);
+  min-width: var(--cue-w, 1300px);
+  text-align: center;
+  opacity: 0;
+}
+.cue span {
+  display: inline;
+  padding: 8px 22px;
+  border-radius: 14px;
+  background: rgb(15 23 20 / 0.74);
+  font: 600 var(--cue-fs, 38px) / 1.75 var(--f-ui);
+  color: #f3efe6;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}

@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="ar" data-resolution="landscape"
+  data-composition-variables='[{"id":"captions","type":"boolean","label":"Burned-in captions","default":true}]'>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="assets/gsap.min.js"></script>
+<script src="assets/CustomEase.min.js"></script>
+<style>
+/*@@SHARED_CSS@@*/
+
+/* ---------- official film (1920×1080) ---------- */
+#s-sat .sat {
+  position: absolute; left: 460px; top: 120px; width: 1000px; height: 720px;
+  border-radius: 28px; overflow: hidden; box-shadow: 0 30px 80px rgb(0 0 0 / .5), 0 0 0 1px rgb(201 161 91 / .25);
+}
+#s-sat .sat img { position: absolute; width: 1240px; left: -73px; top: -885px; }
+#s-sat .sat .vig { position: absolute; inset: 0; background: radial-gradient(closest-side, transparent 70%, rgb(15 23 20 / .55)); }
+#s-sat .credit { left: 476px; top: 852px; }
+#s-sat .big-star { position: absolute; left: 760px; top: 340px; color: var(--gold); }
+#s-sat .head { position: absolute; left: 0; right: 0; top: 896px; text-align: center; font-size: 50px; line-height: 1.5; }
+.dirchip { position: absolute; font-size: 30px; }
+#d-n { left: 0; right: 0; top: 46px; width: max-content; margin: 0 auto; }
+#d-s { left: 0; right: 0; top: 870px; width: max-content; margin: 0 auto; }
+#d-w { left: 190px; top: 452px; }
+#d-e { left: 1500px; top: 452px; }
+
+#s-title .plate { position: absolute; left: 0; right: 0; top: 120px; margin: 0 auto; width: 380px; padding: 18px 30px; border-radius: 22px; background: #fbf9f4; }
+#s-title .plate img { display: block; width: 100%; height: auto; }
+#s-title .lock { position: absolute; left: 0; right: 0; top: 420px; display: flex; flex-direction: column; align-items: center; gap: 26px; }
+#s-title .tile { width: 132px; height: 132px; border-radius: 34px; }
+#s-title h1 { font-size: 84px; line-height: 1.35; color: var(--green-300); }
+#s-title .sub { font-size: 32px; }
+
+#phone-o { left: 1231px; top: 60px; }
+.panel { position: absolute; right: 790px; top: 150px; width: 980px; }
+.panel .kick { font-size: 28px; font-weight: 700; color: var(--gold); margin-bottom: 18px; display: flex; align-items: center; gap: 12px; }
+.panel h2 { font-size: 58px; line-height: 1.45; margin-bottom: 34px; }
+.stat { display: flex; align-items: baseline; gap: 26px; margin-bottom: 22px; }
+.stat b { font: 700 92px/1 var(--f-ui); min-width: 150px; text-align: left; direction: ltr; }
+.stat span { font-size: 36px; color: var(--ink); }
+.row { display: flex; align-items: center; gap: 22px; margin-bottom: 26px; font-size: 38px; }
+.row .tile { width: 72px; height: 72px; border-radius: 20px; flex: none; }
+.names { display: flex; flex-wrap: wrap; gap: 16px 18px; }
+.names .chip { font-size: 32px; }
+.dots4 { display: inline-flex; gap: 10px; margin-inline-start: 8px; }
+.women .kick { color: var(--cat-women-soft); }
+.women .stat b { color: var(--cat-women-soft); }
+.turn { display: inline-flex; align-items: center; gap: 14px; padding: 14px 28px; border-radius: 999px; background: rgb(131 64 155 / .28); color: #e6c8f2; font-size: 38px; font-weight: 700; }
+#credit-phone { left: 40px; top: 30px; }
+
+#s-langs .kick { position: absolute; left: 0; right: 0; top: 110px; text-align: center; font-size: 34px; color: var(--gold); font-weight: 700; }
+#s-langs .list { position: absolute; left: 0; right: 0; top: 200px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+#s-langs .nm { font-size: 52px; line-height: 1.55; font-weight: 600; color: var(--ink); opacity: 0; }
+#s-langs .nm[lang="ar"] { font-family: var(--f-display); font-weight: 700; }
+#s-langs .nm[lang="ur"] { font-family: var(--f-urdu); font-weight: 400; }
+
+#s-ease .badges { position: absolute; left: 0; right: 0; top: 380px; display: flex; justify-content: center; gap: 34px; }
+#s-ease .badge { width: 430px; padding: 40px 34px; display: flex; flex-direction: column; align-items: center; gap: 22px; text-align: center; font-size: 36px; font-weight: 600; }
+#s-ease .badge .tile { width: 96px; height: 96px; border-radius: 26px; }
+
+#s-end .plate { position: absolute; left: 0; right: 0; top: 70px; margin: 0 auto; width: 330px; padding: 16px 26px; border-radius: 20px; background: #fbf9f4; }
+#s-end .plate img { display: block; width: 100%; height: auto; }
+#s-end .lock { position: absolute; right: 250px; top: 390px; display: flex; align-items: center; gap: 34px; }
+#s-end .tile { width: 132px; height: 132px; border-radius: 34px; }
+#s-end h1 { font-size: 70px; color: var(--green-300); line-height: 1.35; }
+#s-end .sub { font-size: 30px; margin-top: 6px; }
+#s-end .qr { position: absolute; left: 250px; top: 330px; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+#s-end .qr .card { width: 300px; height: 300px; padding: 22px; border-radius: 28px; background: #fff; box-shadow: 0 0 0 3px var(--gold); }
+#s-end .qr .card img { width: 100%; height: 100%; display: block; }
+#s-end .url { font: 600 34px/1 var(--f-ui); color: var(--gold); direction: ltr; }
+#s-end .tag { position: absolute; left: 0; right: 0; top: 800px; text-align: center; font-size: 40px; color: var(--ink); }
+.captions { --cue-w: 1500px; --cue-b: 40px; --cue-fs: 36px; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="80" data-width="1920" data-height="1080">
+
+  <div id="bg" class="clip bg" data-start="0" data-duration="80" data-track-index="0"><div class="pattern" id="pat"></div><div class="vignette"></div></div>
+
+  <!-- 1–2 · satellite view of the Haram with the gate ring (owner's phone shot P-14, UI cropped out) -->
+  <div id="s-sat" class="clip" data-start="0" data-duration="11.2" data-track-index="1">
+    <div class="big-star" id="bigstar"></div>
+    <div class="sat" id="sat"><img src="assets/screens/P-14-map-dark-gates.jpg" alt=""><div class="vig"></div></div>
+    <div class="credit" id="sat-credit">Imagery © Esri, Maxar, Earthstar Geographics</div>
+    <div class="head kufi" id="sat-head">112 بوابة وباباً حول المسجد النبوي</div>
+    <div class="chip dirchip" id="d-n" style="--c:var(--dir-north)"><span class="dot"></span>الشمالية</div>
+    <div class="chip dirchip" id="d-s" style="--c:var(--dir-south)"><span class="dot"></span>الجنوبية</div>
+    <div class="chip dirchip" id="d-w" style="--c:var(--dir-west)"><span class="dot"></span>الغربية</div>
+    <div class="chip dirchip" id="d-e" style="--c:var(--dir-east)"><span class="dot"></span>الشرقية</div>
+  </div>
+
+  <!-- 3 · title -->
+  <div id="s-title" class="clip" data-start="11" data-duration="6.2" data-track-index="1">
+    <div class="plate" id="t-plate"><img src="assets/brand/haramain-logo.png" alt=""></div>
+    <div class="lock">
+      <div class="tile" id="t-tile"></div>
+      <h1 class="kufi" id="t-h1">دليل زوار المسجد النبوي</h1>
+      <div class="sub muted" id="t-sub">المدينة المنورة · خريطة تفاعلية للبوابات والأبواب والخدمات</div>
+    </div>
+  </div>
+
+  <!-- 4–9 · the phone with the real app -->
+  <div id="s-phone" class="clip" data-start="17" data-duration="46" data-track-index="2">
+    <div class="phone" id="phone-o"></div>
+    <div class="credit" id="credit-phone">Imagery © Esri, Maxar, Earthstar Geographics</div>
+  </div>
+
+  <div id="p4" class="clip" data-start="17.4" data-duration="6.6" data-track-index="3">
+    <div class="panel">
+      <div class="kick"><span id="p4-ic"></span>بوابات الحرم</div>
+      <div class="stat"><b id="n70">70</b><span>بوابة خارجية</span></div>
+      <div class="stat"><b id="n42">42</b><span>باباً للمسجد</span></div>
+      <div class="stat"><b id="n4">4</b><span>جهات بألوانها</span><span class="dots4"><span class="dot" style="--c:var(--dir-south)"></span><span class="dot" style="--c:var(--dir-west)"></span><span class="dot" style="--c:var(--dir-north)"></span><span class="dot" style="--c:var(--dir-east)"></span></span></div>
+    </div>
+  </div>
+
+  <div id="p5" class="clip" data-start="24.2" data-duration="8.8" data-track-index="3">
+    <div class="panel">
+      <div class="kick"><span id="p5-ic"></span>ابحث برقم الباب أو اسمه</div>
+      <h2 class="kufi" id="p5-h">اكتب «17»… فيظهر لك الباب</h2>
+      <div class="row" id="p5-r1"><span class="tile" style="color:var(--dir-north)"><span class="dot" style="--c:var(--dir-north);width:22px;height:22px"></span></span>جهته</div>
+      <div class="row" id="p5-r2"><span class="tile" id="p5-gate"></span>أقرب بوابة خارجية إليه</div>
+      <div class="row" id="p5-r3"><span class="tile" id="p5-road"></span>أقرب شارع</div>
+    </div>
+  </div>
+
+  <div id="p6" class="clip" data-start="33" data-duration="6" data-track-index="3">
+    <div class="panel">
+      <div class="kick">سبب التسمية</div>
+      <h2 class="kufi" id="p6-h">22 باباً لها اسم وقصة</h2>
+      <div class="names" id="p6-n">
+        <span class="chip">باب السلام</span><span class="chip">باب الرحمة</span><span class="chip">باب جبريل</span><span class="chip">باب النساء</span><span class="chip">باب البقيع</span><span class="chip">باب عمر بن الخطاب</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="p7" class="clip women" data-start="39" data-duration="7" data-track-index="3">
+    <div class="panel">
+      <div class="kick"><span id="p7-ic"></span>الخدمات النسائية</div>
+      <div class="stat"><b id="n16">16</b><span>باباً في القسم النسائي</span></div>
+      <div class="stat"><b id="n15">15</b><span>مجمع دورات للنساء والمشتركة</span></div>
+      <div class="stat"><b id="n2">2</b><span>مصلّى للنساء</span></div>
+    </div>
+  </div>
+
+  <div id="p8" class="clip" data-start="46" data-duration="8" data-track-index="3">
+    <div class="panel">
+      <div class="kick"><span id="p8-ic"></span>الروضة الشريفة · باب 37</div>
+      <h2 class="kufi" id="p8-h">لمن الوقت الآن… ومتى يتبدّل</h2>
+      <div class="turn" id="p8-t"><span class="dot" style="--c:#c58fdb"></span>الآن: وقت النساء</div>
+    </div>
+  </div>
+
+  <div id="p9" class="clip" data-start="54" data-duration="9" data-track-index="3">
+    <div class="panel">
+      <div class="kick"><span id="p9-ic"></span>مسار المشي</div>
+      <h2 class="kufi" id="p9-h">من موقعك إلى الباب</h2>
+      <div class="row" id="p9-r1"><span class="tile" id="p9-a"></span>عبر ممرات الساحات</div>
+      <div class="row" id="p9-r2"><span class="tile" id="p9-b"></span>يتجنّب جسم المسجد والبقيع</div>
+      <div class="row" id="p9-r3"><span class="tile" id="p9-c"></span>المسافة والوقت المتبقي</div>
+    </div>
+  </div>
+
+  <!-- 10 · six languages (names from the app's data/i18n.json) -->
+  <div id="s-langs" class="clip" data-start="63" data-duration="7.2" data-track-index="1">
+    <div class="kick">بستّ لغات</div>
+    <div class="list">
+      <div class="nm" lang="ar" dir="rtl">باب عمر بن الخطاب – رقم 17</div>
+      <div class="nm" lang="en" dir="ltr">Bab Umar ibn al-Khattab – Gate 17</div>
+      <div class="nm" lang="tr" dir="ltr">Ömer bin Hattab Kapısı – Kapı 17</div>
+      <div class="nm" lang="ur" dir="rtl">باب عمر بن خطاب – دروازہ 17</div>
+      <div class="nm" lang="id" dir="ltr">Gerbang Umar bin Khattab – Gerbang 17</div>
+      <div class="nm" lang="uz" dir="ltr">17-Umar ibn Xattob darvozasi</div>
+    </div>
+  </div>
+
+  <!-- 11 · no barriers -->
+  <div id="s-ease" class="clip" data-start="70" data-duration="5.2" data-track-index="1">
+    <div class="badges">
+      <div class="badge glass"><span class="tile" id="b1"></span>يعمل من المتصفح مباشرة</div>
+      <div class="badge glass"><span class="tile" id="b2"></span>دون تنزيل من المتجر</div>
+      <div class="badge glass"><span class="tile" id="b3"></span>لا يحتاج أي إذن ليعمل</div>
+    </div>
+  </div>
+
+  <!-- 12 · end card -->
+  <div id="s-end" class="clip" data-start="75" data-duration="5" data-track-index="1">
+    <div class="plate" id="e-plate"><img src="assets/brand/haramain-logo.png" alt=""></div>
+    <div class="lock" id="e-lock"><div class="tile" id="e-tile"></div><div><h1 class="kufi" id="e-h1">دليل زوار المسجد النبوي</h1><div class="sub muted">المدينة المنورة</div></div></div>
+    <div class="qr" id="e-qr"><div class="card"><img src="assets/qr.svg" alt=""></div><div class="url">masjidalnabawi.vercel.app</div></div>
+    <div class="tag" id="e-tag">لتصل بيُسر… وتتفرّغ لزيارتك</div>
+  </div>
+
+  <div id="cap" class="clip captions" data-start="0" data-duration="80" data-track-index="9"></div>
+
+  <!-- sound: option (A) — soft effects, no music. Voice-over tracks are added when the takes arrive. -->
+  <audio id="a-room" src="assets/sfx/roomtone.wav" data-start="0" data-duration="80" data-track-index="10" data-volume="0.9"></audio>
+  <audio id="a-chime1" src="assets/sfx/chime.wav" data-start="11.3" data-duration="3.5" data-track-index="11" data-volume="0.55"></audio>
+  <audio id="a-sheet1" src="assets/sfx/sheet.wav" data-start="26.5" data-duration="0.55" data-track-index="12" data-volume="0.6"></audio>
+  <audio id="a-sheet2" src="assets/sfx/sheet.wav" data-start="49.9" data-duration="0.55" data-track-index="12" data-volume="0.6"></audio>
+  <audio id="a-route" src="assets/sfx/route.wav" data-start="55.3" data-duration="1.6" data-track-index="13" data-volume="0.6"></audio>
+  <audio id="a-chime2" src="assets/sfx/chime.wav" data-start="75.3" data-duration="3.5" data-track-index="11" data-volume="0.6"></audio>
+  <audio id="a-tap1" src="assets/sfx/tap.wav" data-start="19.2" data-duration="0.25" data-track-index="14" data-volume="0.7"></audio>
+  <audio id="a-tap2" src="assets/sfx/tap.wav" data-start="24.4" data-duration="0.25" data-track-index="14" data-volume="0.7"></audio>
+  <audio id="a-tap3" src="assets/sfx/tap.wav" data-start="26.2" data-duration="0.25" data-track-index="14" data-volume="0.7"></audio>
+  <audio id="a-tap4" src="assets/sfx/tap.wav" data-start="39.3" data-duration="0.25" data-track-index="14" data-volume="0.7"></audio>
+  <audio id="a-tap5" src="assets/sfx/tap.wav" data-start="49.6" data-duration="0.25" data-track-index="14" data-volume="0.7"></audio>
+  <audio id="a-tap6" src="assets/sfx/tap.wav" data-start="55.0" data-duration="0.25" data-track-index="14" data-volume="0.7"></audio>
+</div>
+
+<script>
+/*@@KIT_JS@@*/
+
+const $ = (s) => document.querySelector(s);
+const tl = gsap.timeline({ paused: true });
+const V = vars();
+if (V.captions === false) $('#cap').classList.add('off');
+
+// ---------- background: the app's pattern breathes in and stays faint ----------
+tl.to('#pat', { opacity: 0.1, duration: 2.4, ease: E }, 0.2);
+tl.to('#pat', { opacity: 0.06, duration: 4, ease: E }, 11);
+tl.to('#pat', { opacity: 0.12, duration: 3, ease: E }, 74.5);
+
+// ---------- 1–2 · satellite (0–11) ----------
+$('#bigstar').innerHTML = star(400, 0.6);
+draw(tl, $('#bigstar svg'), 0.1, 1.6, 0.15);
+tl.to('#bigstar', { opacity: 0, scale: 1.25, duration: 0.9, ease: E }, 1.5);
+tl.fromTo('#sat', { opacity: 0, scale: 1.06 }, { opacity: 1, scale: 1, duration: 1.6, ease: E }, 1.3);
+tl.to('#sat img', { scale: 1.05, duration: 9.6, ease: 'sine.inOut' }, 1.3);
+fadeIn(tl, '#sat-credit', 2.2, { y: 0, dur: 0.6 });
+wordsIn(tl, $('#sat-head'), 2.0, { stagger: 0.12 });
+fadeOut(tl, '#sat-head', 5.6);
+popIn(tl, ['#d-n', '#d-e', '#d-s', '#d-w'], 6.0, { stagger: 0.22 });
+tl.to('#s-sat > *', { opacity: 0, duration: 0.7, ease: E }, 10.4);
+
+// ---------- 3 · title (11–17) ----------
+$('#t-tile').innerHTML = star(84, 1.5);
+fadeIn(tl, '#t-plate', 11.2, { dur: 0.9 });
+popIn(tl, '#t-tile', 11.4, { dur: 0.6 });
+draw(tl, $('#t-tile svg'), 11.5, 1.2, 0.15);
+wordsIn(tl, $('#t-h1'), 12.0, { stagger: 0.12, y: 30 });
+fadeIn(tl, '#t-sub', 12.9, { dur: 0.8 });
+tl.to('#s-title > *', { opacity: 0, duration: 0.6, ease: E }, 16.6);
+
+// ---------- 4–9 · phone (17–63) ----------
+const ph = makePhone($('#phone-o'), [
+  'P-13-map-dark-all.jpg', 'P-14-map-dark-gates.jpg', 'D-search-17.png', 'D-gate17.png', 'D-gate1.png',
+  'P-15-map-dark-women.jpg', 'P-16-map-dark-women-zoom.jpg', 'D-gate37-full.png', 'D-route-17.png',
+], { w: 418, h: 820, bezel: 14, r: 60 });
+tl.fromTo('#phone-o', { opacity: 0, x: 140 }, { opacity: 1, x: 0, duration: 0.9, ease: E }, 17.0);
+tl.to('#phone-o', { scale: 1.03, duration: 45, ease: 'sine.inOut' }, 17.0);
+show(tl, ph, 'P-13-map-dark-all.jpg', 17.0, 0.01);
+fadeIn(tl, '#credit-phone', 17.6, { y: 0 });
+// gates pill → the ring of 112 gates
+tap(tl, ph, 0.53, 0.214, 19.2);
+show(tl, ph, 'P-14-map-dark-gates.jpg', 19.45);
+zoomIn(tl, ph, 0.5, 0.52, 1.22, 21.0, 1.6);
+zoomOut(tl, ph, 23.4, 0.7);
+// search «17» → Gate 17 (Umar ibn al-Khattab, women's section)
+tap(tl, ph, 0.55, 0.137, 24.4);
+show(tl, ph, 'D-search-17.png', 24.7);
+tl.to('#credit-phone', { opacity: 0, duration: 0.4 }, 24.7);
+tap(tl, ph, 0.5, 0.238, 26.2);
+show(tl, ph, 'D-gate17.png', 26.5);
+zoomIn(tl, ph, 0.5, 0.66, 1.42, 27.4, 1.1);
+hilite(tl, ph, [0.36, 0.665, 0.6, 0.038], 28.5, 1.6);
+hilite(tl, ph, [0.04, 0.716, 0.918, 0.085], 30.2, 2.1);
+zoomOut(tl, ph, 32.4, 0.7);
+// a named gate: «سبب التسمية»
+show(tl, ph, 'D-gate1.png', 33.2, 0.4);
+zoomIn(tl, ph, 0.5, 0.56, 1.32, 33.7, 1.1);
+hilite(tl, ph, [0.16, 0.54, 0.67, 0.115], 35.0, 3.0);
+zoomOut(tl, ph, 38.4, 0.6);
+// women's services
+tap(tl, ph, 0.18, 0.214, 39.3);
+show(tl, ph, 'P-15-map-dark-women.jpg', 39.6);
+tl.to('#credit-phone', { opacity: 1, duration: 0.4 }, 39.6);
+show(tl, ph, 'P-16-map-dark-women-zoom.jpg', 42.6, 0.7);
+// Rawdah card → Gate 37 schedule
+zoomIn(tl, ph, 0.5, 0.92, 1.45, 46.0, 1.1);
+hilite(tl, ph, [0.03, 0.862, 0.94, 0.118], 47.0, 2.2);
+zoomOut(tl, ph, 49.2, 0.5);
+tap(tl, ph, 0.5, 0.92, 49.6);
+show(tl, ph, 'D-gate37-full.png', 49.9);
+tl.to('#credit-phone', { opacity: 0, duration: 0.4 }, 49.9);
+zoomIn(tl, ph, 0.5, 0.58, 1.3, 50.6, 1.0);
+hilite(tl, ph, [0.043, 0.49, 0.913, 0.178], 51.4, 2.2);
+zoomOut(tl, ph, 53.7, 0.5);
+// walking route
+show(tl, ph, 'D-gate17.png', 54.1, 0.35);
+tap(tl, ph, 0.57, 0.95, 55.0);
+show(tl, ph, 'D-route-17.png', 55.3, 0.5);
+zoomIn(tl, ph, 0.5, 0.72, 1.36, 56.8, 1.1);
+hilite(tl, ph, [0.04, 0.655, 0.92, 0.09], 58.0, 2.4);
+zoomOut(tl, ph, 60.7, 0.7);
+tl.to('#phone-o', { opacity: 0, x: 120, duration: 0.7, ease: E }, 62.3);
+
+// panels (text side, RTL: enters from the right edge of its column)
+$('#p4-ic').innerHTML = ic('gate', 30);
+fadeIn(tl, '#p4 .kick', 17.6, { y: 0, x: 30 });
+tl.from('#p4 .stat', { opacity: 0, x: 40, duration: 0.7, ease: E, stagger: 0.35 }, 17.9);
+countUp(tl, $('#n70'), 70, 18.0); countUp(tl, $('#n42'), 42, 18.35); countUp(tl, $('#n4'), 4, 18.7, 0.6);
+tl.to('#p4 .panel', { opacity: 0, duration: 0.5, ease: E }, 23.5);
+
+$('#p5-ic').innerHTML = ic('search', 30);
+$('#p5-gate').innerHTML = ic('gate', 36);
+$('#p5-road').innerHTML = ic('route', 36);
+fadeIn(tl, '#p5 .kick', 24.4, { y: 0, x: 30 });
+wordsIn(tl, $('#p5-h'), 24.7, { stagger: 0.1 });
+tl.from(['#p5-r1', '#p5-r2', '#p5-r3'], { opacity: 0, x: 40, duration: 0.6, ease: E, stagger: 0.9 }, 28.4);
+tl.to('#p5 .panel', { opacity: 0, duration: 0.5, ease: E }, 32.5);
+
+fadeIn(tl, '#p6 .kick', 33.2, { y: 0, x: 30 });
+wordsIn(tl, $('#p6-h'), 33.4, { stagger: 0.12 });
+popIn(tl, '#p6-n .chip', 34.6, { stagger: 0.35 });
+tl.to('#p6 .panel', { opacity: 0, duration: 0.5, ease: E }, 38.5);
+
+$('#p7-ic').innerHTML = ic('women', 30);
+fadeIn(tl, '#p7 .kick', 39.4, { y: 0, x: 30 });
+tl.from('#p7 .stat', { opacity: 0, x: 40, duration: 0.7, ease: E, stagger: 0.4 }, 39.8);
+countUp(tl, $('#n16'), 16, 39.9); countUp(tl, $('#n15'), 15, 40.3); countUp(tl, $('#n2'), 2, 40.7, 0.6);
+tl.to('#p7 .panel', { opacity: 0, duration: 0.5, ease: E }, 45.5);
+
+$('#p8-ic').innerHTML = ic('dome', 30);
+fadeIn(tl, '#p8 .kick', 46.2, { y: 0, x: 30 });
+wordsIn(tl, $('#p8-h'), 46.5, { stagger: 0.1 });
+popIn(tl, '#p8-t', 47.6);
+tl.to('#p8 .panel', { opacity: 0, duration: 0.5, ease: E }, 53.5);
+
+$('#p9-ic').innerHTML = ic('route', 30);
+$('#p9-a').innerHTML = ic('walk', 36);
+$('#p9-b').innerHTML = ic('dome', 36);
+$('#p9-c').innerHTML = ic('clock', 36);
+fadeIn(tl, '#p9 .kick', 54.2, { y: 0, x: 30 });
+wordsIn(tl, $('#p9-h'), 54.5, { stagger: 0.1 });
+tl.from(['#p9-r1', '#p9-r2', '#p9-r3'], { opacity: 0, x: 40, duration: 0.6, ease: E, stagger: 0.8 }, 56.4);
+tl.to('#p9 .panel', { opacity: 0, duration: 0.5, ease: E }, 62.3);
+
+// ---------- 10 · languages (63–70) ----------
+fadeIn(tl, '#s-langs .kick', 63.2, { y: 0 });
+const names = [...document.querySelectorAll('#s-langs .nm')];
+names.forEach((n, i) => {
+  const t = 63.5 + i * 0.85;
+  const ltr = n.dir === 'ltr';
+  tl.fromTo(n, { opacity: 0, x: ltr ? -24 : 24 }, { opacity: 1, x: 0, duration: 0.55, ease: E }, t);
+  tl.fromTo(n, { color: '#ece8df' }, { color: '#c9a15b', duration: 0.3, ease: E, immediateRender: false }, t);
+  if (i < names.length - 1) tl.to(n, { color: '#a3b2ab', duration: 0.4, ease: E }, t + 0.85);
+});
+tl.to('#s-langs > *', { opacity: 0, duration: 0.5, ease: E }, 69.6);
+
+// ---------- 11 · no barriers (70–75) ----------
+$('#b1').innerHTML = ic('globe', 46);
+$('#b2').innerHTML = ic('download', 46);
+$('#b3').innerHTML = ic('check', 46);
+popIn(tl, '#s-ease .badge', 70.3, { stagger: 0.45, dur: 0.6 });
+tl.to('#s-ease .badges', { opacity: 0, duration: 0.5, ease: E }, 74.6);
+
+// ---------- 12 · end card (75–80) ----------
+$('#e-tile').innerHTML = star(84, 1.5);
+fadeIn(tl, '#e-plate', 75.2, { dur: 0.8 });
+popIn(tl, '#e-tile', 75.4);
+draw(tl, $('#e-tile svg'), 75.5, 1.1, 0.12);
+tl.fromTo('#e-h1', { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.8, ease: E }, 75.8);
+fadeIn(tl, '#e-lock .sub', 76.2, { dur: 0.6 });
+fadeIn(tl, '#e-qr', 76.3, { dur: 0.8 });
+wordsIn(tl, $('#e-tag'), 76.9, { stagger: 0.12 });
+
+// ---------- captions (Arabic, from the voice-over script) ----------
+captions(tl, $('#cap'), [
+  [0.6, 5.4, 'حول المسجد النبوي 112 بوابةً وباباً،'],
+  [5.6, 10.6, 'وكل زائر يبحث عن طريقه إليها بطمأنينة.'],
+  [11.4, 16.8, 'دليل زوار المسجد النبوي: خريطة تفاعلية تجمع البوابات والأبواب والخدمات في مكان واحد.'],
+  [17.6, 23.8, 'سبعون بوابة خارجية، واثنان وأربعون باباً للمسجد، مرتّبة بألوان جهاتها الأربع.'],
+  [24.4, 32.6, 'اكتب رقم الباب أو اسمه، فتظهر جهته، وأقرب بوابة خارجية إليه، وأقرب شارع.'],
+  [33.2, 38.6, 'ولأبواب كثيرة قصة في اسمها، يرويها الدليل بإيجاز.'],
+  [39.2, 45.8, 'وللزائرات تصنيف خاص: أبواب القسم النسائي، ودورات المياه، والمصليات… في لمسة واحدة.'],
+  [46.2, 53.8, 'وعند الباب رقم 37، يُظهر الدليل لمن الوقت الآن في الروضة الشريفة، ومتى يتبدّل.'],
+  [54.2, 58.6, 'ومن موقعك، يرسم مسار مشي عبر ممرات الساحات،'],
+  [58.6, 62.8, 'بالمسافة والوقت، ويحدّث ما تبقّى وأنت تمشي.'],
+  [63.4, 69.6, 'بستّ لغات،'],
+  [70.0, 74.8, 'ومن المتصفح مباشرة، دون تنزيل من المتجر، ودون أي إذن ليعمل.'],
+  [75.4, 79.7, 'دليل زوار المسجد النبوي… لتصل بيُسر، وتتفرّغ لزيارتك.'],
+]);
+
+window.__timelines['main'] = tl;
+</script>
+</body>
+</html>
