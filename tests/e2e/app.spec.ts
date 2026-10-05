@@ -64,6 +64,15 @@ test.describe('filters', () => {
 });
 
 test.describe('search and sheet', () => {
+  test('shows the named Gate 1 label at zoom 19 and its naming reason', async ({ page, errors: _ }) => {
+    await openMap(page, 'ar', '?poi=1');
+    await page.locator('.leaflet-control-zoom-in').click({ clickCount: 3 });
+    await expect(page.locator('.gate-label')).toContainText('باب السلام');
+    await page.locator('.leaflet-control-zoom-out').click();
+    await expect(page.locator('.gate-label')).toHaveCount(0);
+    await expect(page.locator('.sheet')).toContainText('سبب التسمية');
+  });
+
   test('Arabic digits, Enter picks the first result and opens its card', async ({ page, errors: _ }) => {
     // Close 215 for elevator works first (everything starts open).
     await openMap(page, 'ar', '?admin=1');

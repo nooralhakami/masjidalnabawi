@@ -5,7 +5,9 @@ import { icon, type IconName } from '../ui/icons';
 
 /** Zoom tiers drive marker size and progressive disclosure. */
 export type Tier = 's' | 'm' | 'l';
-export const tierOf = (zoom: number): Tier => (zoom <= 16 ? 's' : zoom < 18 ? 'm' : 'l');
+export const tierOf = (zoom: number): Tier => (zoom <= 16 ? 's' : zoom < 19 ? 'm' : 'l');
+
+export const gateLabelVisible = (p: Poi, zoom: number): boolean => p.subCategory === 'gate_inner' && zoom >= 19 && p.name_ar !== `باب رقم ${p.id}`;
 
 /** Facility marker diameter per tier: ≤16 → 10px, 17 → 14px, ≥18 → 20px. */
 export const FACILITY_SIZE: Record<Tier, number> = { s: 10, m: 14, l: 20 };

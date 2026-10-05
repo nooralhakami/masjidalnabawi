@@ -8,6 +8,30 @@ const count = (pred: (p: Poi) => boolean) => POIS.filter(pred).length;
 const ids = (pred: (p: Poi) => boolean) => POIS.filter(pred).map((p) => p.id).sort((a, b) => a - b);
 const range = (a: number, b: number) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 
+describe('inner gate names and descriptions', () => {
+  const named = [1, 2, 3, 4, 5, 8, 11, 13, 17, 19, 21, 23, 25, 29, 32, 34, 37, 38, 39, 40, 41, 42];
+  it('uses the approved Arabic names and non-empty descriptions', () => {
+    for (const id of named) {
+      const p = POI_BY_ID.get(id)!;
+      expect(p.subCategory).toBe('gate_inner');
+      expect(p.name_ar).toContain(`- رقم ${id}`);
+      expect(p.description_ar.trim()).not.toBe('');
+    }
+    expect(POI_BY_ID.get(10)?.name_ar).toBe('باب رقم 10');
+    expect(POI_BY_ID.get(37)?.rawdah).toBe(true);
+  });
+  it('has translated names and descriptions for every named gate', () => {
+    for (const lang of ['en', 'tr', 'ur', 'id', 'uz'] as const) {
+      for (const id of named) {
+        const p = POI_BY_ID.get(id)!;
+        expect(I18N[lang].gi?.[id]).toBeTruthy();
+        expect(I18N[lang].descs?.[p.name_ar]).toBeTruthy();
+      }
+      expect(I18N[lang].gi?.[10]).toBeUndefined();
+    }
+  });
+});
+
 describe('pois.json', () => {
   it('has 213 POIs with unique ids (accessible restrooms 409/410 removed, landmark 604 added)', () => {
     expect(POIS).toHaveLength(213);
