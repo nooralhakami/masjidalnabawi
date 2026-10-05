@@ -197,10 +197,16 @@
   text-align: center;
   box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgb(30 42 38 / 0.3);
 }
+.mk-park-wrap {
+  position: relative;
+  display: inline-flex;
+  padding-top: 3px;
+}
 .mk-park {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  justify-content: center;
+  min-width: 30px;
   height: 20px;
   padding: 0 6px;
   border-radius: 7px;
@@ -209,11 +215,28 @@
   font: 700 10.5px/20px var(--font-ui);
   box-shadow: 0 0 0 2px #fff, 0 3px 8px color-mix(in srgb, var(--cat-men) 40%, transparent);
 }
-.mk-park.is-sub {
+.mk-park-wrap.is-sub .mk-park {
   background: var(--cat-park-sub);
 }
-.mk-park svg {
-  flex: 0 0 auto;
+.mk-park-lock {
+  position: absolute;
+  top: -5px;
+  inset-inline-start: 50%;
+  z-index: 2;
+  display: grid;
+  width: 16px;
+  height: 14px;
+  place-items: center;
+  transform: translateX(-50%);
+  border: 1.5px solid #fff;
+  border-radius: 5px 5px 3px 3px;
+  background: var(--cat-park-sub);
+  color: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / .35);
+}
+.mk-park-lock svg {
+  position: relative;
+  z-index: 1;
 }
 
 .parking-entrance {
