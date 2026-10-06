@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ar" data-resolution="portrait"
+  data-composition-variables='[{"id":"captions","type":"boolean","label":"Burned-in captions","default":true}]'>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<script src="assets/gsap.min.js"></script>
+<script src="assets/CustomEase.min.js"></script>
+<style>
+/*@@SHARED_CSS@@*/
+
+/* ---------- guide film (1080×1920, safe margins 120px top/bottom) ---------- */
+.step { position: absolute; left: 60px; right: 60px; top: 150px; display: flex; align-items: center; gap: 26px; }
+.step .num { width: 92px; height: 92px; flex: none; border-radius: 50%; display: grid; place-items: center; border: 3px solid var(--gold); color: var(--gold); font: 700 46px/1 var(--f-ui); }
+.step h2 { font-size: 54px; line-height: 1.4; }
+.sub-chips { position: absolute; left: 60px; right: 60px; top: 268px; display: flex; gap: 14px; }
+.sub-chips .chip { font-size: 30px; }
+
+#g-hook h1 { position: absolute; left: 60px; right: 60px; top: 170px; font-size: 84px; line-height: 1.4; color: var(--green-300); }
+#g-hook .sat { position: absolute; left: 60px; top: 420px; width: 960px; height: 1060px; border-radius: 32px; overflow: hidden; box-shadow: 0 30px 80px rgb(0 0 0 / .5), 0 0 0 1px rgb(201 161 91 / .25); }
+#g-hook .sat img { position: absolute; width: 1180px; left: -50px; top: -651px; }
+#g-hook .credit { left: 76px; top: 1494px; }
+
+#g-qr .card { position: absolute; left: 290px; top: 560px; width: 500px; height: 500px; padding: 30px; border-radius: 40px; background: #fff; box-shadow: 0 0 0 4px var(--gold); }
+#g-qr .card img { width: 100%; height: 100%; display: block; }
+#g-qr .url { position: absolute; left: 0; right: 0; top: 1120px; text-align: center; font: 600 46px/1 var(--f-ui); color: var(--gold); direction: ltr; }
+#g-qr .hint { position: absolute; left: 0; right: 0; top: 1210px; text-align: center; font-size: 38px; }
+#g-qr .scan { position: absolute; left: 320px; width: 440px; height: 4px; top: 590px; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); box-shadow: 0 0 18px var(--gold); opacity: 0; }
+
+#phone-g { left: 218px; top: 380px; }
+#g-phone .credit { left: 0; right: 0; top: 1660px; text-align: center; }
+
+#g-end .lock { position: absolute; left: 0; right: 0; top: 330px; display: flex; flex-direction: column; align-items: center; gap: 28px; }
+#g-end .tile { width: 150px; height: 150px; border-radius: 40px; }
+#g-end h1 { font-size: 72px; line-height: 1.35; color: var(--green-300); text-align: center; }
+#g-end .card { position: absolute; left: 330px; top: 860px; width: 420px; height: 420px; padding: 26px; border-radius: 36px; background: #fff; box-shadow: 0 0 0 4px var(--gold); }
+#g-end .card img { width: 100%; height: 100%; display: block; }
+#g-end .url { position: absolute; left: 0; right: 0; top: 1330px; text-align: center; font: 600 44px/1 var(--f-ui); color: var(--gold); direction: ltr; }
+#g-end .inst { position: absolute; left: 0; right: 0; top: 1420px; text-align: center; font-size: 40px; }
+.captions { --cue-w: 960px; --cue-b: 150px; --cue-fs: 44px; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="43.5" data-width="1080" data-height="1920">
+
+  <div id="bg" class="clip bg" data-start="0" data-duration="43.5" data-track-index="0"><div class="pattern" id="pat"></div><div class="vignette"></div></div>
+
+  <!-- hook: the women's view on real satellite imagery (owner's phone shot P-15, UI cropped out) -->
+  <div id="g-hook" class="clip" data-start="0.0" data-duration="4.78" data-track-index="1">
+    <h1 class="kufi" id="h-title">تبحث عن بابك؟</h1>
+    <div class="sat" id="h-sat"><img src="assets/screens/P-15-map-dark-women.jpg" alt=""></div>
+    <div class="credit">Imagery © Esri, Maxar, Earthstar Geographics</div>
+  </div>
+
+  <!-- step 1 · open -->
+  <div id="g-s1" class="clip" data-start="4.5" data-duration="5.79" data-track-index="2">
+    <div class="step"><span class="num">1</span><h2 class="kufi" id="s1-h">امسح الرمز أو افتح الرابط</h2></div>
+  </div>
+  <div id="g-qr" class="clip" data-start="4.5" data-duration="2.99" data-track-index="3">
+    <div class="card" id="qr-card"><img src="assets/qr.svg" alt=""></div>
+    <div class="scan" id="qr-scan"></div>
+    <div class="url" id="qr-url">masjidalnabawi.vercel.app</div>
+    <div class="hint muted" id="qr-hint">من المتصفح مباشرة · دون تنزيل من المتجر</div>
+  </div>
+
+  <!-- the phone with the real app (steps 1–4 + extras) -->
+  <div id="g-phone" class="clip" data-start="6.93" data-duration="31.42" data-track-index="4">
+    <div class="phone" id="phone-g"></div>
+    <div class="credit" id="g-credit">Imagery © Esri, Maxar, Earthstar Geographics</div>
+  </div>
+
+  <div id="g-s2" class="clip" data-start="10.2" data-duration="7.5" data-track-index="2">
+    <div class="step"><span class="num">2</span><h2 class="kufi" id="s2-h">اكتب رقم البوابة أو اسمها</h2></div>
+  </div>
+  <div id="g-s3" class="clip" data-start="17.7" data-duration="8.5" data-track-index="2">
+    <div class="step"><span class="num">3</span><h2 class="kufi" id="s3-h">اختر التصنيف</h2></div>
+    <div class="sub-chips"><span class="chip" id="c-w" style="--c:var(--cat-women)"><span class="dot"></span>الخدمات النسائية</span><span class="chip" id="c-g" style="--c:var(--dir-south)"><span class="dot"></span>بوابات الحرم</span></div>
+  </div>
+  <div id="g-s4" class="clip" data-start="26.2" data-duration="5.7" data-track-index="2">
+    <div class="step"><span class="num">4</span><h2 class="kufi" id="s4-h">ارسم المسار من موقعك</h2></div>
+  </div>
+  <div id="g-s5" class="clip" data-start="31.9" data-duration="6.27" data-track-index="2">
+    <div class="step"><span class="num" id="s5-n"></span><h2 class="kufi" id="s5-h">الروضة: لمن الوقت الآن · 6 لغات</h2></div>
+  </div>
+
+  <!-- end -->
+  <div id="g-end" class="clip" data-start="37.8" data-duration="5.7" data-track-index="1">
+    <div class="lock"><div class="tile" id="e-tile"></div><h1 class="kufi" id="e-h1">دليل زوار المسجد النبوي</h1></div>
+    <div class="card" id="e-card"><img src="assets/qr.svg" alt=""></div>
+    <div class="url" id="e-url">masjidalnabawi.vercel.app</div>
+    <div class="inst" id="e-inst">ثبّتها على جوالك كتطبيق</div>
+  </div>
+
+  <div id="cap" class="clip captions" data-start="0" data-duration="43.5" data-track-index="9"></div>
+
+  <!-- sound: option (A) — soft effects, no music -->
+  <audio id="a-room" src="assets/sfx/roomtone.wav" data-start="0" data-duration="43.5" data-track-index="10" data-volume="0.9"></audio>
+  <audio id="a-chime1" src="assets/sfx/chime.wav" data-start="37.8" data-duration="3.5" data-track-index="11" data-volume="0.6"></audio>
+  <audio id="a-tap1" src="assets/sfx/tap.wav" data-start="8.42" data-duration="0.25" data-track-index="14" data-volume="0.7"></audio>
+  <audio id="a-tap2" src="assets/sfx/tap.wav" data-start="10.57" data-duration="0.25" data-track-index="14" data-volume="0.7"></audio>
+  <audio id="a-tap3" src="assets/sfx/tap.wav" data-start="12.54" data-duration="0.25" data-track-index="14" data-volume="0.7"></audio>
+  <audio id="a-tap4" src="assets/sfx/tap.wav" data-start="18.02" data-duration="0.25" data-track-index="14" data-volume="0.7"></audio>
+  <audio id="a-tap5" src="assets/sfx/tap.wav" data-start="26.93" data-duration="0.25" data-track-index="14" data-volume="0.7"></audio>
+  <audio id="a-sheet1" src="assets/sfx/sheet.wav" data-start="12.82" data-duration="0.55" data-track-index="12" data-volume="0.6"></audio>
+  <audio id="a-route" src="assets/sfx/route.wav" data-start="27.18" data-duration="1.6" data-track-index="13" data-volume="0.6"></audio>
+  <!-- voice-over: Fish Audio, voice «عربي وثائقي» (owner's choice) -->
+  <audio id="vo01" src="assets/vo/01.mp3" data-start="0.3" data-duration="3.787688" data-track-index="20" data-volume="1"></audio>
+  <audio id="vo02" src="assets/vo/02.mp3" data-start="4.85" data-duration="4.884813" data-track-index="20" data-volume="1"></audio>
+  <audio id="vo03" src="assets/vo/03.mp3" data-start="10.55" data-duration="6.713375" data-track-index="20" data-volume="1"></audio>
+  <audio id="vo04" src="assets/vo/04.mp3" data-start="18.05" data-duration="7.732125" data-track-index="20" data-volume="1"></audio>
+  <audio id="vo05" src="assets/vo/05.mp3" data-start="26.55" data-duration="4.884813" data-track-index="20" data-volume="1"></audio>
+  <audio id="vo06" src="assets/vo/06.mp3" data-start="32.25" data-duration="5.067688" data-track-index="20" data-volume="1"></audio>
+  <audio id="vo07" src="assets/vo/07.mp3" data-start="38.1" data-duration="4.466875" data-track-index="20" data-volume="1"></audio>
+</div>
+
+<script>
+/*@@KIT_JS@@*/
+
+const $ = (s) => document.querySelector(s);
+const tl = gsap.timeline({ paused: true });
+const V = vars();
+if (V.captions === false) $('#cap').classList.add('off');
+
+tl.to('#pat', { opacity: 0.08, duration: 2.0, ease: E }, 0.1);
+
+// hook (0–4)
+tl.fromTo('#h-sat', { opacity: 0, scale: 1.05 }, { opacity: 1, scale: 1, duration: 0.9, ease: E }, 0.0);
+tl.to('#h-sat img', { scale: 1.06, duration: 4.3, ease: 'sine.inOut' }, 0.0);
+wordsIn(tl, $('#h-title'), 0.3, { stagger: 0.14, y: 30 });
+tl.to('#g-hook > *', { opacity: 0, duration: 0.4, ease: E }, 3.9);
+
+// step 1 · QR, then the phone opens the app
+const stepIn = (id, t) => { const box = $(id); popIn(tl, box.querySelector('.num'), t, { dur: 0.5 }); wordsIn(tl, box.querySelector('h2'), t + 0.15, { stagger: 0.09 }); };
+const stepOut = (id, t) => tl.to($(id).querySelector('.step'), { opacity: 0, duration: 0.35, ease: E }, t);
+stepIn('#g-s1', 4.1);
+popIn(tl, '#qr-card', 4.3, { dur: 0.6 });
+tl.fromTo('#qr-scan', { opacity: 0, y: 0 }, { opacity: 1, y: 440, duration: 1.4, ease: 'sine.inOut' }, 4.9);
+tl.to('#qr-scan', { opacity: 0, duration: 0.3 }, 6.2);
+fadeIn(tl, '#qr-url', 4.8, { y: 16 });
+fadeIn(tl, '#qr-hint', 5.2, { y: 16 });
+tl.to(['#qr-card', '#qr-url', '#qr-hint'], { opacity: 0, scale: 0.94, duration: 0.45, ease: E }, 6.6);
+
+const ph = makePhone($('#phone-g'), [
+  'P-01-landing-dark-hero.jpg', 'P-13-map-dark-all.jpg', 'D-search-17.png', 'D-gate17.png',
+  'P-15-map-dark-women.jpg', 'P-16-map-dark-women-zoom.jpg', 'P-14-map-dark-gates.jpg', 'D-route-17.png', 'D-lang-menu.png',
+], { w: 644, h: 1252, bezel: 18, r: 84 });
+tl.fromTo('#phone-g', { opacity: 0, y: 80 }, { opacity: 1, y: 0, duration: 0.8, ease: E }, 6.7);
+show(tl, ph, 'P-01-landing-dark-hero.jpg', 6.7, 0.01);
+tap(tl, ph, 0.7, 0.807, 8.2);
+show(tl, ph, 'P-13-map-dark-all.jpg', 8.5);
+fadeIn(tl, '#g-credit', 8.6, { y: 0 });
+stepOut('#g-s1', 9.8);
+
+// step 2 · search
+stepIn('#g-s2', 10.1);
+tap(tl, ph, 0.55, 0.137, 10.5);
+show(tl, ph, 'D-search-17.png', 10.8);
+tl.to('#g-credit', { opacity: 0, duration: 0.3 }, 10.8);
+tap(tl, ph, 0.5, 0.238, 12.6);
+show(tl, ph, 'D-gate17.png', 12.9);
+zoomIn(tl, ph, 0.5, 0.69, 1.14, 13.7, 1.0);
+hilite(tl, ph, [0.36, 0.665, 0.6, 0.038], 14.6, 1.3);
+hilite(tl, ph, [0.04, 0.716, 0.918, 0.085], 15.9, 1.6);
+zoomOut(tl, ph, 17.4, 0.6);
+stepOut('#g-s2', 17.8);
+
+// step 3 · categories
+stepIn('#g-s3', 18.1);
+popIn(tl, '#c-w', 18.4);
+tap(tl, ph, 0.18, 0.214, 18.4);
+show(tl, ph, 'P-15-map-dark-women.jpg', 18.7);
+tl.to('#g-credit', { opacity: 1, duration: 0.3 }, 18.7);
+show(tl, ph, 'P-16-map-dark-women-zoom.jpg', 20.9, 0.6);
+popIn(tl, '#c-g', 23.2);
+show(tl, ph, 'P-14-map-dark-gates.jpg', 23.4, 0.6);
+tl.to(['#g-s3 .step', '#g-s3 .sub-chips'], { opacity: 0, duration: 0.35, ease: E }, 25.8);
+
+// step 4 · route
+stepIn('#g-s4', 26.1);
+show(tl, ph, 'D-gate17.png', 26.2, 0.35);
+tl.to('#g-credit', { opacity: 0, duration: 0.3 }, 26.2);
+tap(tl, ph, 0.57, 0.95, 27.0);
+show(tl, ph, 'D-route-17.png', 27.3, 0.5);
+zoomIn(tl, ph, 0.5, 0.72, 1.14, 28.9, 1.0);
+hilite(tl, ph, [0.04, 0.655, 0.92, 0.09], 29.9, 2.2);
+zoomOut(tl, ph, 32.3, 0.6);
+stepOut('#g-s4', 32.8);
+
+// extras · Rawdah card + six languages
+$('#s5-n').innerHTML = ic('dome', 46);
+stepIn('#g-s5', 33.1);
+show(tl, ph, 'P-15-map-dark-women.jpg', 33.1, 0.35);
+tl.to('#g-credit', { opacity: 1, duration: 0.3 }, 33.1);
+zoomIn(tl, ph, 0.5, 0.92, 1.14, 33.3, 0.9);
+hilite(tl, ph, [0.03, 0.862, 0.94, 0.118], 34.0, 1.3);
+zoomOut(tl, ph, 35.3, 0.4);
+show(tl, ph, 'D-lang-menu.png', 35.6, 0.35);
+tl.to('#g-credit', { opacity: 0, duration: 0.3 }, 35.6);
+tl.to('#phone-g', { opacity: 0, y: 60, duration: 0.5, ease: E }, 36.6);
+stepOut('#g-s5', 36.6);
+
+// end (37–40)
+$('#e-tile').innerHTML = star(96, 1.5);
+popIn(tl, '#e-tile', 37.0);
+draw(tl, $('#e-tile svg'), 37.1, 1.0, 0.1);
+wordsIn(tl, $('#e-h1'), 37.2, { stagger: 0.1 });
+popIn(tl, '#e-card', 37.5);
+fadeIn(tl, '#e-url', 37.8, { y: 14 });
+fadeIn(tl, '#e-inst', 38.1, { y: 14 });
+
+retime(tl, timeMap([0, 4, 10.1, 18.1, 26.1, 33.1, 36.9, 40], [0, 4.5, 10.2, 17.7, 26.2, 31.9, 37.8, 43.5]));
+
+// ---------- captions: on the voice-over's own timing ----------
+captions(tl, $('#cap'), [
+  [0.3, 4.09, 'تبحث عن بابك… أو عن أقرب مرفق للزائرات؟'],
+  [4.85, 9.73, 'امسح الرمز، أو افتح الرابط… من المتصفح مباشرة.'],
+  [10.55, 17.26, 'اكتب رقم البوابة أو اسمها، فترى جهتها، وأقرب بوابة خارجية إليها.'],
+  [18.05, 25.78, 'وللزائرات: «الخدمات النسائية»… أبواب القسم النسائي، ودورات المياه، والمصليات.'],
+  [26.55, 31.43, 'ثم: «رسم المسار من موقعي»… وامشِ مطمئناً.'],
+  [32.25, 37.32, 'وبطاقة الروضة تخبرك لمن الوقت الآن… بستّ لغات.'],
+  [38.1, 42.57, 'دليل زوار المسجد النبوي… ثبّته على جوالك.'],
+]);
+
+window.__timelines['main'] = tl;
+</script>
+</body>
+</html>
