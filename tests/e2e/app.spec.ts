@@ -5,10 +5,8 @@ test.describe('landing', () => {
     await page.goto('./');
     await expect(page.locator('h1')).toHaveText('دليل زوار المسجد النبوي');
     // The adopted printed code, and a link that matches what it encodes.
-    const qr = page.locator('img.qr-image');
-    await expect(qr).toBeVisible();
-    expect(await qr.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBe(true);
-    await expect(page.locator('#map-link')).toHaveValue('https://almasjidalnabawi.vercel.app');
+    await expect(page.locator('#qr-code svg[shape-rendering]')).toBeVisible();
+    await expect(page.locator('#map-link')).toHaveValue('https://masjidalnabawi.vercel.app/');
     await page.getByRole('link', { name: 'ابدأ استخدام الخريطة' }).click();
     await expect(page).toHaveURL(/map\.html$/);
     await expect(page.locator('.hdr')).toBeVisible();
