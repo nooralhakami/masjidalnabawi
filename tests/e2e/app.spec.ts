@@ -440,3 +440,19 @@ test.describe('travelling by car', () => {
     expect(meters).toBeLessThan(2600);
   });
 });
+
+test('zoomed out, nearby markers merge into small bubbles with counts; tapping one zooms in', async ({ page, errors: _ }) => {
+  await openMap(page);
+  const out = page.getByRole('button', { name: 'تصغير' });
+  for (let i = 0; i < 3; i++) {
+    await out.click();
+    await page.waitForTimeout(400);
+  }
+  const bubbles = page.locator('.mk-cluster');
+  await expect(bubbles.first()).toBeVisible();
+  const before = await bubbles.count();
+  expect(Number(await bubbles.first().textContent())).toBeGreaterThan(1);
+  await bubbles.first().click({ force: true });
+  await page.waitForTimeout(1200);
+  expect(await page.locator('.mk-cluster').count()).not.toBe(before);
+});

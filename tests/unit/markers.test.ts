@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { POIS, POI_BY_ID } from '../../src/data';
-import { FACILITY_SIZE, gateLabelVisible, markerSpec, tierOf, visibleAtZoom } from '../../src/map/markers';
+import { CLUSTER_MAX_ZOOM, FACILITY_SIZE, clusterColor, clusterItems, clusterSize, gateLabelVisible, markerSpec, tierOf, visibleAtZoom } from '../../src/map/markers';
 
 const P = (id: number) => POI_BY_ID.get(id)!;
 
 describe('markers', () => {
   it('zoom tiers', () => {
     expect([15, 16, 17, 18, 19].map(tierOf)).toEqual(['s', 's', 'm', 'm', 'l']);
-    expect(FACILITY_SIZE).toEqual({ s: 10, m: 14, l: 20 });
+    expect(FACILITY_SIZE).toEqual({ s: 8, m: 14, l: 20 });
   });
 
   it('shows named inner-gate labels only at zoom 19+', () => {
@@ -33,8 +33,8 @@ describe('markers', () => {
     expect(markerSpec(P(11), 'l', 'open', false).html).toContain('--cat-women');
   });
 
-  it('facility size follows the tier; icon hidden at 10px', () => {
-    expect(markerSpec(P(201), 's', 'open', false).html).toContain('--d:10px');
+  it('facility size follows the tier; icon hidden at 8px', () => {
+    expect(markerSpec(P(201), 's', 'open', false).html).toContain('--d:8px');
     expect(markerSpec(P(201), 's', 'open', false).html).not.toContain('<svg');
     expect(markerSpec(P(201), 'l', 'open', false).html).toContain('--d:20px');
     expect(markerSpec(P(201), 'l', 'open', false).html).toContain('<svg');
@@ -61,5 +61,33 @@ describe('markers', () => {
     expect(visibleAtZoom(P(201), 's', 'all', false)).toBe(true);
     expect(visibleAtZoom(P(401), 's', 'wheelchair', false)).toBe(true);
     expect(visibleAtZoom(P(1), 'm', 'all', false)).toBe(true);
+  });
+});
+
+describe('city view (zoom ≤ 15): bubbles with counts', () => {
+  const P = (id: number) => POI_BY_ID.get(id)!;
+
+  it('nearby markers share a bubble; far ones stay apart', () => {
+    const c = clusterItems([
+      { p: P(201), x: 100, y: 100 },
+      { p: P(202), x: 120, y: 105 },
+      { p: P(203), x: 300, y: 300 },
+    ]);
+    expect(c.map((k) => k.members.length).sort()).toEqual([1, 2]);
+    const pair = c.find((k) => k.members.length === 2)!;
+    expect(pair.x).toBeCloseTo(110, 5);
+  });
+
+  it('a bubble takes the colour of its most common kind, and stays small', () => {
+    expect(clusterColor([P(701), P(702), P(201)])).toBe('var(--cat-hotel)');
+    expect(clusterSize(2)).toBe(20);
+    expect(clusterSize(500)).toBe(28);
+  });
+
+  it('gates are left out of the city view under «all», but not under their own pill', () => {
+    const gate = P(330);
+    expect(visibleAtZoom(gate, 's', 'all', false, CLUSTER_MAX_ZOOM)).toBe(false);
+    expect(visibleAtZoom(gate, 's', 'all', false, 16)).toBe(true);
+    expect(visibleAtZoom(gate, 's', 'gates', false, CLUSTER_MAX_ZOOM)).toBe(true);
   });
 });

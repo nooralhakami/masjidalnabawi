@@ -4,7 +4,8 @@ import type { Facilities } from '../domain/facilities';
 import type { FilterId } from '../domain/filters';
 import { nm } from '../i18n';
 import { esc } from '../ui/dom';
-import { HIT, chipSize, gateLabelVisible, markerSpec, overlaps, tierOf, visibleAtZoom } from './markers';
+import { CLUSTER_MAX_ZOOM, HIT, chipSize, clusterColor, clusterItems, clusterSize, gateLabelVisible, markerSpec, overlaps, tierOf, visibleAtZoom } from './markers';
+import { t } from '../i18n';
 
 /**
  * Draws the visible POIs. Only markers inside the viewport (+25%) are created,
@@ -52,7 +53,12 @@ export class PoiLayer {
   draw(): void {
     this.group.clearLayers();
     const bounds = this.map.getBounds().pad(0.25);
-    const tier = tierOf(this.map.getZoom());
+    const zoom = this.map.getZoom();
+    const tier = tierOf(zoom);
+    if (zoom <= CLUSTER_MAX_ZOOM && this.selected === null && !this.hidden) {
+      this.drawClusters(bounds, tier, zoom);
+      return;
+    }
     // Gate chips are placed first so the selected one and lower numbers win ties.
     const placed: { x: number; y: number; w: number; h: number }[] = [];
     const order = [...this.pois].sort((a, b) => Number(b.id === this.selected) - Number(a.id === this.selected));
@@ -64,7 +70,7 @@ export class PoiLayer {
       // "Hide markers" hides everything except a place the visitor has just chosen.
       if (this.hidden && !sel) continue;
       if (!sel && !bounds.contains([p.lat, p.lng])) continue;
-      if (!visibleAtZoom(p, tier, this.filter, sel)) continue;
+      if (!visibleAtZoom(p, tier, this.filter, sel, zoom)) continue;
       let compact = false;
       if (p.subCategory === 'gate_outer' && tier !== 's') {
         const pt = this.map.latLngToContainerPoint([p.lat, p.lng]);
@@ -100,6 +106,51 @@ export class PoiLayer {
           this.group.addLayer(labelMarker);
         }
       }
+    }
+  }
+
+  /** City view: bubbles with counts for nearby markers, plain small dots for lone ones. */
+  private drawClusters(bounds: L.LatLngBounds, tier: ReturnType<typeof tierOf>, zoom: number): void {
+    const items = this.pois
+      .filter((p) => bounds.contains([p.lat, p.lng]) && visibleAtZoom(p, tier, this.filter, false, zoom))
+      .map((p) => {
+        const pt = this.map.latLngToContainerPoint([p.lat, p.lng]);
+        return { p, x: pt.x, y: pt.y };
+      });
+    for (const c of clusterItems(items)) {
+      if (c.members.length === 1) {
+        const p = c.members[0];
+        const spec = markerSpec(p, tier, this.fac.status(p.id), false);
+        const m = L.marker([p.lat, p.lng], {
+          icon: L.divIcon({ html: spec.html, className: spec.className, iconSize: spec.size ?? [HIT, HIT], iconAnchor: spec.anchor ?? [HIT / 2, HIT / 2] }),
+          zIndexOffset: spec.zIndex,
+          keyboard: true,
+          title: nm(p),
+          alt: nm(p),
+        });
+        m.on('click', () => this.onPick(p));
+        this.group.addLayer(m);
+        continue;
+      }
+      const d = clusterSize(c.members.length);
+      const label = t('cluster', { n: c.members.length });
+      const at = this.map.containerPointToLatLng([c.x, c.y]);
+      const m = L.marker(at, {
+        icon: L.divIcon({
+          html: `<span class="mk-cluster" style="--c:${clusterColor(c.members)};--d:${d}px">${c.members.length}</span>`,
+          className: 'mk mk-cl',
+          iconSize: [Math.max(HIT, d), Math.max(HIT, d)],
+        }),
+        zIndexOffset: 400 + c.members.length,
+        keyboard: true,
+        title: label,
+        alt: label,
+      });
+      m.on('click', () => {
+        const b = L.latLngBounds(c.members.map((p) => [p.lat, p.lng] as [number, number]));
+        this.map.flyToBounds(b.pad(0.2), { maxZoom: Math.max(zoom + 2, 17), duration: 0.6 });
+      });
+      this.group.addLayer(m);
     }
   }
 }

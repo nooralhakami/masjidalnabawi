@@ -20,9 +20,9 @@ smallest fix, and keep every test passing. Read `V0-PROMPT.md` first for the pro
 ## 2. Automated checks (run in a clean checkout)
 ```bash
 npm ci
-npm test                         # expect 139 passed
+npm test                         # expect 142 passed
 npx playwright install chromium
-npm run test:e2e                 # expect 31 passed
+npm run test:e2e                 # expect 32 passed
 npm run build                    # expect no type errors
 ```
 - [ ] All three succeed with the expected counts. Paste the summary lines.
