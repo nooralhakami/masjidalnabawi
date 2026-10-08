@@ -9,7 +9,8 @@ export type Category =
   | 'emergency'
   | 'women'
   | 'hotels'
-  | 'food';
+  | 'food'
+  | 'shopping';
 
 export type SubCategory =
   | 'gate_outer'
@@ -31,7 +32,10 @@ export type SubCategory =
   | 'wheelchair_zone'
   | 'women_service'
   | 'hotel'
-  | 'food';
+  | 'food'
+  | 'mall'
+  | 'hypermarket'
+  | 'market';
 
 export type Status = 'open' | 'maintenance' | 'works';
 
@@ -64,6 +68,8 @@ export interface Poi {
   access?: 'public' | 'subscribers';
   /** Source element in OpenStreetMap (n123, w123, r123), for places taken from it. */
   osm?: string;
+  /** Where a place's position comes from when not OSM (e.g. a brand's own branch list). */
+  source?: string;
   /** Wikidata item that confirms a historic site (Q123). */
   wikidata?: string;
 }

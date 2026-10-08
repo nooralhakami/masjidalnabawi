@@ -20,6 +20,7 @@ const CATEGORY_LABEL: Record<Category, string> = {
   women: 'p_women',
   hotels: 'p_hotels',
   food: 'p_food',
+  shopping: 'p_shopping',
 };
 
 export type SheetState = 'closed' | 'half' | 'full';

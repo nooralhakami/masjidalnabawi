@@ -33,9 +33,9 @@ describe('inner gate names and descriptions', () => {
 });
 
 describe('pois.json', () => {
-  it('has 293 POIs with unique ids (hotels, food, landmarks and historic sites from OpenStreetMap/Wikidata 2026-10-09)', () => {
-    expect(POIS).toHaveLength(293);
-    expect(POI_BY_ID.size).toBe(293);
+  it('has 326 POIs with unique ids (hotels, food, shopping, landmarks and historic sites, 2026-10-09)', () => {
+    expect(POIS).toHaveLength(326);
+    expect(POI_BY_ID.size).toBe(326);
     expect(POI_BY_ID.has(409)).toBe(false);
     expect(POI_BY_ID.has(410)).toBe(false);
     expect(POI_BY_ID.get(604)?.category).toBe('landmarks');
@@ -50,7 +50,8 @@ describe('pois.json', () => {
     ['emergency', 11],
     ['women', 2],
     ['hotels', 43],
-    ['food', 26],
+    ['food', 44],
+    ['shopping', 15],
   ] as const)('category %s has %i POIs', (cat, n) => {
     expect(count((p) => p.category === cat)).toBe(n);
   });
@@ -193,10 +194,14 @@ describe('hotels, food and landmarks (OpenStreetMap, 2026-10-09)', () => {
   const m = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => Math.hypot((a.lat - b.lat) * 111_320, (a.lng - b.lng) * 101_330);
   const of = (c: string) => POIS.filter((p) => p.category === c);
 
-  it('every hotel and food place comes from a mapped OSM element, in the central area', () => {
-    for (const p of [...of('hotels'), ...of('food')]) {
+  it('every hotel and food place has a source (an OSM element, or Al Baik’s own branch list)', () => {
+    for (const p of of('hotels')) {
       expect(p.osm, p.name_ar).toMatch(/^[nwr]\d+$/);
-      expect(m(p, { lat: 24.4686, lng: 39.6111 }), p.name_ar).toBeLessThan(1500);
+      expect(m(p, { lat: 24.4686, lng: 39.6111 }), p.name_ar).toBeLessThan(1500); // the central area
+    }
+    for (const p of of('food')) {
+      expect(p.osm ?? p.source, p.name_ar).toBeTruthy();
+      expect(m(p, { lat: 24.4686, lng: 39.6111 }), p.name_ar).toBeLessThan(6000); // within the street data's area
     }
   });
 
@@ -242,5 +247,29 @@ describe('historic sites (confirmed, 2026-10-09)', () => {
 
   it('Abu Dharr (539) is not marked historic: its position is not confirmed', () => {
     expect(POI_BY_ID.get(539)!.subCategory).toBe('landmark');
+  });
+});
+
+describe('chains, Al Baik branches and shopping (2026-10-09)', () => {
+  const of = (c: string) => POIS.filter((p) => p.category === c);
+
+  it('Al Baik: the central branch plus the official branches in the area (albaik.com), named by where they are', () => {
+    const baik = of('food').filter((p) => p.name_ar.startsWith('البيك'));
+    expect(baik.map((p) => p.name_ar).sort()).toEqual(['البيك', 'البيك – المنار مول', 'البيك – النور مول', 'البيك – برج طيبة', 'البيك – حسان مول']);
+    for (const p of baik.filter((p) => p.name_ar !== 'البيك')) expect(p.source).toBe('albaik.com/branches');
+  });
+
+  it('every place has a unique name, and every chain branch says where it is', () => {
+    const names = POIS.map((p) => p.name_ar);
+    expect(new Set(names).size).toBe(names.length);
+    for (const p of of('food').filter((p) => p.id > 826)) expect(p.name_ar, String(p.id)).toContain(' – ');
+  });
+
+  it('shopping: 10 malls, 4 hypermarkets and the central vegetable market, all from OSM', () => {
+    const shop = of('shopping');
+    expect(shop.filter((p) => p.subCategory === 'mall')).toHaveLength(10);
+    expect(shop.filter((p) => p.subCategory === 'hypermarket')).toHaveLength(4);
+    expect(shop.find((p) => p.subCategory === 'market')!.name_ar).toContain('الخضار');
+    for (const p of shop) expect(p.osm, p.name_ar).toMatch(/^[nwr]\d+$/);
   });
 });

@@ -3,7 +3,7 @@ import type { Facilities } from './facilities';
 import { isClosed } from './facilities';
 import { parkingAccess } from './parking';
 
-export type FilterId = 'all' | 'gates' | 'women' | 'toilets' | 'hotels' | 'food' | 'landmarks' | 'historic' | 'wheelchair' | 'parking' | 'emergency';
+export type FilterId = 'all' | 'gates' | 'women' | 'toilets' | 'hotels' | 'food' | 'shopping' | 'landmarks' | 'historic' | 'wheelchair' | 'parking' | 'emergency';
 export type ToiletSub = 'all' | 'open' | 'closed';
 export type ParkingSub = 'all' | 'public' | 'subscribers';
 
@@ -15,6 +15,7 @@ export const FILTERS: readonly { id: FilterId; label: string }[] = [
   { id: 'toilets', label: 'p_toilets' },
   { id: 'hotels', label: 'p_hotels' },
   { id: 'food', label: 'p_food' },
+  { id: 'shopping', label: 'p_shopping' },
   { id: 'landmarks', label: 'p_landmarks' },
   { id: 'historic', label: 'p_historic' },
   { id: 'wheelchair', label: 'p_wheelchair' },
@@ -42,7 +43,7 @@ export interface FilterState {
   searching: boolean;
 }
 
-const SAME_CATEGORY: readonly Category[] = ['hotels', 'food', 'landmarks', 'emergency', 'gates'];
+const SAME_CATEGORY: readonly Category[] = ['hotels', 'food', 'shopping', 'landmarks', 'emergency', 'gates'];
 
 /** Whether a POI passes the active filter pill (search matching is separate). */
 export function passesFilter(p: Poi, s: FilterState, fac: Facilities): boolean {

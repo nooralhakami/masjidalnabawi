@@ -46,6 +46,10 @@ export function lookOf(p: Poi): Look {
       return { icon: 'hotel', color: 'var(--cat-hotel)' };
     case 'food':
       return { icon: 'food', color: 'var(--cat-food)' };
+    case 'mall':
+    case 'hypermarket':
+    case 'market':
+      return { icon: 'bag', color: 'var(--cat-shop)' };
     case 'women_service':
       return { icon: 'prayer', color: 'var(--cat-women)' };
     case 'parking':

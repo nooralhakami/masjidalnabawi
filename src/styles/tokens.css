@@ -35,6 +35,8 @@
   --women-area: #ec4f9a;
   /* Historic sites: an old-bronze tone, apart from the purple of modern landmarks. */
   --cat-hist: #8a5a1f;
+  /* Shopping: malls, hypermarkets, markets. */
+  --cat-shop: #b4236b;
   --cat-park-sub: #9f1239;
 
   --radius-sm: 12px;

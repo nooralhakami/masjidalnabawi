@@ -1,0 +1,80 @@
+{
+ "source": "https://www.albaik.com/branches (official branch list, fetched 2026-10-09)",
+ "branches": [
+  {
+   "name": "ALBAIK-MADINAH CITY",
+   "lat": 24.463747,
+   "lng": 39.616178
+  },
+  {
+   "name": "ALBAIK-MADINAH CITY 2 KHALEDIAH",
+   "lat": 24.4445793,
+   "lng": 39.6504082
+  },
+  {
+   "name": "ALBAIK-MADINA TRAIN STATION",
+   "lat": 24.476413,
+   "lng": 39.710116
+  },
+  {
+   "name": "ALBAIK-IMAM BUKHARI",
+   "lat": 24.452333,
+   "lng": 39.504475
+  },
+  {
+   "name": "ALBAIK-MADINAH TAIBA",
+   "lat": 24.4714556,
+   "lng": 39.6107283
+  },
+  {
+   "name": "ALBAIK-MADINAH ALIA MALL",
+   "lat": 24.41385286,
+   "lng": 39.61935501
+  },
+  {
+   "name": "ALBAIK-AL MANAR MALL",
+   "lat": 24.46052388,
+   "lng": 39.58468833
+  },
+  {
+   "name": "ALBAIK-HASSAN MALL",
+   "lat": 24.49779,
+   "lng": 39.61885
+  },
+  {
+   "name": "ALBAIK-MAMSHA AL HIJRA",
+   "lat": 24.4249282,
+   "lng": 39.5943115
+  },
+  {
+   "name": "ALBAIK-MOHAMMEDIA",
+   "lat": 24.422404,
+   "lng": 39.638055
+  },
+  {
+   "name": "ALBAIK-SASCO MUZZAIN",
+   "lat": 24.4144942,
+   "lng": 39.5483797
+  },
+  {
+   "name": "ALBAIK-TRAIN STATION 2",
+   "lat": 24.473162,
+   "lng": 39.700457
+  },
+  {
+   "name": "ALBAIK-AL NOOR MALL",
+   "lat": 24.496292,
+   "lng": 39.596075
+  },
+  {
+   "name": "ALBAIK-TAIBA TOWER",
+   "lat": 24.4714556,
+   "lng": 39.6107283
+  },
+  {
+   "name": "ALBAIK-MADINAH SHURAN",
+   "lat": 24.3724493,
+   "lng": 39.5971865
+  }
+ ]
+}

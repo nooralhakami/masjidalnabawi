@@ -13,6 +13,7 @@ const PATHS = {
   hotel: '<path d="M3 19V6"/><path d="M3 15h18v4"/><path d="M21 15v-3a3 3 0 0 0-3-3h-7v6"/><circle cx="7" cy="11.5" r="1.8"/>',
   food: '<path d="M7 3v18"/><path d="M4.5 3v5a2.5 2.5 0 0 0 5 0V3"/><path d="M17 21V3c-2.2 1.2-3.5 4-3.5 8H17"/>',
   historic: '<path d="M4 21h16"/><path d="M6 21V11h12v10"/><path d="M9 11a3 3 0 0 1 6 0"/><path d="M12 4.5c1.2 1 1.8 2 1.8 3.2H10.2c0-1.2.6-2.2 1.8-3.2z"/><path d="M19.5 21V6"/><path d="M18.5 6h2"/><path d="M10.5 21v-4h3v4"/>',
+  bag: '<path d="M5.5 8h13l-1 12.5h-11z"/><path d="M9 10V6.5a3 3 0 0 1 6 0V10"/>',
   landmark: '<path d="M12 3l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.3 6.8 19l1-5.8L3.6 9.1l5.8-.8z"/>',
   emergency: '<path d="M9.5 4h5v5.5H20v5h-5.5V20h-5v-5.5H4v-5h5.5z"/>',
   police: '<path d="M12 3l7 3v5.5c0 4.5-3 8-7 9.5-4-1.5-7-5-7-9.5V6z"/><path d="M12 8.5l1.2 2.4 2.6.4-1.9 1.8.5 2.6L12 14.5l-2.4 1.2.5-2.6-1.9-1.8 2.6-.4z"/>',

@@ -10,6 +10,7 @@ const LOOK: Record<FilterId, [IconName, string]> = {
   toilets: ['toilets', 'var(--cat-men)'],
   hotels: ['hotel', 'var(--cat-hotel)'],
   food: ['food', 'var(--cat-food)'],
+  shopping: ['bag', 'var(--cat-shop)'],
   landmarks: ['landmark', 'var(--cat-land)'],
   historic: ['historic', 'var(--cat-hist)'],
   wheelchair: ['cart', 'var(--cat-acc)'],
