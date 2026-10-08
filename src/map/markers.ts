@@ -13,53 +13,10 @@ export const gateLabelVisible = (p: Poi, zoom: number): boolean => p.subCategory
 export const FACILITY_SIZE: Record<Tier, number> = { s: 8, m: 14, l: 20 };
 
 /**
- * City view: zoomed out to 15 or less, nearby markers merge into one bubble with their count
- * (tap to zoom in), and gates — meaningful only close up — are left out under «all».
+ * Zoomed out, every marker stays where it is but shrinks (owner: no merging into one marker):
+ * the map container gets a zoom class and CSS sizes the dots — 4px at 14 and below, 5px at 15.
  */
-export const CLUSTER_MAX_ZOOM = 15;
-/** Markers closer than this (screen px) share a bubble. */
-export const CLUSTER_RADIUS = 38;
-
-export interface ClusterItem {
-  p: Poi;
-  x: number;
-  y: number;
-}
-export interface Cluster {
-  x: number;
-  y: number;
-  members: Poi[];
-}
-
-/** Greedy screen-space clustering: each marker joins the first bubble within the radius, else starts one. */
-export function clusterItems(items: readonly ClusterItem[], radius = CLUSTER_RADIUS): Cluster[] {
-  const out: (Cluster & { sx: number; sy: number })[] = [];
-  for (const it of items) {
-    const c = out.find((k) => Math.hypot(k.x - it.x, k.y - it.y) < radius);
-    if (c) {
-      c.members.push(it.p);
-      c.sx += it.x;
-      c.sy += it.y;
-      c.x = c.sx / c.members.length;
-      c.y = c.sy / c.members.length;
-    } else out.push({ x: it.x, y: it.y, sx: it.x, sy: it.y, members: [it.p] });
-  }
-  return out.map(({ x, y, members }) => ({ x, y, members }));
-}
-
-/** The colour of a bubble: its most common kind of place. */
-export function clusterColor(members: readonly Poi[]): string {
-  const n = new Map<string, number>();
-  for (const p of members) {
-    const c = lookOf(p).color;
-    const key = c === 'mixed' ? 'var(--cat-women)' : c;
-    n.set(key, (n.get(key) ?? 0) + 1);
-  }
-  return [...n.entries()].sort((a, b) => b[1] - a[1])[0][0];
-}
-
-/** Bubble diameter: 20px for two, growing gently with the count, at most 28px. */
-export const clusterSize = (n: number): number => Math.min(28, Math.round(18 + Math.log2(n) * 2));
+export const zoomClass = (zoom: number): string => (zoom <= 14 ? 'z-far' : zoom <= 15 ? 'z-mid' : '');
 
 /** Transparent hit area around every marker. */
 export const HIT = 32;
@@ -119,9 +76,8 @@ export function lookOf(p: Poi): Look {
  * Progressive disclosure: zoomed out (≤16) shows only outer gates and facilities;
  * inner gates and wheelchair zones appear from 17. A specific filter pill shows its POIs at any zoom.
  */
-export function visibleAtZoom(p: Poi, tier: Tier, filter: FilterId, selected: boolean, zoom = 17): boolean {
+export function visibleAtZoom(p: Poi, tier: Tier, filter: FilterId, selected: boolean): boolean {
   if (selected || tier !== 's' || filter !== 'all') return true;
-  if (zoom <= CLUSTER_MAX_ZOOM && p.subCategory === 'gate_outer') return false;
   return p.subCategory !== 'gate_inner' && p.subCategory !== 'wheelchair_zone';
 }
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { POIS, POI_BY_ID } from '../../src/data';
-import { CLUSTER_MAX_ZOOM, FACILITY_SIZE, clusterColor, clusterItems, clusterSize, gateLabelVisible, markerSpec, tierOf, visibleAtZoom } from '../../src/map/markers';
+import { FACILITY_SIZE, gateLabelVisible, markerSpec, tierOf, visibleAtZoom, zoomClass } from '../../src/map/markers';
 
 const P = (id: number) => POI_BY_ID.get(id)!;
 
@@ -64,30 +64,12 @@ describe('markers', () => {
   });
 });
 
-describe('city view (zoom ≤ 15): bubbles with counts', () => {
-  const P = (id: number) => POI_BY_ID.get(id)!;
-
-  it('nearby markers share a bubble; far ones stay apart', () => {
-    const c = clusterItems([
-      { p: P(201), x: 100, y: 100 },
-      { p: P(202), x: 120, y: 105 },
-      { p: P(203), x: 300, y: 300 },
-    ]);
-    expect(c.map((k) => k.members.length).sort()).toEqual([1, 2]);
-    const pair = c.find((k) => k.members.length === 2)!;
-    expect(pair.x).toBeCloseTo(110, 5);
+describe('zoomed out: every marker in its place, smaller', () => {
+  it('the map gets a zoom class that shrinks the dots: 4px at ≤14, 5px at 15, normal from 16', () => {
+    expect([13, 14, 15, 16, 17].map(zoomClass)).toEqual(['z-far', 'z-far', 'z-mid', '', '']);
   });
 
-  it('a bubble takes the colour of its most common kind, and stays small', () => {
-    expect(clusterColor([P(701), P(702), P(201)])).toBe('var(--cat-hotel)');
-    expect(clusterSize(2)).toBe(20);
-    expect(clusterSize(500)).toBe(28);
-  });
-
-  it('gates are left out of the city view under «all», but not under their own pill', () => {
-    const gate = P(330);
-    expect(visibleAtZoom(gate, 's', 'all', false, CLUSTER_MAX_ZOOM)).toBe(false);
-    expect(visibleAtZoom(gate, 's', 'all', false, 16)).toBe(true);
-    expect(visibleAtZoom(gate, 's', 'gates', false, CLUSTER_MAX_ZOOM)).toBe(true);
+  it('nothing is merged or hidden for being zoomed out: outer gates stay', () => {
+    expect(visibleAtZoom(POI_BY_ID.get(330)!, 's', 'all', false)).toBe(true);
   });
 });
