@@ -3,7 +3,7 @@
 Source: OpenStreetMap (© OpenStreetMap contributors, ODbL). Fetch a fresh extract with:
     python3 scripts/streets-from-osm.py --fetch docs/routes/osm/roads-YYYY-MM-DD.json
 or rebuild from a saved one:
-    python3 scripts/streets-from-osm.py docs/routes/osm/roads-2026-10-08.json
+    python3 scripts/streets-from-osm.py docs/routes/osm/roads-2026-10-09.json
 
 Ways that share a node share an exact coordinate, so junctions are found by coordinate; roads that
 merely cross at different levels (a tunnel under a street) never share one and stay apart.
