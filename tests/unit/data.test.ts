@@ -33,9 +33,9 @@ describe('inner gate names and descriptions', () => {
 });
 
 describe('pois.json', () => {
-  it('has 213 POIs with unique ids (accessible restrooms 409/410 removed, landmark 604 added)', () => {
-    expect(POIS).toHaveLength(212);
-    expect(POI_BY_ID.size).toBe(212);
+  it('has 223 POIs with unique ids (restrooms 251–254 and key services 521–527 added 2026-10-08)', () => {
+    expect(POIS).toHaveLength(223);
+    expect(POI_BY_ID.size).toBe(223);
     expect(POI_BY_ID.has(409)).toBe(false);
     expect(POI_BY_ID.has(410)).toBe(false);
     expect(POI_BY_ID.get(604)?.category).toBe('landmarks');
@@ -43,11 +43,11 @@ describe('pois.json', () => {
 
   it.each([
     ['gates', 112],
-    ['toilets', 36],
+    ['toilets', 40],
     ['parking', 13],
-    ['landmarks', 20],
+    ['landmarks', 18],
     ['wheelchair', 8],
-    ['emergency', 2],
+    ['emergency', 11],
     ['women', 2],
     ['hotels', 7],
     ['food', 12],
@@ -61,8 +61,8 @@ describe('pois.json', () => {
   });
 
   it('toilets split by subCategory', () => {
-    expect(count((p) => p.subCategory === 'toilet_men')).toBe(20);
-    expect(count((p) => p.subCategory === 'toilet_women')).toBe(12);
+    expect(count((p) => p.subCategory === 'toilet_men')).toBe(22);
+    expect(count((p) => p.subCategory === 'toilet_women')).toBe(14);
     expect(ids((p) => p.subCategory === 'toilet_mixed')).toEqual([202, 210, 221]);
     expect(ids((p) => p.subCategory === 'toilet_elderly')).toEqual([204]);
     expect(count((p) => p.subCategory === 'toilet_accessible')).toBe(0);
@@ -86,8 +86,24 @@ describe('pois.json', () => {
     });
   });
 
-  it('emergency POIs are landmark subCategory (health centres)', () => {
-    expect(POIS.filter((p) => p.category === 'emergency').every((p) => p.subCategory === 'landmark')).toBe(true);
+  it('key services: health, police, lost children, lost & found, child care and service centres', () => {
+    const by = (s: string) => POIS.filter((p) => p.category === 'emergency' && p.subCategory === s).map((p) => p.id);
+    expect(by('health')).toEqual([501, 502]);
+    expect(by('police')).toEqual([523, 524]);
+    expect(by('lost_children')).toEqual([503]);
+    expect(by('lost_found').sort()).toEqual([504, 521, 522]);
+    expect(by('child_care')).toEqual([526]);
+    expect(by('service').sort()).toEqual([525, 527]);
+  });
+
+  it('restrooms 251–254: at the west edge of the west plaza, numbered south to north; 251–252 men, 253–254 women', () => {
+    const r = [251, 252, 253, 254].map((id) => POI_BY_ID.get(id)!);
+    expect(r.map((p) => p.subCategory)).toEqual(['toilet_men', 'toilet_men', 'toilet_women', 'toilet_women']);
+    for (let i = 1; i < r.length; i++) expect(r[i].lat).toBeGreaterThan(r[i - 1].lat);
+    // The far (west) edge of the plaza: well west of the west gates 318–320.
+    const gate = POI_BY_ID.get(318)!;
+    for (const p of r) expect((gate.lng - p.lng) * 101_330).toBeGreaterThan(200);
+    expect(RULES.rules.WOMEN).toEqual(expect.arrayContaining([253, 254]));
   });
 
   it('every POI has a direction and coordinates near the mosque', () => {
@@ -100,12 +116,31 @@ describe('pois.json', () => {
 });
 
 describe('overrides', () => {
-  it('overrides.json is empty by default, so coordinates are untouched', () => {
+  it('only the owner-requested north outer gates (328–343) and the women entrance 604 are nudged; everything else is untouched', () => {
     const raw = rawPois as Poi[];
+    const moved = (id: number) => (id >= 328 && id <= 343) || id === 604;
     POIS.forEach((p, i) => {
+      if (moved(p.id)) return;
       expect(p.lat).toBe(raw[i].lat);
       expect(p.lng).toBe(raw[i].lng);
     });
+    const metres = (id: number) => {
+      const p = POI_BY_ID.get(id)!;
+      const r = raw.find((x) => x.id === id)!;
+      return { north: (p.lat - r.lat) * 111_320, east: (p.lng - r.lng) * 111_320 * Math.cos((r.lat * Math.PI) / 180) };
+    };
+    // The middle group 332–336: 3 m south and 12 m east; the rest of the north side: 18 m north.
+    for (const id of [332, 334, 336]) {
+      expect(metres(id).north).toBeCloseTo(-3, 5);
+      expect(metres(id).east).toBeCloseTo(12, 5);
+    }
+    // 604 shared Gate 21's exact point and hid it: it now sits 15 m north, facing the gate.
+    expect(metres(604).north).toBeCloseTo(15, 5);
+    expect(POI_BY_ID.get(21)!.lat).toBe(raw.find((x) => x.id === 21)!.lat);
+    for (const id of [328, 331, 337, 343]) {
+      expect(metres(id).north).toBeCloseTo(18, 5);
+      expect(metres(id).east).toBeCloseTo(0, 5);
+    }
   });
 
   it('shifts a POI by metres north/east', () => {

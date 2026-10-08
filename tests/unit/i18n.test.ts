@@ -96,3 +96,24 @@ describe('names and descriptions', () => {
     expect(latinDigits('باب ٣٧ و۲۱۵')).toBe('باب 37 و215');
   });
 });
+
+describe('place texts are really translated', () => {
+  // v0 once left all 22 gate descriptions in Arabic in the other five languages.
+  const ARABIC = /[؀-ۿ]/;
+  it('no Arabic letters in English, Turkish, Indonesian or Uzbek names and descriptions (ﷺ aside)', () => {
+    for (const lang of ['en', 'tr', 'id', 'uz'] as const) {
+      for (const sec of ['names', 'descs'] as const) {
+        for (const [k, v] of Object.entries(I18N[lang][sec] ?? {})) {
+          expect(ARABIC.test(String(v).replace(/ﷺ/g, '')), `${lang}.${sec}: ${k}`).toBe(false);
+        }
+      }
+    }
+  });
+
+  it('Urdu descriptions are not the Arabic text copied over', () => {
+    for (const p of POIS) {
+      const ur = I18N.ur.descs?.[p.name_ar];
+      if (ur) expect(ur, `ur: ${p.name_ar}`).not.toBe(p.description_ar);
+    }
+  });
+});

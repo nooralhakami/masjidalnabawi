@@ -17,7 +17,8 @@ export interface NavigationSnapshot {
   follow: boolean;
 }
 
-const DEFAULT_SPEED = 1.35; // m/s, a calm walking pace
+/** Starting pace in m/s, refined from the phone's own speed: a calm walk, or old-town traffic. */
+const PACE = { walk: { start: 1.35, min: 0.8, max: 2 }, drive: { start: 5, min: 1, max: 15 } };
 /** Worse than this, the status says so (the marker still moves). */
 const LOW_ACCURACY_M = 35;
 const OFF_ROUTE_READS = 3;
@@ -45,7 +46,8 @@ export class NavigationTracker {
   private away = new AwayDetector();
   private offRouteReads = 0;
   private lastReroute = 0;
-  private speed = DEFAULT_SPEED;
+  private pace = PACE.walk;
+  private speed = PACE.walk.start;
   private off: (() => void)[] = [];
   private wakeLock: WakeLockSentinel | null = null;
   private panel?: HTMLElement;
@@ -85,8 +87,11 @@ export class NavigationTracker {
     return this.off.length > 0;
   }
 
-  async start() {
+  /** Walking or driving: sets the pace used for the minutes left. */
+  async start(travel: 'walk' | 'drive' = 'walk') {
     this.stop();
+    this.pace = PACE[travel];
+    this.speed = this.pace.start;
     this.routeChanged();
     this.state = { ...this.state, state: 'locating', follow: true };
     this.off.push(
@@ -119,7 +124,7 @@ export class NavigationTracker {
     this.along = null;
     this.offRouteReads = 0;
     this.away.reset();
-    this.speed = DEFAULT_SPEED;
+    this.speed = this.pace.start;
     this.state = { position: null, accuracy: 0, remainingMeters: 0, remainingMinutes: 0, state: 'stopped', heading: null, follow: false };
     this.panel?.remove();
     this.panel = undefined;
@@ -149,7 +154,7 @@ export class NavigationTracker {
     const pos: LatLng = [f.lat, f.lng];
     const p = this.track.locate(pos, this.along);
     this.along = p.along;
-    if (f.speed > 0.4) this.speed = this.speed * 0.8 + Math.min(2, Math.max(0.8, f.speed)) * 0.2;
+    if (f.speed > 0.4) this.speed = this.speed * 0.8 + Math.min(this.pace.max, Math.max(this.pace.min, f.speed)) * 0.2;
 
     const offRoute = p.offset > Math.max(25, f.accuracy * 1.5);
     this.offRouteReads = offRoute ? this.offRouteReads + 1 : 0;

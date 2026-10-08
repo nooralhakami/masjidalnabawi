@@ -487,6 +487,50 @@
   display: grid;
   place-items: center;
 }
+.rawdah-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rawdah-behind {
+  width: 100%;
+  min-height: 60px;
+  border-radius: 18px;
+  color: var(--ink);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: start;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+.rawdah-behind[hidden] {
+  display: none;
+}
+.rawdah-behind .tile {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--cat-women) 14%, transparent);
+  color: var(--cat-women);
+}
+.rawdah-permit,
+.rawdah-free {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.rawdah-permit {
+  color: var(--muted);
+}
+.rawdah-free {
+  color: var(--cat-acc);
+}
 .rawdah-title {
   font-size: 14.5px;
   font-weight: 700;
@@ -542,7 +586,7 @@
 /* One offset per map corner (Leaflet stacks a corner's controls, so per-control margins would add up). */
 .leaflet-bottom.leaflet-left,
 .leaflet-bottom.leaflet-right {
-  bottom: calc(96px + env(safe-area-inset-bottom));
+  bottom: calc(max(96px, var(--rawdah-h, 0px) + 20px) + env(safe-area-inset-bottom));
   transition: bottom 280ms var(--ease);
 }
 .leaflet-bottom .mc,
@@ -664,6 +708,25 @@ body.is-navigating .leaflet-bottom.leaflet-right {
   font-size: 13.5px;
   line-height: 1.7;
   color: var(--muted);
+}
+/* A named gate: the story of its name, under a small gold heading. */
+.gate-about {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-inline-start: 3px solid var(--gold);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+}
+.gate-about-k {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--heading);
+}
+.gate-about p {
+  margin: 2px 0 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ink);
 }
 .chips {
   display: flex;
@@ -1045,7 +1108,7 @@ body.is-navigating .leaflet-bottom.leaflet-right {
 }
 /* Messages appear above the bottom sheet when it is open. */
 .toast {
-  bottom: calc(max(110px, var(--sheet-h, 0px) + 16px) + env(safe-area-inset-bottom));
+  bottom: calc(max(110px, var(--rawdah-h, 0px) + 28px, var(--sheet-h, 0px) + 16px) + env(safe-area-inset-bottom));
 }
 .hdr-sub {
   white-space: nowrap;
@@ -1064,4 +1127,56 @@ body.is-navigating .leaflet-bottom.leaflet-right {
   .hdr-row > .pill-btn svg:last-child {
     display: none;
   }
+}
+
+/* Walking / by car toggle, next to the route button. */
+.travel {
+  display: flex;
+  flex: none;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+.travel-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.travel-btn[aria-pressed='true'] {
+  background: var(--surface-2);
+  color: var(--heading);
+  box-shadow: var(--shadow);
+}
+.route-legs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.route-legs .leg {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  color: var(--ink);
+}
+.route-legs .leg-drive {
+  color: var(--cat-men);
+}
+.route-legs .leg-lot {
+  background: var(--cat-men);
+  color: #fff;
 }

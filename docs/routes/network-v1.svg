@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1086" height="944" font-family="sans-serif" direction="rtl">
+<style>text{font-size:11px;text-anchor:middle;dominant-baseline:middle}.o{font-size:16px;font-weight:700;fill:#555}.leg{font-size:13px;font-weight:700;fill:#8a6d00}</style>
+<rect width="100%" height="100%" fill="#f4f1ea"/>
+<rect x="233.6" y="239.6" width="646.8" height="448.8" fill="#0e4d3a" opacity=".18"/><text x="557.0" y="464.0" class="o">المسجد (ممنوع العبور)</text><rect x="917.6" y="590.0" width="230.4" height="360.0" fill="#6a4e39" opacity=".18"/><text x="1032.8" y="770.0" class="o">البقيع</text>
+<polyline points="896.0,858.0 135.2,858.0 135.2,102.5 944.2,102.5 944.2,542.0 896.0,585.2 896.0,858.0" fill="none" stroke="#e0a800" stroke-width="5" stroke-dasharray="10 5"/>
+<text class="leg" x="515.6" y="858.0" dy="16" dx="0">0</text><text class="leg" x="135.2" y="480.2" dy="0" dx="-16">1</text><text class="leg" x="539.7" y="102.5" dy="-16" dx="0">2</text><text class="leg" x="944.2" y="322.2" dy="0" dx="16">3</text><text class="leg" x="920.1" y="563.6" dy="0" dx="0">4</text><text class="leg" x="896.0" y="721.6" dy="0" dx="16">5</text>
+<circle cx="796.4" cy="880.4" r="11" fill="#0e8478"/><text x="796.4" y="880.4" fill="#fff">202</text>
+<circle cx="796.4" cy="771.2" r="11" fill="#1f64a8"/><text x="796.4" y="771.2" fill="#fff">201</text>
+<circle cx="644.0" cy="880.4" r="11" fill="#c9a15b"/><text x="644.0" y="880.4" fill="#fff">204</text>
+<circle cx="644.0" cy="771.2" r="11" fill="#1f64a8"/><text x="644.0" y="771.2" fill="#fff">203</text>
+<circle cx="496.4" cy="880.4" r="11" fill="#1f64a8"/><text x="496.4" y="880.4" fill="#fff">206</text>
+<circle cx="496.4" cy="771.2" r="11" fill="#1f64a8"/><text x="496.4" y="771.2" fill="#fff">205</text>
+<circle cx="350.0" cy="880.4" r="11" fill="#1f64a8"/><text x="350.0" y="880.4" fill="#fff">208</text>
+<circle cx="350.0" cy="771.2" r="11" fill="#1f64a8"/><text x="350.0" y="771.2" fill="#fff">207</text>
+<circle cx="157.6" cy="880.4" r="11" fill="#0e8478"/><text x="157.6" y="880.4" fill="#fff">210</text>
+<circle cx="157.6" cy="771.2" r="11" fill="#1f64a8"/><text x="157.6" y="771.2" fill="#fff">209</text>
+<circle cx="162.4" cy="688.4" r="11" fill="#1f64a8"/><text x="162.4" y="688.4" fill="#fff">211</text>
+<circle cx="64.0" cy="688.4" r="11" fill="#1f64a8"/><text x="64.0" y="688.4" fill="#fff">212</text>
+<circle cx="157.6" cy="535.2" r="11" fill="#1f64a8"/><text x="157.6" y="535.2" fill="#fff">213</text>
+<circle cx="64.0" cy="535.2" r="11" fill="#1f64a8"/><text x="64.0" y="535.2" fill="#fff">214</text>
+<circle cx="157.6" cy="390.8" r="11" fill="#83409b"/><text x="157.6" y="390.8" fill="#fff">215</text>
+<circle cx="64.0" cy="390.8" r="11" fill="#83409b"/><text x="64.0" y="390.8" fill="#fff">216</text>
+<circle cx="157.6" cy="238.3" r="11" fill="#83409b"/><text x="157.6" y="238.3" fill="#fff">217</text>
+<circle cx="64.0" cy="238.3" r="11" fill="#83409b"/><text x="64.0" y="238.3" fill="#fff">218</text>
+<circle cx="64.0" cy="64.0" r="11" fill="#1f64a8"/><text x="64.0" y="64.0" fill="#fff">220</text>
+<circle cx="64.0" cy="158.0" r="11" fill="#83409b"/><text x="64.0" y="158.0" fill="#fff">219</text>
+<circle cx="157.6" cy="64.0" r="11" fill="#1f64a8"/><text x="157.6" y="64.0" fill="#fff">222</text>
+<circle cx="157.6" cy="158.0" r="11" fill="#0e8478"/><text x="157.6" y="158.0" fill="#fff">221</text>
+<circle cx="346.4" cy="64.0" r="11" fill="#83409b"/><text x="346.4" y="64.0" fill="#fff">224</text>
+<circle cx="346.4" cy="158.0" r="11" fill="#83409b"/><text x="346.4" y="158.0" fill="#fff">223</text>
+<circle cx="494.0" cy="64.0" r="11" fill="#1f64a8"/><text x="494.0" y="64.0" fill="#fff">226</text>
+<circle cx="494.0" cy="158.0" r="11" fill="#1f64a8"/><text x="494.0" y="158.0" fill="#fff">225</text>
+<circle cx="644.0" cy="64.0" r="11" fill="#1f64a8"/><text x="644.0" y="64.0" fill="#fff">228</text>
+<circle cx="644.0" cy="158.0" r="11" fill="#1f64a8"/><text x="644.0" y="158.0" fill="#fff">227</text>
+<circle cx="796.4" cy="64.0" r="11" fill="#83409b"/><text x="796.4" y="64.0" fill="#fff">230</text>
+<circle cx="796.4" cy="158.0" r="11" fill="#83409b"/><text x="796.4" y="158.0" fill="#fff">229</text>
+<circle cx="1022.0" cy="449.6" r="11" fill="#1f64a8"/><text x="1022.0" y="449.6" fill="#fff">236</text>
+<circle cx="934.4" cy="449.6" r="11" fill="#1f64a8"/><text x="934.4" y="449.6" fill="#fff">235</text>
+<circle cx="1022.0" cy="338.0" r="11" fill="#1f64a8"/><text x="1022.0" y="338.0" fill="#fff">234</text>
+<circle cx="934.4" cy="338.0" r="11" fill="#83409b"/><text x="934.4" y="338.0" fill="#fff">233</text>
+<circle cx="1022.0" cy="158.0" r="11" fill="#83409b"/><text x="1022.0" y="158.0" fill="#fff">232</text>
+<circle cx="934.4" cy="158.0" r="11" fill="#83409b"/><text x="934.4" y="158.0" fill="#fff">231</text>
+<rect x="709.2" y="817.8" width="22" height="16" rx="4" fill="#1f64a8"/><text x="720.2" y="825.8" fill="#fff">P1</text>
+<rect x="559.2" y="817.8" width="22" height="16" rx="4" fill="#9f1239"/><text x="570.2" y="825.8" fill="#fff">P2</text>
+<rect x="412.2" y="817.8" width="22" height="16" rx="4" fill="#1f64a8"/><text x="423.2" y="825.8" fill="#fff">P3</text>
+<rect x="265.8" y="817.8" width="22" height="16" rx="4" fill="#1f64a8"/><text x="276.8" y="825.8" fill="#fff">P4</text>
+<rect x="148.2" y="598.2" width="22" height="16" rx="4" fill="#1f64a8"/><text x="159.2" y="606.2" fill="#fff">P5</text>
+<rect x="148.2" y="449.4" width="22" height="16" rx="4" fill="#9f1239"/><text x="159.2" y="457.4" fill="#fff">P6</text>
+<rect x="148.2" y="330.6" width="22" height="16" rx="4" fill="#1f64a8"/><text x="159.2" y="338.6" fill="#fff">P7</text>
+<rect x="262.2" y="118.5" width="22" height="16" rx="4" fill="#9f1239"/><text x="273.2" y="126.5" fill="#fff">P8</text>
+<rect x="409.2" y="111.0" width="22" height="16" rx="4" fill="#1f64a8"/><text x="420.2" y="119.0" fill="#fff">P9</text>
+<rect x="558.0" y="111.0" width="22" height="16" rx="4" fill="#9f1239"/><text x="569.0" y="119.0" fill="#fff">P10</text>
+<rect x="709.2" y="111.0" width="22" height="16" rx="4" fill="#1f64a8"/><text x="720.2" y="119.0" fill="#fff">P11</text>
+<rect x="967.2" y="240.0" width="22" height="16" rx="4" fill="#1f64a8"/><text x="978.2" y="248.0" fill="#fff">P12</text>
+<rect x="967.2" y="385.8" width="22" height="16" rx="4" fill="#1f64a8"/><text x="978.2" y="393.8" fill="#fff">P13</text>
+<text x="1066" y="20" style="text-anchor:start;font-size:13px;font-weight:700">↑ شمال · الخط الأصفر = حلقة الممرات الحالية (أرقام الأضلاع 0–5)</text>
+</svg>

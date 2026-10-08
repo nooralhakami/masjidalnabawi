@@ -6,6 +6,7 @@
 .mc-btn,
 .mc-zoom,
 .rawdah-card,
+.rawdah-behind,
 .map-quick-action,
 .navigation-status {
   background: var(--glass);
@@ -25,6 +26,7 @@
   .mc-btn,
   .mc-zoom,
   .rawdah-card,
+  .rawdah-behind,
   .map-quick-action,
   .navigation-status {
     background: var(--surface);

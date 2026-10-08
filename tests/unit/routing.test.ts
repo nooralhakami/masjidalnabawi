@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { POI_BY_ID } from '../../src/data';
+import { POIS, POI_BY_ID, ROUTING } from '../../src/data';
 import type { LatLng } from '../../src/data';
-import { insideRect, network, pathLength, toM, walkMinutes, walkPath } from '../../src/routing/walk';
+import { insideRect, network, pathLength, projectOnRing, toM, walkMinutes, walkPath } from '../../src/routing/walk';
 
 const at = (id: number): LatLng => {
   const p = POI_BY_ID.get(id)!;
@@ -55,12 +55,13 @@ describe('walking routes', () => {
     expect(pathLength(path)).toBeLessThan(150);
   });
 
-  it('west plaza → elderly restrooms 204 goes round by the south (≈615 m, 8 min)', () => {
+  it('west plaza → elderly restrooms 204 takes the west cross links and the south-west walk (≈510 m, 7 min)', () => {
+    // Was ≈615 m round the old ring; the owner's west-plaza walkways (2026-10-08) cut ~100 m.
     const path = walkPath([24.4685, 39.6084], at(204));
     const m = pathLength(path);
-    expect(m).toBeGreaterThan(560);
-    expect(m).toBeLessThan(660);
-    expect(walkMinutes(m)).toBe(8);
+    expect(m).toBeGreaterThan(470);
+    expect(m).toBeLessThan(550);
+    expect(walkMinutes(m)).toBe(7);
   });
 
   it('north ↔ south takes the shorter way round the ring', () => {
@@ -76,12 +77,75 @@ describe('walking routes', () => {
   });
 });
 
-describe('walkway ring', () => {
-  it('no ring segment passes through the mosque or Al-Baqi’', async () => {
+describe('every reachable place, from every plaza side', () => {
+  // The whole data set, not a sample: any change to the walkway network must keep all of these true.
+  const SIDES: [string, LatLng][] = [...STARTS, ['east plaza', [24.4688, 39.614]]];
+  const reachable = POIS.filter((p) => !inObstacle([p.lat, p.lng]));
+
+  it('covers the outdoor places (facilities, outer gates, parking, services)', () => {
+    expect(reachable.length).toBeGreaterThan(150);
+    for (let id = 201; id <= 236; id++) expect(reachable.some((p) => p.id === id), String(id)).toBe(true);
+  });
+
+  for (const [name, start] of SIDES) {
+    it(`from the ${name}: starts and ends right, never enters an obstacle, never goes the long way round`, () => {
+      const N = network();
+      for (const p of reachable) {
+        const to: LatLng = [p.lat, p.lng];
+        const path = walkPath(start, to);
+        const m = pathLength(path);
+        expect(enters(path), `${name} → ${p.id}`).toBe(false);
+        expect(path[0][0]).toBeCloseTo(start[0], 6);
+        expect(path[path.length - 1][1]).toBeCloseTo(to[1], 6);
+        // At most half the ring plus the two spurs to and from it (and rounding slack).
+        const spurs = projectOnRing(toM(start), N).d + projectOnRing(toM(to), N).d;
+        expect(m, `${name} → ${p.id}`).toBeLessThan(N.P / 2 + spurs + 20);
+      }
+    });
+  }
+});
+
+describe('walkway network', () => {
+  it('no walkway (ring or branch) passes through the mosque or Al-Baqi’', async () => {
     const { segmentHits } = await import('../../src/routing/walk');
     const N = network();
-    for (const s of N.seg) {
-      for (const r of N.obstacles) expect(segmentHits(s.a, s.b, r), `segment starting at ${s.a}`).toBe(false);
+    for (const e of N.edges) {
+      for (const r of N.obstacles) expect(segmentHits(N.nodes[e.u], N.nodes[e.v], r), `edge ${e.u}–${e.v}`).toBe(false);
     }
+  });
+
+  it('is one connected network: every junction can be reached from every other', () => {
+    const N = network();
+    const seen = new Set([0]);
+    const queue = [0];
+    while (queue.length) {
+      const k = queue.pop()!;
+      for (const e of N.edges) {
+        const j = e.u === k ? e.v : e.v === k ? e.u : -1;
+        if (j >= 0 && !seen.has(j)) {
+          seen.add(j);
+          queue.push(j);
+        }
+      }
+    }
+    expect(seen.size).toBe(N.nodes.length);
+  });
+
+  it('every branch is joined to the network (ring, spurs, cross links, women’s paths)', () => {
+    const N = network();
+    const near = (p: [number, number]) => N.nodes.some((n) => Math.hypot(n[0] - p[0], n[1] - p[1]) < 5);
+    expect(ROUTING.walkways.length).toBe(15);
+    for (const w of ROUTING.walkways) {
+      const ends = [w.path[0], w.path[w.path.length - 1]].map(toM);
+      expect(ends.some(near), w.id).toBe(true);
+    }
+  });
+
+  it('the north spurs stop at the mosque wall side, and the women’s links reach the prayer areas', () => {
+    for (const id of ['north-west-women-link', 'north-east-women-link', 'west-women-walk']) {
+      const w = ROUTING.walkways.find((x) => x.id === id)!;
+      expect(w.kind).toBe('women');
+    }
+    expect(ROUTING.women_prayer_areas.map((a) => a.id)).toEqual(['north-west', 'north-east']);
   });
 });

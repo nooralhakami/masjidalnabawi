@@ -1,0 +1,1677 @@
+{
+ "ringM": 2017,
+ "walkways": [
+  {
+   "id": "north-spur-west",
+   "kind": "spur",
+   "lengthM": 61
+  },
+  {
+   "id": "north-west-women-link",
+   "kind": "women",
+   "lengthM": 27
+  },
+  {
+   "id": "north-spur-middle",
+   "kind": "spur",
+   "lengthM": 69
+  },
+  {
+   "id": "north-spur-east",
+   "kind": "spur",
+   "lengthM": 61
+  },
+  {
+   "id": "north-east-women-link",
+   "kind": "women",
+   "lengthM": 27
+  },
+  {
+   "id": "west-link-221",
+   "kind": "link",
+   "lengthM": 50
+  },
+  {
+   "id": "west-spur",
+   "kind": "spur",
+   "lengthM": 60
+  },
+  {
+   "id": "west-women-walk",
+   "kind": "women",
+   "lengthM": 94
+  },
+  {
+   "id": "west-inner-walk",
+   "kind": "walk",
+   "lengthM": 201
+  },
+  {
+   "id": "west-cross-1",
+   "kind": "link",
+   "lengthM": 61
+  },
+  {
+   "id": "west-cross-2",
+   "kind": "link",
+   "lengthM": 61
+  },
+  {
+   "id": "west-cross-3",
+   "kind": "link",
+   "lengthM": 61
+  },
+  {
+   "id": "south-west-diagonal",
+   "kind": "walk",
+   "lengthM": 87
+  },
+  {
+   "id": "south-west-link",
+   "kind": "link",
+   "lengthM": 51
+  },
+  {
+   "id": "south-west-walk",
+   "kind": "walk",
+   "lengthM": 227
+  }
+ ],
+ "graph": {
+  "nodes": 36,
+  "edges": 41
+ },
+ "routes": [
+  {
+   "from": "south",
+   "to": 202,
+   "meters": 267,
+   "minutes": 4,
+   "walkways": []
+  },
+  {
+   "from": "south",
+   "to": 201,
+   "meters": 250,
+   "minutes": 4,
+   "walkways": []
+  },
+  {
+   "from": "south",
+   "to": 204,
+   "meters": 89,
+   "minutes": 2,
+   "walkways": []
+  },
+  {
+   "from": "south",
+   "to": 203,
+   "meters": 155,
+   "minutes": 2,
+   "walkways": []
+  },
+  {
+   "from": "south",
+   "to": 206,
+   "meters": 74,
+   "minutes": 1,
+   "walkways": []
+  },
+  {
+   "from": "south",
+   "to": 205,
+   "meters": 124,
+   "minutes": 2,
+   "walkways": [
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 208,
+   "meters": 212,
+   "minutes": 3,
+   "walkways": [
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 207,
+   "meters": 191,
+   "minutes": 3,
+   "walkways": [
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 210,
+   "meters": 332,
+   "minutes": 5,
+   "walkways": [
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 209,
+   "meters": 317,
+   "minutes": 4,
+   "walkways": [
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 211,
+   "meters": 309,
+   "minutes": 4,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 212,
+   "meters": 371,
+   "minutes": 5,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 213,
+   "meters": 387,
+   "minutes": 5,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 214,
+   "meters": 443,
+   "minutes": 6,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 215,
+   "meters": 473,
+   "minutes": 6,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 216,
+   "meters": 529,
+   "minutes": 7,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 217,
+   "meters": 624,
+   "minutes": 8,
+   "walkways": [
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 218,
+   "meters": 624,
+   "minutes": 8,
+   "walkways": [
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 220,
+   "meters": 745,
+   "minutes": 10,
+   "walkways": [
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 219,
+   "meters": 677,
+   "minutes": 9,
+   "walkways": [
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 222,
+   "meters": 746,
+   "minutes": 10,
+   "walkways": [
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 221,
+   "meters": 678,
+   "minutes": 9,
+   "walkways": [
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 224,
+   "meters": 863,
+   "minutes": 11,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 223,
+   "meters": 913,
+   "minutes": 12,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 226,
+   "meters": 958,
+   "minutes": 12,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 225,
+   "meters": 1006,
+   "minutes": 13,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 228,
+   "meters": 1049,
+   "minutes": 14,
+   "walkways": [
+    "north-spur-west",
+    "north-spur-middle",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 227,
+   "meters": 1075,
+   "minutes": 14,
+   "walkways": [
+    "north-spur-west",
+    "north-spur-middle",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 230,
+   "meters": 945,
+   "minutes": 12,
+   "walkways": []
+  },
+  {
+   "from": "south",
+   "to": 229,
+   "meters": 1011,
+   "minutes": 13,
+   "walkways": [
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "south",
+   "to": 236,
+   "meters": 567,
+   "minutes": 8,
+   "walkways": []
+  },
+  {
+   "from": "south",
+   "to": 235,
+   "meters": 522,
+   "minutes": 7,
+   "walkways": []
+  },
+  {
+   "from": "south",
+   "to": 234,
+   "meters": 636,
+   "minutes": 8,
+   "walkways": []
+  },
+  {
+   "from": "south",
+   "to": 233,
+   "meters": 690,
+   "minutes": 9,
+   "walkways": []
+  },
+  {
+   "from": "south",
+   "to": 232,
+   "meters": 749,
+   "minutes": 10,
+   "walkways": []
+  },
+  {
+   "from": "south",
+   "to": 231,
+   "meters": 802,
+   "minutes": 11,
+   "walkways": []
+  },
+  {
+   "from": "west",
+   "to": 202,
+   "meters": 636,
+   "minutes": 8,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 201,
+   "meters": 620,
+   "minutes": 8,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 204,
+   "meters": 541,
+   "minutes": 7,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 203,
+   "meters": 525,
+   "minutes": 7,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 206,
+   "meters": 439,
+   "minutes": 6,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 205,
+   "meters": 421,
+   "minutes": 6,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 208,
+   "meters": 420,
+   "minutes": 6,
+   "walkways": [
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-link",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 207,
+   "meters": 322,
+   "minutes": 5,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 210,
+   "meters": 284,
+   "minutes": 4,
+   "walkways": [
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-link",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 209,
+   "meters": 214,
+   "minutes": 3,
+   "walkways": [
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 211,
+   "meters": 184,
+   "minutes": 3,
+   "walkways": [
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 212,
+   "meters": 181,
+   "minutes": 3,
+   "walkways": [
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 213,
+   "meters": 81,
+   "minutes": 2,
+   "walkways": [
+    "west-cross-1"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 214,
+   "meters": 50,
+   "minutes": 1,
+   "walkways": []
+  },
+  {
+   "from": "west",
+   "to": 215,
+   "meters": 85,
+   "minutes": 2,
+   "walkways": [
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 216,
+   "meters": 47,
+   "minutes": 1,
+   "walkways": []
+  },
+  {
+   "from": "west",
+   "to": 217,
+   "meters": 180,
+   "minutes": 3,
+   "walkways": [
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 218,
+   "meters": 180,
+   "minutes": 3,
+   "walkways": [
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 220,
+   "meters": 301,
+   "minutes": 4,
+   "walkways": [
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 219,
+   "meters": 233,
+   "minutes": 3,
+   "walkways": [
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 222,
+   "meters": 302,
+   "minutes": 4,
+   "walkways": [
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 221,
+   "meters": 234,
+   "minutes": 3,
+   "walkways": [
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 224,
+   "meters": 419,
+   "minutes": 6,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 223,
+   "meters": 469,
+   "minutes": 6,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 226,
+   "meters": 515,
+   "minutes": 7,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 225,
+   "meters": 562,
+   "minutes": 8,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 228,
+   "meters": 605,
+   "minutes": 8,
+   "walkways": [
+    "north-spur-west",
+    "north-spur-middle",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 227,
+   "meters": 631,
+   "minutes": 8,
+   "walkways": [
+    "north-spur-west",
+    "north-spur-middle",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 230,
+   "meters": 700,
+   "minutes": 9,
+   "walkways": [
+    "north-spur-west",
+    "north-spur-middle",
+    "north-spur-east",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 229,
+   "meters": 749,
+   "minutes": 10,
+   "walkways": [
+    "north-spur-west",
+    "north-spur-middle",
+    "north-spur-east",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 236,
+   "meters": 936,
+   "minutes": 12,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 235,
+   "meters": 892,
+   "minutes": 12,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 234,
+   "meters": 1008,
+   "minutes": 13,
+   "walkways": [
+    "north-spur-west",
+    "north-spur-middle",
+    "north-spur-east",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 233,
+   "meters": 1061,
+   "minutes": 14,
+   "walkways": [
+    "north-spur-west",
+    "north-spur-middle",
+    "north-spur-east",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 232,
+   "meters": 895,
+   "minutes": 12,
+   "walkways": [
+    "north-spur-west",
+    "north-spur-middle",
+    "north-spur-east",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "west",
+   "to": 231,
+   "meters": 837,
+   "minutes": 11,
+   "walkways": [
+    "north-spur-west",
+    "north-spur-middle",
+    "north-spur-east",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 202,
+   "meters": 895,
+   "minutes": 12,
+   "walkways": [
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 201,
+   "meters": 883,
+   "minutes": 12,
+   "walkways": [
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 204,
+   "meters": 1012,
+   "minutes": 13,
+   "walkways": [
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 203,
+   "meters": 996,
+   "minutes": 13,
+   "walkways": [
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 206,
+   "meters": 965,
+   "minutes": 13,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 205,
+   "meters": 947,
+   "minutes": 12,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 208,
+   "meters": 949,
+   "minutes": 12,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-link",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 207,
+   "meters": 848,
+   "minutes": 11,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 210,
+   "meters": 813,
+   "minutes": 11,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-link",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 209,
+   "meters": 743,
+   "minutes": 10,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 211,
+   "meters": 713,
+   "minutes": 9,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 212,
+   "meters": 710,
+   "minutes": 9,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 213,
+   "meters": 608,
+   "minutes": 8,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk",
+    "west-cross-1"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 214,
+   "meters": 596,
+   "minutes": 8,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur",
+    "west-inner-walk"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 215,
+   "meters": 505,
+   "minutes": 7,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 216,
+   "meters": 505,
+   "minutes": 7,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221",
+    "west-spur"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 217,
+   "meters": 415,
+   "minutes": 6,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 218,
+   "meters": 415,
+   "minutes": 6,
+   "walkways": [
+    "north-spur-west",
+    "west-link-221"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 220,
+   "meters": 331,
+   "minutes": 5,
+   "walkways": [
+    "north-spur-west"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 219,
+   "meters": 361,
+   "minutes": 5,
+   "walkways": [
+    "north-spur-west"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 222,
+   "meters": 277,
+   "minutes": 4,
+   "walkways": [
+    "north-spur-west"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 221,
+   "meters": 323,
+   "minutes": 5,
+   "walkways": [
+    "north-spur-west"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 224,
+   "meters": 159,
+   "minutes": 2,
+   "walkways": []
+  },
+  {
+   "from": "north",
+   "to": 223,
+   "meters": 206,
+   "minutes": 3,
+   "walkways": []
+  },
+  {
+   "from": "north",
+   "to": 226,
+   "meters": 66,
+   "minutes": 1,
+   "walkways": []
+  },
+  {
+   "from": "north",
+   "to": 225,
+   "meters": 103,
+   "minutes": 2,
+   "walkways": [
+    "north-spur-middle"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 228,
+   "meters": 66,
+   "minutes": 1,
+   "walkways": [
+    "north-spur-middle"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 227,
+   "meters": 95,
+   "minutes": 2,
+   "walkways": [
+    "north-spur-middle"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 230,
+   "meters": 162,
+   "minutes": 3,
+   "walkways": [
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 229,
+   "meters": 211,
+   "minutes": 3,
+   "walkways": [
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 236,
+   "meters": 540,
+   "minutes": 7,
+   "walkways": [
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 235,
+   "meters": 593,
+   "minutes": 8,
+   "walkways": [
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 234,
+   "meters": 470,
+   "minutes": 6,
+   "walkways": [
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 233,
+   "meters": 523,
+   "minutes": 7,
+   "walkways": [
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 232,
+   "meters": 357,
+   "minutes": 5,
+   "walkways": [
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "north",
+   "to": 231,
+   "meters": 299,
+   "minutes": 4,
+   "walkways": [
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 202,
+   "meters": 373,
+   "minutes": 5,
+   "walkways": []
+  },
+  {
+   "from": "east",
+   "to": 201,
+   "meters": 362,
+   "minutes": 5,
+   "walkways": []
+  },
+  {
+   "from": "east",
+   "to": 204,
+   "meters": 490,
+   "minutes": 7,
+   "walkways": []
+  },
+  {
+   "from": "east",
+   "to": 203,
+   "meters": 474,
+   "minutes": 6,
+   "walkways": []
+  },
+  {
+   "from": "east",
+   "to": 206,
+   "meters": 582,
+   "minutes": 8,
+   "walkways": []
+  },
+  {
+   "from": "east",
+   "to": 205,
+   "meters": 566,
+   "minutes": 8,
+   "walkways": []
+  },
+  {
+   "from": "east",
+   "to": 208,
+   "meters": 674,
+   "minutes": 9,
+   "walkways": [
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 207,
+   "meters": 652,
+   "minutes": 9,
+   "walkways": [
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 210,
+   "meters": 794,
+   "minutes": 10,
+   "walkways": [
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 209,
+   "meters": 778,
+   "minutes": 10,
+   "walkways": [
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 211,
+   "meters": 770,
+   "minutes": 10,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 212,
+   "meters": 831,
+   "minutes": 11,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 213,
+   "meters": 847,
+   "minutes": 11,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 214,
+   "meters": 904,
+   "minutes": 12,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 215,
+   "meters": 933,
+   "minutes": 12,
+   "walkways": [
+    "west-inner-walk",
+    "west-cross-1",
+    "west-cross-2",
+    "west-cross-3",
+    "south-west-diagonal",
+    "south-west-walk"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 216,
+   "meters": 993,
+   "minutes": 13,
+   "walkways": [
+    "north-spur-west",
+    "north-spur-middle",
+    "north-spur-east",
+    "west-link-221",
+    "west-spur"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 217,
+   "meters": 904,
+   "minutes": 12,
+   "walkways": [
+    "north-spur-west",
+    "north-spur-middle",
+    "north-spur-east",
+    "west-link-221"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 218,
+   "meters": 903,
+   "minutes": 12,
+   "walkways": [
+    "north-spur-west",
+    "north-spur-middle",
+    "north-spur-east",
+    "west-link-221"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 220,
+   "meters": 820,
+   "minutes": 11,
+   "walkways": [
+    "north-spur-west",
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 219,
+   "meters": 850,
+   "minutes": 11,
+   "walkways": [
+    "north-spur-west",
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 222,
+   "meters": 765,
+   "minutes": 10,
+   "walkways": [
+    "north-spur-west",
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 221,
+   "meters": 812,
+   "minutes": 11,
+   "walkways": [
+    "north-spur-west",
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 224,
+   "meters": 647,
+   "minutes": 9,
+   "walkways": [
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 223,
+   "meters": 694,
+   "minutes": 9,
+   "walkways": [
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 226,
+   "meters": 555,
+   "minutes": 7,
+   "walkways": [
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 225,
+   "meters": 572,
+   "minutes": 8,
+   "walkways": [
+    "north-spur-middle",
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 228,
+   "meters": 461,
+   "minutes": 6,
+   "walkways": [
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 227,
+   "meters": 509,
+   "minutes": 7,
+   "walkways": [
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 230,
+   "meters": 366,
+   "minutes": 5,
+   "walkways": []
+  },
+  {
+   "from": "east",
+   "to": 229,
+   "meters": 432,
+   "minutes": 6,
+   "walkways": [
+    "north-spur-east"
+   ]
+  },
+  {
+   "from": "east",
+   "to": 236,
+   "meters": 18,
+   "minutes": 1,
+   "walkways": []
+  },
+  {
+   "from": "east",
+   "to": 235,
+   "meters": 71,
+   "minutes": 1,
+   "walkways": []
+  },
+  {
+   "from": "east",
+   "to": 234,
+   "meters": 57,
+   "minutes": 1,
+   "walkways": []
+  },
+  {
+   "from": "east",
+   "to": 233,
+   "meters": 110,
+   "minutes": 2,
+   "walkways": []
+  },
+  {
+   "from": "east",
+   "to": 232,
+   "meters": 169,
+   "minutes": 3,
+   "walkways": []
+  },
+  {
+   "from": "east",
+   "to": 231,
+   "meters": 222,
+   "minutes": 3,
+   "walkways": []
+  }
+ ]
+}

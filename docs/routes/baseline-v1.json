@@ -1,0 +1,2751 @@
+{
+ "ring": 6,
+ "perimeterM": 1939,
+ "legs": [
+  {
+   "i": 0,
+   "name": "الضلع الجنوبي (شرق→غرب)",
+   "lengthM": 475
+  },
+  {
+   "i": 1,
+   "name": "الضلع الغربي (جنوب→شمال)",
+   "lengthM": 472
+  },
+  {
+   "i": 2,
+   "name": "الضلع الشمالي (غرب→شرق)",
+   "lengthM": 506
+  },
+  {
+   "i": 3,
+   "name": "الضلع الشرقي (شمال→جنوب)",
+   "lengthM": 275
+  },
+  {
+   "i": 4,
+   "name": "وصلة مائلة قصيرة عند ركن البقيع",
+   "lengthM": 40
+  },
+  {
+   "i": 5,
+   "name": "الضلع الجنوبي الشرقي بمحاذاة البقيع (شمال→جنوب)",
+   "lengthM": 170
+  }
+ ],
+ "beside": [
+  {
+   "id": 365,
+   "name": "بوابة 365",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 41,
+   "alongLegM": 20
+  },
+  {
+   "id": 366,
+   "name": "بوابة 366",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 41,
+   "alongLegM": 62
+  },
+  {
+   "id": 367,
+   "name": "بوابة 367",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 41,
+   "alongLegM": 97
+  },
+  {
+   "id": 368,
+   "name": "بوابة 368",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 41,
+   "alongLegM": 140
+  },
+  {
+   "id": 369,
+   "name": "بوابة 369",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 41,
+   "alongLegM": 174
+  },
+  {
+   "id": 370,
+   "name": "بوابة 370",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 41,
+   "alongLegM": 218
+  },
+  {
+   "id": 301,
+   "name": "بوابة 301",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 41,
+   "alongLegM": 252
+  },
+  {
+   "id": 302,
+   "name": "بوابة 302",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 41,
+   "alongLegM": 265
+  },
+  {
+   "id": 303,
+   "name": "بوابة 303",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 41,
+   "alongLegM": 279
+  },
+  {
+   "id": 304,
+   "name": "بوابة 304",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 41,
+   "alongLegM": 306
+  },
+  {
+   "id": 305,
+   "name": "بوابة 305",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 41,
+   "alongLegM": 334
+  },
+  {
+   "id": 306,
+   "name": "بوابة 306",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 41,
+   "alongLegM": 372
+  },
+  {
+   "id": 307,
+   "name": "بوابة 307",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 41,
+   "alongLegM": 409
+  },
+  {
+   "id": 308,
+   "name": "بوابة 308",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 41,
+   "alongLegM": 450
+  },
+  {
+   "id": 309,
+   "name": "بوابة 309",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 47,
+   "alongLegM": 475
+  },
+  {
+   "id": 310,
+   "name": "بوابة 310",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 74,
+   "alongLegM": 475
+  },
+  {
+   "id": 311,
+   "name": "بوابة 311",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 72,
+   "alongLegM": 1
+  },
+  {
+   "id": 312,
+   "name": "بوابة 312",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 72,
+   "alongLegM": 49
+  },
+  {
+   "id": 313,
+   "name": "بوابة 313",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 72,
+   "alongLegM": 63
+  },
+  {
+   "id": 314,
+   "name": "بوابة 314",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 72,
+   "alongLegM": 93
+  },
+  {
+   "id": 315,
+   "name": "بوابة 315",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 72,
+   "alongLegM": 109
+  },
+  {
+   "id": 316,
+   "name": "بوابة 316",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 72,
+   "alongLegM": 122
+  },
+  {
+   "id": 317,
+   "name": "بوابة 317",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 72,
+   "alongLegM": 146
+  },
+  {
+   "id": 318,
+   "name": "بوابة 318",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 72,
+   "alongLegM": 200
+  },
+  {
+   "id": 319,
+   "name": "بوابة 319",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 72,
+   "alongLegM": 233
+  },
+  {
+   "id": 320,
+   "name": "بوابة 320",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 72,
+   "alongLegM": 273
+  },
+  {
+   "id": 321,
+   "name": "بوابة 321",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 72,
+   "alongLegM": 299
+  },
+  {
+   "id": 322,
+   "name": "بوابة 322",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 72,
+   "alongLegM": 335
+  },
+  {
+   "id": 323,
+   "name": "بوابة 323",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 72,
+   "alongLegM": 358
+  },
+  {
+   "id": 324,
+   "name": "بوابة 324",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 72,
+   "alongLegM": 409
+  },
+  {
+   "id": 325,
+   "name": "بوابة 325",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 72,
+   "alongLegM": 438
+  },
+  {
+   "id": 326,
+   "name": "بوابة 326",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 72,
+   "alongLegM": 466
+  },
+  {
+   "id": 327,
+   "name": "بوابة 327",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 73,
+   "alongLegM": 472
+  },
+  {
+   "id": 328,
+   "name": "بوابة 328",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 49,
+   "alongLegM": 13
+  },
+  {
+   "id": 329,
+   "name": "بوابة 329",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 49,
+   "alongLegM": 88
+  },
+  {
+   "id": 330,
+   "name": "بوابة 330",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 49,
+   "alongLegM": 153
+  },
+  {
+   "id": 331,
+   "name": "بوابة 331",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 49,
+   "alongLegM": 199
+  },
+  {
+   "id": 332,
+   "name": "بوابة 332",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 21,
+   "alongLegM": 254
+  },
+  {
+   "id": 333,
+   "name": "بوابة 333",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 21,
+   "alongLegM": 264
+  },
+  {
+   "id": 334,
+   "name": "بوابة 334",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 21,
+   "alongLegM": 274
+  },
+  {
+   "id": 335,
+   "name": "بوابة 335",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 21,
+   "alongLegM": 284
+  },
+  {
+   "id": 336,
+   "name": "بوابة 336",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 21,
+   "alongLegM": 293
+  },
+  {
+   "id": 337,
+   "name": "بوابة 337",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 49,
+   "alongLegM": 343
+  },
+  {
+   "id": 338,
+   "name": "بوابة 338",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 49,
+   "alongLegM": 391
+  },
+  {
+   "id": 339,
+   "name": "بوابة 339",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 49,
+   "alongLegM": 453
+  },
+  {
+   "id": 340,
+   "name": "بوابة 340",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 49,
+   "alongLegM": 484
+  },
+  {
+   "id": 341,
+   "name": "بوابة 341",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 49,
+   "alongLegM": 499
+  },
+  {
+   "id": 342,
+   "name": "بوابة 342",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 54,
+   "alongLegM": 506
+  },
+  {
+   "id": 343,
+   "name": "بوابة 343",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 63,
+   "alongLegM": 506
+  },
+  {
+   "id": 344,
+   "name": "بوابة 344",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 80,
+   "alongLegM": 12
+  },
+  {
+   "id": 345,
+   "name": "بوابة 345",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 80,
+   "alongLegM": 28
+  },
+  {
+   "id": 346,
+   "name": "بوابة 346",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 80,
+   "alongLegM": 101
+  },
+  {
+   "id": 347,
+   "name": "بوابة 347",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 80,
+   "alongLegM": 116
+  },
+  {
+   "id": 348,
+   "name": "بوابة 348",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 80,
+   "alongLegM": 197
+  },
+  {
+   "id": 349,
+   "name": "بوابة 349",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 80,
+   "alongLegM": 212
+  },
+  {
+   "id": 350,
+   "name": "بوابة 350",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 80,
+   "alongLegM": 242
+  },
+  {
+   "id": 351,
+   "name": "بوابة 351",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 80,
+   "alongLegM": 258
+  },
+  {
+   "id": 352,
+   "name": "بوابة 352",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 53,
+   "alongLegM": 275
+  },
+  {
+   "id": 353,
+   "name": "بوابة 353",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 40,
+   "alongLegM": 275
+  },
+  {
+   "id": 354,
+   "name": "بوابة 354",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 28,
+   "alongLegM": 275
+  },
+  {
+   "id": 355,
+   "name": "بوابة 355",
+   "leg": 4,
+   "legName": "وصلة مائلة قصيرة عند ركن البقيع",
+   "side": "out",
+   "offRingM": 10,
+   "alongLegM": 29
+  },
+  {
+   "id": 356,
+   "name": "بوابة 356",
+   "leg": 5,
+   "legName": "الضلع الجنوبي الشرقي بمحاذاة البقيع (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 15,
+   "alongLegM": 8
+  },
+  {
+   "id": 357,
+   "name": "بوابة 357",
+   "leg": 5,
+   "legName": "الضلع الجنوبي الشرقي بمحاذاة البقيع (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 8,
+   "alongLegM": 16
+  },
+  {
+   "id": 358,
+   "name": "بوابة 358",
+   "leg": 5,
+   "legName": "الضلع الجنوبي الشرقي بمحاذاة البقيع (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 8,
+   "alongLegM": 27
+  },
+  {
+   "id": 359,
+   "name": "بوابة 359",
+   "leg": 5,
+   "legName": "الضلع الجنوبي الشرقي بمحاذاة البقيع (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 4,
+   "alongLegM": 51
+  },
+  {
+   "id": 360,
+   "name": "بوابة 360",
+   "leg": 5,
+   "legName": "الضلع الجنوبي الشرقي بمحاذاة البقيع (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 4,
+   "alongLegM": 67
+  },
+  {
+   "id": 361,
+   "name": "بوابة 361",
+   "leg": 5,
+   "legName": "الضلع الجنوبي الشرقي بمحاذاة البقيع (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 4,
+   "alongLegM": 97
+  },
+  {
+   "id": 362,
+   "name": "بوابة 362",
+   "leg": 5,
+   "legName": "الضلع الجنوبي الشرقي بمحاذاة البقيع (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 4,
+   "alongLegM": 111
+  },
+  {
+   "id": 363,
+   "name": "بوابة 363",
+   "leg": 5,
+   "legName": "الضلع الجنوبي الشرقي بمحاذاة البقيع (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 4,
+   "alongLegM": 145
+  },
+  {
+   "id": 364,
+   "name": "بوابة 364",
+   "leg": 5,
+   "legName": "الضلع الجنوبي الشرقي بمحاذاة البقيع (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 4,
+   "alongLegM": 161
+  },
+  {
+   "id": 202,
+   "name": "مجمع دورات مشترك 202",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 14,
+   "alongLegM": 62
+  },
+  {
+   "id": 201,
+   "name": "مجمع دورات الرجال 201",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "in",
+   "offRingM": 54,
+   "alongLegM": 62
+  },
+  {
+   "id": 204,
+   "name": "دورات كبار السن وذوي الاحتياجات الخاصة 204",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 14,
+   "alongLegM": 157
+  },
+  {
+   "id": 203,
+   "name": "مجمع دورات الرجال 203",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "in",
+   "offRingM": 54,
+   "alongLegM": 157
+  },
+  {
+   "id": 206,
+   "name": "مجمع دورات الرجال 206",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 14,
+   "alongLegM": 250
+  },
+  {
+   "id": 205,
+   "name": "مجمع دورات الرجال 205",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "in",
+   "offRingM": 54,
+   "alongLegM": 250
+  },
+  {
+   "id": 208,
+   "name": "مجمع دورات الرجال 208",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 14,
+   "alongLegM": 341
+  },
+  {
+   "id": 207,
+   "name": "مجمع دورات الرجال 207",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "in",
+   "offRingM": 54,
+   "alongLegM": 341
+  },
+  {
+   "id": 210,
+   "name": "مجمع دورات مشترك 210",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "out",
+   "offRingM": 14,
+   "alongLegM": 461
+  },
+  {
+   "id": 209,
+   "name": "مجمع دورات الرجال 209",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "in",
+   "offRingM": 14,
+   "alongLegM": 54
+  },
+  {
+   "id": 211,
+   "name": "مجمع دورات الرجال 211",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "in",
+   "offRingM": 17,
+   "alongLegM": 106
+  },
+  {
+   "id": 212,
+   "name": "مجمع دورات الرجال 212",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 45,
+   "alongLegM": 106
+  },
+  {
+   "id": 213,
+   "name": "مجمع دورات الرجال 213",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "in",
+   "offRingM": 14,
+   "alongLegM": 202
+  },
+  {
+   "id": 214,
+   "name": "مجمع دورات الرجال 214",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 45,
+   "alongLegM": 202
+  },
+  {
+   "id": 215,
+   "name": "مجمع دورات النساء 215",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "in",
+   "offRingM": 14,
+   "alongLegM": 292
+  },
+  {
+   "id": 216,
+   "name": "مجمع دورات النساء 216",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 45,
+   "alongLegM": 292
+  },
+  {
+   "id": 217,
+   "name": "مجمع دورات النساء 217",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "in",
+   "offRingM": 14,
+   "alongLegM": 387
+  },
+  {
+   "id": 218,
+   "name": "مجمع دورات النساء 218",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 45,
+   "alongLegM": 387
+  },
+  {
+   "id": 220,
+   "name": "مجمع دورات الرجال 220",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 51,
+   "alongLegM": 472
+  },
+  {
+   "id": 219,
+   "name": "مجمع دورات النساء 219",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "out",
+   "offRingM": 45,
+   "alongLegM": 437
+  },
+  {
+   "id": 222,
+   "name": "مجمع دورات الرجال 222",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 24,
+   "alongLegM": 14
+  },
+  {
+   "id": 221,
+   "name": "مجمع دورات مشترك 221",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "in",
+   "offRingM": 14,
+   "alongLegM": 437
+  },
+  {
+   "id": 224,
+   "name": "مجمع دورات النساء 224",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 24,
+   "alongLegM": 132
+  },
+  {
+   "id": 223,
+   "name": "مجمع دورات النساء 223",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "in",
+   "offRingM": 35,
+   "alongLegM": 132
+  },
+  {
+   "id": 226,
+   "name": "مجمع دورات الرجال 226",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 24,
+   "alongLegM": 224
+  },
+  {
+   "id": 225,
+   "name": "مجمع دورات الرجال 225",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "in",
+   "offRingM": 35,
+   "alongLegM": 224
+  },
+  {
+   "id": 228,
+   "name": "مجمع دورات الرجال 228",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 24,
+   "alongLegM": 318
+  },
+  {
+   "id": 227,
+   "name": "مجمع دورات الرجال 227",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "in",
+   "offRingM": 35,
+   "alongLegM": 318
+  },
+  {
+   "id": 230,
+   "name": "مجمع دورات النساء 230",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "out",
+   "offRingM": 24,
+   "alongLegM": 413
+  },
+  {
+   "id": 229,
+   "name": "مجمع دورات النساء 229",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "in",
+   "offRingM": 35,
+   "alongLegM": 413
+  },
+  {
+   "id": 236,
+   "name": "مجمع دورات الرجال 236",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 49,
+   "alongLegM": 217
+  },
+  {
+   "id": 235,
+   "name": "مجمع دورات الرجال 235",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "in",
+   "offRingM": 6,
+   "alongLegM": 217
+  },
+  {
+   "id": 234,
+   "name": "مجمع دورات الرجال 234",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 49,
+   "alongLegM": 147
+  },
+  {
+   "id": 233,
+   "name": "مجمع دورات النساء 233",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "in",
+   "offRingM": 6,
+   "alongLegM": 147
+  },
+  {
+   "id": 232,
+   "name": "مجمع دورات النساء 232",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 49,
+   "alongLegM": 35
+  },
+  {
+   "id": 231,
+   "name": "مجمع دورات النساء 231",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "in",
+   "offRingM": 6,
+   "alongLegM": 35
+  },
+  {
+   "id": 901,
+   "name": "مواقف سيارات رقم 1",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "in",
+   "offRingM": 20,
+   "alongLegM": 110
+  },
+  {
+   "id": 902,
+   "name": "مواقف سيارات رقم 2",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "in",
+   "offRingM": 20,
+   "alongLegM": 204
+  },
+  {
+   "id": 903,
+   "name": "مواقف سيارات رقم 3",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "in",
+   "offRingM": 20,
+   "alongLegM": 295
+  },
+  {
+   "id": 904,
+   "name": "مواقف سيارات رقم 4",
+   "leg": 0,
+   "legName": "الضلع الجنوبي (شرق→غرب)",
+   "side": "in",
+   "offRingM": 20,
+   "alongLegM": 387
+  },
+  {
+   "id": 905,
+   "name": "مواقف سيارات رقم 5",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "in",
+   "offRingM": 15,
+   "alongLegM": 157
+  },
+  {
+   "id": 906,
+   "name": "مواقف سيارات رقم 6",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "in",
+   "offRingM": 15,
+   "alongLegM": 250
+  },
+  {
+   "id": 907,
+   "name": "مواقف سيارات رقم 7",
+   "leg": 1,
+   "legName": "الضلع الغربي (جنوب→شمال)",
+   "side": "in",
+   "offRingM": 15,
+   "alongLegM": 325
+  },
+  {
+   "id": 908,
+   "name": "مواقف سيارات رقم 8",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "in",
+   "offRingM": 15,
+   "alongLegM": 86
+  },
+  {
+   "id": 909,
+   "name": "مواقف سيارات رقم 9",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "in",
+   "offRingM": 10,
+   "alongLegM": 178
+  },
+  {
+   "id": 910,
+   "name": "مواقف سيارات رقم 10",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "in",
+   "offRingM": 10,
+   "alongLegM": 271
+  },
+  {
+   "id": 911,
+   "name": "مواقف سيارات رقم 11",
+   "leg": 2,
+   "legName": "الضلع الشمالي (غرب→شرق)",
+   "side": "in",
+   "offRingM": 10,
+   "alongLegM": 366
+  },
+  {
+   "id": 912,
+   "name": "مواقف سيارات رقم 12",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 21,
+   "alongLegM": 91
+  },
+  {
+   "id": 913,
+   "name": "مواقف سيارات رقم 13",
+   "leg": 3,
+   "legName": "الضلع الشرقي (شمال→جنوب)",
+   "side": "out",
+   "offRingM": 21,
+   "alongLegM": 182
+  }
+ ],
+ "routes": [
+  {
+   "from": "south",
+   "to": 202,
+   "meters": 210,
+   "minutes": 3,
+   "legs": [
+    0
+   ],
+   "points": 16
+  },
+  {
+   "from": "south",
+   "to": 201,
+   "meters": 250,
+   "minutes": 4,
+   "legs": [
+    0
+   ],
+   "points": 16
+  },
+  {
+   "from": "south",
+   "to": 204,
+   "meters": 89,
+   "minutes": 2,
+   "legs": [
+    0
+   ],
+   "points": 9
+  },
+  {
+   "from": "south",
+   "to": 203,
+   "meters": 157,
+   "minutes": 2,
+   "legs": [
+    0
+   ],
+   "points": 9
+  },
+  {
+   "from": "south",
+   "to": 206,
+   "meters": 74,
+   "minutes": 1,
+   "legs": [
+    0
+   ],
+   "points": 9
+  },
+  {
+   "from": "south",
+   "to": 205,
+   "meters": 143,
+   "minutes": 2,
+   "legs": [
+    0
+   ],
+   "points": 9
+  },
+  {
+   "from": "south",
+   "to": 208,
+   "meters": 166,
+   "minutes": 3,
+   "legs": [
+    0
+   ],
+   "points": 9
+  },
+  {
+   "from": "south",
+   "to": 207,
+   "meters": 232,
+   "minutes": 3,
+   "legs": [
+    0
+   ],
+   "points": 16
+  },
+  {
+   "from": "south",
+   "to": 210,
+   "meters": 312,
+   "minutes": 4,
+   "legs": [
+    0
+   ],
+   "points": 16
+  },
+  {
+   "from": "south",
+   "to": 209,
+   "meters": 377,
+   "minutes": 5,
+   "legs": [
+    0,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "south",
+   "to": 211,
+   "meters": 432,
+   "minutes": 6,
+   "legs": [
+    0,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "south",
+   "to": 212,
+   "meters": 460,
+   "minutes": 6,
+   "legs": [
+    0,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "south",
+   "to": 213,
+   "meters": 525,
+   "minutes": 7,
+   "legs": [
+    0,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "south",
+   "to": 214,
+   "meters": 555,
+   "minutes": 7,
+   "legs": [
+    0,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "south",
+   "to": 215,
+   "meters": 615,
+   "minutes": 8,
+   "legs": [
+    0,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "south",
+   "to": 216,
+   "meters": 645,
+   "minutes": 9,
+   "legs": [
+    0,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "south",
+   "to": 217,
+   "meters": 710,
+   "minutes": 9,
+   "legs": [
+    0,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "south",
+   "to": 218,
+   "meters": 741,
+   "minutes": 10,
+   "legs": [
+    0,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "south",
+   "to": 220,
+   "meters": 833,
+   "minutes": 11,
+   "legs": [
+    0,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "south",
+   "to": 219,
+   "meters": 791,
+   "minutes": 10,
+   "legs": [
+    0,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "south",
+   "to": 222,
+   "meters": 817,
+   "minutes": 11,
+   "legs": [
+    0,
+    1,
+    2
+   ],
+   "points": 30
+  },
+  {
+   "from": "south",
+   "to": 221,
+   "meters": 760,
+   "minutes": 10,
+   "legs": [
+    0,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "south",
+   "to": 224,
+   "meters": 935,
+   "minutes": 12,
+   "legs": [
+    0,
+    1,
+    2
+   ],
+   "points": 30
+  },
+  {
+   "from": "south",
+   "to": 223,
+   "meters": 945,
+   "minutes": 12,
+   "legs": [
+    0,
+    1,
+    2
+   ],
+   "points": 30
+  },
+  {
+   "from": "south",
+   "to": 226,
+   "meters": 1027,
+   "minutes": 13,
+   "legs": [
+    0,
+    1,
+    2
+   ],
+   "points": 30
+  },
+  {
+   "from": "south",
+   "to": 225,
+   "meters": 1037,
+   "minutes": 13,
+   "legs": [
+    0,
+    1,
+    2
+   ],
+   "points": 30
+  },
+  {
+   "from": "south",
+   "to": 228,
+   "meters": 949,
+   "minutes": 12,
+   "legs": [
+    0,
+    5,
+    4,
+    3,
+    2
+   ],
+   "points": 44
+  },
+  {
+   "from": "south",
+   "to": 227,
+   "meters": 960,
+   "minutes": 12,
+   "legs": [
+    0,
+    5,
+    4,
+    3,
+    2
+   ],
+   "points": 44
+  },
+  {
+   "from": "south",
+   "to": 230,
+   "meters": 854,
+   "minutes": 11,
+   "legs": [
+    0,
+    5,
+    4,
+    3,
+    2
+   ],
+   "points": 44
+  },
+  {
+   "from": "south",
+   "to": 229,
+   "meters": 864,
+   "minutes": 11,
+   "legs": [
+    0,
+    5,
+    4,
+    3,
+    2
+   ],
+   "points": 44
+  },
+  {
+   "from": "south",
+   "to": 236,
+   "meters": 572,
+   "minutes": 8,
+   "legs": [
+    0,
+    5,
+    4,
+    3
+   ],
+   "points": 37
+  },
+  {
+   "from": "south",
+   "to": 235,
+   "meters": 530,
+   "minutes": 7,
+   "legs": [
+    0,
+    5,
+    4,
+    3
+   ],
+   "points": 37
+  },
+  {
+   "from": "south",
+   "to": 234,
+   "meters": 641,
+   "minutes": 9,
+   "legs": [
+    0,
+    5,
+    4,
+    3
+   ],
+   "points": 37
+  },
+  {
+   "from": "south",
+   "to": 233,
+   "meters": 599,
+   "minutes": 8,
+   "legs": [
+    0,
+    5,
+    4,
+    3
+   ],
+   "points": 37
+  },
+  {
+   "from": "south",
+   "to": 232,
+   "meters": 754,
+   "minutes": 10,
+   "legs": [
+    0,
+    5,
+    4,
+    3
+   ],
+   "points": 37
+  },
+  {
+   "from": "south",
+   "to": 231,
+   "meters": 712,
+   "minutes": 9,
+   "legs": [
+    0,
+    5,
+    4,
+    3
+   ],
+   "points": 37
+  },
+  {
+   "from": "west",
+   "to": 202,
+   "meters": 718,
+   "minutes": 9,
+   "legs": [
+    1,
+    0
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 201,
+   "meters": 758,
+   "minutes": 10,
+   "legs": [
+    1,
+    0
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 204,
+   "meters": 623,
+   "minutes": 8,
+   "legs": [
+    1,
+    0
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 203,
+   "meters": 663,
+   "minutes": 9,
+   "legs": [
+    1,
+    0
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 206,
+   "meters": 530,
+   "minutes": 7,
+   "legs": [
+    1,
+    0
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 205,
+   "meters": 571,
+   "minutes": 8,
+   "legs": [
+    1,
+    0
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 208,
+   "meters": 439,
+   "minutes": 6,
+   "legs": [
+    1,
+    0
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 207,
+   "meters": 479,
+   "minutes": 6,
+   "legs": [
+    1,
+    0
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 210,
+   "meters": 319,
+   "minutes": 4,
+   "legs": [
+    1,
+    0
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 209,
+   "meters": 253,
+   "minutes": 4,
+   "legs": [
+    1
+   ],
+   "points": 16
+  },
+  {
+   "from": "west",
+   "to": 211,
+   "meters": 204,
+   "minutes": 3,
+   "legs": [
+    1
+   ],
+   "points": 16
+  },
+  {
+   "from": "west",
+   "to": 212,
+   "meters": 146,
+   "minutes": 2,
+   "legs": [
+    1
+   ],
+   "points": 9
+  },
+  {
+   "from": "west",
+   "to": 213,
+   "meters": 108,
+   "minutes": 2,
+   "legs": [
+    1
+   ],
+   "points": 9
+  },
+  {
+   "from": "west",
+   "to": 214,
+   "meters": 50,
+   "minutes": 1,
+   "legs": [
+    1
+   ],
+   "points": 9
+  },
+  {
+   "from": "west",
+   "to": 215,
+   "meters": 105,
+   "minutes": 2,
+   "legs": [
+    1
+   ],
+   "points": 9
+  },
+  {
+   "from": "west",
+   "to": 216,
+   "meters": 47,
+   "minutes": 1,
+   "legs": [
+    1
+   ],
+   "points": 9
+  },
+  {
+   "from": "west",
+   "to": 217,
+   "meters": 198,
+   "minutes": 3,
+   "legs": [
+    1
+   ],
+   "points": 16
+  },
+  {
+   "from": "west",
+   "to": 218,
+   "meters": 142,
+   "minutes": 2,
+   "legs": [
+    1
+   ],
+   "points": 9
+  },
+  {
+   "from": "west",
+   "to": 220,
+   "meters": 320,
+   "minutes": 5,
+   "legs": [
+    1
+   ],
+   "points": 16
+  },
+  {
+   "from": "west",
+   "to": 219,
+   "meters": 278,
+   "minutes": 4,
+   "legs": [
+    1
+   ],
+   "points": 16
+  },
+  {
+   "from": "west",
+   "to": 222,
+   "meters": 304,
+   "minutes": 4,
+   "legs": [
+    1,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 221,
+   "meters": 248,
+   "minutes": 4,
+   "legs": [
+    1
+   ],
+   "points": 16
+  },
+  {
+   "from": "west",
+   "to": 224,
+   "meters": 422,
+   "minutes": 6,
+   "legs": [
+    1,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 223,
+   "meters": 433,
+   "minutes": 6,
+   "legs": [
+    1,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 226,
+   "meters": 514,
+   "minutes": 7,
+   "legs": [
+    1,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 225,
+   "meters": 525,
+   "minutes": 7,
+   "legs": [
+    1,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 228,
+   "meters": 608,
+   "minutes": 8,
+   "legs": [
+    1,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 227,
+   "meters": 619,
+   "minutes": 8,
+   "legs": [
+    1,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 230,
+   "meters": 703,
+   "minutes": 9,
+   "legs": [
+    1,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 229,
+   "meters": 714,
+   "minutes": 9,
+   "legs": [
+    1,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "west",
+   "to": 236,
+   "meters": 1034,
+   "minutes": 13,
+   "legs": [
+    1,
+    2,
+    3
+   ],
+   "points": 30
+  },
+  {
+   "from": "west",
+   "to": 235,
+   "meters": 993,
+   "minutes": 13,
+   "legs": [
+    1,
+    2,
+    3
+   ],
+   "points": 30
+  },
+  {
+   "from": "west",
+   "to": 234,
+   "meters": 965,
+   "minutes": 13,
+   "legs": [
+    1,
+    2,
+    3
+   ],
+   "points": 30
+  },
+  {
+   "from": "west",
+   "to": 233,
+   "meters": 923,
+   "minutes": 12,
+   "legs": [
+    1,
+    2,
+    3
+   ],
+   "points": 30
+  },
+  {
+   "from": "west",
+   "to": 232,
+   "meters": 852,
+   "minutes": 11,
+   "legs": [
+    1,
+    2,
+    3
+   ],
+   "points": 30
+  },
+  {
+   "from": "west",
+   "to": 231,
+   "meters": 811,
+   "minutes": 11,
+   "legs": [
+    1,
+    2,
+    3
+   ],
+   "points": 30
+  },
+  {
+   "from": "north",
+   "to": 202,
+   "meters": 835,
+   "minutes": 11,
+   "legs": [
+    2,
+    3,
+    4,
+    5,
+    0
+   ],
+   "points": 44
+  },
+  {
+   "from": "north",
+   "to": 201,
+   "meters": 875,
+   "minutes": 11,
+   "legs": [
+    2,
+    3,
+    4,
+    5,
+    0
+   ],
+   "points": 44
+  },
+  {
+   "from": "north",
+   "to": 204,
+   "meters": 930,
+   "minutes": 12,
+   "legs": [
+    2,
+    3,
+    4,
+    5,
+    0
+   ],
+   "points": 44
+  },
+  {
+   "from": "north",
+   "to": 203,
+   "meters": 970,
+   "minutes": 13,
+   "legs": [
+    2,
+    3,
+    4,
+    5,
+    0
+   ],
+   "points": 44
+  },
+  {
+   "from": "north",
+   "to": 206,
+   "meters": 1010,
+   "minutes": 13,
+   "legs": [
+    2,
+    1,
+    0
+   ],
+   "points": 30
+  },
+  {
+   "from": "north",
+   "to": 205,
+   "meters": 1050,
+   "minutes": 14,
+   "legs": [
+    2,
+    1,
+    0
+   ],
+   "points": 30
+  },
+  {
+   "from": "north",
+   "to": 208,
+   "meters": 918,
+   "minutes": 12,
+   "legs": [
+    2,
+    1,
+    0
+   ],
+   "points": 30
+  },
+  {
+   "from": "north",
+   "to": 207,
+   "meters": 958,
+   "minutes": 12,
+   "legs": [
+    2,
+    1,
+    0
+   ],
+   "points": 30
+  },
+  {
+   "from": "north",
+   "to": 210,
+   "meters": 798,
+   "minutes": 10,
+   "legs": [
+    2,
+    1,
+    0
+   ],
+   "points": 30
+  },
+  {
+   "from": "north",
+   "to": 209,
+   "meters": 732,
+   "minutes": 10,
+   "legs": [
+    2,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "north",
+   "to": 211,
+   "meters": 683,
+   "minutes": 9,
+   "legs": [
+    2,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "north",
+   "to": 212,
+   "meters": 711,
+   "minutes": 9,
+   "legs": [
+    2,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "north",
+   "to": 213,
+   "meters": 585,
+   "minutes": 8,
+   "legs": [
+    2,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "north",
+   "to": 214,
+   "meters": 615,
+   "minutes": 8,
+   "legs": [
+    2,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "north",
+   "to": 215,
+   "meters": 495,
+   "minutes": 7,
+   "legs": [
+    2,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "north",
+   "to": 216,
+   "meters": 525,
+   "minutes": 7,
+   "legs": [
+    2,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "north",
+   "to": 217,
+   "meters": 399,
+   "minutes": 5,
+   "legs": [
+    2,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "north",
+   "to": 218,
+   "meters": 430,
+   "minutes": 6,
+   "legs": [
+    2,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "north",
+   "to": 220,
+   "meters": 356,
+   "minutes": 5,
+   "legs": [
+    2,
+    1
+   ],
+   "points": 16
+  },
+  {
+   "from": "north",
+   "to": 219,
+   "meters": 380,
+   "minutes": 5,
+   "legs": [
+    2,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "north",
+   "to": 222,
+   "meters": 313,
+   "minutes": 4,
+   "legs": [
+    2
+   ],
+   "points": 16
+  },
+  {
+   "from": "north",
+   "to": 221,
+   "meters": 349,
+   "minutes": 5,
+   "legs": [
+    2,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "north",
+   "to": 224,
+   "meters": 149,
+   "minutes": 2,
+   "legs": [
+    2
+   ],
+   "points": 9
+  },
+  {
+   "from": "north",
+   "to": 223,
+   "meters": 206,
+   "minutes": 3,
+   "legs": [
+    2
+   ],
+   "points": 16
+  },
+  {
+   "from": "north",
+   "to": 226,
+   "meters": 57,
+   "minutes": 1,
+   "legs": [
+    2
+   ],
+   "points": 9
+  },
+  {
+   "from": "north",
+   "to": 225,
+   "meters": 116,
+   "minutes": 2,
+   "legs": [
+    2
+   ],
+   "points": 9
+  },
+  {
+   "from": "north",
+   "to": 228,
+   "meters": 70,
+   "minutes": 1,
+   "legs": [
+    2
+   ],
+   "points": 9
+  },
+  {
+   "from": "north",
+   "to": 227,
+   "meters": 129,
+   "minutes": 2,
+   "legs": [
+    2
+   ],
+   "points": 9
+  },
+  {
+   "from": "north",
+   "to": 230,
+   "meters": 211,
+   "minutes": 3,
+   "legs": [
+    2
+   ],
+   "points": 16
+  },
+  {
+   "from": "north",
+   "to": 229,
+   "meters": 222,
+   "minutes": 3,
+   "legs": [
+    2
+   ],
+   "points": 16
+  },
+  {
+   "from": "north",
+   "to": 236,
+   "meters": 543,
+   "minutes": 7,
+   "legs": [
+    2,
+    3
+   ],
+   "points": 23
+  },
+  {
+   "from": "north",
+   "to": 235,
+   "meters": 501,
+   "minutes": 7,
+   "legs": [
+    2,
+    3
+   ],
+   "points": 23
+  },
+  {
+   "from": "north",
+   "to": 234,
+   "meters": 473,
+   "minutes": 6,
+   "legs": [
+    2,
+    3
+   ],
+   "points": 23
+  },
+  {
+   "from": "north",
+   "to": 233,
+   "meters": 431,
+   "minutes": 6,
+   "legs": [
+    2,
+    3
+   ],
+   "points": 23
+  },
+  {
+   "from": "north",
+   "to": 232,
+   "meters": 361,
+   "minutes": 5,
+   "legs": [
+    2,
+    3
+   ],
+   "points": 23
+  },
+  {
+   "from": "north",
+   "to": 231,
+   "meters": 319,
+   "minutes": 4,
+   "legs": [
+    2,
+    3
+   ],
+   "points": 23
+  },
+  {
+   "from": "east",
+   "to": 202,
+   "meters": 404,
+   "minutes": 6,
+   "legs": [
+    3,
+    4,
+    5,
+    0
+   ],
+   "points": 37
+  },
+  {
+   "from": "east",
+   "to": 201,
+   "meters": 445,
+   "minutes": 6,
+   "legs": [
+    3,
+    4,
+    5,
+    0
+   ],
+   "points": 37
+  },
+  {
+   "from": "east",
+   "to": 204,
+   "meters": 500,
+   "minutes": 7,
+   "legs": [
+    3,
+    4,
+    5,
+    0
+   ],
+   "points": 37
+  },
+  {
+   "from": "east",
+   "to": 203,
+   "meters": 540,
+   "minutes": 7,
+   "legs": [
+    3,
+    4,
+    5,
+    0
+   ],
+   "points": 37
+  },
+  {
+   "from": "east",
+   "to": 206,
+   "meters": 592,
+   "minutes": 8,
+   "legs": [
+    3,
+    4,
+    5,
+    0
+   ],
+   "points": 37
+  },
+  {
+   "from": "east",
+   "to": 205,
+   "meters": 632,
+   "minutes": 8,
+   "legs": [
+    3,
+    4,
+    5,
+    0
+   ],
+   "points": 37
+  },
+  {
+   "from": "east",
+   "to": 208,
+   "meters": 683,
+   "minutes": 9,
+   "legs": [
+    3,
+    4,
+    5,
+    0
+   ],
+   "points": 37
+  },
+  {
+   "from": "east",
+   "to": 207,
+   "meters": 723,
+   "minutes": 10,
+   "legs": [
+    3,
+    4,
+    5,
+    0
+   ],
+   "points": 37
+  },
+  {
+   "from": "east",
+   "to": 210,
+   "meters": 803,
+   "minutes": 11,
+   "legs": [
+    3,
+    4,
+    5,
+    0
+   ],
+   "points": 37
+  },
+  {
+   "from": "east",
+   "to": 209,
+   "meters": 869,
+   "minutes": 11,
+   "legs": [
+    3,
+    4,
+    5,
+    0,
+    1
+   ],
+   "points": 44
+  },
+  {
+   "from": "east",
+   "to": 211,
+   "meters": 924,
+   "minutes": 12,
+   "legs": [
+    3,
+    4,
+    5,
+    0,
+    1
+   ],
+   "points": 44
+  },
+  {
+   "from": "east",
+   "to": 212,
+   "meters": 951,
+   "minutes": 12,
+   "legs": [
+    3,
+    4,
+    5,
+    0,
+    1
+   ],
+   "points": 44
+  },
+  {
+   "from": "east",
+   "to": 213,
+   "meters": 1016,
+   "minutes": 13,
+   "legs": [
+    3,
+    4,
+    5,
+    0,
+    1
+   ],
+   "points": 44
+  },
+  {
+   "from": "east",
+   "to": 214,
+   "meters": 1047,
+   "minutes": 14,
+   "legs": [
+    3,
+    4,
+    5,
+    0,
+    1
+   ],
+   "points": 44
+  },
+  {
+   "from": "east",
+   "to": 215,
+   "meters": 944,
+   "minutes": 12,
+   "legs": [
+    3,
+    2,
+    1
+   ],
+   "points": 30
+  },
+  {
+   "from": "east",
+   "to": 216,
+   "meters": 974,
+   "minutes": 13,
+   "legs": [
+    3,
+    2,
+    1
+   ],
+   "points": 30
+  },
+  {
+   "from": "east",
+   "to": 217,
+   "meters": 849,
+   "minutes": 11,
+   "legs": [
+    3,
+    2,
+    1
+   ],
+   "points": 30
+  },
+  {
+   "from": "east",
+   "to": 218,
+   "meters": 879,
+   "minutes": 11,
+   "legs": [
+    3,
+    2,
+    1
+   ],
+   "points": 30
+  },
+  {
+   "from": "east",
+   "to": 220,
+   "meters": 805,
+   "minutes": 11,
+   "legs": [
+    3,
+    2,
+    1
+   ],
+   "points": 23
+  },
+  {
+   "from": "east",
+   "to": 219,
+   "meters": 829,
+   "minutes": 11,
+   "legs": [
+    3,
+    2,
+    1
+   ],
+   "points": 30
+  },
+  {
+   "from": "east",
+   "to": 222,
+   "meters": 762,
+   "minutes": 10,
+   "legs": [
+    3,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "east",
+   "to": 221,
+   "meters": 798,
+   "minutes": 10,
+   "legs": [
+    3,
+    2,
+    1
+   ],
+   "points": 30
+  },
+  {
+   "from": "east",
+   "to": 224,
+   "meters": 644,
+   "minutes": 9,
+   "legs": [
+    3,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "east",
+   "to": 223,
+   "meters": 655,
+   "minutes": 9,
+   "legs": [
+    3,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "east",
+   "to": 226,
+   "meters": 552,
+   "minutes": 7,
+   "legs": [
+    3,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "east",
+   "to": 225,
+   "meters": 563,
+   "minutes": 8,
+   "legs": [
+    3,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "east",
+   "to": 228,
+   "meters": 458,
+   "minutes": 6,
+   "legs": [
+    3,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "east",
+   "to": 227,
+   "meters": 469,
+   "minutes": 6,
+   "legs": [
+    3,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "east",
+   "to": 230,
+   "meters": 363,
+   "minutes": 5,
+   "legs": [
+    3,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "east",
+   "to": 229,
+   "meters": 374,
+   "minutes": 5,
+   "legs": [
+    3,
+    2
+   ],
+   "points": 23
+  },
+  {
+   "from": "east",
+   "to": 236,
+   "meters": 18,
+   "minutes": 1,
+   "legs": [
+    3
+   ],
+   "points": 9
+  },
+  {
+   "from": "east",
+   "to": 235,
+   "meters": 72,
+   "minutes": 1,
+   "legs": [
+    3
+   ],
+   "points": 9
+  },
+  {
+   "from": "east",
+   "to": 234,
+   "meters": 57,
+   "minutes": 1,
+   "legs": [
+    3
+   ],
+   "points": 9
+  },
+  {
+   "from": "east",
+   "to": 233,
+   "meters": 111,
+   "minutes": 2,
+   "legs": [
+    3
+   ],
+   "points": 9
+  },
+  {
+   "from": "east",
+   "to": 232,
+   "meters": 263,
+   "minutes": 4,
+   "legs": [
+    3
+   ],
+   "points": 16
+  },
+  {
+   "from": "east",
+   "to": 231,
+   "meters": 221,
+   "minutes": 3,
+   "legs": [
+    3
+   ],
+   "points": 16
+  }
+ ]
+}

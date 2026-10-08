@@ -22,10 +22,11 @@ import { LocationService } from '../location/LocationService';
 import { MeMarker } from '../location/MeMarker';
 import { RouteLayer } from './route-layer';
 import { createMap } from './setup';
+import { planRoute } from '../routing/plan';
+import { addWeatherChip } from '../ui/weather-chip';
 import { NavigationTracker } from '../navigation/NavigationTracker';
 import { applyTheme, savedTheme } from '../ui/theme';
 import { toast } from '../ui/toast';
-import { nearestEntrance, parkingEntrances } from '../domain/parking';
 
 applyTheme(savedTheme(), false);
 applyLang(initialLang());
@@ -42,6 +43,7 @@ app.innerHTML = `
 const fac = new Facilities();
 const handle = createMap(document.getElementById('map')!);
 const map = handle.map;
+addWeatherChip(map);
 const layer = new PoiLayer(map, fac, (p) => select(p, false));
 // One live location for the whole app: the "my location" button and navigation share it.
 const geo = new LocationService();
@@ -59,15 +61,15 @@ geo.onStatus((s, extra) => {
 });
 const route = new RouteLayer(map);
 const navigation = new NavigationTracker(map, geo, me, () => route.latLngs, (from) => {
-  // Left the route: redraw it from where the visitor actually is.
+  // Left the route: redraw it from where the visitor actually is, the same way (walking or driving).
   const dest = state.selected !== null ? POI_BY_ID.get(state.selected) : undefined;
   if (!dest || !route.active) return;
-  const parking = dest.category === 'parking' ? nearestEntrance([from.lat, from.lng], dest) : null;
-  const target = parking?.entrance ?? dest;
-  const info = route.show([from.lat, from.lng], [target.lat, target.lng], parking ? { entrances: parkingEntrances(dest), nearest: parking.entrance } : undefined);
-  navigation.routeChanged();
-  sheet.setRoute(info);
-  toast(t('rerouted'));
+  void planRoute([from.lat, from.lng], dest, sheet.travel).then((plan) => {
+    if (state.selected !== dest.id || !route.active) return;
+    sheet.setRoute(route.show(plan));
+    navigation.routeChanged();
+    toast(t('rerouted'));
+  });
 });
 
 navigation.onChange((s) => document.body.classList.toggle('is-navigating', s.state !== 'stopped'));
@@ -96,12 +98,22 @@ const pills = new Pills(
 const top = document.getElementById('ui-top')!;
 top.append(header.root, pills.root);
 
-const rawdah = new RawdahCard(() => {
-  const gate = POI_BY_ID.get(RULES.rules.rawdah.gate);
-  if (gate) select(gate, true);
-});
+const BEHIND_RAWDAH_ID = 604;
+const rawdah = new RawdahCard(
+  () => {
+    const gate = POI_BY_ID.get(RULES.rules.rawdah.gate);
+    if (gate) select(gate, true);
+  },
+  () => {
+    // The women's entrance to the area behind the Rawdah, facing Gate 21.
+    const entrance = POI_BY_ID.get(BEHIND_RAWDAH_ID);
+    if (entrance) select(entrance, true);
+  },
+);
 const bottom = document.getElementById('ui-bottom')!;
 bottom.append(rawdah.root);
+// The map controls and toasts sit above the Rawdah cards, which grow in the women's turn.
+new ResizeObserver(() => document.body.style.setProperty('--rawdah-h', `${rawdah.root.offsetHeight}px`)).observe(rawdah.root);
 
 const sheet = new Sheet(fac, {
   close: () => deselect(),
@@ -162,11 +174,13 @@ function focus(p: Poi, zoom: number, fly: boolean) {
 async function drawRoute(p: Poi) {
   const fix = geo.fresh() ?? (await geo.start());
   if (!fix || state.selected !== p.id) return;
-  const parking = p.category === 'parking' ? nearestEntrance([fix.lat, fix.lng], p) : null;
-  const target = parking?.entrance ?? p;
-  const info = route.show([fix.lat, fix.lng], [target.lat, target.lng], parking ? { entrances: parkingEntrances(p), nearest: parking.entrance } : undefined);
+  const travel = sheet.travel;
+  const plan = await planRoute([fix.lat, fix.lng], p, travel);
+  if (state.selected !== p.id) return;
+  if (travel === 'drive' && plan.mode === 'walk') toast(t('drive_fallback'), 5000);
+  const info = route.show(plan);
   sheet.setRoute(info);
-  await navigation.start();
+  await navigation.start(plan.mode);
   const topH = top.getBoundingClientRect().bottom;
   map.fitBounds(info.bounds, {
     paddingTopLeft: [40, topH + 24],

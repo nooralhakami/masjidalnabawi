@@ -562,3 +562,73 @@
 :root[data-theme='dark'] .leaflet-container {
   background: #141d1a;
 }
+
+/* Women's prayer areas inside the mosque (data/routing.json → women_prayer_areas). */
+.women-area {
+  fill: var(--women-area);
+  fill-opacity: 0.22;
+  stroke: var(--women-area);
+  stroke-opacity: 0.55;
+  stroke-dasharray: 6 4;
+}
+
+/* Current weather chip above the bottom-left map buttons. */
+.leaflet-bottom .weather-chip {
+  margin-bottom: 10px !important;
+}
+.weather-chip {
+  display: inline-flex;
+  flex-direction: row;
+  white-space: nowrap;
+  width: max-content;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 18px;
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-line);
+  color: var(--ink);
+  font: 700 14px/1 var(--font-ui);
+  box-shadow: var(--shadow);
+}
+.weather-chip[hidden] {
+  display: none;
+}
+.weather-chip svg {
+  color: var(--gold);
+}
+.weather-chip[data-sky='cloudy'] svg,
+.weather-chip[data-sky='fog'] svg,
+.weather-chip[data-sky='rain'] svg,
+.weather-chip[data-sky='storm'] svg {
+  color: var(--muted);
+}
+
+/* ---------- trips by car: the drive, the car park, the walk up ---------- */
+.route-drive {
+  stroke: var(--cat-men);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+/* Inside the underground car park (and up its stairs): dashed. */
+.route-garage {
+  stroke: var(--cat-men);
+  stroke-dasharray: 2 9;
+  stroke-linecap: round;
+  fill: none;
+}
+.route-ramp span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: var(--cat-men);
+  color: #fff;
+  font: 700 13px/1 var(--font-ui);
+  box-shadow: 0 0 0 2px #fff, var(--shadow);
+}

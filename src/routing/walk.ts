@@ -3,8 +3,9 @@ import type { LatLng } from '../data/types';
 import { haversine } from '../domain/geo';
 
 /**
- * Walking routes along the plaza walkway ring, ported from the reference app.
- * Never crosses the mosque building or Al-Baqi' (outside the Haram).
+ * Walking routes on the plaza walkway network: the main ring round the mosque plus the owner's
+ * branches (spurs to the north wall, cross links in the west plaza, paths to the women's prayer
+ * areas). Shortest path on that graph; never crosses the mosque building or Al-Baqi' (outside the Haram).
  */
 
 // Local metric projection around the reference anchor (same as the reference app).
@@ -39,15 +40,104 @@ interface Segment {
   t0: number;
 }
 
+/** One walkable piece of the graph between two nodes. */
+interface Edge {
+  u: number;
+  v: number;
+  l: number;
+}
+
 export interface Network {
+  /** The main ring (kept for reports and tests). */
   ring: XY[];
   seg: Segment[];
   /** Ring perimeter in metres. */
   P: number;
   obstacles: Rect[];
+  /** Walkway graph: ring + branches, split where they meet. */
+  nodes: XY[];
+  edges: Edge[];
 }
 
 let net: Network | null = null;
+
+const dist = (a: XY, b: XY) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+
+/** Closest point on segment a–b to p, with its parameter (0…1) and distance. */
+function project(p: XY, a: XY, b: XY): { q: XY; u: number; d: number } {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const l2 = dx * dx + dy * dy;
+  const u = l2 ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2)) : 0;
+  const q: XY = [a[0] + dx * u, a[1] + dy * u];
+  return { q, u, d: dist(p, q) };
+}
+
+/** A branch end this close to another walkway joins it there. */
+const JOIN_M = 4;
+/** Points closer than this are one node. */
+const MERGE_M = 1;
+
+function buildGraph(lines: XY[][]): { nodes: XY[]; edges: Edge[] } {
+  const segs = lines.flatMap((pts, li) => pts.slice(1).map((b, i) => ({ li, a: pts[i], b, cuts: [] as { u: number; p: XY }[] })));
+  // Branch ends that stop at (or just short of) another walkway join it there.
+  lines.forEach((pts, li) => {
+    for (const end of [0, pts.length - 1]) {
+      let best: { s: (typeof segs)[number]; u: number; q: XY; d: number } | null = null;
+      for (const s of segs) {
+        if (s.li === li) continue;
+        const pr = project(pts[end], s.a, s.b);
+        if (pr.d <= JOIN_M && (!best || pr.d < best.d)) best = { s, ...pr };
+      }
+      if (best) {
+        best.s.cuts.push({ u: best.u, p: best.q });
+        const own = segs.filter((s) => s.li === li);
+        const mine = end === 0 ? own[0] : own[own.length - 1];
+        mine.cuts.push({ u: end === 0 ? 0 : 1, p: best.q });
+      }
+    }
+  });
+  // Walkways that cross each other meet at the crossing.
+  for (let i = 0; i < segs.length; i++) {
+    for (let j = i + 1; j < segs.length; j++) {
+      const s = segs[i];
+      const t = segs[j];
+      if (s.li === t.li) continue;
+      const r: XY = [s.b[0] - s.a[0], s.b[1] - s.a[1]];
+      const q: XY = [t.b[0] - t.a[0], t.b[1] - t.a[1]];
+      const den = r[0] * q[1] - r[1] * q[0];
+      if (Math.abs(den) < 1e-9) continue;
+      const w: XY = [t.a[0] - s.a[0], t.a[1] - s.a[1]];
+      const u = (w[0] * q[1] - w[1] * q[0]) / den;
+      const v = (w[0] * r[1] - w[1] * r[0]) / den;
+      if (u > 0 && u < 1 && v > 0 && v < 1) {
+        const p: XY = [s.a[0] + r[0] * u, s.a[1] + r[1] * u];
+        s.cuts.push({ u, p });
+        t.cuts.push({ u: v, p });
+      }
+    }
+  }
+  const nodes: XY[] = [];
+  const node = (p: XY) => {
+    const k = nodes.findIndex((n) => dist(n, p) < MERGE_M);
+    if (k >= 0) return k;
+    nodes.push(p);
+    return nodes.length - 1;
+  };
+  const edges: Edge[] = [];
+  for (const s of segs) {
+    const pts = [{ u: 0, p: s.a }, ...s.cuts, { u: 1, p: s.b }].sort((x, y) => x.u - y.u);
+    // A joined end replaces the segment's own end point.
+    const first = s.cuts.find((c) => c.u === 0)?.p ?? s.a;
+    const last = s.cuts.find((c) => c.u === 1)?.p ?? s.b;
+    const seq = pts.map((c) => (c.u === 0 ? first : c.u === 1 ? last : c.p)).map(node);
+    for (let i = 1; i < seq.length; i++) {
+      if (seq[i] === seq[i - 1]) continue;
+      edges.push({ u: seq[i - 1], v: seq[i], l: dist(nodes[seq[i - 1]], nodes[seq[i]]) });
+    }
+  }
+  return { nodes, edges };
+}
 
 export function network(): Network {
   if (net) return net;
@@ -61,8 +151,9 @@ export function network(): Network {
     P += l;
   });
   // The mosque is shrunk 3 m so paths may hug its walls, as in the reference.
-  const obstacles = [rectOf(ROUTING.obstacles.mosque_building, 3), rectOf(ROUTING.obstacles.baqi_outside_haram, 0)];
-  return (net = { ring, seg, P, obstacles });
+  const obstacles = Object.entries(ROUTING.obstacles).map(([name, poly]) => rectOf(poly, name === 'mosque_building' ? 3 : 0));
+  const lines = [[...ring, ring[0]], ...(ROUTING.walkways ?? []).map((w) => w.path.map(toM))];
+  return (net = { ring, seg, P, obstacles, ...buildGraph(lines) });
 }
 
 export const insideRect = (p: XY, r: Rect): boolean => p[0] > r.x0 && p[0] < r.x1 && p[1] > r.y0 && p[1] < r.y1;
@@ -124,9 +215,120 @@ export function roundCorners(P: XY[], r: number): XY[] {
   return out;
 }
 
+function inPolygon(p: XY, poly: XY[]): boolean {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i];
+    const [xj, yj] = poly[j];
+    if (yi > p[1] !== yj > p[1] && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+let openAreas: XY[][] | null = null;
+/** Both points on the same open area (no set paths there). */
+export function openTogether(a: XY, b: XY): boolean {
+  openAreas ??= (ROUTING.open_areas ?? []).map((o) => o.polygon.map(toM));
+  return openAreas.some((poly) => inPolygon(a, poly) && inPolygon(b, poly));
+}
+
+interface Hook {
+  /** Where the visitor joins the walkway, and the walk to it. */
+  q: XY;
+  d: number;
+  /** The edge it joins and how far along it. */
+  e: Edge;
+  along: number;
+}
+
 /**
- * Route from a to b. Short trips (< 150 m) take a right-angle "L" if it clears every obstacle;
- * otherwise both ends snap to the ring and the route follows it the shorter way round.
+ * Where a point may join the network: the nearest point of every edge it can reach in a straight
+ * line without crossing an obstacle (one it stands inside does not count), up to 40 m further than
+ * the nearest such edge, so the shortest path can pick the best one.
+ */
+function hooks(p: XY, N: Network): Hook[] {
+  const blocking = N.obstacles.filter((r) => !insideRect(p, r));
+  const all = N.edges.map((e) => {
+    const pr = project(p, N.nodes[e.u], N.nodes[e.v]);
+    return { q: pr.q, d: pr.d, e, along: pr.u * e.l, clear: !blocking.some((r) => segmentHits(p, pr.q, r)) };
+  });
+  const ok = all.filter((h) => h.clear);
+  const pool = ok.length ? ok : all;
+  const best = Math.min(...pool.map((h) => h.d));
+  return pool.filter((h) => h.d <= best + 40);
+}
+
+/** Shortest walk a → network → b, as points (without corner rounding), or null. */
+function graphRoute(A: XY, B: XY, N: Network): { pts: XY[]; length: number } | null {
+  const n = N.nodes.length;
+  const S = n;
+  const T = n + 1;
+  const adj: [number, number][][] = Array.from({ length: n + 2 }, () => []);
+  for (const e of N.edges) {
+    adj[e.u].push([e.v, e.l]);
+    adj[e.v].push([e.u, e.l]);
+  }
+  const hs = hooks(A, N);
+  const ht = hooks(B, N);
+  // Joining through a hook: S → q → edge end, edge end → q → T.
+  const via = new Map<string, XY>();
+  for (const h of hs) {
+    adj[S].push([h.e.u, h.d + h.along], [h.e.v, h.d + h.e.l - h.along]);
+    via.set(`S${h.e.u}`, via.get(`S${h.e.u}`) ?? h.q);
+    via.set(`S${h.e.v}`, via.get(`S${h.e.v}`) ?? h.q);
+  }
+  for (const h of ht) {
+    adj[h.e.u].push([T, h.d + h.along]);
+    adj[h.e.v].push([T, h.d + h.e.l - h.along]);
+  }
+  // Dijkstra (the graph is a few dozen nodes).
+  const D = new Array(n + 2).fill(Infinity);
+  const prev = new Array(n + 2).fill(-1);
+  const done = new Array(n + 2).fill(false);
+  D[S] = 0;
+  for (;;) {
+    let k = -1;
+    for (let i = 0; i < n + 2; i++) if (!done[i] && D[i] < Infinity && (k < 0 || D[i] < D[k])) k = i;
+    if (k < 0 || k === T) break;
+    done[k] = true;
+    for (const [j, w] of adj[k]) {
+      if (D[k] + w < D[j]) {
+        D[j] = D[k] + w;
+        prev[j] = k;
+      }
+    }
+  }
+  let best: { pts: XY[]; length: number } | null = null;
+  // Both ends on the same edge: walk along it directly.
+  for (const s of hs) {
+    for (const t of ht) {
+      if (s.e !== t.e) continue;
+      const length = s.d + Math.abs(s.along - t.along) + t.d;
+      if (!best || length < best.length) best = { pts: [A, s.q, t.q, B], length };
+    }
+  }
+  if (D[T] < Infinity && (!best || D[T] < best.length)) {
+    const chain: number[] = [];
+    for (let k = prev[T]; k !== S && k >= 0; k = prev[k]) chain.unshift(k);
+    const first = chain[0];
+    const last = chain[chain.length - 1];
+    // The hooks used at each end: the ones that give the costs Dijkstra settled on.
+    const hS = hs.reduce((m, h) => {
+      const c = h.e.u === first ? h.d + h.along : h.e.v === first ? h.d + h.e.l - h.along : Infinity;
+      return c < m.c ? { h, c } : m;
+    }, { h: hs[0], c: Infinity }).h;
+    const hT = ht.reduce((m, h) => {
+      const c = h.e.u === last ? h.d + h.along : h.e.v === last ? h.d + h.e.l - h.along : Infinity;
+      return c < m.c ? { h, c } : m;
+    }, { h: ht[0], c: Infinity }).h;
+    best = { pts: [A, hS.q, ...chain.map((k) => N.nodes[k]), hT.q, B], length: D[T] };
+  }
+  return best;
+}
+
+/**
+ * Route from a to b along the walkway network (shortest path). A short trip (< 150 m) may instead
+ * take a right-angle "L" that clears every obstacle, but only when the walkways would be much longer.
  */
 export function walkPath(a: LatLng, b: LatLng): LatLng[] {
   const N = network();
@@ -134,35 +336,24 @@ export function walkPath(a: LatLng, b: LatLng): LatLng[] {
   const A = toM(a);
   const B = toM(b);
   let pts: XY[] | null = null;
+  const graph = graphRoute(A, B, N);
 
-  if (Math.hypot(A[0] - B[0], A[1] - B[1]) < short_L_route_max_m) {
+  // Open ground (the west plaza): with both ends on it, walk straight across.
+  if (openTogether(A, B) && !hitsAny(A, B, N) && (!graph || dist(A, B) < graph.length)) pts = [A, B];
+
+  if (!pts && dist(A, B) < short_L_route_max_m) {
     for (const c of [
       [B[0], A[1]],
       [A[0], B[1]],
     ] as XY[]) {
-      if (!hitsAny(A, c, N) && !hitsAny(c, B, N)) {
+      const L = dist(A, c) + dist(c, B);
+      if (!hitsAny(A, c, N) && !hitsAny(c, B, N) && (!graph || L < graph.length / 1.5)) {
         pts = [A, c, B];
         break;
       }
     }
   }
-
-  if (!pts) {
-    const qa = projectOnRing(A, N);
-    const qb = projectOnRing(B, N);
-    const P = N.P;
-    let df = (((qb.t - qa.t) % P) + P) % P;
-    const fwd = df <= P / 2;
-    if (!fwd) df = P - df;
-    pts = [A, qa.p];
-    const mid: [number, XY][] = [];
-    N.seg.forEach((sg, i) => {
-      const d = fwd ? (((sg.t0 - qa.t) % P) + P) % P : (((qa.t - sg.t0) % P) + P) % P;
-      if (d > 0.5 && d < df - 0.5) mid.push([d, N.ring[i]]);
-    });
-    mid.sort((x, y) => x[0] - y[0]).forEach((m) => pts!.push(m[1]));
-    pts.push(qb.p, B);
-  }
+  pts ??= graph?.pts ?? [A, B];
 
   // Drop near-duplicate points before rounding.
   const clean: XY[] = [pts[0]];
@@ -171,6 +362,31 @@ export function walkPath(a: LatLng, b: LatLng): LatLng[] {
     if (Math.hypot(pts[i][0] - l[0], pts[i][1] - l[1]) > 0.5) clean.push(pts[i]);
   }
   return roundCorners(clean, corner_radius_m).map(fromM);
+}
+
+/**
+ * Along the main ring only, the shorter way round, from a to b (each joined to the ring by a straight
+ * line). The underground car park runs round the Haram in this shape (owner, 2026-10-08).
+ */
+export function ringPath(a: LatLng, b: LatLng): LatLng[] {
+  const N = network();
+  const A = toM(a);
+  const B = toM(b);
+  const qa = projectOnRing(A, N);
+  const qb = projectOnRing(B, N);
+  const P = N.P;
+  let df = (((qb.t - qa.t) % P) + P) % P;
+  const fwd = df <= P / 2;
+  if (!fwd) df = P - df;
+  const mid: [number, XY][] = [];
+  N.seg.forEach((sg, i) => {
+    const d = fwd ? (((sg.t0 - qa.t) % P) + P) % P : (((qa.t - sg.t0) % P) + P) % P;
+    if (d > 0.5 && d < df - 0.5) mid.push([d, N.ring[i]]);
+  });
+  const pts: XY[] = [A, qa.p, ...mid.sort((x, y) => x[0] - y[0]).map((m) => m[1]), qb.p, B];
+  const clean: XY[] = [pts[0]];
+  for (const p of pts.slice(1)) if (dist(p, clean[clean.length - 1]) > 0.5) clean.push(p);
+  return roundCorners(clean, ROUTING.rules.corner_radius_m).map(fromM);
 }
 
 /** Path length in metres. */

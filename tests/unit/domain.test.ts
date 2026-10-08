@@ -23,7 +23,7 @@ const shown = (filter: FilterId, toiletSub: 'all' | 'open' | 'closed' = 'all') =
 describe('filters', () => {
   it('"all" shows everything except parking', () => {
     const all = shown('all');
-    expect(all).toHaveLength(212 - 13);
+    expect(all).toHaveLength(223 - 13);
     expect(all.some((p) => p.category === 'parking')).toBe(false);
   });
 
@@ -38,7 +38,7 @@ describe('filters', () => {
 
   it('landmarks exclude wheelchair zones, which have their own pill', () => {
     expect(shown('landmarks').some((p) => p.subCategory === 'wheelchair_zone')).toBe(false);
-    expect(shown('landmarks')).toHaveLength(20);
+    expect(shown('landmarks')).toHaveLength(18);
     expect(shown('wheelchair')).toHaveLength(8);
     expect(shown('wheelchair').every((p) => p.subCategory === 'wheelchair_zone')).toBe(true);
   });
@@ -46,7 +46,7 @@ describe('filters', () => {
   it('women services = women + mixed restrooms + prayer halls + open women-section inner gates', () => {
     const w = shown('women');
     const womenGates = POIS.filter((p) => p.subCategory === 'gate_inner' && p.women);
-    expect(w.filter((p) => p.subCategory === 'toilet_women')).toHaveLength(12);
+    expect(w.filter((p) => p.subCategory === 'toilet_women')).toHaveLength(14);
     expect(w.filter((p) => p.subCategory === 'toilet_mixed').map((p) => p.id).sort()).toEqual([202, 210, 221]);
     expect(w.filter((p) => p.category === 'women')).toHaveLength(2);
     expect(w.filter((p) => p.subCategory === 'gate_inner')).toHaveLength(womenGates.length);
@@ -54,20 +54,20 @@ describe('filters', () => {
   });
 
   it('toilet sub-filters: everything starts open; closed = maintenance + works', () => {
-    expect(shown('toilets')).toHaveLength(36);
+    expect(shown('toilets')).toHaveLength(40);
     expect(shown('toilets', 'closed')).toHaveLength(0);
-    expect(shown('toilets', 'open')).toHaveLength(36);
+    expect(shown('toilets', 'open')).toHaveLength(40);
     fac.toggleMaintenance(212);
     fac.toggleElevatorWorks(215);
     expect(shown('toilets', 'closed').map((p) => p.id).sort()).toEqual([212, 215, 216]);
-    expect(shown('toilets', 'open')).toHaveLength(33);
+    expect(shown('toilets', 'open')).toHaveLength(37);
   });
 
   it('category pills match their category', () => {
     expect(shown('gates')).toHaveLength(112);
     expect(shown('hotels')).toHaveLength(7);
     expect(shown('food')).toHaveLength(12);
-    expect(shown('emergency')).toHaveLength(2);
+    expect(shown('emergency')).toHaveLength(11);
   });
 });
 
@@ -78,7 +78,7 @@ describe('facilities: alternatives by gender', () => {
     expect(alt.poi.id).toBe(217);
     expect(['toilet_women', 'toilet_mixed']).toContain(alt.poi.subCategory);
     expect(alt.meters).toBeGreaterThan(50);
-    expect(alt.meters).toBeLessThan(80);
+    expect(alt.meters).toBeLessThan(110); // 215↔217 after the v0 coordinate update: ~95 m
   });
 
   it('men → men or mixed, never women', () => {
@@ -221,5 +221,19 @@ describe('nearby', () => {
     expect(g.poi.subCategory).toBe('gate_outer');
     expect(g.poi.id).toBe(321);
     expect(nearestOuterGate(P(301))).toBeNull();
+  });
+});
+
+describe('weather', () => {
+  it('maps WMO codes to the skies we show', async () => {
+    const { skyOf } = await import('../../src/domain/weather');
+    expect([0, 1, 3, 45, 61, 81, 95].map(skyOf)).toEqual(['clear', 'cloudy', 'cloudy', 'fog', 'rain', 'rain', 'storm']);
+  });
+
+  it('reads the Open-Meteo "current" block and rejects anything else', async () => {
+    const { parseWeather } = await import('../../src/domain/weather');
+    expect(parseWeather({ current: { temperature_2m: 33.6, weather_code: 0, is_day: 0 } }, 5)).toEqual({ temp: 34, sky: 'clear', day: false, at: 5 });
+    expect(parseWeather({ error: true })).toBeNull();
+    expect(parseWeather(null)).toBeNull();
   });
 });

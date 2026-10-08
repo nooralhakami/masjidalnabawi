@@ -47,6 +47,18 @@ export function lookOf(p: Poi): Look {
     case 'gate_outer':
     case 'gate_inner':
       return { icon: 'gate', color: DIR_VAR[p.direction] };
+    // Key services: one colour, an icon for each kind of help.
+    case 'health':
+      return { icon: 'emergency', color: 'var(--cat-emg)' };
+    case 'police':
+      return { icon: 'police', color: 'var(--cat-emg)' };
+    case 'lost_children':
+    case 'child_care':
+      return { icon: 'child', color: 'var(--cat-emg)' };
+    case 'lost_found':
+      return { icon: 'lostfound', color: 'var(--cat-emg)' };
+    case 'service':
+      return { icon: 'info', color: 'var(--cat-emg)' };
     default:
       return p.category === 'emergency' ? { icon: 'emergency', color: 'var(--cat-emg)' } : { icon: 'landmark', color: 'var(--cat-land)' };
   }

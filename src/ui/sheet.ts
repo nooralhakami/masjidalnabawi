@@ -29,13 +29,23 @@ const WALK_M_PER_MIN = 80;
 /**
  * Draggable bottom sheet (closed / half / full) with a POI's details.
  */
+function savedTravel(): 'walk' | 'drive' {
+  try {
+    return localStorage.getItem('travel') === 'drive' ? 'drive' : 'walk';
+  } catch {
+    return 'walk';
+  }
+}
+
 export class Sheet {
   readonly root: HTMLElement;
   private body: HTMLElement;
   private foot: HTMLElement;
   private state: SheetState = 'closed';
   private poi: Poi | null = null;
-  private route: { meters: number; minutes: number; nearestEntrance?: number } | null = null;
+  private route: { meters: number; minutes: number; nearestEntrance?: number; drive?: { meters: number; lot: number; walkMeters: number } } | null = null;
+  /** How the visitor travels: walking by default, or by car (remembered). */
+  private mode: 'walk' | 'drive' = savedTravel();
 
   constructor(
     private fac: Facilities,
@@ -72,8 +82,12 @@ export class Sheet {
     if (wasClosed) (this.root.querySelector('.sh-title') as HTMLElement | null)?.focus({ preventScroll: true });
   }
 
-  /** Show (or clear) the walking-route summary for the current POI. */
-  setRoute(r: { meters: number; minutes: number } | null): void {
+  get travel(): 'walk' | 'drive' {
+    return this.mode;
+  }
+
+  /** Show (or clear) the route summary for the current POI. */
+  setRoute(r: { meters: number; minutes: number; nearestEntrance?: number; drive?: { meters: number; lot: number; walkMeters: number } } | null): void {
     this.route = r;
     this.root.dataset.route = r ? 'active' : 'inactive';
     this.render();
@@ -201,6 +215,15 @@ export class Sheet {
     else if (act === 'route') this.on.route(this.poi);
     else if (act === 'endroute') this.on.endRoute();
     else if (act === 'share') this.on.share(this.poi);
+    else if (act === 'travel') {
+      this.mode = b.dataset.mode === 'drive' ? 'drive' : 'walk';
+      try {
+        localStorage.setItem('travel', this.mode);
+      } catch {
+        /* private mode */
+      }
+      this.render();
+    }
     else if (act === 'go') {
       const p = POI_BY_ID.get(Number(b.dataset.id));
       if (p) this.on.goTo(p);
@@ -280,10 +303,19 @@ export class Sheet {
       ? `<div class="route-box" role="status">
           <div class="facts facts-3">
             <div class="fact"><span class="fact-k">${esc(t('r_dist'))}</span><span class="fact-v big">${esc(t('meters', { m: num(Math.round(r.meters / 5) * 5) }))}</span></div>
-            <div class="fact"><span class="fact-k">${esc(t('r_time'))}</span><span class="fact-v big">${esc(t('r_min', { t: r.minutes }))}</span></div>
+            <div class="fact"><span class="fact-k">${esc(t(r.drive ? 'r_time_total' : 'r_time'))}</span><span class="fact-v big">${esc(t('r_min', { t: r.minutes }))}</span></div>
             <div class="fact"><span class="fact-k"><span class="dot" style="--c:${dirVar(p)}"></span>${esc(t('side', { d: '' }).trim())}</span><span class="fact-v">${esc(dirName(p.direction))}</span></div>
           </div>
           ${r.nearestEntrance ? `<div class="route-nearest">${esc(t('park_nearest', { n: r.nearestEntrance }))}</div>` : ''}
+          ${
+            r.drive
+              ? `<div class="route-legs">
+              <span class="leg leg-drive">${icon('car', 16)}${esc(t('r_drive'))} · ${esc(t('km', { k: (r.drive.meters / 1000).toFixed(1) }))}</span>
+              <span class="leg leg-lot">${esc(t('r_lot', { n: r.drive.lot }))}</span>
+              ${r.drive.walkMeters > 5 ? `<span class="leg leg-walk">${icon('walk', 16)}${esc(t('r_walk'))} · ${esc(t('meters', { m: num(Math.round(r.drive.walkMeters / 5) * 5) }))}</span>` : ''}
+            </div>`
+              : ''
+          }
         </div>`
       : '';
 
@@ -292,7 +324,7 @@ export class Sheet {
       this.body.innerHTML = `
         <div class="sh-head sh-head-route">
           <span class="sh-icon" style="--c:${closed ? 'var(--cat-gray)' : poiColor(p)}">${poiIcon(p, 22)}</span>
-          <div style="flex:1;min-width:0"><div class="sh-kicker">${esc(t('r_title'))}</div><h2 class="sh-title" tabindex="-1">${esc(nm(p))}</h2></div>
+          <div style="flex:1;min-width:0"><div class="sh-kicker">${esc(t(r.drive ? 'r_title_drive' : 'r_title'))}</div><h2 class="sh-title" tabindex="-1">${esc(nm(p))}</h2></div>
           <button type="button" class="icon-btn lg" data-act="close" aria-label="${esc(t('l_close'))}">${icon('close', 18)}</button>
         </div>
         ${routeBox}`;
@@ -306,8 +338,12 @@ export class Sheet {
         <div style="flex:1;min-width:0">
           <div class="sh-kicker">${esc(t(CATEGORY_LABEL[p.category]))}</div>
           <h2 class="sh-title" tabindex="-1">${esc(nm(p))}</h2>
-          <p class="sh-desc">${esc(ds(p))}</p>
-          ${p.subCategory === 'gate_inner' && p.name_ar !== `باب رقم ${p.id}` ? `<div class="gate-about"><div class="gate-about-k">${esc(t('gate_about'))}</div><p>${esc(ds(p))}</p></div>` : ''}
+          ${
+            // A named gate's description is the story of its name: shown once, under «سبب التسمية».
+            p.subCategory === 'gate_inner' && p.name_ar !== `باب رقم ${p.id}`
+              ? `<div class="gate-about"><div class="gate-about-k">${esc(t('gate_about'))}</div><p>${esc(ds(p))}</p></div>`
+              : `<p class="sh-desc">${esc(ds(p))}</p>`
+          }
         </div>
         <button type="button" class="icon-btn lg" data-act="close" aria-label="${esc(t('l_close'))}">${icon('close', 18)}</button>
       </div>
@@ -317,7 +353,10 @@ export class Sheet {
       ${altBox}
       ${rawdah}
       ${facts}`;
-    this.foot.innerHTML = `<button type="button" class="btn block" data-act="route">${icon('route', 20)}${esc(t('route'))}</button>
+    const travel = (m: 'walk' | 'drive', ic: 'walk' | 'car') =>
+      `<button type="button" class="travel-btn" data-act="travel" data-mode="${m}" aria-pressed="${this.mode === m}" aria-label="${esc(t(m === 'walk' ? 'travel_walk' : 'travel_drive'))}" title="${esc(t(m === 'walk' ? 'travel_walk' : 'travel_drive'))}">${icon(ic, 20)}</button>`;
+    this.foot.innerHTML = `<div class="travel" role="group" aria-label="${esc(t('travel_mode'))}">${travel('walk', 'walk')}${travel('drive', 'car')}</div>
+      <button type="button" class="btn block" data-act="route">${icon(this.mode === 'drive' ? 'car' : 'route', 20)}${esc(t('route'))}</button>
       <button type="button" class="btn btn-square" data-act="share" aria-label="${esc(t('share_place'))}" title="${esc(t('share_place'))}">${icon('share', 20)}</button>`;
   }
 }

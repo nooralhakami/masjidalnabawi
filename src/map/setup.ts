@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import 'leaflet-rotate';
-import { POIS, RULES } from '../data';
+import { POIS, ROUTING, RULES } from '../data';
 import type { Poi } from '../data/types';
 import { SITE } from '../config/site.config';
 import { t } from '../i18n';
@@ -56,6 +56,15 @@ export function createMap(el: HTMLElement): MapHandle {
     syncLabels();
   };
 
+  // Women's prayer areas inside the mosque: a soft pink wash under routes and markers.
+  // (inside leaflet-rotate's pane, like the overlay pane, so it turns and zooms with the map)
+  map.createPane('women-areas', map.getPane('rotatePane') ?? undefined).style.zIndex = '350';
+  for (const area of ROUTING.women_prayer_areas ?? []) {
+    L.polygon(area.polygon, { pane: 'women-areas', className: 'women-area', interactive: false, weight: 1.5, smoothFactor: 0 }).addTo(map);
+  }
+
+  // Walking and driving routes beyond the plazas use OpenStreetMap streets (ODbL).
+  map.attributionControl.addAttribution('<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a>');
   map.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
   L.control.scale({ metric: true, imperial: false, position: 'bottomleft', maxWidth: 90 }).addTo(map);
 

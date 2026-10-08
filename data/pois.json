@@ -1004,7 +1004,7 @@
   "lat": 24.4698467,
   "lng": 39.6111543,
   "direction": "north",
-  "description_ar": "البوابة الشمالية الكبرى والمدخل الرئيسي الشمالي للمسجد، سُمي باسم خادم الحرمين الشريفين الملك فهد بن ��بد العزيز صاحب أكبر توسعة للحرم.",
+  "description_ar": "البوابة الشمالية الكبرى والمدخل الرئيسي الشمالي للمسجد، سُمي باسم خادم الحرمين الشريفين الملك فهد بن عبد العزيز صاحب أكبر توسعة للحرم.",
   "status": "open"
  },
  {
@@ -1015,7 +1015,7 @@
   "lat": 24.4698467,
   "lng": 39.6111543,
   "direction": "north",
-  "description_ar": "مدخل مخصص للنساء إلى المنطقة خلف الروضة بعد صلاة العشاء حتى الساعة 12:00 منتصف الليل. هذا ليس مدخل الروضة؛ دخول الروضة يكون عبر باب 37 ويلزم تصريح من تطبيق نسك.",
+  "description_ar": "مدخل مخصص للنساء إلى المنطقة خلف الروضة، بدون تصريح، في وقتي النساء: بعد صلاة الفجر حتى الساعة 10:00 صباحاً، وبعد صلاة العشاء حتى الساعة 12:00 منتصف الليل. هذا ليس مدخل الروضة؛ دخول الروضة يكون عبر باب 37 ويلزم تصريح من تطبيق نسك.",
   "status": "open"
  },
  {
@@ -1234,7 +1234,7 @@
   "lat": 24.4677379,
   "lng": 39.6116502,
   "direction": "south",
-  "description_ar": "يقع في جدار المسجد النبوي القديم، وسُمي بذلك لأن جبريل علي�� السلام كان يأتي النبي ﷺ من جهته في عدة وقائع.",
+  "description_ar": "يقع في جدار المسجد النبوي القديم، وسُمي بذلك لأن جبريل عليه السلام كان يأتي النبي ﷺ من جهته في عدة وقائع.",
   "status": "open"
  },
  {
@@ -1293,7 +1293,7 @@
   "lat": 24.4662422,
   "lng": 39.611628,
   "direction": "south",
-  "description_ar": "دورات مياه ��كبار السن وذوي الاحتياجات الخاصة في الدور السفلي، ويتوفر فيها مصعد كهربائي ♿. وفي الدور العلوي معرض الحرمين الشريفين (متحف) ويضم مخطوطات أ��رية ونادرة للقرآن الكريم، وأدوات من عهد النبي ﷺ والصحابة والتابعين.",
+  "description_ar": "دورات مياه لكبار السن وذوي الاحتياجات الخاصة في الدور السفلي، ويتوفر فيها مصعد كهربائي ♿. وفي الدور العلوي معرض الحرمين الشريفين (متحف) ويضم مخطوطات أثرية ونادرة للقرآن الكريم، وأدوات من عهد النبي ﷺ والصحابة والتابعين.",
   "status": "open",
   "pairWith": 203,
   "elevatorAvailable": true,
@@ -1372,7 +1372,7 @@
   "category": "toilets",
   "subCategory": "toilet_mixed",
   "lat": 24.4662422,
-  "lng": 39.6086280,
+  "lng": 39.608628,
   "direction": "south",
   "description_ar": "مجمع مشترك: الدور العلوي للنساء ويُوصل إليه بالدرج العادي 🟣، والأدوار السفلية للرجال ويُوصل إليها بالسلم الكهربائي المتحرك 🔵",
   "status": "open",
@@ -1385,7 +1385,7 @@
   "category": "toilets",
   "subCategory": "toilet_men",
   "lat": 24.4668553,
-  "lng": 39.6086280,
+  "lng": 39.608628,
   "direction": "west",
   "description_ar": "مجمع دورات مياه مخصص للرجال 🔵",
   "status": "open",
@@ -1425,7 +1425,7 @@
   "category": "toilets",
   "subCategory": "toilet_men",
   "lat": 24.4681802,
-  "lng": 39.6086280,
+  "lng": 39.608628,
   "direction": "west",
   "description_ar": "مجمع دورات مياه مخصص للرجال 🔵",
   "status": "open",
@@ -1452,7 +1452,7 @@
   "category": "toilets",
   "subCategory": "toilet_women",
   "lat": 24.4689911,
-  "lng": 39.6086280,
+  "lng": 39.608628,
   "direction": "west",
   "description_ar": "مجمع دورات مياه مخصص للنساء 🟣",
   "status": "open",
@@ -1479,7 +1479,7 @@
   "category": "toilets",
   "subCategory": "toilet_women",
   "lat": 24.4698472,
-  "lng": 39.6086280,
+  "lng": 39.608628,
   "direction": "west",
   "description_ar": "مجمع دورات مياه مخصص للنساء 🟣",
   "status": "open",
@@ -1532,7 +1532,7 @@
   "category": "toilets",
   "subCategory": "toilet_men",
   "lat": 24.470826,
-  "lng": 39.6086280,
+  "lng": 39.608628,
   "direction": "north",
   "description_ar": "مجمع دورات مياه مخصص للرجال 🔵",
   "status": "open",
@@ -1545,7 +1545,7 @@
   "category": "toilets",
   "subCategory": "toilet_mixed",
   "lat": 24.4702981,
-  "lng": 39.6086280,
+  "lng": 39.608628,
   "direction": "west",
   "description_ar": "مجمع مشترك: الدور العلوي للنساء ويُوصل إليه بالدرج العادي 🟣، والأدوار السفلية للرجال ويُوصل إليها بالسلم الكهربائي المتحرك 🔵",
   "status": "open",
@@ -1595,7 +1595,7 @@
  },
  {
   "id": 225,
-  "name_ar": "مجمع دور��ت الرجال 225",
+  "name_ar": "مجمع دورات الرجال 225",
   "category": "toilets",
   "subCategory": "toilet_men",
   "lat": 24.4702981,
@@ -1854,7 +1854,7 @@
   "id": 501,
   "name_ar": "مركز صحي الصافية",
   "category": "emergency",
-  "subCategory": "landmark",
+  "subCategory": "health",
   "lat": 24.4656628,
   "lng": 39.6100415,
   "direction": "south",
@@ -1864,7 +1864,7 @@
   "id": 502,
   "name_ar": "مركز صحي باب جبريل",
   "category": "emergency",
-  "subCategory": "landmark",
+  "subCategory": "health",
   "lat": 24.4674145,
   "lng": 39.6133502,
   "direction": "east",
@@ -1873,8 +1873,8 @@
  {
   "id": 503,
   "name_ar": "مركز رعاية الأطفال التائهين",
-  "category": "landmarks",
-  "subCategory": "landmark",
+  "category": "emergency",
+  "subCategory": "lost_children",
   "lat": 24.4677379,
   "lng": 39.6133478,
   "direction": "east",
@@ -1883,8 +1883,8 @@
  {
   "id": 504,
   "name_ar": "مكتب المفقودات",
-  "category": "landmarks",
-  "subCategory": "landmark",
+  "category": "emergency",
+  "subCategory": "lost_found",
   "lat": 24.4656628,
   "lng": 39.6124324,
   "direction": "south",
@@ -1922,7 +1922,7 @@
  },
  {
   "id": 508,
-  "name_ar": "معرض عما����ة المسجد النبوي",
+  "name_ar": "معرض عمارة المسجد النبوي",
   "category": "landmarks",
   "subCategory": "landmark",
   "lat": 24.4656628,
@@ -1932,7 +1932,7 @@
  },
  {
   "id": 509,
-  "name_ar": "مكتبة المسجد ا��نبوي (الشرقية)",
+  "name_ar": "مكتبة المسجد النبوي (الشرقية)",
   "category": "landmarks",
   "subCategory": "landmark",
   "lat": 24.4695974,
@@ -2070,7 +2070,6 @@
   "direction": "north",
   "description_ar": "فندق قريب من المسجد النبوي."
  },
-
  {
   "id": 704,
   "name_ar": "موفنبيك أنوار المدينة",
@@ -2213,7 +2212,7 @@
  },
  {
   "id": 810,
-  "name_ar": "��طعم الروضة",
+  "name_ar": "مطعم الروضة",
   "category": "food",
   "subCategory": "food",
   "lat": 24.4636529,
@@ -2396,5 +2395,123 @@
   "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 233/234 ومرفقي 235/236.",
   "alias": "13A 13B P13 parking",
   "access": "public"
+ },
+ {
+  "id": 251,
+  "name_ar": "مجمع دورات الرجال 251",
+  "category": "toilets",
+  "subCategory": "toilet_men",
+  "lat": 24.468351,
+  "lng": 39.6050027,
+  "direction": "west",
+  "description_ar": "مجمع دورات مياه مخصص للرجال 🔵",
+  "status": "open",
+  "gender": "men"
+ },
+ {
+  "id": 252,
+  "name_ar": "مجمع دورات الرجال 252",
+  "category": "toilets",
+  "subCategory": "toilet_men",
+  "lat": 24.4686169,
+  "lng": 39.6050027,
+  "direction": "west",
+  "description_ar": "مجمع دورات مياه مخصص للرجال 🔵",
+  "status": "open",
+  "gender": "men"
+ },
+ {
+  "id": 253,
+  "name_ar": "مجمع دورات النساء 253",
+  "category": "toilets",
+  "subCategory": "toilet_women",
+  "lat": 24.4689691,
+  "lng": 39.6049948,
+  "direction": "west",
+  "description_ar": "مجمع دورات مياه مخصص للنساء 🟣",
+  "status": "open",
+  "gender": "women"
+ },
+ {
+  "id": 254,
+  "name_ar": "مجمع دورات النساء 254",
+  "category": "toilets",
+  "subCategory": "toilet_women",
+  "lat": 24.4693428,
+  "lng": 39.6049948,
+  "direction": "west",
+  "description_ar": "مجمع دورات مياه مخصص للنساء 🟣",
+  "status": "open",
+  "gender": "women"
+ },
+ {
+  "id": 521,
+  "name_ar": "مكتب المفقودات (باب 33)",
+  "category": "emergency",
+  "subCategory": "lost_found",
+  "lat": 24.4685127,
+  "lng": 39.6130887,
+  "direction": "east",
+  "description_ar": "مكتب المفقودات داخل المسجد عند باب رقم 33."
+ },
+ {
+  "id": 522,
+  "name_ar": "مكتب المفقودات وشرطة النساء (باب 30)",
+  "category": "emergency",
+  "subCategory": "lost_found",
+  "lat": 24.4691865,
+  "lng": 39.6130887,
+  "direction": "east",
+  "description_ar": "مكتب المفقودات ومكتب شرطة للنساء داخل المسجد عند باب رقم 30."
+ },
+ {
+  "id": 523,
+  "name_ar": "مركز شرطة (باب 2)",
+  "category": "emergency",
+  "subCategory": "police",
+  "lat": 24.4676746,
+  "lng": 39.6106134,
+  "direction": "south",
+  "description_ar": "مركز شرطة داخل المسجد عند باب رقم 2 (باب أبي بكر الصديق)."
+ },
+ {
+  "id": 524,
+  "name_ar": "مركز شرطة (باب 34)",
+  "category": "emergency",
+  "subCategory": "police",
+  "lat": 24.4682908,
+  "lng": 39.6130887,
+  "direction": "east",
+  "description_ar": "مركز شرطة داخل المسجد عند باب رقم 34 (باب الملك عبد العزيز)."
+ },
+ {
+  "id": 525,
+  "name_ar": "مركز الخدمة الشاملة",
+  "category": "emergency",
+  "subCategory": "service",
+  "lat": 24.4708483,
+  "lng": 39.6095505,
+  "direction": "north",
+  "description_ar": "في الساحة الشمالية بين البوابتين 329 و330."
+ },
+ {
+  "id": 526,
+  "name_ar": "دار ضيافة الأطفال",
+  "category": "emergency",
+  "subCategory": "child_care",
+  "lat": 24.4708483,
+  "lng": 39.6131134,
+  "direction": "north",
+  "description_ar": "دار لضيافة الأطفال في الساحة الشمالية بين البوابتين 339 و340."
+ },
+ {
+  "id": 527,
+  "name_ar": "مركز عناية (وزارة الحج والعمرة)",
+  "category": "emergency",
+  "subCategory": "service",
+  "lat": 24.4679737,
+  "lng": 39.6134687,
+  "direction": "east",
+  "description_ar": "مركز «عناية» التابع لوزارة الحج والعمرة، بجوار مركز رعاية الأطفال التائهين."
  }
 ]

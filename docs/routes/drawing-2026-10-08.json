@@ -1,0 +1,41 @@
+{
+  "source": "owner-drawing-2026-10-08.webp (app screenshot, 2000×1304 px, north up, before v0 moved facilities 209–230)",
+  "control_points_note": "pixel → metres in the local frame of src/routing/walk.ts (toM), using the facility coordinates the screenshot was drawn on (commit c6aec69)",
+  "control_points": [
+    { "id": 220, "px": [530, 294], "m": [-280, 382] }, { "id": 222, "px": [624, 294], "m": [-224, 382] },
+    { "id": 224, "px": [774, 294], "m": [-133, 382] }, { "id": 226, "px": [926, 294], "m": [-40, 382] },
+    { "id": 219, "px": [530, 374], "m": [-280, 334] }, { "id": 223, "px": [774, 374], "m": [-133, 334] },
+    { "id": 225, "px": [926, 374], "m": [-40, 334] }, { "id": 218, "px": [530, 505], "m": [-280, 253] },
+    { "id": 217, "px": [634, 505], "m": [-219, 253] }, { "id": 216, "px": [530, 612], "m": [-280, 188] },
+    { "id": 215, "px": [634, 612], "m": [-219, 188] }, { "id": 205, "px": [927, 1004], "m": [-39, -50] },
+    { "id": 203, "px": [1080, 1004], "m": [53, -50] }, { "id": 201, "px": [1236, 1004], "m": [149, -50] },
+    { "id": 206, "px": [927, 1116], "m": [-39, -118] }, { "id": 202, "px": [1236, 1116], "m": [149, -118] },
+    { "id": 232, "px": [1470, 374], "m": [290, 334] }, { "id": 231, "px": [1377, 374], "m": [235, 334] },
+    { "id": 234, "px": [1470, 560], "m": [290, 221] }, { "id": 233, "px": [1377, 560], "m": [235, 221] }
+  ],
+  "ring": [
+    [531, 286], [1472, 286], [1472, 775], [1403, 775], [1403, 804], [1386, 804], [1386, 883], [1363, 883],
+    [1363, 1007], [1307, 1046], [905, 1046], [767, 962], [531, 962]
+  ],
+  "walkways": [
+    { "id": "north-spur-west", "colour": "black", "kind": "spur", "px": [[724, 286], [724, 386]] },
+    { "id": "north-west-women-link", "colour": "red", "kind": "women", "px": [[724, 386], [767, 399]] },
+    { "id": "north-spur-middle", "colour": "black", "kind": "spur", "px": [[1016, 286], [1016, 399]] },
+    { "id": "north-spur-east", "colour": "black", "kind": "spur", "px": [[1220, 286], [1220, 386]] },
+    { "id": "north-east-women-link", "colour": "red", "kind": "women", "px": [[1220, 386], [1262, 400]] },
+    { "id": "west-link-221", "colour": "red", "kind": "link", "px": [[531, 410], [612, 399]] },
+    { "id": "west-spur", "colour": "black", "kind": "spur", "px": [[531, 515], [629, 515]] },
+    { "id": "west-women-walk", "colour": "red", "kind": "women", "px": [[629, 450], [629, 605]] },
+    { "id": "west-inner-walk", "colour": "cyan", "kind": "walk", "px": [[531, 683], [629, 683], [631, 915]] },
+    { "id": "west-cross-1", "colour": "green", "kind": "link", "px": [[531, 742], [631, 742]] },
+    { "id": "west-cross-2", "colour": "red", "kind": "link", "px": [[531, 805], [631, 805]] },
+    { "id": "west-cross-3", "colour": "red", "kind": "link", "px": [[531, 915], [631, 915]] },
+    { "id": "south-west-diagonal", "colour": "purple", "kind": "walk", "px": [[631, 915], [767, 962]] },
+    { "id": "south-west-link", "colour": "red", "kind": "link", "px": [[531, 962], [531, 1046]] },
+    { "id": "south-west-walk", "colour": "cyan", "kind": "walk", "px": [[531, 1046], [905, 1046]] }
+  ],
+  "women_prayer_areas": [
+    { "id": "north-west", "px": [[640, 400], [865, 400], [865, 602], [640, 602]] },
+    { "id": "north-east", "px": [[1166, 400], [1402, 400], [1402, 602], [1166, 602]] }
+  ]
+}

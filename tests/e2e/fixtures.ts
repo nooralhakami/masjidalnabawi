@@ -9,6 +9,10 @@ export const test = base.extend<{ errors: string[] }>({
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     page.on('pageerror', (e) => errors.push(e.message));
     await page.route(/arcgisonline|openstreetmap|cartocdn/, (r) => r.fulfill({ contentType: 'image/png', body: PIXEL }));
+    // Weather: a fixed sunny 33 °C, so tests need no network.
+    await page.route(/api\.open-meteo\.com/, (r) =>
+      r.fulfill({ contentType: 'application/json', body: JSON.stringify({ current: { temperature_2m: 33.4, weather_code: 0, is_day: 1 } }) }),
+    );
     await use(errors);
     // Every test also asserts a clean console.
     expect(errors, 'console errors').toEqual([]);

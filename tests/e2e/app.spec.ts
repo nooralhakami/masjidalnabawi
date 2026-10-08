@@ -25,16 +25,16 @@ test.describe('landing', () => {
 
 test.describe('filters', () => {
   const EXPECTED: [string, number][] = [
-    ['all', 200],
+    ['all', 210],
     ['gates', 112],
-    ['women', 33],
-    ['toilets', 36],
+    ['women', 35],
+    ['toilets', 40],
     ['hotels', 7],
     ['food', 12],
-    ['landmarks', 20],
+    ['landmarks', 18],
     ['wheelchair', 8],
     ['parking', 13],
-    ['emergency', 2],
+    ['emergency', 11],
   ];
 
   test('every filter pill shows its POIs', async ({ page, errors: _ }) => {
@@ -55,7 +55,7 @@ test.describe('filters', () => {
 
     await page.locator('.pill[data-f="toilets"]').click();
     await page.locator('.subpill[data-s="open"]').click();
-    await expect.poll(() => count(page)).toBe(36);
+    await expect.poll(() => count(page)).toBe(40);
     await page.locator('.subpill[data-s="closed"]').click();
     await expect.poll(() => count(page)).toBe(0);
   });
@@ -64,11 +64,23 @@ test.describe('filters', () => {
 test.describe('search and sheet', () => {
   test('shows the named Gate 1 label at zoom 19 and its naming reason', async ({ page, errors: _ }) => {
     await openMap(page, 'ar', '?poi=1');
-    await page.locator('.leaflet-control-zoom-in').click({ clickCount: 3 });
+    // The map has no zoom buttons; Leaflet's keyboard zoom works once the map has focus.
+    // Each step waits for the zoom animation, otherwise Leaflet drops the key press.
+    const zoom = async (key: string, times: number) => {
+      for (let i = 0; i < times; i++) {
+        await page.locator('.leaflet-container').focus();
+        await page.keyboard.press(key);
+        await page.waitForTimeout(400);
+      }
+    };
+    await zoom('Equal', 3); // the default zoom is 17 (?poi= opens closer); 19 is the maximum
     await expect(page.locator('.gate-label')).toContainText('باب السلام');
-    await page.locator('.leaflet-control-zoom-out').click();
+    await zoom('Minus', 1);
     await expect(page.locator('.gate-label')).toHaveCount(0);
     await expect(page.locator('.sheet')).toContainText('سبب التسمية');
+    // The description appears once, under «سبب التسمية», not again under the title.
+    await expect(page.locator('.sheet .gate-about p')).toContainText('المدخل الرئيسي للزيارة');
+    await expect(page.locator('.sheet .sh-desc')).toHaveCount(0);
   });
 
   test('Arabic digits, Enter picks the first result and opens its card', async ({ page, errors: _ }) => {
@@ -103,6 +115,31 @@ test.describe('search and sheet', () => {
     await expect(page.locator('.res-none')).toBeVisible();
   });
 
+  test("women's turn: Gate 37 needs a Nusuk permit, and a second card leads to the area behind the Rawdah (Gate 21)", async ({ page, errors: _ }) => {
+    await page.clock.setFixedTime(new Date('2026-10-08T21:00:00+03:00')); // after Isha in Madinah: women
+    await openMap(page);
+    await expect(page.locator('.rawdah-card')).toContainText('بتصريح من تطبيق نسك');
+    const behind = page.locator('.rawdah-behind');
+    await expect(behind).toBeVisible();
+    await expect(behind).toContainText('بدون تصريح');
+    await behind.click();
+    await expect(page.locator('.sheet .sh-title')).toContainText('مدخل منطقة خلف الروضة للنساء');
+  });
+
+  test("the morning women's turn (Fajr → 10:00) also offers the area behind the Rawdah", async ({ page, errors: _ }) => {
+    await page.clock.setFixedTime(new Date('2026-10-08T08:00:00+03:00'));
+    await openMap(page);
+    await expect(page.locator('.rawdah-behind')).toBeVisible();
+  });
+
+  test("men's turn: no permit line and no behind-the-Rawdah card", async ({ page, errors: _ }) => {
+    await page.clock.setFixedTime(new Date('2026-10-08T12:00:00+03:00')); // midday: men
+    await openMap(page);
+    await expect(page.locator('.rawdah-card')).toBeVisible();
+    await expect(page.locator('.rawdah-card')).not.toContainText('نسك');
+    await expect(page.locator('.rawdah-behind')).toBeHidden();
+  });
+
   test('Rawdah card opens Gate 37 with the live schedule', async ({ page, errors: _ }) => {
     await openMap(page);
     await page.locator('.rawdah-card').click();
@@ -123,9 +160,10 @@ test.describe('walking route', () => {
     const box = page.locator('.route-box');
     await expect(box).toBeVisible();
     const meters = Number((await box.locator('.fact-v').first().textContent())!.match(/\d+/)![0]);
-    expect(meters).toBeGreaterThan(560);
-    expect(meters).toBeLessThan(660);
-    await expect(box).toContainText('8');
+    // ≈510 m since the owner's west-plaza walkways (2026-10-08); it was ≈615 m round the old ring.
+    expect(meters).toBeGreaterThan(470);
+    expect(meters).toBeLessThan(550);
+    await expect(box).toContainText('7');
     await expect(page.locator('path.route-line')).toHaveCount(1);
     await expect(page.locator('.me-dot')).toBeVisible();
     await page.locator('[data-act="endroute"]').click();
@@ -162,9 +200,9 @@ test.describe('languages', () => {
       await page.locator(`#lang-menu [data-lang="${code}"]`).click();
       await expect(page.locator('html')).toHaveAttribute('lang', code);
       await expect(page.locator('html')).toHaveAttribute('dir', dir);
-      await expect.poll(() => count(page)).toBe(200);
+      await expect.poll(() => count(page)).toBe(210);
       // Digits stay Latin in every language.
-      await expect(page.locator('#hdr-sub')).toContainText('200');
+      await expect(page.locator('#hdr-sub')).toContainText('210');
     }
   });
 });
@@ -309,8 +347,10 @@ test('a shared place link (?poi=) opens that place, and the share button builds 
 });
 
 test.describe('live location while walking', () => {
-  test.use({ geolocation: { latitude: 24.4685, longitude: 39.60849, accuracy: 10 }, permissions: ['geolocation'] });
-  const step = (n: number) => ({ latitude: 24.4685 - (n * 2.5) / 111_320, longitude: 39.60849, accuracy: 10 });
+  // Walking south along the west side of the walkway ring (data/routing.json), towards restrooms 204.
+  const RING_WEST_LNG = 39.608334;
+  test.use({ geolocation: { latitude: 24.4685, longitude: RING_WEST_LNG, accuracy: 10 }, permissions: ['geolocation'] });
+  const step = (n: number) => ({ latitude: 24.4685 - (n * 2.5) / 111_320, longitude: RING_WEST_LNG, accuracy: 10 });
 
   test('"my location" keeps following the visitor (it used to read once and stop)', async ({ page, context, errors: _ }) => {
     await openMap(page);
@@ -347,5 +387,55 @@ test.describe('live location while walking', () => {
     }
     expect(await metresLeft()).toBeGreaterThan(mid + 10);
     await expect(page.locator('.navigation-status')).toHaveAttribute('data-state', 'away');
+  });
+});
+
+test('the weather chip shows the current temperature in Madinah, labelled in the UI language', async ({ page, errors: _ }) => {
+  await openMap(page, 'en');
+  const chip = page.locator('.weather-chip');
+  await expect(chip).toBeVisible();
+  await expect(chip).toHaveText('33°');
+  await expect(chip).toHaveAttribute('aria-label', 'Weather now in Madinah: 33° · Clear');
+});
+
+test('key services: one pill for health centres, police, lost children, lost & found and service centres', async ({ page, errors: _ }) => {
+  await openMap(page);
+  await page.locator('.pill[data-f="emergency"]').click();
+  await expect.poll(() => count(page)).toBe(11);
+  // Police at gates 2 and 34, and the women's police with lost & found at gate 30.
+  await search(page, 'شرطة');
+  await expect(page.locator('.res')).toHaveCount(3);
+});
+
+test.describe('travelling by car', () => {
+  // ~1.5 km south-west of the Haram, on the Quba road side.
+  test.use({ geolocation: { latitude: 24.456, longitude: 39.6, accuracy: 15 }, permissions: ['geolocation'] });
+
+  test('walking is the default; the car button drives to the car park under the Haram and is remembered', async ({ page, errors: _ }) => {
+    await page.goto('map.html?poi=223');
+    const walk = page.locator('.travel-btn[data-mode="walk"]');
+    const car = page.locator('.travel-btn[data-mode="drive"]');
+    await expect(walk).toHaveAttribute('aria-pressed', 'true');
+    await car.click();
+    await expect(car).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('[data-act="route"]').click();
+    await expect(page.locator('path.route-drive')).toHaveCount(1);
+    await expect(page.locator('path.route-garage')).toHaveCount(1);
+    await expect(page.locator('.route-ramp')).toBeVisible();
+    await expect(page.locator('.route-legs .leg-lot')).toContainText('موقف رقم');
+    await page.locator('[data-act="endroute"]').click();
+    await expect(page.locator('path.route-drive')).toHaveCount(0);
+    await page.reload();
+    await expect(page.locator('.travel-btn[data-mode="drive"]')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('on foot from outside the Haram, the walk follows the streets in (no car legs)', async ({ page, errors: _ }) => {
+    await page.goto('map.html?poi=204');
+    await page.locator('[data-act="route"]').click();
+    await expect(page.locator('path.route-line')).toHaveCount(1);
+    await expect(page.locator('path.route-drive')).toHaveCount(0);
+    const meters = Number((await page.locator('.route-box .fact-v').first().textContent())!.replace(/\D/g, ''));
+    expect(meters).toBeGreaterThan(1300);
+    expect(meters).toBeLessThan(2600);
   });
 });

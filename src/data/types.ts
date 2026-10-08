@@ -21,6 +21,12 @@ export type SubCategory =
   | 'toilet_accessible'
   | 'parking'
   | 'landmark'
+  | 'health'
+  | 'lost_children'
+  | 'lost_found'
+  | 'police'
+  | 'child_care'
+  | 'service'
   | 'wheelchair_zone'
   | 'women_service'
   | 'hotel'
@@ -59,12 +65,27 @@ export interface Poi {
 
 export type LatLng = [number, number];
 
+/** A walkway branching off the main ring: a spur, a cross link, or a path to a women's prayer area. */
+export interface Walkway {
+  id: string;
+  kind: 'spur' | 'link' | 'walk' | 'women';
+  path: LatLng[];
+}
+
 export interface Routing {
+  /** The main walkway loop round the mosque (closed: the last point joins the first). */
   walkway_ring: LatLng[];
+  /** Branches that join the ring or each other where their ends meet a walkway. */
+  walkways: Walkway[];
+  /** Areas no route may cross; each is a 4-corner rectangle. */
   obstacles: {
     mosque_building: LatLng[];
     baqi_outside_haram: LatLng[];
-  };
+  } & Record<string, LatLng[]>;
+  /** Open ground with no set paths (the west plaza): inside it, walk straight. */
+  open_areas?: { id: string; polygon: LatLng[] }[];
+  /** Women's prayer areas inside the mosque, drawn as a pink overlay. */
+  women_prayer_areas: { id: string; polygon: LatLng[] }[];
   rules: {
     short_L_route_max_m: number;
     corner_radius_m: number;
