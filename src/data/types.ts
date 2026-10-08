@@ -21,6 +21,7 @@ export type SubCategory =
   | 'toilet_accessible'
   | 'parking'
   | 'landmark'
+  | 'historic'
   | 'health'
   | 'lost_children'
   | 'lost_found'
@@ -63,6 +64,8 @@ export interface Poi {
   access?: 'public' | 'subscribers';
   /** Source element in OpenStreetMap (n123, w123, r123), for places taken from it. */
   osm?: string;
+  /** Wikidata item that confirms a historic site (Q123). */
+  wikidata?: string;
 }
 
 export type LatLng = [number, number];

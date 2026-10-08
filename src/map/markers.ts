@@ -47,6 +47,8 @@ export function lookOf(p: Poi): Look {
     case 'gate_outer':
     case 'gate_inner':
       return { icon: 'gate', color: DIR_VAR[p.direction] };
+    case 'historic':
+      return { icon: 'historic', color: 'var(--cat-hist)' };
     // Key services: one colour, an icon for each kind of help.
     case 'health':
       return { icon: 'emergency', color: 'var(--cat-emg)' };

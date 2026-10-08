@@ -20,7 +20,7 @@ smallest fix, and keep every test passing. Read `V0-PROMPT.md` first for the pro
 ## 2. Automated checks (run in a clean checkout)
 ```bash
 npm ci
-npm test                         # expect 130 passed
+npm test                         # expect 139 passed
 npx playwright install chromium
 npm run test:e2e                 # expect 31 passed
 npm run build                    # expect no type errors
@@ -31,7 +31,7 @@ npm run build                    # expect no type errors
 | URL | Expect |
 |---|---|
 | `/` | 200, Arabic landing page with the title «دليل زوار المسجد النبوي» visible before JS runs (view source) |
-| `/map.html` | 200, map with header, filter pills (`الكل 271`) and the Rawdah card |
+| `/map.html` | 200, map with header, filter pills (`الكل 280`) and the Rawdah card |
 | `/map.html?poi=204` | opens the card for restrooms 204 with a gold pin on the map |
 | `/manifest.webmanifest` | `lang: ar`, `dir: rtl`, `start_url: ./map.html`, icons 192 and 512 (with maskable) |
 | `/sw.js` | 200; after one visit, the app shell loads offline (DevTools → Network → Offline → reload) |

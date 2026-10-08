@@ -3,7 +3,7 @@ import type { Facilities } from './facilities';
 import { isClosed } from './facilities';
 import { parkingAccess } from './parking';
 
-export type FilterId = 'all' | 'gates' | 'women' | 'toilets' | 'hotels' | 'food' | 'landmarks' | 'wheelchair' | 'parking' | 'emergency';
+export type FilterId = 'all' | 'gates' | 'women' | 'toilets' | 'hotels' | 'food' | 'landmarks' | 'historic' | 'wheelchair' | 'parking' | 'emergency';
 export type ToiletSub = 'all' | 'open' | 'closed';
 export type ParkingSub = 'all' | 'public' | 'subscribers';
 
@@ -16,6 +16,7 @@ export const FILTERS: readonly { id: FilterId; label: string }[] = [
   { id: 'hotels', label: 'p_hotels' },
   { id: 'food', label: 'p_food' },
   { id: 'landmarks', label: 'p_landmarks' },
+  { id: 'historic', label: 'p_historic' },
   { id: 'wheelchair', label: 'p_wheelchair' },
   { id: 'parking', label: 'p_parking' },
   { id: 'emergency', label: 'p_emergency' },
@@ -68,6 +69,9 @@ export function passesFilter(p: Poi, s: FilterState, fac: Facilities): boolean {
     }
     case 'wheelchair':
       return p.subCategory === 'wheelchair_zone';
+    case 'historic':
+      // Confirmed historic sites (docs/places/PLACES.md); they also show under landmarks.
+      return p.subCategory === 'historic';
     case 'landmarks':
       // Wheelchair zones have their own pill.
       return p.category === 'landmarks' && p.subCategory !== 'wheelchair_zone';

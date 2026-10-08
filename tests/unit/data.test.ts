@@ -33,9 +33,9 @@ describe('inner gate names and descriptions', () => {
 });
 
 describe('pois.json', () => {
-  it('has 284 POIs with unique ids (hotels, food and landmarks rebuilt from OpenStreetMap 2026-10-09)', () => {
-    expect(POIS).toHaveLength(284);
-    expect(POI_BY_ID.size).toBe(284);
+  it('has 293 POIs with unique ids (hotels, food, landmarks and historic sites from OpenStreetMap/Wikidata 2026-10-09)', () => {
+    expect(POIS).toHaveLength(293);
+    expect(POI_BY_ID.size).toBe(293);
     expect(POI_BY_ID.has(409)).toBe(false);
     expect(POI_BY_ID.has(410)).toBe(false);
     expect(POI_BY_ID.get(604)?.category).toBe('landmarks');
@@ -45,7 +45,7 @@ describe('pois.json', () => {
     ['gates', 112],
     ['toilets', 40],
     ['parking', 13],
-    ['landmarks', 29],
+    ['landmarks', 38],
     ['wheelchair', 8],
     ['emergency', 11],
     ['women', 2],
@@ -109,8 +109,9 @@ describe('pois.json', () => {
   it('every POI has a direction and coordinates near the mosque', () => {
     for (const p of POIS) {
       expect(['south', 'west', 'north', 'east']).toContain(p.direction);
-      expect(Math.abs(p.lat - 24.468)).toBeLessThan(0.02);
-      expect(Math.abs(p.lng - 39.611)).toBeLessThan(0.02);
+      // Within about 5 km: the historic sites reach out to Quba, al-Qiblatain and Uhud.
+      expect(Math.abs(p.lat - 24.468)).toBeLessThan(0.045);
+      expect(Math.abs(p.lng - 39.611)).toBeLessThan(0.045);
     }
   });
 });
@@ -210,5 +211,36 @@ describe('hotels, food and landmarks (OpenStreetMap, 2026-10-09)', () => {
       expect(POI_BY_ID.get(id)?.osm, String(id)).toMatch(/^[nwr]\d+$/);
     }
     expect(POI_BY_ID.get(531)!.name_ar).toBe('مقبرة بقيع الغرقد');
+  });
+});
+
+describe('historic sites (confirmed, 2026-10-09)', () => {
+  const hist = POIS.filter((p) => p.subCategory === 'historic');
+
+  it('17 sites, each in OpenStreetMap; the new ones also confirmed by Wikidata', () => {
+    expect(hist).toHaveLength(17);
+    for (const p of hist) expect(p.osm ?? p.id, p.name_ar).toBeTruthy();
+    for (let id = 542; id <= 550; id++) {
+      const p = POI_BY_ID.get(id)!;
+      expect(p.subCategory).toBe('historic');
+      expect(p.wikidata, p.name_ar).toMatch(/^Q\d+$/);
+      expect(p.osm, p.name_ar).toMatch(/^[nwr]\d+$/);
+    }
+  });
+
+  it('Quba, al-Qiblatain, the Uhud martyrs, the archers’ hill, the Trench, al-Jumu’ah and the Well of Uthman are where they are', () => {
+    const near = (id: number, lat: number, lng: number, m: number) =>
+      expect(Math.hypot((POI_BY_ID.get(id)!.lat - lat) * 111_320, (POI_BY_ID.get(id)!.lng - lng) * 101_330), String(id)).toBeLessThan(m);
+    near(542, 24.4392, 39.6172, 80); // Quba
+    near(543, 24.4841, 39.5789, 60); // al-Qiblatain
+    near(544, 24.5038, 39.6118, 80); // Uhud martyrs
+    near(546, 24.5022, 39.6122, 80); // Jabal al-Rumat
+    near(547, 24.4778, 39.5957, 80); // al-Fath (the Trench)
+    near(548, 24.4455, 39.6155, 60); // al-Jumu'ah
+    near(549, 24.4944, 39.5778, 120); // Well of Uthman
+  });
+
+  it('Abu Dharr (539) is not marked historic: its position is not confirmed', () => {
+    expect(POI_BY_ID.get(539)!.subCategory).toBe('landmark');
   });
 });

@@ -12,13 +12,14 @@ Output (compact):
   nodes: [[lat, lng], …]
   ways:  [[mode, oneway, node indices…], …]   mode bit 1 = cars, bit 2 = walkers, bit 4 = underground,
                                                 bit 8 = underground service road (car-park ramps),
-                                                bit 16 = walkers only (footway, pedestrian, steps, path);
+                                                bit 16 = walkers only (footway, pedestrian, steps, path),
+                                                bit 32 = has a name (a real pedestrian street such as Quba Avenue);
                                                 oneway 1/-1/0 (cars only)
   parking_entrances: [[lat, lng], …]            amenity=parking_entrance (underground car park)
 """
 import json, math, sys, urllib.parse, urllib.request
 
-BBOX = (24.452, 39.592, 24.486, 39.630)
+BBOX = (24.430, 39.565, 24.512, 39.640)  # the central area and the historic sites round it (Quba, Qiblatain, Uhud)
 QUERY = (
     '[out:json][timeout:120];(way["highway"]({0},{1},{2},{3});'
     'node["amenity"="parking_entrance"]({0},{1},{2},{3}););out geom tags;'
@@ -56,7 +57,8 @@ def modes(t):
         return 0
     ramp = underground and hw == 'service'
     foot_only = foot and not car
-    return (1 if car else 0) | (2 if foot else 0) | (4 if underground else 0) | (8 if ramp else 0) | (16 if foot_only else 0)
+    named = bool(t.get('name'))
+    return (1 if car else 0) | (2 if foot else 0) | (4 if underground else 0) | (8 if ramp else 0) | (16 if foot_only else 0) | (32 if named else 0)
 
 
 def oneway(t):
@@ -130,6 +132,43 @@ def main():
                 nodes.append(list(p))
             ids.append(index[p])
         out_ways.append([m, o, *ids])
+    # Pedestrian streets are often mapped in pieces that stop short at a road (Quba Avenue stops
+    # ~30 m short at each crossing). Join each walkers-only dead end to the nearest walkable point
+    # within 35 m on another way: the street crossing that is not mapped.
+    degree = {}
+    for m, o, *ids in out_ways:
+        for i, k in enumerate(ids):
+            degree[k] = degree.get(k, 0) + (1 if i in (0, len(ids) - 1) else 2)
+    walk_nodes = {}
+    for wi, (m, o, *ids) in enumerate(out_ways):
+        if m & 2:
+            for k in ids:
+                walk_nodes.setdefault(k, set()).add(wi)
+    grid = {}
+    for k in walk_nodes:
+        la, ln = nodes[k]
+        grid.setdefault((round(la * 2000), round(ln * 2000)), []).append(k)
+    links = 0
+    for wi, (m, o, *ids) in enumerate(list(out_ways)):
+        if not (m & 16):
+            continue
+        for end in (ids[0], ids[-1]):
+            if degree.get(end, 0) != 1:
+                continue
+            la, ln = nodes[end]
+            gx, gy = round(la * 2000), round(ln * 2000)
+            best, bd = None, 35.0
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    for k in grid.get((gx + dx, gy + dy), []):
+                        if k == end or wi in walk_nodes[k]:
+                            continue
+                        d = metres(nodes[end], nodes[k])
+                        if d < bd:
+                            best, bd = k, d
+            if best is not None:
+                out_ways.append([2 | 32, 0, end, best])  # a short walkers' link, not penalised
+                links += 1
     entrances = [[round(e['lat'], 6), round(e['lon'], 6)] for e in src['elements'] if e['type'] == 'node']
     data = {
         'source': '© OpenStreetMap contributors, ODbL — openstreetmap.org/copyright',
@@ -140,7 +179,7 @@ def main():
         'parking_entrances': entrances,
     }
     open('data/streets.json', 'w').write(json.dumps(data, separators=(',', ':')) + '\n')
-    print(f'{len(nodes)} nodes, {len(out_ways)} ways, {len(entrances)} parking entrances')
+    print(f'{len(nodes)} nodes, {len(out_ways)} ways ({links} crossing links), {len(entrances)} parking entrances')
 
 
 if __name__ == '__main__':

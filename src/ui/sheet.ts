@@ -336,7 +336,7 @@ export class Sheet {
       <div class="sh-head">
         <span class="sh-icon" style="--c:${closed ? 'var(--cat-gray)' : poiColor(p)}">${poiIcon(p, 26)}</span>
         <div style="flex:1;min-width:0">
-          <div class="sh-kicker">${esc(t(CATEGORY_LABEL[p.category]))}</div>
+          <div class="sh-kicker">${esc(t(p.subCategory === 'historic' ? 'p_historic' : CATEGORY_LABEL[p.category]))}</div>
           <h2 class="sh-title" tabindex="-1">${esc(nm(p))}</h2>
           ${
             // A named gate's description is the story of its name: shown once, under «سبب التسمية».

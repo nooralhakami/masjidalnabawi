@@ -9,7 +9,7 @@ import { toM, type XY } from './walk';
 
 export interface StreetsData {
   nodes: LatLng[];
-  /** [mode, oneway, ...node indices]; mode bits: 1 cars, 2 walkers, 4 underground, 8 car-park ramp, 16 walkers only. */
+  /** [mode, oneway, ...node indices]; mode bits: 1 cars, 2 walkers, 4 underground, 8 car-park ramp, 16 walkers only, 32 named. */
   ways: number[][];
   parking_entrances: LatLng[];
 }
@@ -17,9 +17,10 @@ export interface StreetsData {
 export type Travel = 'walk' | 'drive';
 
 /**
- * Walkers-only ways round the Haram are often passages through hotel blocks (mapped without
+ * Unnamed walkers-only ways round the Haram are often passages through hotel blocks (mapped without
  * indoor tags), so on a map they cut across buildings. Walking prefers real streets: such a way
- * counts 1.8× its length, and is taken only where it saves a lot (underpasses are not penalised).
+ * counts 1.8× its length, and is taken only where it saves a lot. Named pedestrian streets (Quba
+ * Avenue, the pedestrianised King Fahd Road) and underpasses are not penalised.
  */
 export const FOOTWAY_PENALTY = 1.8;
 const BIT: Record<Travel, number> = { drive: 1, walk: 2 };
@@ -105,7 +106,7 @@ export class Streets {
           let b = ids[i];
           if (t === 'drive' && oneway === -1) [a, b] = [b, a];
           const metres = Math.hypot(this.xy[a][0] - this.xy[b][0], this.xy[a][1] - this.xy[b][1]);
-          const l = t === 'walk' && mode & 16 && !(mode & 4) ? metres * FOOTWAY_PENALTY : metres;
+          const l = t === 'walk' && mode & 16 && !(mode & 4) && !(mode & 32) ? metres * FOOTWAY_PENALTY : metres;
           this.edges[t].push({ a, b, l, oneway: oneWay });
           this.out[t][a].push([b, l]);
           if (!oneWay) this.out[t][b].push([a, l]);

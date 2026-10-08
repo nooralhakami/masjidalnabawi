@@ -169,3 +169,28 @@ describe('driving to a hotel outside the Haram', () => {
     expect(last[last.length - 1][0]).toBeCloseTo(P(705).lat, 6);
   });
 });
+
+describe('to the historic sites round Madinah', () => {
+  const SOUTH_PLAZA: LatLng = [24.4664, 39.611];
+
+  it('walks to Quba Mosque the short way, into Quba along Quba Avenue, not round by the roads', async () => {
+    const p = await planRoute(SOUTH_PLAZA, P(542), 'walk');
+    // The avenue makes it barely longer than the straight line (~3.4 km); round the roads it was ~4.3 km.
+    expect(p.walkM / pathLength([SOUTH_PLAZA, at(542)])).toBeLessThan(1.2);
+    // and takes the avenue's southern stretch into Quba (24.446, 39.6142)
+    const onAvenue = p.legs[0].path.some((q) => Math.hypot((q[0] - 24.446) * 111_320, (q[1] - 39.6142) * 101_330) < 40);
+    expect(onAvenue).toBe(true);
+  });
+
+  for (const id of [543, 544, 547, 548, 549]) {
+    it(`walk and drive to ${id} follow the streets (realistic length, no obstacle)`, async () => {
+      for (const mode of ['walk', 'drive'] as const) {
+        const p = await planRoute(SOUTH_PLAZA, P(id), mode);
+        expect(p.mode).toBe(mode);
+        const all = p.legs.flatMap((l) => l.path);
+        expect(enters(all), `${id} ${mode}`).toBe(false);
+        expect((p.walkM + p.driveM) / pathLength([SOUTH_PLAZA, at(id)]), `${id} ${mode}`).toBeLessThan(mode === 'walk' ? 1.5 : 2.2);
+      }
+    });
+  }
+});

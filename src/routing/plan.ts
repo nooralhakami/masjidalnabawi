@@ -103,6 +103,29 @@ function crossesObstacle(path: LatLng[]): boolean {
   return false;
 }
 
+/**
+ * Where to leave the streets for a place: of the usable nodes within 150 m of it, the one that makes
+ * the trip shortest (the street distance plus the last stretch, counted 1.5× as it is off-street).
+ * The nearest node alone can be on the wrong street — Quba Avenue ends ~100 m from Quba Mosque's
+ * marker, on its plaza, while a back street passes closer.
+ */
+function bestNear(S: Streets, r: Reach, p: LatLng, t: 'walk' | 'drive'): number {
+  const P = toM(p);
+  let best = S.nearestNode(P, t);
+  let cost = r.dist[best] + 1.5 * Math.hypot(S.xy[best][0] - P[0], S.xy[best][1] - P[1]);
+  for (let k = 0; k < S.size; k++) {
+    if (!Number.isFinite(r.dist[k])) continue;
+    const d = Math.hypot(S.xy[k][0] - P[0], S.xy[k][1] - P[1]);
+    if (d > 150) continue;
+    const c = r.dist[k] + 1.5 * d;
+    if (c < cost) {
+      cost = c;
+      best = k;
+    }
+  }
+  return best;
+}
+
 /** Street distances from a point to every outer gate (walking is two-way). */
 function gateCosts(S: Streets, r: Reach): { gate: Poi; k: number; cost: number }[] {
   return GATES.map((gate) => {
@@ -132,7 +155,7 @@ async function walkLegs(a: LatLng, b: LatLng): Promise<LatLng[]> {
   const ra = S.reach(a, 'walk')!;
 
   // 1) Streets all the way.
-  const kb = S.nearestNode(toM(b), 'walk');
+  const kb = bestNear(S, ra, b, 'walk');
   if (Number.isFinite(ra.dist[kb])) options.push([...streetPath(S, ra, kb, a, false), b]);
 
   if (ia !== ib) {
@@ -197,8 +220,7 @@ async function planDrive(from: LatLng, to: Poi): Promise<Plan | null> {
   if (!r) return null;
   // A place outside the Haram (a hotel, a restaurant): drive to the street at its door, walk the rest.
   if (to.category !== 'parking' && !inHaram(at(to))) {
-    const T = toM(at(to));
-    const k = S.nearestNode(T, 'drive');
+    const k = bestNear(S, r, at(to), 'drive');
     if (!Number.isFinite(r.dist[k])) return null;
     const drive = streetPath(S, r, k, from, false);
     const kerb = fromM(S.xy[k]);
