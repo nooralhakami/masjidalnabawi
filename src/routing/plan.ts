@@ -195,6 +195,24 @@ async function planDrive(from: LatLng, to: Poi): Promise<Plan | null> {
   if (!S || !S.garageNodes.length) return null;
   const r = S.reach(from, 'drive');
   if (!r) return null;
+  // A place outside the Haram (a hotel, a restaurant): drive to the street at its door, walk the rest.
+  if (to.category !== 'parking' && !inHaram(at(to))) {
+    const T = toM(at(to));
+    const k = S.nearestNode(T, 'drive');
+    if (!Number.isFinite(r.dist[k])) return null;
+    const drive = streetPath(S, r, k, from, false);
+    const kerb = fromM(S.xy[k]);
+    const walk = len([kerb, at(to)]) > 2 ? await walkLegs(kerb, at(to)) : [];
+    const driveM = len(drive);
+    const walkM = len(walk);
+    return {
+      mode: 'drive',
+      legs: [{ kind: 'drive', path: drive }, ...(walk.length > 1 ? [{ kind: 'walk' as const, path: walk }] : [])],
+      walkM,
+      driveM,
+      minutes: Math.max(1, Math.ceil(driveM / DRIVE_M_PER_MIN + walkM / WALK_M_PER_MIN)),
+    };
+  }
   const lots = to.category === 'parking' ? [to] : LOTS.filter((p) => parkingAccess(p) === 'public');
   let best: { cost: number; plan: Plan } | null = null;
   for (const lot of lots) {

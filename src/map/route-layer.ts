@@ -11,7 +11,7 @@ export interface RouteInfo {
   bounds: L.LatLngBounds;
   nearestEntrance?: number;
   /** By car: the drive, the lot, and the walk from it. */
-  drive?: { meters: number; lot: number; walkMeters: number };
+  drive?: { meters: number; lot?: number; walkMeters: number };
 }
 
 const ARROW_EVERY_M = 55;
@@ -126,7 +126,7 @@ export class RouteLayer {
       minutes: plan.minutes,
       bounds: L.latLngBounds(this.path),
       ...(parking ? { nearestEntrance: parking.nearest.id } : {}),
-      ...(plan.mode === 'drive' && plan.lot ? { drive: { meters: plan.driveM, lot: plan.lot.id - 900, walkMeters: plan.walkM } } : {}),
+      ...(plan.mode === 'drive' ? { drive: { meters: plan.driveM, lot: plan.lot ? plan.lot.id - 900 : undefined, walkMeters: plan.walkM } } : {}),
     };
   }
 

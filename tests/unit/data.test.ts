@@ -33,9 +33,9 @@ describe('inner gate names and descriptions', () => {
 });
 
 describe('pois.json', () => {
-  it('has 223 POIs with unique ids (restrooms 251–254 and key services 521–527 added 2026-10-08)', () => {
-    expect(POIS).toHaveLength(223);
-    expect(POI_BY_ID.size).toBe(223);
+  it('has 284 POIs with unique ids (hotels, food and landmarks rebuilt from OpenStreetMap 2026-10-09)', () => {
+    expect(POIS).toHaveLength(284);
+    expect(POI_BY_ID.size).toBe(284);
     expect(POI_BY_ID.has(409)).toBe(false);
     expect(POI_BY_ID.has(410)).toBe(false);
     expect(POI_BY_ID.get(604)?.category).toBe('landmarks');
@@ -45,12 +45,12 @@ describe('pois.json', () => {
     ['gates', 112],
     ['toilets', 40],
     ['parking', 13],
-    ['landmarks', 18],
+    ['landmarks', 29],
     ['wheelchair', 8],
     ['emergency', 11],
     ['women', 2],
-    ['hotels', 7],
-    ['food', 12],
+    ['hotels', 43],
+    ['food', 26],
   ] as const)('category %s has %i POIs', (cat, n) => {
     expect(count((p) => p.category === cat)).toBe(n);
   });
@@ -185,5 +185,30 @@ describe('data integrity', () => {
       const text = readFileSync(new URL(`../../data/${f}.json`, import.meta.url), 'utf8');
       expect(text.includes('�'), `${f}.json`).toBe(false);
     }
+  });
+});
+
+describe('hotels, food and landmarks (OpenStreetMap, 2026-10-09)', () => {
+  const m = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => Math.hypot((a.lat - b.lat) * 111_320, (a.lng - b.lng) * 101_330);
+  const of = (c: string) => POIS.filter((p) => p.category === c);
+
+  it('every hotel and food place comes from a mapped OSM element, in the central area', () => {
+    for (const p of [...of('hotels'), ...of('food')]) {
+      expect(p.osm, p.name_ar).toMatch(/^[nwr]\d+$/);
+      expect(m(p, { lat: 24.4686, lng: 39.6111 }), p.name_ar).toBeLessThan(1500);
+    }
+  });
+
+  it('no hotel is listed twice (towers and duplicate map entries collapse)', () => {
+    const h = of('hotels');
+    for (let i = 0; i < h.length; i++) for (let j = i + 1; j < h.length; j++) expect(m(h[i], h[j]), `${h[i].name_ar} / ${h[j].name_ar}`).toBeGreaterThan(40);
+    expect(new Set(h.map((p) => p.name_ar)).size).toBe(h.length);
+  });
+
+  it('the official landmarks are at their mapped positions (Al-Baqi’, the historic mosques, museums)', () => {
+    for (const id of [508, 516, 517, 518, 520, 531, 532, 533, 534, 535, 536, 537, 538, 539, 540, 541]) {
+      expect(POI_BY_ID.get(id)?.osm, String(id)).toMatch(/^[nwr]\d+$/);
+    }
+    expect(POI_BY_ID.get(531)!.name_ar).toBe('مقبرة بقيع الغرقد');
   });
 });

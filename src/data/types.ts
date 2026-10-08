@@ -61,6 +61,8 @@ export interface Poi {
   worksBy?: number;
   rawdah?: boolean;
   access?: 'public' | 'subscribers';
+  /** Source element in OpenStreetMap (n123, w123, r123), for places taken from it. */
+  osm?: string;
 }
 
 export type LatLng = [number, number];

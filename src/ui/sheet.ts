@@ -43,7 +43,7 @@ export class Sheet {
   private foot: HTMLElement;
   private state: SheetState = 'closed';
   private poi: Poi | null = null;
-  private route: { meters: number; minutes: number; nearestEntrance?: number; drive?: { meters: number; lot: number; walkMeters: number } } | null = null;
+  private route: { meters: number; minutes: number; nearestEntrance?: number; drive?: { meters: number; lot?: number; walkMeters: number } } | null = null;
   /** How the visitor travels: walking by default, or by car (remembered). */
   private mode: 'walk' | 'drive' = savedTravel();
 
@@ -87,7 +87,7 @@ export class Sheet {
   }
 
   /** Show (or clear) the route summary for the current POI. */
-  setRoute(r: { meters: number; minutes: number; nearestEntrance?: number; drive?: { meters: number; lot: number; walkMeters: number } } | null): void {
+  setRoute(r: { meters: number; minutes: number; nearestEntrance?: number; drive?: { meters: number; lot?: number; walkMeters: number } } | null): void {
     this.route = r;
     this.root.dataset.route = r ? 'active' : 'inactive';
     this.render();
@@ -311,7 +311,7 @@ export class Sheet {
             r.drive
               ? `<div class="route-legs">
               <span class="leg leg-drive">${icon('car', 16)}${esc(t('r_drive'))} · ${esc(t('km', { k: (r.drive.meters / 1000).toFixed(1) }))}</span>
-              <span class="leg leg-lot">${esc(t('r_lot', { n: r.drive.lot }))}</span>
+              ${r.drive.lot ? `<span class="leg leg-lot">${esc(t('r_lot', { n: r.drive.lot }))}</span>` : ''}
               ${r.drive.walkMeters > 5 ? `<span class="leg leg-walk">${icon('walk', 16)}${esc(t('r_walk'))} · ${esc(t('meters', { m: num(Math.round(r.drive.walkMeters / 5) * 5) }))}</span>` : ''}
             </div>`
               : ''

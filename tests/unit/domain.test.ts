@@ -23,7 +23,7 @@ const shown = (filter: FilterId, toiletSub: 'all' | 'open' | 'closed' = 'all') =
 describe('filters', () => {
   it('"all" shows everything except parking', () => {
     const all = shown('all');
-    expect(all).toHaveLength(223 - 13);
+    expect(all).toHaveLength(284 - 13);
     expect(all.some((p) => p.category === 'parking')).toBe(false);
   });
 
@@ -38,7 +38,7 @@ describe('filters', () => {
 
   it('landmarks exclude wheelchair zones, which have their own pill', () => {
     expect(shown('landmarks').some((p) => p.subCategory === 'wheelchair_zone')).toBe(false);
-    expect(shown('landmarks')).toHaveLength(18);
+    expect(shown('landmarks')).toHaveLength(29);
     expect(shown('wheelchair')).toHaveLength(8);
     expect(shown('wheelchair').every((p) => p.subCategory === 'wheelchair_zone')).toBe(true);
   });
@@ -65,8 +65,8 @@ describe('filters', () => {
 
   it('category pills match their category', () => {
     expect(shown('gates')).toHaveLength(112);
-    expect(shown('hotels')).toHaveLength(7);
-    expect(shown('food')).toHaveLength(12);
+    expect(shown('hotels')).toHaveLength(43);
+    expect(shown('food')).toHaveLength(26);
     expect(shown('emergency')).toHaveLength(11);
   });
 });

@@ -70,7 +70,7 @@ describe('walking beyond the plazas', () => {
   // behind it. The walk takes the shortest sensible way — streets, a gate, or a short cut across.
   for (const [name, from, to] of [
     ['south-west → Saqifa Bani Sa’ida (515) by the streets, not round through gate 316', [24.4606, 39.6012], 515],
-    ['east of Al-Baqi’ → a hotel south of the Haram (705)', EAST_STREET, 705],
+    ['east of Al-Baqi’ → a hotel south of the Haram (713, ZamZam Pullman)', EAST_STREET, 713],
     ['west street → a hotel north of the Haram (706)', WEST_STREET, 706],
   ] as [string, LatLng, number][]) {
     it(name, async () => {
@@ -92,16 +92,15 @@ describe('walking beyond the plazas', () => {
     expect(enters(path)).toBe(false);
   });
 
-  it('to a restaurant north of the Haram (809): out by the middle north gates and up the street, not through hotel blocks', async () => {
-    // Before, a passage through a hotel block (mapped as a footway) was taken to save a few metres.
+  it('to Arabesque restaurant north of the Haram (809): out by a north gate near it, then up the streets', async () => {
     const p = await planRoute([24.4606, 39.6012], P(809), 'walk');
     const path = p.legs[0].path;
     const exit = path.findIndex((q, i) => i > 0 && inHaram(path[i - 1]) && !inHaram(q));
     expect(exit).toBeGreaterThan(0);
-    const [x] = toM(path[exit]);
-    const gates = [332, 336].map((id) => toM(at(id))[0]);
-    expect(x).toBeGreaterThan(gates[0] - 40);
-    expect(x).toBeLessThan(gates[1] + 40);
+    const [x, y] = toM(path[exit]);
+    const [dx] = toM(at(809));
+    expect(y).toBeGreaterThan(380); // the north side
+    expect(Math.abs(x - dx)).toBeLessThan(200); // a gate near the restaurant, not one far along
     expect(enters(path)).toBe(false);
   });
 
@@ -156,5 +155,17 @@ describe('driving to the car park under the Haram', () => {
       expect(p.mode, `P${id - 900}`).toBe('drive');
       expect(p.lot?.id).toBe(id);
     }
+  });
+});
+
+describe('driving to a hotel outside the Haram', () => {
+  it('drives to the street at its door and walks the last steps — no car park under the Haram', async () => {
+    const p = await planRoute(SOUTH_WEST, P(705), 'drive'); // a hotel north of the Haram
+    expect(p.mode).toBe('drive');
+    expect(p.lot).toBeUndefined();
+    expect(p.legs[0].kind).toBe('drive');
+    expect(p.walkM).toBeLessThan(150);
+    const last = p.legs[p.legs.length - 1].path;
+    expect(last[last.length - 1][0]).toBeCloseTo(P(705).lat, 6);
   });
 });

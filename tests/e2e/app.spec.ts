@@ -25,13 +25,13 @@ test.describe('landing', () => {
 
 test.describe('filters', () => {
   const EXPECTED: [string, number][] = [
-    ['all', 210],
+    ['all', 271],
     ['gates', 112],
     ['women', 35],
     ['toilets', 40],
-    ['hotels', 7],
-    ['food', 12],
-    ['landmarks', 18],
+    ['hotels', 43],
+    ['food', 26],
+    ['landmarks', 29],
     ['wheelchair', 8],
     ['parking', 13],
     ['emergency', 11],
@@ -200,9 +200,9 @@ test.describe('languages', () => {
       await page.locator(`#lang-menu [data-lang="${code}"]`).click();
       await expect(page.locator('html')).toHaveAttribute('lang', code);
       await expect(page.locator('html')).toHaveAttribute('dir', dir);
-      await expect.poll(() => count(page)).toBe(210);
+      await expect.poll(() => count(page)).toBe(271);
       // Digits stay Latin in every language.
-      await expect(page.locator('#hdr-sub')).toContainText('210');
+      await expect(page.locator('#hdr-sub')).toContainText('271');
     }
   });
 });

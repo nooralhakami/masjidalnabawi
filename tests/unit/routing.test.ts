@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { POIS, POI_BY_ID, ROUTING } from '../../src/data';
+import { inHaram } from '../../src/routing/plan';
 import type { LatLng } from '../../src/data';
 import { insideRect, network, pathLength, projectOnRing, toM, walkMinutes, walkPath } from '../../src/routing/walk';
 
@@ -80,10 +81,11 @@ describe('walking routes', () => {
 describe('every reachable place, from every plaza side', () => {
   // The whole data set, not a sample: any change to the walkway network must keep all of these true.
   const SIDES: [string, LatLng][] = [...STARTS, ['east plaza', [24.4688, 39.614]]];
-  const reachable = POIS.filter((p) => !inObstacle([p.lat, p.lng]));
+  // Places in the Haram (plaza walkways); places outside it are reached through the streets (streets.test.ts).
+  const reachable = POIS.filter((p) => !inObstacle([p.lat, p.lng]) && inHaram([p.lat, p.lng]));
 
   it('covers the outdoor places (facilities, outer gates, parking, services)', () => {
-    expect(reachable.length).toBeGreaterThan(150);
+    expect(reachable.length).toBeGreaterThan(140);
     for (let id = 201; id <= 236; id++) expect(reachable.some((p) => p.id === id), String(id)).toBe(true);
   });
 

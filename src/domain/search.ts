@@ -25,6 +25,8 @@ export function matchRank(p: Poi, query: string): number {
   if (names.split(' ').some((w) => w.startsWith(q))) return 60;
   if (names.includes(q)) return 50;
   if (q.length > 3 && tags.some((w) => w.startsWith(q))) return 40;
+  // Other spellings as phrases ("Al Baik" for Albaik).
+  if (q.length > 2 && normalize(p.alias ?? '').includes(q)) return 35;
   if (normalize(`${p.description_ar} ${ds(p)}`).includes(q)) return 20;
   return 0;
 }
