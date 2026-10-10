@@ -8,7 +8,7 @@ import '../styles/refresh.css';
 import { POI_BY_ID, RULES } from '../data';
 import type { Poi } from '../data/types';
 import { Facilities } from '../domain/facilities';
-import { FILTERS, type FilterId, type ParkingSub, type ToiletSub } from '../domain/filters';
+import { FILTERS, isHidden, type FilterId, type ParkingSub, type ToiletSub } from '../domain/filters';
 import { visiblePois } from '../domain/visible';
 import { nm, t } from '../i18n';
 import { applyLang, initialLang } from '../i18n/dom';
@@ -266,7 +266,7 @@ refresh();
 {
   const id = Number(new URLSearchParams(location.search).get('poi'));
   const p = Number.isInteger(id) ? POI_BY_ID.get(id) : undefined;
-  if (p) map.whenReady(() => setTimeout(() => select(p, true), 50));
+  if (p && !isHidden(p)) map.whenReady(() => setTimeout(() => select(p, true), 50));
 }
 
 // Dev-only handles for debugging in the browser console.

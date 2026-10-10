@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { POIS, POI_BY_ID, RULES } from '../../src/data';
 import type { Poi } from '../../src/data';
 import { Facilities, elevatorBadge, pairOf } from '../../src/domain/facilities';
-import { passesFilter, type FilterId } from '../../src/domain/filters';
+import { FILTERS, passesFilter, type FilterId } from '../../src/domain/filters';
 import { search } from '../../src/domain/search';
 import { visiblePois } from '../../src/domain/visible';
 import { PARKING, between, levels, lotLabel } from '../../src/domain/parking';
@@ -21,9 +21,9 @@ const shown = (filter: FilterId, toiletSub: 'all' | 'open' | 'closed' = 'all') =
   POIS.filter((p) => passesFilter(p, { filter, toiletSub, searching: false }, fac));
 
 describe('filters', () => {
-  it('"all" shows everything except parking', () => {
+  it('"all" shows everything except parking and the hidden wheelchair zones', () => {
     const all = shown('all');
-    expect(all).toHaveLength(326 - 13);
+    expect(all).toHaveLength(326 - 13 - 8);
     expect(all.some((p) => p.category === 'parking')).toBe(false);
   });
 
@@ -36,12 +36,12 @@ describe('filters', () => {
     expect(passesFilter(P(901), { filter: 'all', toiletSub: 'all', searching: true }, fac)).toBe(true);
   });
 
-  it('landmarks exclude wheelchair zones, which have their own pill', () => {
-    expect(shown('landmarks').some((p) => p.subCategory === 'wheelchair_zone')).toBe(false);
+  it('wheelchair zones are hidden everywhere, under every filter and in search (owner, 2026-10-10)', () => {
+    for (const f of FILTERS.map((x) => x.id)) expect(shown(f).some((p) => p.subCategory === 'wheelchair_zone'), f).toBe(false);
+    expect(passesFilter(P(401), { filter: 'all', toiletSub: 'all', searching: true }, fac)).toBe(false);
+    expect(FILTERS.some((x) => x.label === 'p_wheelchair')).toBe(false);
     expect(shown('landmarks')).toHaveLength(38);
     expect(shown('historic')).toHaveLength(17);
-    expect(shown('wheelchair')).toHaveLength(8);
-    expect(shown('wheelchair').every((p) => p.subCategory === 'wheelchair_zone')).toBe(true);
   });
 
   it('women services = women + mixed restrooms + prayer halls + open women-section inner gates', () => {

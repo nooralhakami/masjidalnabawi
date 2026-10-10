@@ -13,7 +13,6 @@ const LOOK: Record<FilterId, [IconName, string]> = {
   shopping: ['bag', 'var(--cat-shop)'],
   landmarks: ['landmark', 'var(--cat-land)'],
   historic: ['historic', 'var(--cat-hist)'],
-  wheelchair: ['cart', 'var(--cat-acc)'],
   parking: ['parking', 'var(--cat-men)'],
   emergency: ['emergency', 'var(--cat-emg)'],
 };

@@ -3,7 +3,7 @@ import type { Facilities } from './facilities';
 import { isClosed } from './facilities';
 import { parkingAccess } from './parking';
 
-export type FilterId = 'all' | 'gates' | 'women' | 'toilets' | 'hotels' | 'food' | 'shopping' | 'landmarks' | 'historic' | 'wheelchair' | 'parking' | 'emergency';
+export type FilterId = 'all' | 'gates' | 'women' | 'toilets' | 'hotels' | 'food' | 'shopping' | 'landmarks' | 'historic' | 'parking' | 'emergency';
 export type ToiletSub = 'all' | 'open' | 'closed';
 export type ParkingSub = 'all' | 'public' | 'subscribers';
 
@@ -18,7 +18,6 @@ export const FILTERS: readonly { id: FilterId; label: string }[] = [
   { id: 'shopping', label: 'p_shopping' },
   { id: 'landmarks', label: 'p_landmarks' },
   { id: 'historic', label: 'p_historic' },
-  { id: 'wheelchair', label: 'p_wheelchair' },
   { id: 'parking', label: 'p_parking' },
   { id: 'emergency', label: 'p_emergency' },
 ];
@@ -43,10 +42,20 @@ export interface FilterState {
   searching: boolean;
 }
 
+/**
+ * Places kept in the data but not shown anywhere (map, search, filters, links).
+ * Owner decision 2026-10-10: the wheelchair areas inside the mosque are not useful for now.
+ * Remove a sub-category from this set to bring its places back.
+ */
+export const HIDDEN_SUBCATEGORIES: ReadonlySet<string> = new Set(['wheelchair_zone']);
+
+export const isHidden = (p: Poi): boolean => HIDDEN_SUBCATEGORIES.has(p.subCategory);
+
 const SAME_CATEGORY: readonly Category[] = ['hotels', 'food', 'shopping', 'landmarks', 'emergency', 'gates'];
 
 /** Whether a POI passes the active filter pill (search matching is separate). */
 export function passesFilter(p: Poi, s: FilterState, fac: Facilities): boolean {
+  if (isHidden(p)) return false;
   const f = s.filter;
   // Parking only ever shows with its own pill or while searching.
   if (p.category === 'parking') return (f === 'parking' && ((s.parkingSub ?? 'all') === 'all' || parkingAccess(p) === (s.parkingSub ?? 'all'))) || s.searching;
@@ -68,14 +77,11 @@ export function passesFilter(p: Poi, s: FilterState, fac: Facilities): boolean {
       if (s.toiletSub === 'closed') return isClosed(fac.status(p.id));
       return true;
     }
-    case 'wheelchair':
-      return p.subCategory === 'wheelchair_zone';
     case 'historic':
       // Confirmed historic sites (docs/places/PLACES.md); they also show under landmarks.
       return p.subCategory === 'historic';
     case 'landmarks':
-      // Wheelchair zones have their own pill.
-      return p.category === 'landmarks' && p.subCategory !== 'wheelchair_zone';
+      return p.category === 'landmarks';
     default:
       return SAME_CATEGORY.includes(f as Category) && p.category === f;
   }

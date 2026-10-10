@@ -59,7 +59,6 @@ describe('markers', () => {
     expect(visibleAtZoom(P(401), 's', 'all', false)).toBe(false);
     expect(visibleAtZoom(P(301), 's', 'all', false)).toBe(true);
     expect(visibleAtZoom(P(201), 's', 'all', false)).toBe(true);
-    expect(visibleAtZoom(P(401), 's', 'wheelchair', false)).toBe(true);
     expect(visibleAtZoom(P(1), 'm', 'all', false)).toBe(true);
   });
 });
