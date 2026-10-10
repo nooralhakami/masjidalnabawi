@@ -100,21 +100,27 @@ body {
   color: var(--gold);
 }
 .haramain-logo {
-  width: min(180px, 42vw);
+  /* Transparent PNGs built from the owner's source (scripts/logo-from-source.py): the light-theme file
+     keeps the navy and gold; the dark-theme file paints the navy light and keeps the gold. */
+  width: min(220px, 52vw);
   height: auto;
-  object-fit: contain;
-  mix-blend-mode: multiply;
-  filter: sepia(0.12) saturate(0.9);
   margin-block-end: 18px;
 }
-:root[data-theme='dark'] .haramain-logo {
-  mix-blend-mode: screen;
-  filter: invert(1) sepia(0.12) saturate(0.7);
+.haramain-logo.logo-dark {
+  display: none;
+}
+:root[data-theme='dark'] .haramain-logo.logo-light {
+  display: none;
+}
+:root[data-theme='dark'] .haramain-logo.logo-dark {
+  display: block;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .haramain-logo {
-    mix-blend-mode: screen;
-    filter: invert(1) sepia(0.12) saturate(0.7);
+  :root:not([data-theme='light']) .haramain-logo.logo-light {
+    display: none;
+  }
+  :root:not([data-theme='light']) .haramain-logo.logo-dark {
+    display: block;
   }
 }
 .lang {

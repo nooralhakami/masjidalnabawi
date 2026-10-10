@@ -86,7 +86,8 @@ export function landingHtml(url: string): string {
     <div class="hero-pattern" aria-hidden="true"></div>
     <div class="wrap hero-grid">
       <div class="hero-text">
-        <img class="haramain-logo" src="./haramain-logo.png" width="220" height="220" alt="شعار الحرمين" decoding="async" />
+        <img class="haramain-logo logo-light" src="./haramain-logo.png" width="720" height="393" alt="شعار الحرمين — الهيئة العامة للعناية بشؤون المسجد الحرام والمسجد النبوي" decoding="async" />
+        <img class="haramain-logo logo-dark" src="./haramain-logo-dark.png" width="720" height="393" alt="" aria-hidden="true" decoding="async" />
         <span class="tag">${icon('phone', 16)}${e('l_tag')}</span>
         <h1>${e('title')}</h1>
         <p class="lead">${e('hero_p')}</p>

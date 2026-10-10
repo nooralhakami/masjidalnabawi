@@ -28,6 +28,7 @@ The owner is not a programmer: explain changes in plain Arabic, one concept at a
 - Respect the dependency rule in ARCHITECTURE.md; `domain/` and `routing/` stay pure (no DOM, no Leaflet).
 - Every user-facing string in 6 languages (`src/i18n/strings.ts`, `data/i18n.json`); tests enforce it. Never hard-code Arabic/English text in components.
 - Colours only via tokens in `src/styles/tokens.css`; logical CSS properties (RTL); digits stay Latin.
+- The Haramain logo (used with the Authority's permission) is built from `docs/haramain-logo-source.jpg` by `scripts/logo-from-source.py` into a light and a dark transparent PNG; don't recolour it with CSS filters.
 - Data: never hand-edit generated files (`streets.json`, OSM-derived places) — change the script or its source and rebuild. Position nudges go in `data/overrides.json`.
 - Map performance: no work proportional to all POIs on every frame; no `backdrop-filter`/blur work during map gestures; reuse markers instead of recreating them.
 - Accessibility: real buttons/links, aria-labels on icon buttons, 40–44 px targets, contrast 4.5:1, respect `prefers-reduced-motion`.
