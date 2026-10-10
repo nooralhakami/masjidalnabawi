@@ -197,9 +197,13 @@ test.describe('languages', () => {
     ['fr', 'ltr'],
     ['fa', 'rtl'],
     ['ru', 'ltr'],
+    ['ms', 'ltr'],
+    ['ha', 'ltr'],
+    ['ml', 'ltr'],
+    ['sw', 'ltr'],
   ];
 
-  test('switching through all ten languages', async ({ page, errors: _ }) => {
+  test('switching through every language', async ({ page, errors: _ }) => {
     await openMap(page);
     for (const [code, dir] of LANGS) {
       await page.locator('#lang-btn').click();

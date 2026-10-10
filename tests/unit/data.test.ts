@@ -21,7 +21,7 @@ describe('inner gate names and descriptions', () => {
     expect(POI_BY_ID.get(37)?.rawdah).toBe(true);
   });
   it('has translated names and descriptions for every named gate', () => {
-    for (const lang of ['en', 'tr', 'ur', 'id', 'uz', 'bn', 'fr', 'fa', 'ru'] as const) {
+    for (const lang of ['en', 'tr', 'ur', 'id', 'uz', 'bn', 'fr', 'fa', 'ru', 'ms', 'ha', 'ml', 'sw'] as const) {
       for (const id of named) {
         const p = POI_BY_ID.get(id)!;
         expect(I18N[lang].gi?.[id]).toBeTruthy();
@@ -172,9 +172,9 @@ describe('supporting data', () => {
     expect(ROUTING.obstacles.baqi_outside_haram).toHaveLength(4);
   });
 
-  it('ten languages with identical UI keys', () => {
+  it('fourteen languages with identical UI keys', () => {
     const langs = Object.keys(I18N);
-    expect(langs).toEqual(['ar', 'en', 'tr', 'ur', 'id', 'uz', 'bn', 'fr', 'fa', 'ru']);
+    expect(langs).toEqual(['ar', 'en', 'tr', 'ur', 'id', 'uz', 'bn', 'fr', 'fa', 'ru', 'ms', 'ha', 'ml', 'sw']);
     const keys = Object.keys(I18N.ar.ui).sort();
     for (const l of langs) expect(Object.keys(I18N[l as keyof typeof I18N].ui).sort()).toEqual(keys);
   });

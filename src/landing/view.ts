@@ -26,6 +26,8 @@ const FEATURES: [IconName, string, string][] = [
 
 const brand = (size = 44) => `<span class="brand" style="width:${size}px;height:${size}px">${brandStar(Math.round(size * 0.58))}</span>`;
 const e = (k: string, v?: Record<string, string | number>) => esc(t(k, v));
+/** The language count and native names, filled into the landing texts so they never go stale. */
+const langVars = { n: LANGS.length, list: LANGS.map((c) => pack(c).n).join(' · ') };
 
 function qrBlock(url: string): string {
   if (SITE.QR_IMAGE) return `<img class="qr-image" src="${esc(SITE.QR_IMAGE)}" width="216" height="216" alt="${e('qr_alt')}" />`;
@@ -90,7 +92,7 @@ export function landingHtml(url: string): string {
         <img class="haramain-logo logo-dark" src="./haramain-logo-dark.png" width="720" height="393" alt="" aria-hidden="true" decoding="async" />
         <span class="tag">${icon('phone', 16)}${e('l_tag')}</span>
         <h1>${e('title')}</h1>
-        <p class="lead">${e('hero_p')}</p>
+        <p class="lead">${e('hero_p', { n: LANGS.length })}</p>
         <div class="row">
           <a class="btn-cta" href="./map.html">${e('l_open')}<span class="flip">${icon('arrowleft', 20)}</span></a>
           <a class="btn-sec" href="#install">${icon('download', 20)}${e('l_install')}</a>
@@ -131,7 +133,7 @@ export function landingHtml(url: string): string {
 
   <section id="features" class="wrap section">
     <div class="section-head"><span class="eyebrow">${e('nav_features')}</span><h2>${e('f_h')}</h2><p class="muted">${e('f_p')}</p></div>
-    <div class="cards">${FEATURES.map(([ic, tk, dk]) => `<article class="card feature"><span class="feature-icon">${icon(ic, 26)}</span><h3>${e(tk)}</h3><p class="muted">${e(dk)}</p></article>`).join('')}</div>
+    <div class="cards">${FEATURES.map(([ic, tk, dk]) => `<article class="card feature"><span class="feature-icon">${icon(ic, 26)}</span><h3>${e(tk, langVars)}</h3><p class="muted">${e(dk, langVars)}</p></article>`).join('')}</div>
   </section>
 
   <section id="install" class="wrap section">

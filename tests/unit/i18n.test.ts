@@ -9,12 +9,12 @@ import { FILTERS, TOILET_SUBS } from '../../src/domain/filters';
 const P = (id: number): Poi => POI_BY_ID.get(id)!;
 
 describe('translations are complete', () => {
-  it('every data UI key exists in all ten languages', () => {
+  it('every data UI key exists in every language', () => {
     const keys = Object.keys(I18N.ar.ui).sort();
     for (const l of LANGS) expect(Object.keys(I18N[l].ui).sort(), l).toEqual(keys);
   });
 
-  it('every added UI key exists in all ten languages and is non-empty', () => {
+  it('every added UI key exists in every language and is non-empty', () => {
     const keys = Object.keys(EXTRA_UI.ar).sort();
     for (const l of LANGS) {
       expect(Object.keys(EXTRA_UI[l]).sort(), l).toEqual(keys);
@@ -22,7 +22,7 @@ describe('translations are complete', () => {
     }
   });
 
-  it('every landing key exists in all ten languages, with matching placeholders', () => {
+  it('every landing key exists in every language, with matching placeholders', () => {
     const keys = Object.keys(LANDING_UI.ar).sort();
     const ph = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort().join();
     for (const l of LANGS) {
@@ -67,9 +67,9 @@ describe('translations are complete', () => {
   });
 });
 
-describe('added languages (Bengali, French, Persian, Russian)', () => {
+describe('added languages (Bengali, French, Persian, Russian, Malay, Hausa, Malayalam, Swahili)', () => {
   it('every description is really translated, not left in English or Arabic', () => {
-    for (const l of ['bn', 'fr', 'fa', 'ru'] as const) {
+    for (const l of ['bn', 'fr', 'fa', 'ru', 'ms', 'ha', 'ml', 'sw'] as const) {
       for (const p of POIS) {
         const d = ds(p, l);
         expect(d, `${l} desc ${p.id}`).not.toBe(ds(p, 'en'));
@@ -80,7 +80,7 @@ describe('added languages (Bengali, French, Persian, Russian)', () => {
 
   it('Persian is right-to-left and the others left-to-right', () => {
     expect(I18N.fa.dir).toBe('rtl');
-    for (const l of ['bn', 'fr', 'ru'] as const) expect(I18N[l].dir).toBe('ltr');
+    for (const l of ['bn', 'fr', 'ru', 'ms', 'ha', 'ml', 'sw'] as const) expect(I18N[l].dir).toBe('ltr');
   });
 });
 
@@ -118,7 +118,7 @@ describe('place texts are really translated', () => {
   // v0 once left all 22 gate descriptions in Arabic in the other five languages.
   const ARABIC = /[؀-ۿ]/;
   it('no Arabic letters in English, Turkish, Indonesian or Uzbek names and descriptions (ﷺ aside)', () => {
-    for (const lang of ['en', 'tr', 'id', 'uz', 'bn', 'fr', 'ru'] as const) {
+    for (const lang of ['en', 'tr', 'id', 'uz', 'bn', 'fr', 'ru', 'ms', 'ha', 'ml', 'sw'] as const) {
       for (const sec of ['names', 'descs'] as const) {
         for (const [k, v] of Object.entries(I18N[lang][sec] ?? {})) {
           expect(ARABIC.test(String(v).replace(/ﷺ/g, '')), `${lang}.${sec}: ${k}`).toBe(false);
