@@ -164,8 +164,8 @@ describe('overrides', () => {
       expect(metres(id).north).toBeCloseTo(-9, 5);
       expect(metres(id).east).toBeCloseTo(0, 5);
     }
-    // 213–214 4 m south, 215–216 3 m north, 217–218 6 m north, north restrooms 220–230 (even) 4 m north.
-    const north: [number[], number][] = [[[213, 214], -4], [[215, 216], 3], [[217, 218], 6], [[220, 222, 224, 226, 228, 230], 4]];
+    // 213–214 4 m south, 215–216 3 m north, 217–218 6 m north, north restrooms 220–230 (even) 4 m then 2 m north (6 m).
+    const north: [number[], number][] = [[[213, 214], -4], [[215, 216], 3], [[217, 218], 6], [[220, 222, 224, 226, 228, 230], 6]];
     for (const [group, m] of north) {
       for (const id of group) {
         expect(metres(id).north, String(id)).toBeCloseTo(m, 5);
