@@ -2280,16 +2280,6 @@
   "description_ar": "مكتب المفقودات ومكتب شرطة للنساء داخل المسجد عند باب رقم 30."
  },
  {
-  "id": 524,
-  "name_ar": "مركز شرطة (باب 34)",
-  "category": "emergency",
-  "subCategory": "police",
-  "lat": 24.4682908,
-  "lng": 39.6130887,
-  "direction": "east",
-  "description_ar": "مركز شرطة داخل المسجد عند باب رقم 34 (باب الملك عبد العزيز)."
- },
- {
   "id": 525,
   "name_ar": "مركز الخدمة الشاملة",
   "category": "emergency",
