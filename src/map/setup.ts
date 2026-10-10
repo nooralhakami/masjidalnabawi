@@ -40,10 +40,14 @@ export function createMap(el: HTMLElement): MapHandle {
   const satellite = L.tileLayer(cfg.tiles.satellite, {
     maxZoom: cfg.max_zoom,
     maxNativeZoom: 19,
+    // Keep more tiles round the view (fewer empty squares while panning) and don't fetch tiles in the
+    // middle of a zoom animation (SPEC F13).
+    keepBuffer: 4,
+    updateWhenZooming: false,
     attribution: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics',
   });
   const light = SITE.LIGHT_TILES
-    ? L.tileLayer(SITE.LIGHT_TILES, { maxZoom: cfg.max_zoom, maxNativeZoom: 19, attribution: SITE.LIGHT_ATTRIBUTION })
+    ? L.tileLayer(SITE.LIGHT_TILES, { maxZoom: cfg.max_zoom, maxNativeZoom: 19, keepBuffer: 4, updateWhenZooming: false, attribution: SITE.LIGHT_ATTRIBUTION })
     : L.tileLayer(cfg.tiles.light, { maxZoom: cfg.max_zoom, subdomains: 'abcd', attribution: '© OpenStreetMap contributors © CARTO' });
   let current: 'satellite' | 'light' = 'satellite';
   satellite.addTo(map);

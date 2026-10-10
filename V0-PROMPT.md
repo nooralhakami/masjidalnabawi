@@ -86,7 +86,7 @@ npm ci
 npm run dev          # http://localhost:5173/  و  /map.html  (?admin=1 للوحة المشرف)
 npm test             # 145 اختبار وحدة — يجب أن تنجح كلها
 npx playwright install chromium   # مرة واحدة
-npm run test:e2e     # 32 اختبار متصفح على نسخة البناء — يجب أن تنجح كلها
+npm run test:e2e     # 33 اختبار متصفح على نسخة البناء — يجب أن تنجح كلها
 npm run build        # فحص الأنواع ثم بناء dist/
 ```
 

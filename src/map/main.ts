@@ -24,6 +24,7 @@ import { RouteLayer } from './route-layer';
 import { createMap } from './setup';
 import { planRoute } from '../routing/plan';
 import { addWeatherChip } from '../ui/weather-chip';
+import { trackMotion } from './motion';
 import { NavigationTracker } from '../navigation/NavigationTracker';
 import { applyTheme, savedTheme } from '../ui/theme';
 import { toast } from '../ui/toast';
@@ -44,6 +45,7 @@ const fac = new Facilities();
 const handle = createMap(document.getElementById('map')!);
 const map = handle.map;
 addWeatherChip(map);
+trackMotion(map);
 const layer = new PoiLayer(map, fac, (p) => select(p, false));
 // One live location for the whole app: the "my location" button and navigation share it.
 const geo = new LocationService();

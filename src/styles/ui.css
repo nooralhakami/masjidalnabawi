@@ -38,7 +38,6 @@
   text-decoration: none;
   cursor: pointer;
   box-shadow: 0 3px 10px rgb(0 0 0 / 0.16);
-  backdrop-filter: blur(8px);
 }
 .map-quick-action svg { color: var(--gold); }
 .map-quick-action:hover { filter: brightness(1.15); }

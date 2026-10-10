@@ -7,8 +7,10 @@ import { esc } from '../ui/dom';
 import { HIT, chipSize, gateLabelVisible, markerSpec, overlaps, tierOf, visibleAtZoom, zoomClass } from './markers';
 
 /**
- * Draws the visible POIs. Only markers inside the viewport (+25%) are created,
- * and the layer redraws on moveend/zoomend.
+ * Draws the visible POIs. Only markers inside the viewport (+25%) exist, and after each move the
+ * layer is reconciled, not rebuilt: a marker whose look is unchanged is kept, only markers that
+ * entered or left the view (or changed look) are added or removed. Rebuilding ~250 DOM markers at
+ * the end of every drag caused a visible hitch on phones (SPEC F13).
  */
 export class PoiLayer {
   private group = L.layerGroup();
@@ -16,6 +18,8 @@ export class PoiLayer {
   private filter: FilterId = 'all';
   private selected: number | null = null;
   private hidden = false;
+  /** Markers on the map, by key ("p<id>" for a place, "l<id>" for a gate label), with the look they were made with. */
+  private live = new Map<string, { marker: L.Marker; look: string }>();
 
   constructor(
     private map: L.Map,
@@ -23,7 +27,8 @@ export class PoiLayer {
     private onPick: (p: Poi) => void,
   ) {
     this.group.addTo(map);
-    map.on('moveend zoomend', () => this.draw());
+    // A zoom also ends with "moveend", so one listener covers pan, zoom and fly.
+    map.on('moveend', () => this.draw());
     fac.onChange(() => this.draw());
   }
 
@@ -49,8 +54,19 @@ export class PoiLayer {
     this.draw();
   }
 
+  /** Keep the marker under `key` if its look is unchanged; otherwise (re)create it. */
+  private put(key: string, look: string, make: () => L.Marker, seen: Set<string>): void {
+    seen.add(key);
+    const cur = this.live.get(key);
+    if (cur && cur.look === look) return;
+    if (cur) this.group.removeLayer(cur.marker);
+    const marker = make();
+    this.group.addLayer(marker);
+    this.live.set(key, { marker, look });
+  }
+
   draw(): void {
-    this.group.clearLayers();
+    const seen = new Set<string>();
     const bounds = this.map.getBounds().pad(0.25);
     const zoom = this.map.getZoom();
     const tier = tierOf(zoom);
@@ -79,16 +95,21 @@ export class PoiLayer {
         if (!compact) placed.push(box);
       }
       const spec = markerSpec(p, tier, this.fac.status(p.id), sel, compact);
-      const m = L.marker([p.lat, p.lng], {
-        icon: L.divIcon({ html: spec.html, className: spec.className, iconSize: spec.size ?? [HIT, HIT], iconAnchor: spec.anchor ?? [HIT / 2, HIT / 2] }),
-        zIndexOffset: spec.zIndex,
-        keyboard: true,
-        title: nm(p),
-        alt: nm(p),
-        riseOnHover: true,
-      });
-      m.on('click', () => this.onPick(p));
-      this.group.addLayer(m);
+      const name = nm(p);
+      const size = spec.size ?? [HIT, HIT];
+      const anchor = spec.anchor ?? [HIT / 2, HIT / 2];
+      this.put(`p${p.id}`, `${spec.className}|${spec.zIndex}|${size}|${anchor}|${name}|${spec.html}`, () => {
+        const m = L.marker([p.lat, p.lng], {
+          icon: L.divIcon({ html: spec.html, className: spec.className, iconSize: size, iconAnchor: anchor }),
+          zIndexOffset: spec.zIndex,
+          keyboard: true,
+          title: name,
+          alt: name,
+          riseOnHover: true,
+        });
+        m.on('click', () => this.onPick(p));
+        return m;
+      }, seen);
       if (gateLabelVisible(p, this.map.getZoom())) {
         const pt = this.map.latLngToContainerPoint([p.lat, p.lng]);
         const label = nm(p);
@@ -96,16 +117,22 @@ export class PoiLayer {
         const box = { x: pt.x + 26 + w / 2, y: pt.y, w, h: 24 };
         if (!placed.some((b) => overlaps(b, box))) {
           placed.push(box);
-          const labelMarker = L.marker([p.lat, p.lng], {
-            icon: L.divIcon({ html: `<span class="gate-label" dir="auto">${esc(label)}</span>`, className: 'gate-label-wrap', iconSize: [w, 24], iconAnchor: [-26, 12] }),
-            zIndexOffset: sel ? 1001 : 51,
-            keyboard: false,
-            interactive: false,
-          });
-          this.group.addLayer(labelMarker);
+          this.put(`l${p.id}`, `${label}|${w}|${sel}`, () =>
+            L.marker([p.lat, p.lng], {
+              icon: L.divIcon({ html: `<span class="gate-label" dir="auto">${esc(label)}</span>`, className: 'gate-label-wrap', iconSize: [w, 24], iconAnchor: [-26, 12] }),
+              zIndexOffset: sel ? 1001 : 51,
+              keyboard: false,
+              interactive: false,
+            }), seen);
         }
       }
     }
+    // Whatever was not drawn this time has left the view (or the filter): remove it.
+    for (const [key, { marker }] of this.live) {
+      if (!seen.has(key)) {
+        this.group.removeLayer(marker);
+        this.live.delete(key);
+      }
+    }
   }
-
 }

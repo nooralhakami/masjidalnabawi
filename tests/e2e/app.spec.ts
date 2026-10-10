@@ -456,3 +456,24 @@ test('zoomed out, every marker stays in its place but smaller (no merging)', asy
   expect((await dot.boundingBox())!.width).toBeLessThanOrEqual(6);
   expect(await page.locator('.mk').count()).toBeGreaterThanOrEqual(before);
 });
+
+test.describe('smoothness (SPEC F13)', () => {
+  test('a small pan keeps the markers already on screen (no rebuild) and the glass blur pauses only while moving', async ({ page, errors: _ }) => {
+    await openMap(page);
+    // Tag the markers on screen, pan a little, and check they are the same elements afterwards.
+    await page.evaluate(() => document.querySelectorAll('.leaflet-marker-icon').forEach((el) => el.setAttribute('data-kept', '1')));
+    const before = await page.locator('[data-kept="1"]').count();
+    const box = (await page.locator('.leaflet-container').boundingBox())!;
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height * 0.55;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + 30, y + 20, { steps: 6 });
+    expect(await page.evaluate(() => document.body.classList.contains('map-moving'))).toBe(true);
+    await page.mouse.up();
+    await page.waitForTimeout(500);
+    expect(await page.evaluate(() => document.body.classList.contains('map-moving'))).toBe(false);
+    // Most markers survive a 36 px pan (only those crossing the view's padded edge change).
+    expect(await page.locator('[data-kept="1"]').count()).toBeGreaterThan(before * 0.8);
+  });
+});

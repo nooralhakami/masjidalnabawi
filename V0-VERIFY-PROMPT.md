@@ -22,7 +22,7 @@ smallest fix, and keep every test passing. Read `V0-PROMPT.md` first for the pro
 npm ci
 npm test                         # expect 145 passed
 npx playwright install chromium
-npm run test:e2e                 # expect 32 passed
+npm run test:e2e                 # expect 33 passed
 npm run build                    # expect no type errors
 ```
 - [ ] All three succeed with the expected counts. Paste the summary lines.

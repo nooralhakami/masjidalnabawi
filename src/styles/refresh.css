@@ -264,3 +264,9 @@
 :root[data-theme='dark'] .navigation-status[data-state='low-accuracy'] strong {
   color: #f0c46a;
 }
+
+/* ---------- while the map moves (src/map/motion.ts) ---------- */
+.map-moving .route-flow {
+  /* the only endless animation that spans the whole route: pause it during gestures */
+  animation-play-state: paused;
+}
