@@ -119,10 +119,10 @@ describe('pois.json', () => {
 });
 
 describe('overrides', () => {
-  it('only the owner-requested POIs are nudged (outer gates north 328–343, west 322–327, south 301–309 and 365–370; restrooms 205–209, 211–218 and north 220–230 (even); service buildings 501, 504–507; centres 511 and 604); everything else is untouched', () => {
+  it('only the owner-requested POIs are nudged (outer gates north 328–343, west 322–327, south 301–309 and 365–370; restrooms 205–209, 211–218 and north 220–230 (even); service buildings 501, 504–507; centres 511 and 604; women prayer halls 601–602); everything else is untouched', () => {
     const raw = rawPois as Poi[];
     const moved = (id: number) =>
-      (id >= 322 && id <= 343) || (id >= 301 && id <= 309) || (id >= 365 && id <= 370) || (id >= 205 && id <= 209) || (id >= 211 && id <= 218) || [220, 222, 224, 226, 228, 230].includes(id) || id === 501 || (id >= 504 && id <= 507) || id === 511 || id === 604;
+      (id >= 322 && id <= 343) || (id >= 301 && id <= 309) || (id >= 365 && id <= 370) || (id >= 205 && id <= 209) || (id >= 211 && id <= 218) || [220, 222, 224, 226, 228, 230].includes(id) || id === 501 || (id >= 504 && id <= 507) || id === 511 || id === 601 || id === 602 || id === 604;
     POIS.forEach((p, i) => {
       if (moved(p.id)) return;
       expect(p.lat).toBe(raw[i].lat);
@@ -182,6 +182,19 @@ describe('overrides', () => {
     for (const id of [301, 305, 309, 365, 370]) {
       expect(metres(id).north).toBeCloseTo(5, 5);
       expect(metres(id).east).toBeCloseTo(0, 5);
+    }
+  });
+
+  it("each women's prayer-hall icon sits in the middle of its pink area (owner, 2026-10-10)", () => {
+    const centre = (id: string) => {
+      const poly = ROUTING.women_prayer_areas.find((a) => a.id === id)!.polygon;
+      return [poly.reduce((s, q) => s + q[0], 0) / poly.length, poly.reduce((s, q) => s + q[1], 0) / poly.length];
+    };
+    for (const [pid, area] of [[601, 'north-east'], [602, 'north-west']] as const) {
+      const p = POI_BY_ID.get(pid)!;
+      const [lat, lng] = centre(area);
+      const metres = Math.hypot((p.lat - lat) * 111_320, (p.lng - lng) * 111_320 * Math.cos((lat * Math.PI) / 180));
+      expect(metres, String(pid)).toBeLessThan(0.5);
     }
   });
 
