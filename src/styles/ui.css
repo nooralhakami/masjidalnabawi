@@ -164,6 +164,10 @@
   inset-inline-end: 12px;
   top: 62px;
   min-width: 200px;
+  /* With many languages the list is taller than a phone: it scrolls inside the screen. */
+  max-height: calc(100dvh - 62px - 16px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 6px;
   margin: 0;
   list-style: none;

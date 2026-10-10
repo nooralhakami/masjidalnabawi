@@ -149,6 +149,10 @@ body {
 .lang-menu {
   position: absolute;
   min-width: 210px;
+  /* With many languages the list is taller than a phone: it scrolls inside the screen. */
+  max-height: calc(100dvh - 150px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 6px;
   margin: 0;
   list-style: none;
