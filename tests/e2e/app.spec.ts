@@ -477,3 +477,22 @@ test.describe('smoothness (SPEC F13)', () => {
     expect(await page.locator('[data-kept="1"]').count()).toBeGreaterThan(before * 0.8);
   });
 });
+
+test.describe('compass', () => {
+  test('needle turns with true north on screen (opposite to the map turn) and shows the Kaaba', async ({ page, errors: _ }) => {
+    await openMap(page);
+    const compass = page.locator('.mc-compass');
+    await expect(compass.locator('.kaaba')).toHaveCount(1);
+    await page.locator('.mc-rotate .mc-btn').first().click(); // rotate by +15°
+    await expect(compass).toHaveClass(/is-rotated/);
+    const { pane, needle } = await page.evaluate(() => {
+      const t = (document.querySelector('.leaflet-rotate-pane') as HTMLElement).style.transform;
+      const rad = Number(/rotate\((-?[\d.e-]+)rad\)/.exec(t)?.[1]);
+      const deg = parseFloat((document.querySelector('.mc-compass') as HTMLElement).style.getPropertyValue('--bearing'));
+      return { pane: (rad * 180) / Math.PI, needle: deg };
+    });
+    // The map content (and with it north) turned clockwise by the bearing; the needle must follow north.
+    expect(Math.abs(pane)).toBeCloseTo(15, 0);
+    expect(needle).toBeCloseTo(pane, 0);
+  });
+});

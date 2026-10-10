@@ -93,7 +93,7 @@ export function createMap(el: HTMLElement): MapHandle {
     L.DomEvent.disableClickPropagation(box);
     return box;
   };
-  // One column: zoom (+/−), then rotation (↺ · compass · ↻). The compass needle always points to true north.
+  // One column: zoom (+/−), then rotation (↺ · compass · ↻). The compass needle always points to true north; the Kaaba mark at its other end points to the qibla (≈176°, south of Madinah).
   zoom.onAdd = () => {
     const box = L.DomUtil.create('div', 'mc mc-right');
     const grp = L.DomUtil.create('div', 'mc-zoom', box);
@@ -113,8 +113,10 @@ export function createMap(el: HTMLElement): MapHandle {
     rotRight.addEventListener('click', () => map.setBearing(map.getBearing() + 15));
     rotReset.addEventListener('click', () => map.setBearing(0));
     const syncCompass = () => {
+      // leaflet-rotate turns the map clockwise by the bearing, so true north on screen sits at +bearing:
+      // the needle turns with that angle (opposite to the user's sense of "turning the map").
       const bearing = map.getBearing?.() ?? 0;
-      rotReset!.style.setProperty('--bearing', `${-bearing}deg`);
+      rotReset!.style.setProperty('--bearing', `${bearing}deg`);
       rotReset!.classList.toggle('is-rotated', Math.abs(((bearing % 360) + 360) % 360) > 0.5);
     };
     map.on('rotate', syncCompass);

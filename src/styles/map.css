@@ -428,6 +428,14 @@
 .mc-compass .needle-s {
   color: var(--muted);
 }
+/* The Kaaba at the south end of the needle: qibla from Madinah. */
+.mc-compass .kaaba rect:first-child {
+  fill: #1b1b1b;
+  stroke: var(--muted);
+}
+.mc-compass .kaaba-band {
+  fill: #d4a72c;
+}
 .mc-compass.is-rotated {
   background: var(--tint-green) !important;
 }

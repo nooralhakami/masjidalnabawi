@@ -32,7 +32,7 @@ const PATHS = {
   'rotate-left': '<path d="M9 5H5v4"/><path d="M5.5 9A7 7 0 1 1 7 17"/>',
   'rotate-right': '<path d="M15 5h4v4"/><path d="M18.5 9A7 7 0 1 0 17 17"/>',
   // Compass needle: the filled (north) half is coloured by CSS and turned to true north.
-  'rotate-reset': '<circle cx="12" cy="12" r="9.5" stroke-width="1.5"/><path class="needle-n" d="M12 3.8l3 8.2h-6z" fill="currentColor" stroke="none"/><path class="needle-s" d="M12 20.2l-3-8.2h6z" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="var(--surface-2, #fff)" stroke="none"/>',
+  'rotate-reset': '<circle cx="12" cy="12" r="9.5" stroke-width="1.5"/><path class="needle-n" d="M12 3.6l2.8 8.4h-5.6z" fill="currentColor" stroke="none"/><path class="needle-s" d="M10.6 12h2.8l-1.4 3z" fill="currentColor" stroke="none"/><g class="kaaba"><rect x="9.6" y="15.4" width="4.8" height="4.8" rx=".4" stroke-width=".7"/><rect class="kaaba-band" x="9.6" y="16.5" width="4.8" height=".9" stroke="none"/></g><circle cx="12" cy="12" r="1.3" fill="var(--surface-2, #fff)" stroke="none"/>',
   close: '<path d="M6 6l12 12M18 6L6 18"/>',
   globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>',
   chevdown: '<path d="M6 9l6 6 6-6"/>',
