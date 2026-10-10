@@ -1,4 +1,4 @@
-"""Builds the extra languages (Bengali, French, Persian, Russian, Malay, Hausa, Malayalam, Swahili) into data/i18n.json.
+"""Builds the extra languages (Bengali, French, Persian, Russian, Malay, Hausa, Malayalam, Swahili, Pashto, Somali, Tamil, Hindi) into data/i18n.json.
 
 Sources: docs/translations/<lang>.json — hand translations of the interface, gate names, landmark and
 historic names and descriptions, plus sentence templates for the generated descriptions (hotels,
@@ -11,11 +11,11 @@ Run it last, after the place scripts:
 
 If a place or text was added since, the script stops and lists what still needs translating.
 Names of generated places (hotels, restaurants, shops) stay as on the signs: English, or for
-Persian the same name Urdu uses (Arabic script).
+Persian and Pashto the same name Urdu uses (Arabic script).
 """
 import json, re, sys
 
-EXTRA = ('bn', 'fr', 'fa', 'ru', 'ms', 'ha', 'ml', 'sw')
+EXTRA = ('bn', 'fr', 'fa', 'ru', 'ms', 'ha', 'ml', 'sw', 'ps', 'so', 'ta', 'hi')
 # English generated descriptions → template name and fields (see places-from-osm.py / shops-from-osm.py).
 PATTERNS = [
     ('hotel_stars', r'^A (?P<stars>\d+)-star hotel in the (?P<district>.+?) district of the central area, about (?P<m>\d+) m from Gate (?P<gate>\d+)\.$'),

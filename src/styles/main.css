@@ -14,7 +14,9 @@ html {
   font-family: var(--font-ui);
   -webkit-text-size-adjust: 100%;
 }
-html[lang='ur'] {
+/* Naskh covers the Urdu and Pashto letters (ٹ ڈ ڑ ښ ږ ړ ډ ټ ...) that IBM Plex Sans Arabic lacks. */
+html[lang='ur'],
+html[lang='ps'] {
   font-family: var(--font-urdu);
 }
 body {

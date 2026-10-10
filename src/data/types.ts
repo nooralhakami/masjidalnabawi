@@ -133,7 +133,7 @@ export interface Rules {
   };
 }
 
-export type LangCode = 'ar' | 'en' | 'tr' | 'ur' | 'id' | 'uz' | 'bn' | 'fr' | 'fa' | 'ru' | 'ms' | 'ha' | 'ml' | 'sw';
+export type LangCode = 'ar' | 'en' | 'tr' | 'ur' | 'id' | 'uz' | 'bn' | 'fr' | 'fa' | 'ru' | 'ms' | 'ha' | 'ml' | 'sw' | 'ps' | 'so' | 'ta' | 'hi';
 
 export interface LangPack {
   n: string;

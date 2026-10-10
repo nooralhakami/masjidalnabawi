@@ -67,9 +67,9 @@ describe('translations are complete', () => {
   });
 });
 
-describe('added languages (Bengali, French, Persian, Russian, Malay, Hausa, Malayalam, Swahili)', () => {
+describe('added languages (Bengali, French, Persian, Russian, Malay, Hausa, Malayalam, Swahili, Pashto, Somali, Tamil, Hindi)', () => {
   it('every description is really translated, not left in English or Arabic', () => {
-    for (const l of ['bn', 'fr', 'fa', 'ru', 'ms', 'ha', 'ml', 'sw'] as const) {
+    for (const l of ['bn', 'fr', 'fa', 'ru', 'ms', 'ha', 'ml', 'sw', 'ps', 'so', 'ta', 'hi'] as const) {
       for (const p of POIS) {
         const d = ds(p, l);
         expect(d, `${l} desc ${p.id}`).not.toBe(ds(p, 'en'));
@@ -78,9 +78,10 @@ describe('added languages (Bengali, French, Persian, Russian, Malay, Hausa, Mala
     }
   });
 
-  it('Persian is right-to-left and the others left-to-right', () => {
+  it('Persian and Pashto are right-to-left and the others left-to-right', () => {
     expect(I18N.fa.dir).toBe('rtl');
-    for (const l of ['bn', 'fr', 'ru', 'ms', 'ha', 'ml', 'sw'] as const) expect(I18N[l].dir).toBe('ltr');
+    expect(I18N.ps.dir).toBe('rtl');
+    for (const l of ['bn', 'fr', 'ru', 'ms', 'ha', 'ml', 'sw', 'so', 'ta', 'hi'] as const) expect(I18N[l].dir).toBe('ltr');
   });
 });
 
@@ -117,8 +118,8 @@ describe('names and descriptions', () => {
 describe('place texts are really translated', () => {
   // v0 once left all 22 gate descriptions in Arabic in the other five languages.
   const ARABIC = /[؀-ۿ]/;
-  it('no Arabic letters in English, Turkish, Indonesian or Uzbek names and descriptions (ﷺ aside)', () => {
-    for (const lang of ['en', 'tr', 'id', 'uz', 'bn', 'fr', 'ru', 'ms', 'ha', 'ml', 'sw'] as const) {
+  it('no Arabic letters in the languages not written in Arabic script (ﷺ aside)', () => {
+    for (const lang of ['en', 'tr', 'id', 'uz', 'bn', 'fr', 'ru', 'ms', 'ha', 'ml', 'sw', 'so', 'ta', 'hi'] as const) {
       for (const sec of ['names', 'descs'] as const) {
         for (const [k, v] of Object.entries(I18N[lang][sec] ?? {})) {
           expect(ARABIC.test(String(v).replace(/ﷺ/g, '')), `${lang}.${sec}: ${k}`).toBe(false);
