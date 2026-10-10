@@ -1,6 +1,6 @@
 import { POIS } from '../data';
 import type { LatLng, Poi } from '../data/types';
-import { nearestEntrance, parkingAccess, parkingEntrances } from '../domain/parking';
+import { parkingAccess, parkingEntrances } from '../domain/parking';
 import { loadStreets, type Reach, type Streets } from './streets';
 import { fromM, insideRect, network, openTogether, pathLength, ringPath, segmentHits, toM, walkPath, type XY } from './walk';
 
@@ -192,6 +192,16 @@ async function walkLegs(a: LatLng, b: LatLng): Promise<LatLng[]> {
   }
   const ok = options.filter((p) => !crossesObstacle(p)).sort((x, y) => len(x) - len(y));
   return ok[0] ?? walkPath(a, b);
+}
+
+/** Of a lot's four entrances (the facilities round it), the one nearest on foot. */
+export function nearestEntrance(from: LatLng, p: Poi): { entrance: Poi; path: LatLng[] } {
+  const candidates = parkingEntrances(p).map((entrance) => {
+    const path = walkPath(from, at(entrance));
+    return { entrance, path, length: len(path) };
+  });
+  if (!candidates.length) return { entrance: p, path: walkPath(from, at(p)) };
+  return candidates.reduce((best, c) => (c.length < best.length ? c : best));
 }
 
 /** Walking: to a lot, the route ends at the nearest of its four entrances. */

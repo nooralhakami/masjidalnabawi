@@ -5,7 +5,13 @@
 - `index.html` صفحة الهبوط: تعريف بالخريطة، باركود QR، المزايا، طريقة التثبيت.
 - `map.html` تطبيق الخريطة التفاعلية.
 
-**للمطوّرين ولـ v0:** ابدأ بقراءة `V0-PROMPT.md` (القواعد والبنية والسلوكيات التي يجب أن تبقى). المواصفات الأصلية في `PROMPT.md`، والتقارير السابقة في `docs/history/`، والتطبيق القديم للمقارنة في `reference/current-app.html`.
+**للمطوّرين (Claude ومطوّري الهيئة) — Developers start here:**
+1. [`SPEC.md`](SPEC.md) — ما يجب أن يفعله التطبيق، وشروط القبول، وقرارات المالك، وقائمة التحذيرات (ملزم).
+2. [`ARCHITECTURE.md`](ARCHITECTURE.md) — أجزاء الكود وحدودها وتدفقها ونقاط الدمج (English + ملخص عربي).
+3. [`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md) — قواعد العمل، وتعريف «تم»، والدروس المستفادة.
+4. [`docs/PERF.md`](docs/PERF.md) و`npm run perf` — ميزانية السلاسة. [`docs/places/PLACES.md`](docs/places/PLACES.md) و[`docs/routes/NETWORK.md`](docs/routes/NETWORK.md) — مصادر البيانات وبناؤها.
+
+البرومبتات القديمة لـ v0 والمواصفات الأولى (`PROMPT.md`) أصبحت أرشيفاً في `docs/history/`، والتطبيق القديم للمقارنة في `reference/current-app.html`.
 
 ---
 

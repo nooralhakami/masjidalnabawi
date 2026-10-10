@@ -11,5 +11,3 @@ export function nearestOuterGate(p: Poi): { poi: Poi; meters: number } | null {
   return best ? { poi: best.item, meters: best.meters } : null;
 }
 
-/** The plaza side's street (key into i18n `streets`). */
-export const nearestStreetSide = (p: Poi) => p.direction;

@@ -4,7 +4,7 @@ import type { Facilities } from '../domain/facilities';
 import type { FilterId } from '../domain/filters';
 import { nm } from '../i18n';
 import { esc } from '../ui/dom';
-import { HIT, chipSize, gateLabelVisible, markerSpec, overlaps, tierOf, visibleAtZoom, zoomClass } from './markers';
+import { HIT, chipSize, gateLabelVisible, markerSpec, overlaps, tierOf, visibleAtZoom, zoomClass } from '../ui/markers';
 
 /**
  * Draws the visible POIs. Only markers inside the viewport (+25%) exist, and after each move the

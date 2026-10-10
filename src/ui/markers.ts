@@ -1,7 +1,7 @@
 import type { Poi, Status } from '../data/types';
 import type { FilterId } from '../domain/filters';
 import { isClosed } from '../domain/facilities';
-import { icon, type IconName } from '../ui/icons';
+import { icon, type IconName } from './icons';
 
 /** Zoom tiers drive marker size and progressive disclosure. */
 export type Tier = 's' | 'm' | 'l';

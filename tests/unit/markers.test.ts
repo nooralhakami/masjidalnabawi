@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { POIS, POI_BY_ID } from '../../src/data';
-import { FACILITY_SIZE, gateLabelVisible, markerSpec, tierOf, visibleAtZoom, zoomClass } from '../../src/map/markers';
+import { FACILITY_SIZE, gateLabelVisible, markerSpec, tierOf, visibleAtZoom, zoomClass } from '../../src/ui/markers';
 
 const P = (id: number) => POI_BY_ID.get(id)!;
 

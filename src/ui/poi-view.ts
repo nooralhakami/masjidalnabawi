@@ -1,6 +1,6 @@
 import type { Poi } from '../data/types';
 import { dirName, nm, t } from '../i18n';
-import { lookOf, markerSpec } from '../map/markers';
+import { lookOf, markerSpec } from './markers';
 import { icon } from './icons';
 import { esc } from './dom';
 

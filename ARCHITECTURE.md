@@ -28,15 +28,14 @@ src/ui          header/search, pills, sheet (place card), Rawdah card, admin, ic
 src/landing     landing page (view is SSR'd at build time)
 src/styles      tokens.css (all colours, light/dark), component CSS
 ```
-**Rule:** a module may import only from modules *above* it in this list (data → domain → routing → location/i18n → map/navigation/ui). `domain` and `routing` must stay free of DOM and Leaflet so they run in unit tests and could run in another host (e.g. a native app or a server).
-
-Known exceptions to clean up (tracked in `docs/PERF.md` / health checks):
-- `src/domain/parking.ts` calls `routing/walk` (nearest entrance by walking distance) — move to `routing/`.
-- `src/ui/poi-view.ts` imports `map/markers` (marker look) — move the look table to `ui/` or `domain/`.
-- `src/navigation/NavigationTracker.ts` imports `ui/dom` (`esc`) — move `esc` to a shared util.
+**Rules** (checked 2026-10-10, no violations):
+- A module imports only from modules *above* it: data → domain → routing → location / i18n → ui → map / navigation.
+- `domain/` and `routing/` stay free of DOM and Leaflet, so they run in unit tests and could run in another host (a native app, a server).
+- `ui/` never imports `map/` or `navigation/`; `map/` and `navigation/` may use `ui/` helpers.
+- `ui/markers.ts` builds marker HTML as pure data (no Leaflet); `map/layer.ts` turns it into Leaflet markers.
 
 ## 3. Key flows
-- **Filter/search → markers:** `ui/pills`, `ui/header` → `domain/visible.visiblePois()` → `map/layer.PoiLayer.set()` → `map/markers.markerSpec()` (pure HTML spec) → Leaflet markers.
+- **Filter/search → markers:** `ui/pills`, `ui/header` → `domain/visible.visiblePois()` → `map/layer.PoiLayer.set()` → `ui/markers.markerSpec()` (pure HTML spec) → Leaflet markers, reused across moves.
 - **Select a place:** marker click / search / `?poi=ID` → `map/main.select()` → `ui/sheet.show()`.
 - **Route:** sheet "route" → `map/main.drawRoute()` → `location/LocationService` (on demand) → `routing/plan.planRoute(from, to, mode)` → legs (walk / drive / garage) → `map/route-layer.show()` → `navigation/NavigationTracker.start()`.
 - **Trip planner (`routing/plan.ts`):** inside the Haram → plaza walkways (`walk.ts`); otherwise the shortest of streets-only / streets + best gate + walkways / short cut across the plazas; driving → street graph to the best car-park ramp, aisles round the Haram (`ringPath`), stairs up, walk; or straight to a place outside the Haram.
