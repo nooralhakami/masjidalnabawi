@@ -118,10 +118,10 @@ describe('pois.json', () => {
 });
 
 describe('overrides', () => {
-  it('only the owner-requested POIs are nudged (outer gates north 328–343, west 322–327, south 301–309 and 365–370; restrooms 205–208; centres 511 and 604); everything else is untouched', () => {
+  it('only the owner-requested POIs are nudged (outer gates north 328–343, west 322–327, south 301–309 and 365–370; restrooms 205–208; service buildings 501, 504–507; centres 511 and 604); everything else is untouched', () => {
     const raw = rawPois as Poi[];
     const moved = (id: number) =>
-      (id >= 322 && id <= 343) || (id >= 301 && id <= 309) || (id >= 365 && id <= 370) || (id >= 205 && id <= 208) || id === 511 || id === 604;
+      (id >= 322 && id <= 343) || (id >= 301 && id <= 309) || (id >= 365 && id <= 370) || (id >= 205 && id <= 208) || id === 501 || (id >= 504 && id <= 507) || id === 511 || id === 604;
     POIS.forEach((p, i) => {
       if (moved(p.id)) return;
       expect(p.lat).toBe(raw[i].lat);
@@ -158,6 +158,11 @@ describe('overrides', () => {
     for (const id of [205, 206]) expect(metres(id).east).toBeCloseTo(-4, 5);
     // South services centre 7 m north; all southern outer gates 5 m north.
     expect(metres(511).north).toBeCloseTo(7, 5);
+    // South service buildings (health centre, lost & found, services 1–2, Seerah exhibition): 8 m north.
+    for (const id of [501, 504, 505, 506, 507]) {
+      expect(metres(id).north).toBeCloseTo(8, 5);
+      expect(metres(id).east).toBeCloseTo(0, 5);
+    }
     for (const id of [301, 305, 309, 365, 370]) {
       expect(metres(id).north).toBeCloseTo(5, 5);
       expect(metres(id).east).toBeCloseTo(0, 5);
