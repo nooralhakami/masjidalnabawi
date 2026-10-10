@@ -19,6 +19,11 @@ export function langMenuItems(current: LangCode): string {
   return [...main, arrow, ...more].join('');
 }
 
+/** Fit an open menu to the space left below it on screen (the header's height varies with language and width). */
+export function fitLangMenu(menu: HTMLElement): void {
+  menu.style.maxHeight = `${Math.max(160, window.innerHeight - menu.getBoundingClientRect().top - 12)}px`;
+}
+
 /** Unfold/fold the less widespread languages when the arrow is tapped (delegated, bind once per menu element). */
 export function bindLangMore(menu: HTMLElement): void {
   menu.addEventListener('click', (e) => {

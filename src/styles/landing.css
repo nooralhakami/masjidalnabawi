@@ -156,6 +156,8 @@ body {
 .lang-menu {
   position: absolute;
   min-width: 210px;
+  /* Never wider than the screen (long names such as O‘zbekcha (Turkiston) wrap instead). */
+  max-width: calc(100vw - 32px);
   /* With many languages the list is taller than a phone: it scrolls inside the screen. */
   max-height: calc(100dvh - 150px);
   overflow-y: auto;
@@ -170,6 +172,7 @@ body {
 }
 .lang-menu button {
   width: 100%;
+  text-align: start;
   min-height: 44px;
   border: 0;
   border-radius: 10px;
@@ -210,6 +213,13 @@ body {
 }
 .lang-menu .lang-more-btn[aria-expanded="true"] svg {
   transform: rotate(180deg);
+}
+/* While folded, the arrow stays pinned to the bottom of the menu so it is always seen. */
+.lang-menu .lang-more:has(.lang-more-btn[aria-expanded="false"]) {
+  position: sticky;
+  bottom: -6px;
+  background: var(--surface-2);
+  padding-bottom: 6px;
 }
 @media (prefers-reduced-motion: reduce) {
   .lang-menu .lang-more-btn svg { transition: none; }

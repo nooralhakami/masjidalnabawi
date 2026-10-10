@@ -4,7 +4,7 @@ import { brandStar, icon } from './icons';
 import { applyTheme, currentTheme } from './theme';
 import { $, esc } from './dom';
 import { poiBadge, poiName, sideLabel } from './poi-view';
-import { bindLangMore, langMenuItems } from './lang-menu';
+import { bindLangMore, fitLangMenu, langMenuItems } from './lang-menu';
 
 const MAX_RESULTS = 8;
 
@@ -129,7 +129,10 @@ export class Header {
   private toggleMenu(open = this.menu.hidden) {
     this.menu.hidden = !open;
     this.langBtn.setAttribute('aria-expanded', String(open));
-    if (open) (this.menu.querySelector('[aria-current="true"]') as HTMLElement | null)?.focus();
+    if (open) {
+      fitLangMenu(this.menu);
+      (this.menu.querySelector('[aria-current="true"]') as HTMLElement | null)?.focus();
+    }
   }
 
   private pick(p: Poi) {

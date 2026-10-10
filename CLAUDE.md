@@ -41,3 +41,4 @@ The owner is not a programmer: explain changes in plain Arabic, one concept at a
 - Owner rejected merging markers into count bubbles: markers stay in place and shrink when zoomed out.
 - The live domain is `masjidalnabawi.vercel.app` (not "masjidnabawi").
 - Backdrop blur over the moving map stutters on phones; toggling many-selector classes on <body> per gesture costs a 50–60 ms restyle → panels are near-opaque without blur (docs/PERF.md).
+- The language menu was cut off on a 360 px phone though it fitted at 375 px → check popovers at 320, 360, 375 and 412 px in an RTL and an LTR language; size them to the space left on screen. After CSS edits, if the dev preview looks unchanged, restart it (it can serve stale CSS); "Outdated Optimize Dep" errors mean clearing `node_modules/.vite`.

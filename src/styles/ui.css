@@ -164,6 +164,7 @@
   inset-inline-end: 12px;
   top: 62px;
   min-width: 200px;
+  max-width: calc(100vw - 24px);
   /* With many languages the list is taller than a phone: it scrolls inside the screen. */
   max-height: calc(100dvh - 62px - 16px);
   overflow-y: auto;
@@ -179,6 +180,7 @@
 }
 .lang-menu button {
   width: 100%;
+  text-align: start;
   min-height: 44px;
   border: 0;
   border-radius: 10px;
@@ -219,6 +221,13 @@
 }
 .lang-menu .lang-more-btn[aria-expanded="true"] svg {
   transform: rotate(180deg);
+}
+/* While folded, the arrow stays pinned to the bottom of the menu so it is always seen. */
+.lang-menu .lang-more:has(.lang-more-btn[aria-expanded="false"]) {
+  position: sticky;
+  bottom: -6px;
+  background: var(--surface-2);
+  padding-bottom: 6px;
 }
 @media (prefers-reduced-motion: reduce) {
   .lang-menu .lang-more-btn svg { transition: none; }
