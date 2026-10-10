@@ -2280,16 +2280,6 @@
   "description_ar": "مكتب المفقودات ومكتب شرطة للنساء داخل المسجد عند باب رقم 30."
  },
  {
-  "id": 523,
-  "name_ar": "مركز شرطة (باب 2)",
-  "category": "emergency",
-  "subCategory": "police",
-  "lat": 24.4676746,
-  "lng": 39.6106134,
-  "direction": "south",
-  "description_ar": "مركز شرطة داخل المسجد عند باب رقم 2 (باب أبي بكر الصديق)."
- },
- {
   "id": 524,
   "name_ar": "مركز شرطة (باب 34)",
   "category": "emergency",

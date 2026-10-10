@@ -33,9 +33,10 @@ describe('inner gate names and descriptions', () => {
 });
 
 describe('pois.json', () => {
-  it('has 326 POIs with unique ids (hotels, food, shopping, landmarks and historic sites, 2026-10-09)', () => {
-    expect(POIS).toHaveLength(326);
-    expect(POI_BY_ID.size).toBe(326);
+  it('has 325 POIs with unique ids (police station at Gate 2, 523, removed by the owner 2026-10-10)', () => {
+    expect(POIS).toHaveLength(325);
+    expect(POI_BY_ID.has(523)).toBe(false);
+    expect(POI_BY_ID.size).toBe(325);
     expect(POI_BY_ID.has(409)).toBe(false);
     expect(POI_BY_ID.has(410)).toBe(false);
     expect(POI_BY_ID.get(604)?.category).toBe('landmarks');
@@ -47,7 +48,7 @@ describe('pois.json', () => {
     ['parking', 13],
     ['landmarks', 38],
     ['wheelchair', 8],
-    ['emergency', 11],
+    ['emergency', 10],
     ['women', 2],
     ['hotels', 43],
     ['food', 44],
@@ -90,7 +91,7 @@ describe('pois.json', () => {
   it('key services: health, police, lost children, lost & found, child care and service centres', () => {
     const by = (s: string) => POIS.filter((p) => p.category === 'emergency' && p.subCategory === s).map((p) => p.id);
     expect(by('health')).toEqual([501, 502]);
-    expect(by('police')).toEqual([523, 524]);
+    expect(by('police')).toEqual([524]); // 523 (Gate 2) removed by the owner
     expect(by('lost_children')).toEqual([503]);
     expect(by('lost_found').sort()).toEqual([504, 521, 522]);
     expect(by('child_care')).toEqual([526]);

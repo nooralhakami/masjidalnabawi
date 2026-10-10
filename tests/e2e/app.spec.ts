@@ -25,7 +25,7 @@ test.describe('landing', () => {
 
 test.describe('filters', () => {
   const EXPECTED: [string, number][] = [
-    ['all', 305],
+    ['all', 304],
     ['gates', 112],
     ['women', 35],
     ['toilets', 40],
@@ -35,7 +35,7 @@ test.describe('filters', () => {
     ['landmarks', 38],
     ['historic', 17],
     ['parking', 13],
-    ['emergency', 11],
+    ['emergency', 10],
   ];
 
   test('every filter pill shows its POIs', async ({ page, errors: _ }) => {
@@ -240,9 +240,9 @@ test.describe('languages', () => {
       await item.click();
       await expect(page.locator('html')).toHaveAttribute('lang', code);
       await expect(page.locator('html')).toHaveAttribute('dir', dir);
-      await expect.poll(() => count(page)).toBe(305);
+      await expect.poll(() => count(page)).toBe(304);
       // Digits stay Latin in every language.
-      await expect(page.locator('#hdr-sub')).toContainText('305');
+      await expect(page.locator('#hdr-sub')).toContainText('304');
     }
   });
 });
@@ -441,10 +441,10 @@ test('the weather chip shows the current temperature in Madinah, labelled in the
 test('key services: one pill for health centres, police, lost children, lost & found and service centres', async ({ page, errors: _ }) => {
   await openMap(page);
   await page.locator('.pill[data-f="emergency"]').click();
-  await expect.poll(() => count(page)).toBe(11);
-  // Police at gates 2 and 34, and the women's police with lost & found at gate 30.
+  await expect.poll(() => count(page)).toBe(10);
+  // Police at gate 34, and the women's police with lost & found at gate 30 (gate 2's station was removed).
   await search(page, 'شرطة');
-  await expect(page.locator('.res')).toHaveCount(3);
+  await expect(page.locator('.res')).toHaveCount(2);
 });
 
 test.describe('travelling by car', () => {
