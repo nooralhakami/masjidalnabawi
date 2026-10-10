@@ -130,6 +130,13 @@ body {
   top: 52px;
   inset-inline-end: 0;
 }
+/* On phones the language button sits at the start of the second header row: open the menu from there. */
+@media (max-width: 600px) {
+  .lang .lang-menu {
+    inset-inline-end: auto;
+    inset-inline-start: 0;
+  }
+}
 .pill-btn {
   height: 44px;
   padding: 0 14px;
@@ -186,6 +193,26 @@ body {
   color: var(--muted);
   font-size: 11px;
   font-weight: 700;
+}
+
+/* The arrow that unfolds the less widespread languages. */
+.lang-menu .lang-more {
+  border-top: 1px solid var(--line);
+  margin-top: 4px;
+  padding-top: 4px;
+}
+.lang-menu .lang-more-btn {
+  justify-content: center;
+  color: var(--muted);
+}
+.lang-menu .lang-more-btn svg {
+  transition: transform var(--dur, 0.2s) ease;
+}
+.lang-menu .lang-more-btn[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lang-menu .lang-more-btn svg { transition: none; }
 }
 
 /* buttons */

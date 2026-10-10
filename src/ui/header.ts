@@ -1,9 +1,10 @@
 import type { LangCode, Poi } from '../data/types';
-import { LANGS, getLang, pack, t } from '../i18n';
+import { getLang, pack, t } from '../i18n';
 import { brandStar, icon } from './icons';
 import { applyTheme, currentTheme } from './theme';
 import { $, esc } from './dom';
 import { poiBadge, poiName, sideLabel } from './poi-view';
+import { bindLangMore, langMenuItems } from './lang-menu';
 
 const MAX_RESULTS = 8;
 
@@ -102,6 +103,7 @@ export class Header {
     });
 
     this.langBtn.addEventListener('click', () => this.toggleMenu());
+    bindLangMore(this.menu);
     $('#map-theme', this.root).addEventListener('click', () => {
       applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
       this.paintTheme();
@@ -214,10 +216,7 @@ export class Header {
     $('#lang-short', this.root).textContent = pack(l).short;
     this.langBtn.setAttribute('aria-label', `${t('lang_title')}: ${pack(l).n}`);
     this.menu.setAttribute('aria-label', t('lang_title'));
-    this.menu.innerHTML = LANGS.map(
-      (c) =>
-        `<li><button type="button" data-lang="${c}" lang="${c}" dir="${pack(c).dir}" aria-current="${c === l}">${esc(pack(c).n)}<small>${pack(c).short}</small></button></li>`,
-    ).join('');
+    this.menu.innerHTML = langMenuItems(l);
     if (!this.list.hidden) this.showResults(this.results, this.total);
   }
 }

@@ -6,6 +6,7 @@ import type { LangCode } from '../data/types';
  */
 export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
   ar: {
+    lang_more: 'لغات أخرى',
     nav_away: 'أنت تبتعد عن الوجهة',
     nav_acc: 'دقة ±{m} م',
     share_place: 'مشاركة المكان',
@@ -87,6 +88,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'انتقال',
   },
   en: {
+    lang_more: 'More languages',
     nav_away: 'You are walking away from the destination',
     nav_acc: 'accuracy ±{m} m',
     share_place: 'Share this place',
@@ -168,6 +170,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Go',
   },
   tr: {
+    lang_more: 'Diğer diller',
     nav_away: 'Hedeften uzaklaşıyorsunuz',
     nav_acc: 'doğruluk ±{m} m',
     share_place: 'Bu yeri paylaş',
@@ -249,6 +252,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Git',
   },
   ur: {
+    lang_more: 'مزید زبانیں',
     nav_away: 'آپ منزل سے دور جا رہے ہیں',
     nav_acc: 'درستگی ±{m} میٹر',
     share_place: 'یہ جگہ شیئر کریں',
@@ -330,6 +334,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'جائیں',
   },
   id: {
+    lang_more: 'Bahasa lainnya',
     nav_away: 'Anda menjauhi tujuan',
     nav_acc: 'akurasi ±{m} m',
     share_place: 'Bagikan tempat ini',
@@ -411,6 +416,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Buka',
   },
   uz: {
+    lang_more: 'Boshqa tillar',
     nav_away: 'Siz manzildan uzoqlashyapsiz',
     nav_acc: 'aniqlik ±{m} m',
     share_place: 'Bu joyni ulashish',
@@ -492,6 +498,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'O‘tish',
   },
   bn: {
+    lang_more: 'আরও ভাষা',
     nav_away: 'আপনি গন্তব্য থেকে দূরে সরে যাচ্ছেন',
     nav_acc: 'নির্ভুলতা ±{m} মি',
     share_place: 'স্থানটি শেয়ার করুন',
@@ -580,6 +587,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'যান',
   },
   fr: {
+    lang_more: 'Autres langues',
     nav_away: 'Vous vous éloignez de la destination',
     nav_acc: 'précision ±{m} m',
     share_place: 'Partager ce lieu',
@@ -668,6 +676,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Y aller',
   },
   fa: {
+    lang_more: 'زبان‌های بیشتر',
     nav_away: 'شما در حال دور شدن از مقصد هستید',
     nav_acc: 'دقت ±{m} متر',
     share_place: 'اشتراک‌گذاری مکان',
@@ -756,6 +765,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'برو',
   },
   ru: {
+    lang_more: 'Другие языки',
     nav_away: 'Вы удаляетесь от цели',
     nav_acc: 'точность ±{m} м',
     share_place: 'Поделиться местом',
@@ -844,6 +854,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Идти',
   },
   ms: {
+    lang_more: 'Bahasa lain',
     nav_away: 'Anda semakin jauh dari destinasi',
     nav_acc: 'ketepatan ±{m} m',
     share_place: 'Kongsi tempat ini',
@@ -932,6 +943,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Pergi',
   },
   ha: {
+    lang_more: 'Ƙarin harsuna',
     nav_away: 'Kana nisanta daga inda za ka',
     nav_acc: 'daidaito ±{m} m',
     share_place: 'Raba wannan wuri',
@@ -1020,6 +1032,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Je',
   },
   ml: {
+    lang_more: 'കൂടുതൽ ഭാഷകൾ',
     nav_away: 'നിങ്ങൾ ലക്ഷ്യസ്ഥാനത്തുനിന്ന് അകന്നുപോകുന്നു',
     nav_acc: 'കൃത്യത ±{m} മീ',
     share_place: 'ഈ സ്ഥലം പങ്കിടുക',
@@ -1108,6 +1121,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'പോകുക',
   },
   sw: {
+    lang_more: 'Lugha zaidi',
     nav_away: 'Unaondoka mbali na unakokwenda',
     nav_acc: 'usahihi ±{m} m',
     share_place: 'Shiriki mahali hapa',
@@ -1196,6 +1210,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Nenda',
   },
   ps: {
+    lang_more: 'نورې ژبې',
     nav_away: 'تاسو له منزل څخه لرې کېږئ',
     nav_acc: 'دقت ±{m} متره',
     share_place: 'دا ځای شریک کړئ',
@@ -1284,6 +1299,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'لاړ شه',
   },
   so: {
+    lang_more: 'Luqado kale',
     nav_away: 'Waxaad ka fogaanaysaa meesha aad u socoto',
     nav_acc: 'saxnaanta ±{m} m',
     share_place: 'Wadaag goobtan',
@@ -1372,6 +1388,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Tag',
   },
   ta: {
+    lang_more: 'மேலும் மொழிகள்',
     nav_away: 'நீங்கள் சேருமிடத்திலிருந்து விலகிச் செல்கிறீர்கள்',
     nav_acc: 'துல்லியம் ±{m} மீ',
     share_place: 'இந்த இடத்தைப் பகிர்',
@@ -1460,6 +1477,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'செல்',
   },
   hi: {
+    lang_more: 'और भाषाएँ',
     nav_away: 'आप मंज़िल से दूर जा रहे हैं',
     nav_acc: 'सटीकता ±{m} मी',
     share_place: 'यह स्थान साझा करें',
@@ -1548,6 +1566,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'जाएँ',
   },
   bs: {
+    lang_more: 'Više jezika',
     nav_away: 'Udaljavate se od odredišta',
     nav_acc: 'tačnost ±{m} m',
     share_place: 'Podijeli ovo mjesto',
@@ -1636,6 +1655,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Idi',
   },
   de: {
+    lang_more: 'Weitere Sprachen',
     nav_away: 'Sie entfernen sich vom Ziel',
     nav_acc: 'Genauigkeit ±{m} m',
     share_place: 'Ort teilen',
@@ -1724,6 +1744,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Los',
   },
   zh: {
+    lang_more: '更多语言',
     nav_away: '您正在远离目的地',
     nav_acc: '精度 ±{m}米',
     share_place: '分享此地点',
@@ -1812,6 +1833,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: '前往',
   },
   am: {
+    lang_more: 'ተጨማሪ ቋንቋዎች',
     nav_away: 'ከመድረሻዎ እየራቁ ነው',
     nav_acc: 'ትክክለኛነት ±{m} ሜ',
     share_place: 'ይህን ቦታ አጋራ',
@@ -1900,6 +1922,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'ሂድ',
   },
   ku: {
+    lang_more: 'Zimanên din',
     nav_away: 'Tu ji armancê dûr dikevî',
     nav_acc: 'rastî ±{m} m',
     share_place: 'Vî cihî parve bike',
@@ -1988,6 +2011,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Biçe',
   },
   az: {
+    lang_more: 'Digər dillər',
     nav_away: 'Təyinat yerindən uzaqlaşırsınız',
     nav_acc: 'dəqiqlik ±{m} m',
     share_place: 'Bu yeri paylaş',
@@ -2076,6 +2100,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Get',
   },
   th: {
+    lang_more: 'ภาษาอื่นๆ',
     nav_away: 'คุณกำลังออกห่างจากจุดหมาย',
     nav_acc: 'ความแม่นยำ ±{m} ม.',
     share_place: 'แชร์สถานที่นี้',
@@ -2164,6 +2189,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'ไป',
   },
   es: {
+    lang_more: 'Más idiomas',
     nav_away: 'Te estás alejando del destino',
     nav_acc: 'precisión ±{m} m',
     share_place: 'Compartir este lugar',

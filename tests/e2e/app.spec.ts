@@ -214,11 +214,30 @@ test.describe('languages', () => {
     ['es', 'ltr'],
   ];
 
+  test('menu: Arabic and English first, the less widespread languages folded under an arrow', async ({ page, errors: _ }) => {
+    await openMap(page);
+    await page.locator('#lang-btn').click();
+    const codes = await page.locator('#lang-menu [data-lang]').evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.lang));
+    expect(codes.slice(0, 2)).toEqual(['ar', 'en']);
+    const bs = page.locator('#lang-menu [data-lang="bs"]');
+    await expect(bs).toBeHidden();
+    await page.locator('#lang-menu .lang-more-btn').click();
+    await expect(page.locator('#lang-menu .lang-more-btn')).toHaveAttribute('aria-expanded', 'true');
+    await expect(bs).toBeVisible();
+    await bs.click();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'bs');
+    // The current language is one of the folded ones, so the menu opens unfolded.
+    await page.locator('#lang-btn').click();
+    await expect(page.locator('#lang-menu [data-lang="bs"]')).toBeVisible();
+  });
+
   test('switching through every language', async ({ page, errors: _ }) => {
     await openMap(page);
     for (const [code, dir] of LANGS) {
       await page.locator('#lang-btn').click();
-      await page.locator(`#lang-menu [data-lang="${code}"]`).click();
+      const item = page.locator(`#lang-menu [data-lang="${code}"]`);
+      if (!(await item.isVisible())) await page.locator('#lang-menu .lang-more-btn').click();
+      await item.click();
       await expect(page.locator('html')).toHaveAttribute('lang', code);
       await expect(page.locator('html')).toHaveAttribute('dir', dir);
       await expect.poll(() => count(page)).toBe(305);

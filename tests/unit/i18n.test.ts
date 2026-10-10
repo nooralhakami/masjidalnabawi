@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { I18N, POIS, POI_BY_ID } from '../../src/data';
 import type { LangCode, Poi } from '../../src/data';
-import { LANGS, ds, latinDigits, nm, t } from '../../src/i18n';
+import { LANGS, MORE_LANGS, ds, latinDigits, nm, t } from '../../src/i18n';
 import { EXTRA_UI } from '../../src/i18n/strings';
 import { LANDING_UI } from '../../src/i18n/landing-strings';
 import { FILTERS, TOILET_SUBS } from '../../src/domain/filters';
@@ -82,6 +82,15 @@ describe('added languages (Bengali, French, Persian, Russian, Malay, Hausa, Mala
     expect(I18N.fa.dir).toBe('rtl');
     expect(I18N.ps.dir).toBe('rtl');
     for (const l of ['bn', 'fr', 'ru', 'ms', 'ha', 'ml', 'sw', 'so', 'ta', 'hi', 'bs', 'de', 'zh', 'am', 'ku', 'az', 'th', 'es'] as const) expect(I18N[l].dir).toBe('ltr');
+  });
+});
+
+describe('language order', () => {
+  it('Arabic and English first; the folded, less widespread languages come last', () => {
+    expect(LANGS.slice(0, 2)).toEqual(['ar', 'en']);
+    const tail = LANGS.slice(LANGS.length - MORE_LANGS.size);
+    expect(new Set(tail)).toEqual(MORE_LANGS);
+    expect(new Set(LANGS).size).toBe(LANGS.length);
   });
 });
 

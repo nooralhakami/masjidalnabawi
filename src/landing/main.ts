@@ -10,6 +10,7 @@ import { applyTheme, currentTheme, savedTheme } from '../ui/theme';
 import { toast } from '../ui/toast';
 import { imageToPng, mapUrl, qrPng, qrSvg } from './qr';
 import { landingHtml } from './view';
+import { bindLangMore } from '../ui/lang-menu';
 
 interface InstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -54,6 +55,7 @@ function bind(): void {
 
   const btn = document.getElementById('lang-btn')!;
   const menu = document.getElementById('lang-menu')!;
+  bindLangMore(menu);
   const toggle = (open = menu.hidden) => {
     menu.hidden = !open;
     btn.setAttribute('aria-expanded', String(open));

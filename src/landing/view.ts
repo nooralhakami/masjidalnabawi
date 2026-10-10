@@ -4,6 +4,7 @@ import { LANGS, getLang, pack, t } from '../i18n';
 import { esc } from '../ui/dom';
 import { brandStar, icon, type IconName } from '../ui/icons';
 import { qrSvg } from './qr';
+import { langMenuItems } from '../ui/lang-menu';
 
 /**
  * Landing page markup for the current language. Pure (no DOM), so the build can
@@ -76,7 +77,7 @@ export function landingHtml(url: string): string {
           ${icon('globe', 18)}<span>${esc(pack(l).n)}</span>${icon('chevdown', 14)}
         </button>
         <ul class="lang-menu" id="lang-menu" hidden aria-label="${e('lang_title')}">
-          ${LANGS.map((c) => `<li><button type="button" data-lang="${c}" lang="${c}" dir="${pack(c).dir}" aria-current="${c === l}">${esc(pack(c).n)}<small>${pack(c).short}</small></button></li>`).join('')}
+          ${langMenuItems(l)}
         </ul>
       </div>
       <a class="btn-cta sm" href="./map.html">${e('l_open_short')}<span class="flip">${icon('arrowleft', 16)}</span></a>
