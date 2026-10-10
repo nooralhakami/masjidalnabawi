@@ -26,7 +26,7 @@ The owner is not a programmer: explain changes in plain Arabic, one concept at a
 
 ## Code rules
 - Respect the dependency rule in ARCHITECTURE.md; `domain/` and `routing/` stay pure (no DOM, no Leaflet).
-- Every user-facing string in 6 languages (`src/i18n/strings.ts`, `data/i18n.json`); tests enforce it. Never hard-code Arabic/English text in components.
+- Every user-facing string in all 10 languages (`src/i18n/strings.ts`, `src/i18n/landing-strings.ts`, `data/i18n.json`; Bengali/French/Persian/Russian data texts come from `docs/translations/*.json` via `scripts/translations-to-i18n.py`); tests enforce it. Never hard-code Arabic/English text in components.
 - Colours only via tokens in `src/styles/tokens.css`; logical CSS properties (RTL); digits stay Latin.
 - The Haramain logo (used with the Authority's permission) is built from `docs/haramain-logo-source.jpg` by `scripts/logo-from-source.py` into a light and a dark transparent PNG; don't recolour it with CSS filters.
 - Data: never hand-edit generated files (`streets.json`, OSM-derived places) — change the script or its source and rebuild. Position nudges go in `data/overrides.json`.

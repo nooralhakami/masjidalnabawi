@@ -9,7 +9,7 @@ import { dirVar, poiColor, poiIcon } from './poi-view';
 import { rawdahNowHtml } from './rawdah-card';
 import type { Category } from '../data/types';
 
-/** Category name above a place's title (the filter pill labels, already in six languages). */
+/** Category name above a place's title (the filter pill labels, already in every language). */
 const CATEGORY_LABEL: Record<Category, string> = {
   gates: 'p_gates',
   toilets: 'p_toilets',
