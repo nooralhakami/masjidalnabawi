@@ -21,7 +21,7 @@ src/routing     plaza walkways (walk.ts), street  ← pure: no DOM, no Leaflet
                 graph (streets.ts), trip planner (plan.ts)
 src/location    GPS service, Kalman filter,       ← browser APIs only (no Leaflet except MeMarker)
                 route progress, visitor marker
-src/i18n        t()/nm()/ds(), strings in 22 languages
+src/i18n        t()/nm()/ds(), strings in 26 languages
 src/map         Leaflet: setup, POI layer, markers, route layer, entry point (main.ts)
 src/navigation  live navigation on top of location + map
 src/ui          header/search, pills, sheet (place card), Rawdah card, admin, icons, theme, toast, weather chip
@@ -45,7 +45,7 @@ src/styles      tokens.css (all colours, light/dark), component CSS
 | File | What | Built by |
 |---|---|---|
 | `data/pois.json` | all places | owner data + `scripts/places-from-osm.py` → `historic-from-osm.py` → `shops-from-osm.py` (run in that order) |
-| `data/i18n.json` | names/descriptions/labels in every language | same scripts + hand edits; the 16 added languages (bn, fr, fa, ru, ms, ha, ml, sw, ps, so, ta, hi, bs, de, zh, am) from `docs/translations/<lang>.json` by `scripts/translations-to-i18n.py` (run last) |
+| `data/i18n.json` | names/descriptions/labels in every language | same scripts + hand edits; the 20 added languages (bn, fr, fa, ru, ms, ha, ml, sw, ps, so, ta, hi, bs, de, zh, am, ku, az, th, es) from `docs/translations/<lang>.json` by `scripts/translations-to-i18n.py` (run last) |
 | `data/routing.json` | plaza walkway graph, obstacles, open areas, women's prayer areas | `scripts/routes-from-drawing.py docs/routes/drawing-*.json` |
 | `data/streets.json` | walk/drive street graph (OSM) | `scripts/streets-from-osm.py docs/routes/osm/roads-*.json` |
 | `data/rules.json` | facility rules, Rawdah gate, map config | hand edits (owner decisions) |

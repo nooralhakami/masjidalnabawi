@@ -209,6 +209,10 @@ test.describe('languages', () => {
     ['de', 'ltr'],
     ['zh', 'ltr'],
     ['am', 'ltr'],
+    ['ku', 'ltr'],
+    ['az', 'ltr'],
+    ['th', 'ltr'],
+    ['es', 'ltr'],
   ];
 
   test('switching through every language', async ({ page, errors: _ }) => {

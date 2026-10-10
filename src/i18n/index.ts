@@ -4,7 +4,7 @@ import type { Direction, I18n, LangCode, LangPack, Poi } from '../data/types';
 import { EXTRA_UI } from './strings';
 import { LANDING_UI } from './landing-strings';
 
-export const LANGS: readonly LangCode[] = ['ar', 'en', 'tr', 'ur', 'id', 'uz', 'bn', 'fr', 'fa', 'ru', 'ms', 'ha', 'ml', 'sw', 'ps', 'so', 'ta', 'hi', 'bs', 'de', 'zh', 'am'];
+export const LANGS: readonly LangCode[] = ['ar', 'en', 'tr', 'ur', 'id', 'uz', 'bn', 'fr', 'fa', 'ru', 'ms', 'ha', 'ml', 'sw', 'ps', 'so', 'ta', 'hi', 'bs', 'de', 'zh', 'am', 'ku', 'az', 'th', 'es'];
 
 const I18N = i18nJson as I18n;
 
