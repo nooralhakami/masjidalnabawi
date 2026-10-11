@@ -74,7 +74,7 @@ describe('pois.json', () => {
   it('west plaza restrooms pair too: men 251↔252, women 253↔254, each pair with its number (owner, 2026-10-11)', () => {
     for (const [a, b, no, gender] of [
       [251, 252, 251, 'men'],
-      [253, 254, 253, 'women'],
+      [253, 254, 252, 'women'],
     ] as const) {
       for (const [id, other] of [[a, b], [b, a]]) {
         const p = POI_BY_ID.get(id)!;

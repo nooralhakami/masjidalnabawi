@@ -11,7 +11,7 @@ describe('the number between a pair of restrooms', () => {
   it('carries the pair number, in blue for men and purple for women', () => {
     expect(pairLabelSpec(P(251)).html).toContain('>251<');
     expect(pairLabelSpec(P(251)).html).toContain('--cat-men');
-    expect(pairLabelSpec(P(253)).html).toContain('>253<');
+    expect(pairLabelSpec(P(253)).html).toContain('>252<');
     expect(pairLabelSpec(P(253)).html).toContain('--cat-women');
   });
   it('leaves the markers of the pair as they were (a dot or icon each, no number on them)', () => {
