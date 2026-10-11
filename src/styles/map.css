@@ -742,3 +742,6 @@
   width: 30px;
   height: 30px;
 }
+.mc-btn.is-stories {
+  color: var(--cat-hist);
+}

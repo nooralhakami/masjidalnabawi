@@ -3,6 +3,7 @@ import i18nJson from '../../data/i18n.json';
 import type { Direction, I18n, LangCode, LangPack, Poi } from '../data/types';
 import { EXTRA_UI } from './strings';
 import { LANDING_UI } from './landing-strings';
+import { STORIES_UI } from './stories-strings';
 
 /**
  * Menu order (owner, 2026-10-10): Arabic, English, then by how widely known and spoken a language
@@ -18,7 +19,7 @@ export const MORE_LANGS: ReadonlySet<LangCode> = new Set<LangCode>(['ha', 'ps', 
 const I18N = i18nJson as I18n;
 
 const PACKS: Record<LangCode, LangPack> = Object.fromEntries(
-  LANGS.map((l) => [l, { ...I18N[l], ui: { ...I18N[l].ui, ...EXTRA_UI[l], ...LANDING_UI[l] } }]),
+  LANGS.map((l) => [l, { ...I18N[l], ui: { ...I18N[l].ui, ...EXTRA_UI[l], ...LANDING_UI[l], ...STORIES_UI[l] } }]),
 ) as Record<LangCode, LangPack>;
 
 let current: LangCode = 'ar';

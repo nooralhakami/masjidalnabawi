@@ -5,6 +5,7 @@ import '../styles/main.css';
 import '../styles/map.css';
 import '../styles/ui.css';
 import '../styles/refresh.css';
+import '../styles/stories.css';
 import { POI_BY_ID, RULES } from '../data';
 import type { Poi } from '../data/types';
 import { Facilities } from '../domain/facilities';
@@ -15,6 +16,8 @@ import { applyLang, initialLang } from '../i18n/dom';
 import { AdminPanel } from '../ui/admin';
 import { Header } from '../ui/header';
 import { Pills } from '../ui/pills';
+import { Stories } from '../ui/stories';
+import { VISIT_LIST } from '../domain/visits';
 import { RawdahCard } from '../ui/rawdah-card';
 import { Sheet } from '../ui/sheet';
 import { PoiLayer } from './layer';
@@ -133,6 +136,20 @@ const pills = new Pills(
 );
 const top = document.getElementById('ui-top')!;
 top.append(header.root, pills.root);
+
+// Landmark stories: opened from the map button (or ?visit=ID), they hand a site back to the map or the route planner.
+const stories = new Stories({
+  onMap: (p) => select(p, true),
+  onRoute: (p) => {
+    select(p, true);
+    void drawRoute(p);
+  },
+});
+document.body.append(stories.root);
+document.getElementById('map')!.addEventListener('stories-request', () => stories.open(0));
+const visitParam = Number(new URLSearchParams(location.search).get('visit'));
+const visitAt = VISIT_LIST.findIndex((v) => v.poi.id === visitParam);
+if (visitAt >= 0) stories.open(visitAt);
 
 const BEHIND_RAWDAH_ID = 604;
 const rawdah = new RawdahCard(

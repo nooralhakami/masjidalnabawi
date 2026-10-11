@@ -1,4 +1,118 @@
 {
-  "_note": "Must-visit sites of Madinah, most important first (owner-approved order, 2026-10-11). Ids refer to data/pois.json. Add Jabal Uhud, Dhul Hulayfah, Dar Al-Madinah Museum and the King Fahd Quran Complex once their positions are confirmed (docs/places/CANDIDATES-2026-10-11.md).",
-  "order": [542, 531, 544, 543, 547, 546, 516, 549, 548]
+  "_note": "Must-visit sites of Madinah, most important first (owner-approved order, 2026-10-11). `id` is a place in data/pois.json. Each text slide has Arabic and English; the other 24 languages are added after the owner approves the texts (until then the app shows English). Only facts that two sources agree on; every site lists them in `sources`. `images` is empty until the owner supplies photos with their credit and licence (docs/VISIT-PHOTOS.md). Add Jabal Uhud, Dhul Hulayfah, Dar Al-Madinah Museum and the King Fahd Quran Complex once their positions are confirmed (docs/places/CANDIDATES-2026-10-11.md).",
+  "sites": [
+    {
+      "id": 542,
+      "slides": [
+        { "ar": "أول مسجد أُسِّس في الإسلام. بناه النبي ﷺ عند وصوله إلى المدينة مهاجراً، وشارك أصحابه في بنائه.", "en": "The first mosque founded in Islam. The Prophet ﷺ built it on reaching Madinah as a migrant, and took part in its building with his Companions." },
+        { "ar": "كان النبي ﷺ يأتي مسجد قباء كل سبت، ماشياً أو راكباً، ويصلي فيه ركعتين.", "en": "Every Saturday the Prophet ﷺ would come to Quba Mosque, on foot or riding, and pray two rak'ahs in it." },
+        { "ar": "ورد في الحديث: «الصلاة في مسجد قباء كعمرة» (رواه الترمذي وابن ماجه).", "en": "In the hadith: “Prayer in Quba Mosque is like an Umrah” (narrated by al-Tirmidhi and Ibn Majah)." }
+      ],
+      "sources": [
+        { "t": "صحيفة اليوم: أول مسجد بني في الإسلام", "u": "https://www.alyaum.com/articles/6647338/الرأي/كلمة-ومقال/أول-مسجد-بني-في-الإسلام" },
+        { "t": "صحيفة المدينة: ما أول مسجد أسس في الإسلام", "u": "https://www.al-madina.com/article/989221/أخيرة/ما-أول-مسجد-أسس-في-الإسلام" }
+      ],
+      "images": []
+    },
+    {
+      "id": 531,
+      "slides": [
+        { "ar": "المقبرة الرئيسة لأهل المدينة منذ عهد النبي ﷺ. يسمّى «بقيع الغرقد» لشجر الغرقد الذي كان ينبت فيه.", "en": "The main cemetery of Madinah since the Prophet's ﷺ time. It is called Baqi' al-Gharqad after the gharqad bushes that once grew there." },
+        { "ar": "فيه قبور عدد كبير من الصحابة وأهل بيت النبي ﷺ، ومنهم زوجاته (عدا خديجة وميمونة رضي الله عنهن) وابنه إبراهيم وعمه العباس والخليفة عثمان بن عفان رضي الله عنهم.", "en": "It holds the graves of many Companions and members of the Prophet's ﷺ family, among them his wives (except Khadijah and Maymunah, may God be pleased with them), his son Ibrahim, his uncle al-Abbas and the caliph Uthman ibn Affan." }
+      ],
+      "sources": [
+        { "t": "سعودي بيديا: Al-Baqi Cemetery", "u": "https://saudipedia.com/en/al-baqi-cemetery" },
+        { "t": "زوروا المدينة: Baqi' Al-Gharqad", "u": "https://visitmadinahsa.com/sa-en/destinations/Baqi'-Al-Gharqad-" },
+        { "t": "ويكيبيديا: List of burials at al-Baqi Cemetery", "u": "https://en.wikipedia.org/wiki/List_of_burials_at_al-Baqi_Cemetery" }
+      ],
+      "images": []
+    },
+    {
+      "id": 544,
+      "slides": [
+        { "ar": "فيها قبور شهداء غزوة أحد، التي وقعت في السنة الثالثة للهجرة.", "en": "It holds the graves of the martyrs of the Battle of Uhud, fought in the 3rd year after the Hijrah." },
+        { "ar": "أشهرهم عمّ النبي ﷺ حمزة بن عبدالمطلب رضي الله عنه، «سيد الشهداء». ويذكر أن عدد الشهداء سبعون.", "en": "The best known is the Prophet's ﷺ uncle Hamzah ibn Abd al-Muttalib, “Master of the Martyrs”. The martyrs are reported to be seventy." }
+      ],
+      "sources": [
+        { "t": "صحيفة المدينة: شهداء أحد", "u": "https://www.al-madina.com/ampArticle/665709" },
+        { "t": "موسوعة محتويات: من معالم المدينة المنورة", "u": "https://mhtwyat.com/?p=212177" },
+        { "t": "ويكي بيانات: Battle of Uhud (Q488278)", "u": "https://www.wikidata.org/wiki/Q488278" }
+      ],
+      "images": []
+    },
+    {
+      "id": 543,
+      "slides": [
+        { "ar": "في هذا الموضع نزل الأمر بتحويل القبلة من بيت المقدس إلى الكعبة المشرفة أثناء الصلاة، في السنة الثانية للهجرة.", "en": "Here the command came, during prayer, to turn the qiblah from Jerusalem to the Kaaba, in the 2nd year after the Hijrah." },
+        { "ar": "سُمّي «القبلتين» لأن المسلمين صلّوا فيه إلى القبلتين. وقد ورد ذلك في سورة البقرة، الآية 144.", "en": "It is called “of the Two Qiblahs” because the Muslims prayed in it towards both. This is mentioned in Surat al-Baqarah, verse 144." }
+      ],
+      "sources": [
+        { "t": "سعودي بيديا: مسجد القبلتين", "u": "https://saudipedia.com/%D9%85%D8%B3%D8%AC%D8%AF-%D8%A7%D9%84%D9%82%D8%A8%D9%84%D8%AA%D9%8A%D9%86" },
+        { "t": "الشرق الأوسط: مسجد القبلتين.. قصة تحوُّل القبلة", "u": "https://aawsat.com/node/407391" }
+      ],
+      "images": []
+    },
+    {
+      "id": 547,
+      "slides": [
+        { "ar": "عند السفح الغربي لجبل سلع، في موضع الخندق الذي حفره النبي ﷺ وأصحابه دفاعاً عن المدينة في غزوة الخندق (الأحزاب) سنة 5هـ.", "en": "At the western foot of Mount Sal', on the line of the trench the Prophet ﷺ and his Companions dug to defend Madinah in the Battle of the Trench (al-Ahzab), 5 AH." },
+        { "ar": "كان سلمان الفارسي رضي الله عنه صاحب فكرة حفر الخندق، فأقرّها النبي ﷺ.", "en": "Salman al-Farisi, may God be pleased with him, proposed digging the trench, and the Prophet ﷺ approved it." },
+        { "ar": "اشتهرت بـ«المساجد السبعة»، وبعض المصادر تعدّها ستة. وتنسب أسماؤها إلى من رابط في مواضعها.", "en": "Known as “the Seven Mosques”, though some sources count six. Their names go back to those who kept guard at their sites." }
+      ],
+      "sources": [
+        { "t": "صحيفة المدينة: المساجد السبعة.. شاهدة على تاريخ غزوة الخندق", "u": "https://www.al-madina.com/ampArticle/168613" },
+        { "t": "سعودي بيديا: المساجد السبعة", "u": "https://saudipedia.com/article/10579" }
+      ],
+      "images": []
+    },
+    {
+      "id": 546,
+      "slides": [
+        { "ar": "تلّة صغيرة جنوب جبل أحد. أمر النبي ﷺ فيها جماعة من الرماة (خمسين رامياً) بقيادة عبدالله بن جبير رضي الله عنه أن يثبتوا في موضعهم.", "en": "A small hill south of Mount Uhud. The Prophet ﷺ stationed a group of archers (fifty) here under Abdullah ibn Jubayr, may God be pleased with him, and told them to hold their position." },
+        { "ar": "ولذلك سُمّي «جبل الرماة»، وهو من أبرز مواضع غزوة أحد.", "en": "That is why it is called Jabal al-Rumat, “Hill of the Archers”, a key site of the Battle of Uhud." }
+      ],
+      "sources": [
+        { "t": "موضوع: أين وقعت غزوة أحد", "u": "https://mawdoo3.com/أين_وقعت_غزوة_أحد" },
+        { "t": "عرق: جبل الرماة", "u": "https://areq.net/m/جبل_الرماة.html" },
+        { "t": "صحيفة المدينة: غزوة أحد", "u": "https://www.al-madina.com/ampArticle/665709" }
+      ],
+      "images": []
+    },
+    {
+      "id": 516,
+      "slides": [
+        { "ar": "في الموضع الذي كان يُعرف بـ«المُصلّى» غرب المسجد النبوي، وصلّى فيه النبي ﷺ العيد وصلاة الاستسقاء.", "en": "On the spot once known as “the Musalla”, west of the Prophet's Mosque, where the Prophet ﷺ prayed the Eid prayers and the prayer for rain." },
+        { "ar": "يُنسب بناء المسجد إلى عمر بن عبدالعزيز حين كان والياً على المدينة، وجُدّد مراراً في العهود اللاحقة.", "en": "The mosque is attributed to Umar ibn Abd al-Aziz when he was governor of Madinah, and was renovated many times since." }
+      ],
+      "sources": [
+        { "t": "صحيفة عاجل: مسجد الغمامة", "u": "https://ajel.sa/local/9u6yopy85r" },
+        { "t": "صحيفة المدينة: مسجد الغمامة يعيد زواره لزمن النبوة", "u": "https://www.al-madina.com/article/664963/آخر-الأخبار/المدينة-المنورة-مسجد-الغمامة-يعيد-زواره-لزمن-النبوة" }
+      ],
+      "images": []
+    },
+    {
+      "id": 549,
+      "slides": [
+        { "ar": "بئر رومة، من أعذب آبار المدينة. رغّب النبي ﷺ في شرائها للمسلمين، فاشتراها عثمان بن عفان رضي الله عنه ووقفها عليهم.", "en": "The well of Rumah, among the sweetest in Madinah. The Prophet ﷺ encouraged buying it for the Muslims, and Uthman ibn Affan, may God be pleased with him, bought it and made it a waqf for them." },
+        { "ar": "ولا يزال وقفها قائماً إلى اليوم، وفق شرط الواقف.", "en": "The waqf still stands today, under the founder's condition." }
+      ],
+      "sources": [
+        { "t": "سعودي بيديا: بئر رومة", "u": "https://saudipedia.com/ar/بئر-رومة" },
+        { "t": "الألوكة: آبار المدينة المنورة", "u": "https://www.alukah.net/personal_pages/11439/97247/%d8%a2%d8%a8%d8%a7%d8%b1-%d8%a7%d9%84%d9%85%d8%af%d9%8a%d9%86%d8%a9-%d8%a7%d9%84%d9%85%d9%86%d9%88%d8%b1%d8%a9/" }
+      ],
+      "images": []
+    },
+    {
+      "id": 548,
+      "slides": [
+        { "ar": "الموضع الذي أدركت النبي ﷺ فيه أول صلاة جمعة بعد الهجرة، وهو في طريقه من قباء إلى المدينة.", "en": "The spot where the Prophet ﷺ was overtaken by the first Friday prayer after the Hijrah, on his way from Quba to Madinah." },
+        { "ar": "يقع في بطن وادي رانوناء عند ديار بني سالم بن عوف، ومن أسمائه مسجد الوادي ومسجد عاتكة.", "en": "It lies in the bed of Wadi Ranuna', among the homes of Banu Salim ibn Awf. It is also called Masjid al-Wadi and Masjid Atikah." }
+      ],
+      "sources": [
+        { "t": "سعودي بيديا: مسجد الجمعة", "u": "https://saudipedia.com/%D9%85%D8%B3%D8%AC%D8%AF-%D8%A7%D9%84%D8%AC%D9%85%D8%B9%D8%A9" },
+        { "t": "سبق: مسجد الوادي.. هنا كانت أول صلاة جمعة في الإسلام", "u": "https://sabq.org/saudia/ctmcxr" }
+      ],
+      "images": []
+    }
+  ]
 }

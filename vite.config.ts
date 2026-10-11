@@ -102,7 +102,8 @@ export default defineConfig({
       workbox: {
         // App shell, JS libraries and fonts (Arabic + Latin subsets only). The plugin adds the manifest and its icons.
         globPatterns: ['**/*.{html,js,css,jpg,webp}', 'icons/icon.svg', 'icons/apple-touch-icon.png', 'assets/*-{arabic,latin}-*.woff2'],
-        globIgnores: ['**/*-cyrillic*', '**/*-greek*', '**/*-vietnamese*', '**/*-math-*', '**/*-symbols-*'],
+        // Landmark photos (public/visits/) load on demand, not at install, so the first load stays light.
+        globIgnores: ['visits/**', '**/*-cyrillic*', '**/*-greek*', '**/*-vietnamese*', '**/*-math-*', '**/*-symbols-*'],
         // Map tiles (Esri / OpenStreetMap) are cross-origin and deliberately never cached.
         runtimeCaching: [],
         navigateFallback: null,

@@ -74,6 +74,28 @@ export interface Poi {
   wikidata?: string;
 }
 
+/** One text slide of a must-visit site. `ar` and `en` are required; other languages are added after the texts are approved. */
+export type VisitText = { ar: string; en: string } & Partial<Record<LangCode, string>>;
+
+/** A photo of a site: file under public/visits/, with the credit shown under it. */
+export interface VisitImage {
+  src: string;
+  alt: Partial<Record<LangCode, string>> & { ar: string; en: string };
+  by: string;
+  license: string;
+  /** Page where the photo and its licence can be checked. */
+  url?: string;
+}
+
+export interface VisitSite {
+  /** Place in pois.json. */
+  id: number;
+  slides: VisitText[];
+  /** Pages the facts come from (two at least). */
+  sources: { t: string; u: string }[];
+  images: VisitImage[];
+}
+
 export type LatLng = [number, number];
 
 /** A walkway branching off the main ring: a spur, a cross link, or a path to a women's prayer area. */

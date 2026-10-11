@@ -572,3 +572,70 @@ test.describe('alternative routes', () => {
     await expect(page.locator('.toast')).toContainText('تحوّل المسار');
   });
 });
+
+test.describe('landmark stories', () => {
+  test('open from the map button: one segment per site, Quba first; tapping moves on; close returns to the map', async ({ page, errors: _ }) => {
+    await openMap(page);
+    await page.locator('.mc-btn.is-stories').click();
+    const stories = page.locator('.stories');
+    await expect(stories).toBeVisible();
+    await expect(stories).toHaveAttribute('aria-modal', 'true');
+    await expect(page.locator('.st-bar')).toHaveCount(9);
+    await expect(page.locator('.st-name')).toHaveText('مسجد قباء');
+    await expect(page.locator('.st-rank')).toHaveText('1 / 9');
+    const first = await page.locator('.st-text').textContent();
+    await page.locator('[data-act="next"]').click();
+    await expect(page.locator('.st-text')).not.toHaveText(first!);
+    // Back to the first slide with the other side.
+    await page.locator('[data-act="prev"]').click();
+    await expect(page.locator('.st-text')).toHaveText(first!);
+    await page.locator('[data-act="close"]').click();
+    await expect(stories).toBeHidden();
+    await expect(page.locator('.mc-btn.is-stories')).toBeFocused();
+  });
+
+  test('every site ends with the prayer on the Prophet ﷺ; the count is kept on the device', async ({ page, errors: _ }) => {
+    await openMap(page);
+    await page.locator('.mc-btn.is-stories').click();
+    // Quba has 3 text slides, so the 4th is the prayer.
+    for (let i = 0; i < 3; i++) await page.locator('[data-act="next"]').click();
+    await expect(page.locator('.st-pray-ar')).toHaveText('اللهم صل وسلم على نبينا محمد');
+    await page.locator('.st-pray-btn').click();
+    await page.locator('.st-pray-btn').click();
+    await expect(page.locator('#st-count')).toContainText('2');
+    expect(await page.evaluate(() => localStorage.getItem('salawat-count'))).toBe('2');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.stories')).toBeHidden();
+    // Another visit continues from the saved count.
+    await page.locator('.mc-btn.is-stories').click();
+    await expect(page.locator('.st-mini b')).toHaveText('2');
+  });
+
+  test('the story advances by itself, and pauses with the pause button', async ({ page, errors: _ }) => {
+    await openMap(page);
+    await page.locator('.mc-btn.is-stories').click();
+    const first = await page.locator('.st-text').textContent();
+    await page.locator('[data-act="pause"]').click();
+    await page.waitForTimeout(6500);
+    await expect(page.locator('.st-text')).toHaveText(first!);
+    await page.locator('[data-act="pause"]').click();
+    await expect(page.locator('.st-text')).not.toHaveText(first!, { timeout: 8000 });
+  });
+
+  test('the map shows the site and the sources are listed; a shared link (?visit=) opens that site', async ({ page, errors: _ }) => {
+    await openMap(page, 'ar', '?visit=543');
+    await expect(page.locator('.st-name')).toHaveText('مسجد القبلتين');
+    await page.locator('[data-act="sources"]').click();
+    await expect(page.locator('.st-sources a')).toHaveCount(2);
+    await page.locator('[data-act="map"]').click();
+    await expect(page.locator('.stories')).toBeHidden();
+    await expect(page.locator('.sheet .sh-title')).toContainText('مسجد القبلتين');
+  });
+
+  test('English falls back for untranslated texts, and every language opens the stories', async ({ page, errors: _ }) => {
+    await openMap(page, 'tr');
+    await page.locator('.mc-btn.is-stories').click();
+    await expect(page.locator('.st-text')).toHaveAttribute('lang', 'en');
+    await expect(page.locator('[data-act="map"]')).toContainText('Haritada göster');
+  });
+});

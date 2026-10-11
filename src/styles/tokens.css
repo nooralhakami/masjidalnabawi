@@ -7,6 +7,13 @@
   --gold-ink: #2a1f08;
   /* Halo behind a must-visit site's marker: a warm light, same in both themes. */
   --star-glow: 255 214 120;
+  /* Landmark stories: a dark full-screen scene, the same in both themes. */
+  --story-bg: #0b1210;
+  --story-ink: #ffffff;
+  --story-ink-soft: rgb(255 255 255 / 0.82);
+  --story-bar: rgb(255 255 255 / 0.32);
+  --story-chip: rgb(255 255 255 / 0.16);
+  --story-scrim: 0 0 0;
 
   --bg: #f4f1ea;
   --surface: #fbfaf6;
