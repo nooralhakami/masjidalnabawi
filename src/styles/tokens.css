@@ -5,6 +5,8 @@
   --green-300: #8fd3b4;
   --gold: #c9a15b;
   --gold-ink: #2a1f08;
+  /* Halo behind a must-visit site's marker: a warm light, same in both themes. */
+  --star-glow: 255 214 120;
 
   --bg: #f4f1ea;
   --surface: #fbfaf6;

@@ -2,6 +2,7 @@ import L from 'leaflet';
 import type { Poi } from '../data/types';
 import type { Facilities } from '../domain/facilities';
 import type { FilterId } from '../domain/filters';
+import { VISIT_SITES, FEATURED_IDS } from '../domain/visits';
 import { nm } from '../i18n';
 import { esc } from '../ui/dom';
 import { HIT, chipSize, gateLabelVisible, markerSpec, overlaps, tierOf, visibleAtZoom, zoomClass } from '../ui/markers';
@@ -18,6 +19,8 @@ export class PoiLayer {
   private filter: FilterId = 'all';
   private selected: number | null = null;
   private hidden = false;
+  /** Must-visit sites stay on the map whatever the filter, unless a search is running. */
+  private withFeatured = true;
   /** Markers on the map, by key ("p<id>" for a place, "l<id>" for a gate label), with the look they were made with. */
   private live = new Map<string, { marker: L.Marker; look: string }>();
 
@@ -32,10 +35,11 @@ export class PoiLayer {
     fac.onChange(() => this.draw());
   }
 
-  set(pois: readonly Poi[], filter: FilterId, hidden = false): void {
+  set(pois: readonly Poi[], filter: FilterId, hidden = false, withFeatured = true): void {
     // A new filter (or showing markers again) pops the markers in; plain panning doesn't.
     if (filter !== this.filter || hidden !== this.hidden) this.pop();
-    this.pois = pois;
+    this.withFeatured = withFeatured;
+    this.pois = withFeatured ? [...pois, ...VISIT_SITES.filter((v) => !pois.includes(v))] : pois;
     this.filter = filter;
     this.hidden = hidden;
     this.draw();
@@ -94,7 +98,7 @@ export class PoiLayer {
         compact = !sel && placed.some((b) => overlaps(b, box));
         if (!compact) placed.push(box);
       }
-      const spec = markerSpec(p, tier, this.fac.status(p.id), sel, compact);
+      const spec = markerSpec(p, tier, this.fac.status(p.id), sel, compact, this.withFeatured && FEATURED_IDS.has(p.id));
       const name = nm(p);
       const size = spec.size ?? [HIT, HIT];
       const anchor = spec.anchor ?? [HIT / 2, HIT / 2];

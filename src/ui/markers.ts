@@ -113,8 +113,9 @@ export function overlaps(a: { x: number; y: number; w: number; h: number }, b: {
 /**
  * Marker HTML for a POI at a zoom tier. Pure — no Leaflet.
  * `compact` draws an outer gate as a dot even when zoomed in (its chip would overlap another).
+ * `featured` (a must-visit site) draws a glowing badge that keeps its size at every zoom.
  */
-export function markerSpec(p: Poi, tier: Tier, status: Status | undefined, selected: boolean, compact = false): MarkerSpec {
+export function markerSpec(p: Poi, tier: Tier, status: Status | undefined, selected: boolean, compact = false, featured = false): MarkerSpec {
   const look = lookOf(p);
   const closed = isClosed(status);
   const cls = ['mk', `mk-${tier}`];
@@ -142,6 +143,10 @@ export function markerSpec(p: Poi, tier: Tier, status: Status | undefined, selec
     const title = subscriber ? 'Subscribers only' : 'Open to all';
     inner = `<span class="mk-park-wrap${subscriber ? ' is-sub' : ''}" title="${title}" aria-label="${title}"><span class="mk-park">P${p.id - 900}</span>${subscriber ? `<span class="mk-park-lock" aria-hidden="true">${icon('lock', 10)}</span>` : ''}</span>`;
     z = 200;
+  } else if (featured && !selected) {
+    cls.push('mk-feat');
+    inner = `<span class="mk-star-wrap"><span class="mk-halo" aria-hidden="true"></span><span class="mk-star">${icon(look.icon, 24)}</span></span>`;
+    z = 400;
   } else {
     const d = FACILITY_SIZE[tier];
     const bg = closed ? 'var(--cat-gray)' : look.color;

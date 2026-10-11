@@ -21,3 +21,6 @@ no long task > 100 ms during gestures; 95% of frames < 33 ms; redraw after a mov
 Lesson: a class on `<body>` that many selectors depend on (especially attribute selectors such as
 `[class*='pulse']`) makes the browser restyle the whole page each time it changes — avoid toggling
 such classes on every gesture.
+
+## 2026-10-11: glowing must-visit markers
+Halo is a static radial-gradient (no blur/filter, no animation). In the cloud sandbox (software rendering, no tiles) `scripts/perf.mjs` gave pan p95 16.8 ms and rotate 16.8 ms (PASS) both with and without the change; zoom FAILED both before (p95 100 ms, 15 long tasks) and after (p95 83 ms, 11 long tasks), so the zoom number is the sandbox, not the change. Re-measure on a real phone/CI before publishing.

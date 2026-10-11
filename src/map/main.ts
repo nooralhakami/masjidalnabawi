@@ -189,7 +189,7 @@ if (new URLSearchParams(location.search).get('admin') === '1') {
 /** Recompute visible POIs for the filter + query, then update map, count and results. */
 function refresh() {
   const vis = visiblePois(state.filter, state.toiletSub, state.query, fac, undefined, state.parkingSub);
-  layer.set(vis, state.filter, state.markersHidden);
+  layer.set(vis, state.filter, state.markersHidden, state.query.trim() === '');
   header.setCount(vis.length);
   header.showResults(vis, vis.length);
 }

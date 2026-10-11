@@ -705,3 +705,40 @@
 .z-far .mk-park-wrap {
   transform: scale(0.7);
 }
+
+/* ---------- must-visit sites: a clear badge with a warm halo, same size at every zoom ---------- */
+.leaflet-marker-icon.mk.mk-feat {
+  overflow: visible;
+}
+.mk-star-wrap {
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+.mk-star {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--cat-hist);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 0 2px #fff, 0 2px 6px rgb(0 0 0 / 0.4);
+}
+.mk-star svg {
+  width: 62%;
+  height: 62%;
+  stroke-width: 2.4;
+}
+/* A plain radial gradient: no blur or filter, so panning and zooming stay cheap. */
+.mk-halo {
+  position: absolute;
+  inset: -18px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(var(--star-glow) / 0.85) 0%, rgb(var(--star-glow) / 0.45) 35%, rgb(var(--star-glow) / 0) 70%);
+  pointer-events: none;
+}
+.mk-l .mk-star-wrap {
+  width: 30px;
+  height: 30px;
+}

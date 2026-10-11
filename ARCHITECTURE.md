@@ -50,6 +50,7 @@ src/styles      tokens.css (all colours, light/dark), component CSS
 | `data/streets.json` | walk/drive street graph (OSM) | `scripts/streets-from-osm.py docs/routes/osm/roads-*.json` |
 | `data/rules.json` | facility rules, Rawdah gate, map config | hand edits (owner decisions) |
 | `data/overrides.json` | metre nudges of positions | hand edits |
+| `data/visits.json` | must-visit sites in order of importance (ids of `pois.json`); their markers glow at every zoom (`domain/visits.ts`) | hand edits (owner decides the order) |
 Sources and decisions: `docs/places/PLACES.md`, `docs/routes/NETWORK.md`. Raw extracts are kept under `docs/` so every build is reproducible.
 
 ## 5. Integration points (for embedding, e.g. in Nusuk)
