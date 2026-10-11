@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="ar" data-resolution="landscape"
+  data-composition-variables='[{"id":"captions","type":"boolean","label":"Burned-in captions","default":true}]'>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="assets/gsap.min.js"></script>
+<script src="assets/CustomEase.min.js"></script>
+<style>
+/*@@SHARED_CSS@@*/
+
+/* ---------- promo film v2 (1920×1080, 91.5 s) ----------
+   Concept: one gold ring — "you are here" — opens the film on the satellite, becomes every tap inside the
+   one phone that never leaves the frame (15–82 s), and closes as the app's star on the end card. */
+
+/* 1 · hook: the real satellite (owner's phone shot P-14, UI cropped out) */
+#s-hook .sat { position: absolute; left: 120px; top: 150px; width: 980px; height: 706px; border-radius: 28px; overflow: hidden;
+  box-shadow: 0 30px 80px rgb(0 0 0 / .5), 0 0 0 1px rgb(201 161 91 / .25); }
+#s-hook .sat img { position: absolute; width: 1215px; left: -72px; top: -867px; }
+#s-hook .sat .vig { position: absolute; inset: 0; background: radial-gradient(closest-side, transparent 68%, rgb(15 23 20 / .6)); }
+#s-hook .credit { left: 136px; top: 870px; }
+.ping { position: absolute; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; border: 3px solid var(--gold); opacity: 0; }
+.ping-dot { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 6px rgb(201 161 91 / .25); opacity: 0; }
+#s-hook .copy { position: absolute; right: 120px; top: 250px; width: 640px; }
+#s-hook .num { font: 700 230px/1 var(--f-ui); color: var(--gold); direction: ltr; text-align: right; }
+#s-hook .l1 { font-size: 64px; line-height: 1.45; margin-top: 10px; }
+#s-hook .l2 { font-size: 48px; line-height: 1.5; color: var(--muted); }
+#s-hook .q { position: absolute; right: 120px; top: 700px; font-size: 72px; color: var(--green-300); }
+
+/* 2 · title */
+#s-title .plate { position: absolute; left: 0; right: 0; top: 110px; margin: 0 auto; width: 380px; padding: 18px 30px; border-radius: 22px; background: #fbf9f4; }
+#s-title .plate img { display: block; width: 100%; height: auto; }
+#s-title .lock { position: absolute; left: 0; right: 0; top: 400px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+#s-title .tile { width: 132px; height: 132px; border-radius: 34px; }
+#s-title h1 { font-size: 88px; line-height: 1.35; color: var(--green-300); }
+#s-title .sub { font-size: 40px; color: var(--ink); }
+
+/* the one phone */
+#phone { left: 1262px; top: 70px; }
+#credit-phone { left: 40px; top: 30px; }
+
+/* panels (left column, RTL text) */
+.panel { position: absolute; right: 760px; top: 140px; width: 1000px; }
+.panel .kick { font-size: 30px; font-weight: 700; color: var(--gold); margin-bottom: 18px; display: flex; align-items: center; gap: 12px; }
+.panel h2 { font-size: 60px; line-height: 1.42; margin-bottom: 36px; }
+.row { display: flex; align-items: center; gap: 24px; margin-bottom: 26px; font-size: 40px; }
+.row .tile { width: 76px; height: 76px; border-radius: 22px; flex: none; }
+.stat { display: flex; align-items: baseline; gap: 26px; margin-bottom: 18px; }
+.stat b { font: 700 84px/1 var(--f-ui); min-width: 140px; text-align: left; direction: ltr; }
+.stat span { font-size: 38px; color: var(--ink); }
+.women .kick, .women .stat b, .women .big b { color: var(--cat-women-soft); }
+.big { display: flex; align-items: baseline; gap: 28px; margin-bottom: 30px; }
+.big b { font: 700 170px/1 var(--f-ui); direction: ltr; }
+.big span { font-size: 54px; font-family: var(--f-display); font-weight: 700; }
+.turn { display: inline-flex; align-items: center; gap: 14px; padding: 14px 28px; border-radius: 999px; background: rgb(31 100 168 / .3); color: #cfe2f6; font-size: 40px; font-weight: 700; }
+.cats { display: grid; grid-template-columns: repeat(3, 300px); gap: 22px; }
+.cat { display: flex; align-items: center; gap: 18px; padding: 20px 22px; border-radius: 24px; background: var(--glass); border: 1px solid var(--glass-line); }
+.cat .ci { width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center; color: #fff; background: var(--c); flex: none; }
+.cat .cn { font: 700 46px/1 var(--f-ui); direction: ltr; }
+.cat .cl { font-size: 28px; color: var(--muted); margin-top: 6px; }
+.flow { display: flex; align-items: center; gap: 22px; font-size: 40px; font-weight: 600; }
+.flow .step { display: flex; align-items: center; gap: 16px; padding: 18px 28px; border-radius: 22px; background: var(--glass); border: 1px solid var(--glass-line); }
+.flow .arr { color: var(--gold); }
+.names { display: flex; flex-wrap: wrap; gap: 14px 16px; }
+.names .chip { font-size: 32px; }
+.langs { height: 64px; overflow: hidden; margin: 6px 0 34px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+.langs .track { display: flex; gap: 34px; width: max-content; font-size: 36px; font-weight: 600; color: var(--muted); white-space: nowrap; direction: ltr; }
+
+/* end card */
+#s-end .plate { position: absolute; left: 0; right: 0; top: 70px; margin: 0 auto; width: 330px; padding: 16px 26px; border-radius: 20px; background: #fbf9f4; }
+#s-end .plate img { display: block; width: 100%; height: auto; }
+#s-end .lock { position: absolute; right: 230px; top: 380px; display: flex; align-items: center; gap: 34px; }
+#s-end .tile { width: 132px; height: 132px; border-radius: 34px; }
+#s-end h1 { font-size: 72px; color: var(--green-300); line-height: 1.35; }
+#s-end .sub { font-size: 32px; margin-top: 6px; }
+#s-end .cta { display: inline-flex; align-items: center; gap: 14px; margin-top: 26px; padding: 16px 34px; border-radius: 999px; background: linear-gradient(160deg, var(--green-700), var(--green-900)); color: #fff; font-size: 40px; font-weight: 700; box-shadow: inset 0 0 0 1px rgb(201 161 91 / .45); }
+#s-end .qr { position: absolute; left: 250px; top: 320px; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+#s-end .qr .card { width: 310px; height: 310px; padding: 22px; border-radius: 28px; background: #fff; box-shadow: 0 0 0 3px var(--gold); }
+#s-end .qr .card img { width: 100%; height: 100%; display: block; }
+#s-end .url { font: 600 36px/1 var(--f-ui); color: var(--gold); direction: ltr; }
+#s-end .tag { position: absolute; left: 0; right: 0; top: 820px; text-align: center; font-size: 44px; color: var(--ink); }
+.captions { --cue-w: 1500px; --cue-b: 34px; --cue-fs: 36px; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="91.5" data-width="1920" data-height="1080">
+
+  <div id="bg" class="clip bg" data-start="0" data-duration="91.5" data-track-index="0"><div class="pattern" id="pat"></div><div class="vignette"></div></div>
+
+  <!-- 1 · hook -->
+  <div id="s-hook" class="clip" data-start="0" data-duration="7.6" data-track-index="1">
+    <div class="sat" id="sat"><img src="assets/screens/P-14-map-dark-gates.jpg" alt=""><div class="vig"></div>
+      <div class="ping" id="ping1" style="left:50%;top:55%"></div><div class="ping" id="ping2" style="left:50%;top:55%"></div><div class="ping-dot" id="pdot" style="left:50%;top:55%"></div></div>
+    <div class="credit" id="sat-credit">Imagery © Esri, Maxar, Earthstar Geographics</div>
+    <div class="copy">
+      <div class="num" id="h-num">112</div>
+      <div class="l1 kufi" id="h-l1">بوابة وباباً</div>
+      <div class="l2" id="h-l2">حول المسجد النبوي</div>
+    </div>
+    <div class="q kufi" id="h-q">فمن أين تبدأ؟</div>
+  </div>
+
+  <!-- 2 · title -->
+  <div id="s-title" class="clip" data-start="7.2" data-duration="8.0" data-track-index="1">
+    <div class="plate" id="t-plate"><img src="assets/brand/haramain-logo.png" alt=""></div>
+    <div class="lock">
+      <div class="tile" id="t-tile"></div>
+      <h1 class="kufi" id="t-h1">دليل زوار المسجد النبوي</h1>
+      <div class="sub" id="t-sub">كل ما تحتاجه حول الحرم… على خريطة واحدة في يدك</div>
+    </div>
+  </div>
+
+  <!-- the one phone: real screens of the current app -->
+  <div id="s-phone" class="clip" data-start="14.6" data-duration="68.0" data-track-index="2">
+    <div class="phone" id="phone"></div>
+    <div class="credit" id="credit-phone">Imagery © Esri, Maxar, Earthstar Geographics</div>
+  </div>
+
+  <!-- 3 · search -->
+  <div id="p3" class="clip" data-start="14.9" data-duration="7.5" data-track-index="3"><div class="panel">
+    <div class="kick"><span id="p3-ic"></span>ابحث برقم الباب أو اسمه</div>
+    <h2 class="kufi" id="p3-h">اكتب «17»… وتعرف طريقك</h2>
+    <div class="row" id="p3-r1"><span class="tile"><span class="dot" style="--c:var(--dir-north);width:24px;height:24px"></span></span>جهته</div>
+    <div class="row" id="p3-r2"><span class="tile" id="p3-a"></span>أقرب بوابة إليه</div>
+    <div class="row" id="p3-r3"><span class="tile" id="p3-b"></span>أقرب شارع</div>
+  </div></div>
+
+  <!-- 4 · walking route -->
+  <div id="p4" class="clip" data-start="22.2" data-duration="12.6" data-track-index="3"><div class="panel">
+    <div class="kick"><span id="p4-ic"></span>رسم المسار من موقعي</div>
+    <h2 class="kufi" id="p4-h">مسارك… بضغطة واحدة</h2>
+    <div class="row" id="p4-r1"><span class="tile" id="p4-a"></span>المسافة والوقت</div>
+    <div class="row" id="p4-r2"><span class="tile" id="p4-b"></span>يُحدّث ما تبقّى وأنت تمشي</div>
+    <div class="row" id="p4-r3"><span class="tile" id="p4-c"></span>يتحوّل معك إن سلكت طريقاً آخر</div>
+  </div></div>
+
+  <!-- 5 · Rawdah -->
+  <div id="p5" class="clip" data-start="34.6" data-duration="6.8" data-track-index="3"><div class="panel">
+    <div class="kick"><span id="p5-ic"></span>الروضة الشريفة · باب 37</div>
+    <h2 class="kufi" id="p5-h">لمن الوقت الآن… ومتى يتبدّل</h2>
+    <div class="turn" id="p5-t"><span class="dot" style="--c:#6aa8e6"></span>الآن: وقت الرجال</div>
+  </div></div>
+
+  <!-- 6 · women -->
+  <div id="p6" class="clip women" data-start="41.2" data-duration="10.1" data-track-index="3"><div class="panel">
+    <div class="kick"><span id="p6-ic"></span>الخدمات النسائية</div>
+    <div class="big"><b id="n35">35</b><span>مكاناً للزائرات</span></div>
+    <div class="stat" id="w1"><b id="n16">16</b><span>باباً للقسم النسائي</span></div>
+    <div class="stat" id="w2"><b id="n17">17</b><span>دورة مياه نسائية ومشتركة</span></div>
+    <div class="stat" id="w3"><b id="n2">2</b><span>مصلّى للنساء</span></div>
+  </div></div>
+
+  <!-- 7 · around the Haram -->
+  <div id="p7" class="clip" data-start="51.1" data-duration="8.6" data-track-index="3"><div class="panel">
+    <div class="kick"><span id="p7-ic"></span>حول الحرم</div>
+    <h2 class="kufi" id="p7-h">كل ما تحتاجه</h2>
+    <div class="cats">
+      <div class="cat" id="c1" style="--c:#1f64a8"><span class="ci" id="c1i"></span><div><div class="cn">40</div><div class="cl">دورات مياه</div></div></div>
+      <div class="cat" id="c2" style="--c:#7a4b9e"><span class="ci" id="c2i"></span><div><div class="cn">43</div><div class="cl">فنادق</div></div></div>
+      <div class="cat" id="c3" style="--c:#c96f1e"><span class="ci" id="c3i"></span><div><div class="cn">44</div><div class="cl">مطاعم ومقاهٍ</div></div></div>
+      <div class="cat" id="c4" style="--c:#2a77b5"><span class="ci" id="c4i"></span><div><div class="cn">13</div><div class="cl">موقفاً للسيارات</div></div></div>
+      <div class="cat" id="c5" style="--c:#b03f3f"><span class="ci" id="c5i"></span><div><div class="cn">9</div><div class="cl">خدمات مهمة</div></div></div>
+    </div>
+  </div></div>
+
+  <!-- 8 · by car -->
+  <div id="p8" class="clip" data-start="59.6" data-duration="6.1" data-track-index="3"><div class="panel">
+    <div class="kick"><span id="p8-ic"></span>بالسيارة</div>
+    <h2 class="kufi" id="p8-h">إلى المواقف… ثم مشياً</h2>
+    <div class="flow" id="p8-f"><span class="step" id="f1"><span id="f1i"></span>موقعك</span><span class="arr">←</span><span class="step" id="f2"><span id="f2i"></span>الموقف</span><span class="arr">←</span><span class="step" id="f3"><span id="f3i"></span>وجهتك</span></div>
+  </div></div>
+
+  <!-- 9 · landmark stories -->
+  <div id="p9" class="clip" data-start="65.5" data-duration="7.5" data-track-index="3"><div class="panel">
+    <div class="kick"><span id="p9-ic"></span>معالم المدينة</div>
+    <h2 class="kufi" id="p9-h">قصص مصوّرة لتسعة معالم</h2>
+    <div class="names" id="p9-n"><span class="chip">مسجد قباء</span><span class="chip">مسجد القبلتين</span><span class="chip">مسجد الغمامة</span><span class="chip">بئر رومة</span><span class="chip">شهداء أحد</span></div>
+  </div></div>
+
+  <!-- 10 · languages · browser · privacy -->
+  <div id="p10" class="clip" data-start="72.9" data-duration="9.4" data-track-index="3"><div class="panel">
+    <div class="big" id="p10-big"><b id="n26">26</b><span>لغة</span></div>
+    <div class="langs"><div class="track" id="ltrack">English · Türkçe · اردو · Bahasa Indonesia · O‘zbekcha · বাংলা · Français · فارسی · Русский · Bahasa Melayu · Hausa · മലയാളം · Kiswahili · پښتو · Soomaali · தமிழ் · हिन्दी · Bosanski · Deutsch · 中文 · አማርኛ · Kurdî · Azərbaycanca · ไทย · Español · العربية</div></div>
+    <div class="row" id="p10-r1"><span class="tile" id="p10-a"></span>من المتصفح مباشرة</div>
+    <div class="row" id="p10-r2"><span class="tile" id="p10-b"></span>بلا تنزيل من المتجر</div>
+    <div class="row" id="p10-r3"><span class="tile" id="p10-c"></span>لا يطلب موقعك إلا حين تحتاجه</div>
+  </div></div>
+
+  <!-- 11 · end card -->
+  <div id="s-end" class="clip" data-start="81.9" data-duration="9.6" data-track-index="1">
+    <div class="plate" id="e-plate"><img src="assets/brand/haramain-logo.png" alt=""></div>
+    <div class="lock" id="e-lock"><div class="tile" id="e-tile"></div><div><h1 class="kufi" id="e-h1">دليل زوار المسجد النبوي</h1><div class="sub muted" id="e-sub">المدينة المنورة</div><div class="cta" id="e-cta"><span id="e-cta-i"></span>افتحه الآن</div></div></div>
+    <div class="qr" id="e-qr"><div class="card"><img src="assets/qr.svg" alt=""></div><div class="url">masjidalnabawi.vercel.app</div></div>
+    <div class="tag" id="e-tag">لتصل بيُسر… وتتفرّغ لزيارتك</div>
+  </div>
+
+  <div id="cap" class="clip captions" data-start="0" data-duration="91.5" data-track-index="9"></div>
+
+  <!-- sound: soft tonal bed (synthesized), room air, gentle UI effects, and the voice-over -->
+  <audio id="a-pad" src="assets/music/pad.wav" data-start="0" data-duration="91.5" data-track-index="10" data-volume="0.4"></audio>
+  <audio id="a-room" src="assets/sfx/roomtone.wav" data-start="0" data-duration="90" data-track-index="11" data-volume="0.6"></audio>
+  <audio id="a-chime1" src="assets/sfx/chime.wav" data-start="7.45" data-duration="3.5" data-track-index="12" data-volume="0.5"></audio>
+  <audio id="a-chime2" src="assets/sfx/chime.wav" data-start="82.2" data-duration="3.5" data-track-index="12" data-volume="0.55"></audio>
+  <audio id="a-route1" src="assets/sfx/route.wav" data-start="24.0" data-duration="1.6" data-track-index="13" data-volume="0.55"></audio>
+  <audio id="a-route2" src="assets/sfx/route.wav" data-start="62.0" data-duration="1.6" data-track-index="13" data-volume="0.55"></audio>
+  <audio id="a-sheet1" src="assets/sfx/sheet.wav" data-start="17.0" data-duration="0.55" data-track-index="14" data-volume="0.55"></audio>
+  <audio id="a-sheet2" src="assets/sfx/sheet.wav" data-start="37.2" data-duration="0.55" data-track-index="14" data-volume="0.55"></audio>
+  <audio id="a-sheet3" src="assets/sfx/sheet.wav" data-start="66.0" data-duration="0.55" data-track-index="14" data-volume="0.55"></audio>
+  <audio id="a-tap1" src="assets/sfx/tap.wav" data-start="15.9" data-duration="0.25" data-track-index="15" data-volume="0.65"></audio>
+  <audio id="a-tap2" src="assets/sfx/tap.wav" data-start="16.8" data-duration="0.25" data-track-index="15" data-volume="0.65"></audio>
+  <audio id="a-tap3" src="assets/sfx/tap.wav" data-start="23.4" data-duration="0.25" data-track-index="15" data-volume="0.65"></audio>
+  <audio id="a-tap4" src="assets/sfx/tap.wav" data-start="37.0" data-duration="0.25" data-track-index="15" data-volume="0.65"></audio>
+  <audio id="a-tap5" src="assets/sfx/tap.wav" data-start="42.4" data-duration="0.25" data-track-index="15" data-volume="0.65"></audio>
+  <audio id="a-tap6" src="assets/sfx/tap.wav" data-start="60.3" data-duration="0.25" data-track-index="15" data-volume="0.65"></audio>
+  <audio id="a-tap7" src="assets/sfx/tap.wav" data-start="61.4" data-duration="0.25" data-track-index="15" data-volume="0.65"></audio>
+  <!-- voice-over: ElevenLabs Eleven v3, voice «Mazen Lawand» (MSA, commercial) -->
+  <audio id="vo01" src="assets/vo/01.wav" data-start="0.5" data-duration="6.499854" data-track-index="20" data-volume="1"></audio>
+  <audio id="vo02" src="assets/vo/02.wav" data-start="7.6" data-duration="7.020229" data-track-index="20" data-volume="1"></audio>
+  <audio id="vo03" src="assets/vo/03.wav" data-start="15.2" data-duration="6.76225" data-track-index="20" data-volume="1"></audio>
+  <audio id="vo04" src="assets/vo/04.wav" data-start="22.5" data-duration="11.856667" data-track-index="20" data-volume="1"></audio>
+  <audio id="vo05" src="assets/vo/05.wav" data-start="34.9" data-duration="6.026625" data-track-index="20" data-volume="1"></audio>
+  <audio id="vo06" src="assets/vo/06.wav" data-start="41.5" data-duration="9.359667" data-track-index="20" data-volume="1"></audio>
+  <audio id="vo07" src="assets/vo/07.wav" data-start="51.4" data-duration="7.90725" data-track-index="20" data-volume="1"></audio>
+  <audio id="vo08" src="assets/vo/08.wav" data-start="59.85" data-duration="5.344063" data-track-index="20" data-volume="1"></audio>
+  <audio id="vo09" src="assets/vo/09.wav" data-start="65.75" data-duration="6.915292" data-track-index="20" data-volume="1"></audio>
+  <audio id="vo10" src="assets/vo/10.wav" data-start="73.2" data-duration="8.617208" data-track-index="20" data-volume="1"></audio>
+  <audio id="vo11" src="assets/vo/11.wav" data-start="82.4" data-duration="7.098042" data-track-index="20" data-volume="1"></audio>
+</div>
+
+<script>
+/*@@KIT_JS@@*/
+
+const $ = (s) => document.querySelector(s);
+const tl = gsap.timeline({ paused: true });
+const V = vars();
+if (V.captions === false) $('#cap').classList.add('off');
+const out = (sel, t) => tl.to(sel, { opacity: 0, y: -12, duration: 0.45, ease: E }, t);
+const rowsIn = (sels, times) => sels.forEach((s, i) => tl.fromTo(s, { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 0.6, ease: E }, times[i]));
+
+// background pattern breathes in and stays faint
+tl.to('#pat', { opacity: 0.1, duration: 2.4, ease: E }, 0.2);
+tl.to('#pat', { opacity: 0.06, duration: 4, ease: E }, 14);
+tl.to('#pat', { opacity: 0.12, duration: 3, ease: E }, 82);
+
+// ---------- 1 · hook (0–7.6): "you are here" on the real satellite ----------
+tl.fromTo('#sat', { opacity: 0, scale: 1.08 }, { opacity: 1, scale: 1, duration: 1.4, ease: E }, 0.0);
+tl.to('#sat img', { scale: 1.06, duration: 7.4, ease: 'sine.inOut' }, 0.0);
+fadeIn(tl, '#sat-credit', 0.8, { y: 0, dur: 0.6 });
+popIn(tl, '#pdot', 0.9);
+for (const [el, t] of [['#ping1', 1.0], ['#ping2', 1.6], ['#ping1', 2.8], ['#ping2', 3.4], ['#ping1', 4.6], ['#ping2', 5.2]])
+  tl.fromTo(el, { opacity: 0.9, scale: 0.2 }, { opacity: 0, scale: 1.6, duration: 1.4, ease: E, immediateRender: false }, t);
+tl.fromTo('#h-num', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.7, ease: E }, 0.5);
+countUp(tl, $('#h-num'), 112, 0.55, 1.4);
+wordsIn(tl, $('#h-l1'), 1.4, { stagger: 0.12 });
+wordsIn(tl, $('#h-l2'), 3.85, { stagger: 0.12 });
+wordsIn(tl, $('#h-q'), 5.8, { stagger: 0.14, y: 30 });
+tl.to('#s-hook > *', { opacity: 0, duration: 0.6, ease: E }, 7.1);
+
+// ---------- 2 · title (7.2–15) ----------
+$('#t-tile').innerHTML = star(84, 1.5);
+fadeIn(tl, '#t-plate', 7.4, { dur: 0.9 });
+popIn(tl, '#t-tile', 7.6, { dur: 0.6 });
+draw(tl, $('#t-tile svg'), 7.7, 1.2, 0.15);
+wordsIn(tl, $('#t-h1'), 7.75, { stagger: 0.12, y: 30 });
+wordsIn(tl, $('#t-sub'), 10.1, { stagger: 0.1 });
+tl.to('#s-title > *', { opacity: 0, duration: 0.6, ease: E }, 14.4);
+
+// ---------- the phone (14.6–82) ----------
+const ph = makePhone($('#phone'), [
+  'O-3.jpg', 'M-search-17.png', 'M-gate17.png', 'M-route-walk-17.png', 'M-route-walk-333.png', 'M-gate37-men.png',
+  'M-f-women.png', 'M-f-toilets.png', 'O-1.jpg', 'M-f-hotels.png', 'M-f-food.png', 'M-f-parking.png', 'M-f-emergency.png',
+  'M-drive-card.png', 'M-route-drive-17.png', 'S-542.png', 'S-544.png', 'S-516.png', 'M-lang-menu.png', 'L-hero.png',
+], { w: 448, h: 880, bezel: 14, r: 60 });
+tl.fromTo('#phone', { opacity: 0, x: 160 }, { opacity: 1, x: 0, duration: 0.9, ease: E }, 14.6);
+tl.to('#phone', { scale: 1.03, duration: 66, ease: 'sine.inOut' }, 14.6);
+show(tl, ph, 'O-3.jpg', 14.6, 0.01);
+fadeIn(tl, '#credit-phone', 15.0, { y: 0 });
+const credit = (on, t) => tl.to('#credit-phone', { opacity: on ? 1 : 0, duration: 0.4 }, t);
+
+// 3 · search «17» → Gate 17
+tap(tl, ph, 0.5, 0.141, 15.9);
+show(tl, ph, 'M-search-17.png', 16.1);
+credit(false, 16.1);
+tap(tl, ph, 0.5, 0.236, 16.8);
+show(tl, ph, 'M-gate17.png', 17.0);
+zoomIn(tl, ph, 0.5, 0.72, 1.14, 17.3, 1.0);
+hilite(tl, ph, [0.715, 0.686, 0.26, 0.034], 17.5, 1.2);
+hilite(tl, ph, [0.04, 0.742, 0.92, 0.078], 18.8, 2.6);
+zoomOut(tl, ph, 21.6, 0.6);
+
+// 4 · walking route
+tap(tl, ph, 0.41, 0.95, 23.4);
+show(tl, ph, 'M-route-walk-17.png', 23.7, 0.5);
+zoomIn(tl, ph, 0.5, 0.78, 1.12, 26.0, 1.0);
+hilite(tl, ph, [0.02, 0.68, 0.96, 0.06], 26.4, 2.4);
+hilite(tl, ph, [0.02, 0.862, 0.96, 0.064], 29.1, 2.2);
+zoomOut(tl, ph, 31.2, 0.6);
+show(tl, ph, 'M-route-walk-333.png', 31.6, 0.6);
+
+// 5 · Rawdah: the card at the bottom of the map → Gate 37 schedule
+show(tl, ph, 'O-3.jpg', 34.7, 0.4);
+credit(true, 34.7);
+zoomIn(tl, ph, 0.5, 0.9, 1.14, 35.0, 1.0);
+hilite(tl, ph, [0.03, 0.862, 0.94, 0.078], 35.3, 1.5);
+zoomOut(tl, ph, 36.7, 0.4);
+tap(tl, ph, 0.5, 0.9, 37.0);
+show(tl, ph, 'M-gate37-men.png', 37.2);
+credit(false, 37.2);
+zoomIn(tl, ph, 0.5, 0.5, 1.14, 37.6, 1.0);
+hilite(tl, ph, [0.04, 0.425, 0.92, 0.178], 38.2, 2.6);
+zoomOut(tl, ph, 40.9, 0.5);
+
+// 6 · women's services
+show(tl, ph, 'O-3.jpg', 41.4, 0.3);
+credit(true, 41.4);
+tap(tl, ph, 0.19, 0.219, 42.4);
+show(tl, ph, 'M-f-women.png', 42.6, 0.4);
+credit(false, 42.6);
+zoomIn(tl, ph, 0.5, 0.45, 1.12, 44.0, 1.4);
+zoomOut(tl, ph, 50.4, 0.6);
+
+// 7 · around the Haram: one screen per item, on the spoken word
+show(tl, ph, 'M-f-toilets.png', 53.9, 0.35);
+show(tl, ph, 'O-1.jpg', 54.5, 0.35);
+tl.to('#credit-phone', { opacity: 1, duration: 0.3 }, 54.5);
+show(tl, ph, 'M-f-hotels.png', 55.0, 0.35);
+credit(false, 55.0);
+show(tl, ph, 'M-f-food.png', 55.9, 0.35);
+show(tl, ph, 'M-f-parking.png', 56.9, 0.35);
+show(tl, ph, 'M-f-emergency.png', 58.15, 0.35);
+
+// 8 · by car
+show(tl, ph, 'M-drive-card.png', 59.8, 0.4);
+tap(tl, ph, 0.79, 0.95, 60.3);
+tap(tl, ph, 0.41, 0.95, 61.4);
+show(tl, ph, 'M-route-drive-17.png', 61.7, 0.5);
+zoomIn(tl, ph, 0.5, 0.86, 1.12, 63.0, 0.9);
+hilite(tl, ph, [0.02, 0.872, 0.96, 0.046], 63.4, 1.8);
+zoomOut(tl, ph, 65.2, 0.5);
+
+// 9 · landmark stories
+show(tl, ph, 'S-542.png', 65.9, 0.6);
+show(tl, ph, 'S-544.png', 68.6, 0.6);
+show(tl, ph, 'S-516.png', 71.0, 0.6);
+
+// 10 · languages → the landing page in the browser
+show(tl, ph, 'M-lang-menu.png', 73.2, 0.4);
+show(tl, ph, 'L-hero.png', 74.8, 0.5);
+tl.to('#phone', { opacity: 0, x: 140, duration: 0.7, ease: E }, 81.6);
+
+// ---------- panels (enter from their right edge, RTL) ----------
+$('#p3-ic').innerHTML = ic('search', 30); $('#p3-a').innerHTML = ic('gate', 38); $('#p3-b').innerHTML = ic('road', 38);
+fadeIn(tl, '#p3 .kick', 15.2, { y: 0, x: 30 });
+wordsIn(tl, $('#p3-h'), 15.4, { stagger: 0.1 });
+rowsIn(['#p3-r1', '#p3-r2', '#p3-r3'], [17.5, 18.8, 20.9]);
+out('#p3 .panel', 21.9);
+
+$('#p4-ic').innerHTML = ic('route', 30); $('#p4-a').innerHTML = ic('clock', 38); $('#p4-b').innerHTML = ic('walk', 38); $('#p4-c').innerHTML = ic('route', 38);
+fadeIn(tl, '#p4 .kick', 22.5, { y: 0, x: 30 });
+wordsIn(tl, $('#p4-h'), 23.0, { stagger: 0.1 });
+rowsIn(['#p4-r1', '#p4-r2', '#p4-r3'], [26.6, 29.1, 31.5]);
+out('#p4 .panel', 34.3);
+
+$('#p5-ic').innerHTML = ic('dome', 30);
+fadeIn(tl, '#p5 .kick', 34.9, { y: 0, x: 30 });
+wordsIn(tl, $('#p5-h'), 37.3, { stagger: 0.1 });
+popIn(tl, '#p5-t', 39.0);
+out('#p5 .panel', 40.9);
+
+$('#p6-ic').innerHTML = ic('women', 30);
+fadeIn(tl, '#p6 .kick', 41.5, { y: 0, x: 30 });
+fadeIn(tl, '#p6 .big', 42.4, { y: 20 });
+countUp(tl, $('#n35'), 35, 42.5, 1.3);
+rowsIn(['#w1', '#w2', '#w3'], [47.4, 48.3, 49.7]);
+countUp(tl, $('#n16'), 16, 47.4, 0.7); countUp(tl, $('#n17'), 17, 48.3, 0.7); countUp(tl, $('#n2'), 2, 49.7, 0.5);
+out('#p6 .panel', 50.8);
+
+$('#p7-ic').innerHTML = ic('grid', 30);
+[['#c1i', 'toilets'], ['#c2i', 'hotel'], ['#c3i', 'food'], ['#c4i', 'parking'], ['#c5i', 'emergency']].forEach(([s, n]) => ($(s).innerHTML = ic(n, 34)));
+fadeIn(tl, '#p7 .kick', 51.4, { y: 0, x: 30 });
+wordsIn(tl, $('#p7-h'), 52.5, { stagger: 0.12 });
+popIn(tl, '#c1', 53.9); popIn(tl, '#c2', 55.0); popIn(tl, '#c3', 55.9); popIn(tl, '#c4', 56.9); popIn(tl, '#c5', 58.15);
+out('#p7 .panel', 59.3);
+
+$('#p8-ic').innerHTML = ic('car', 30); $('#f1i').innerHTML = ic('locate', 34); $('#f2i').innerHTML = ic('parking', 34); $('#f3i').innerHTML = ic('walk', 34);
+fadeIn(tl, '#p8 .kick', 59.85, { y: 0, x: 30 });
+wordsIn(tl, $('#p8-h'), 61.3, { stagger: 0.1 });
+tl.from('#p8-f > *', { opacity: 0, x: 30, duration: 0.5, ease: E, stagger: 0.25 }, 62.0);
+out('#p8 .panel', 65.2);
+
+$('#p9-ic').innerHTML = ic('historic', 30);
+fadeIn(tl, '#p9 .kick', 65.75, { y: 0, x: 30 });
+wordsIn(tl, $('#p9-h'), 67.9, { stagger: 0.1 });
+popIn(tl, '#p9-n .chip', 69.3, { stagger: 0.32 });
+out('#p9 .panel', 72.6);
+
+$('#p10-a').innerHTML = ic('globe', 38); $('#p10-b').innerHTML = ic('download', 38); $('#p10-c').innerHTML = ic('locate', 38);
+fadeIn(tl, '#p10-big', 73.2, { y: 20 });
+countUp(tl, $('#n26'), 26, 73.25, 1.0);
+fadeIn(tl, '.langs', 73.6, { y: 0 });
+tl.fromTo('#ltrack', { x: 0 }, { x: 1700, duration: 8.6, ease: 'none' }, 73.4);
+rowsIn(['#p10-r1', '#p10-r2', '#p10-r3'], [74.8, 76.8, 78.7]);
+out('#p10 .panel', 81.6);
+
+// ---------- 11 · end card (81.9–91.5): the gold ring closes as the app's star ----------
+$('#e-tile').innerHTML = star(84, 1.5);
+$('#e-cta-i').innerHTML = ic('arrowleft', 30);
+fadeIn(tl, '#e-plate', 82.1, { dur: 0.8 });
+popIn(tl, '#e-tile', 82.3);
+draw(tl, $('#e-tile svg'), 82.4, 1.1, 0.12);
+tl.fromTo('#e-h1', { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.8, ease: E }, 82.5);
+fadeIn(tl, '#e-sub', 83.0, { dur: 0.6 });
+fadeIn(tl, '#e-qr', 83.2, { dur: 0.8 });
+popIn(tl, '#e-cta', 84.8);
+wordsIn(tl, $('#e-tag'), 86.3, { stagger: 0.12 });
+
+// ---------- captions on the voice-over timing ----------
+captions(tl, $('#cap'), [
+  [0.5, 5.65, '112 بوابةً وباباً حول المسجد النبوي…'],
+  [5.85, 7.05, 'فمن أين تبدأ؟'],
+  [7.6, 14.65, 'دليل زوار المسجد النبوي… كل ما تحتاجه حول الحرم، على خريطة واحدة في يدك.'],
+  [15.2, 22.0, 'اكتب رقم الباب أو اسمه… فتعرف جهته، وأقرب بوابة إليه، وأقرب شارع.'],
+  [22.5, 26.15, 'وبضغطة واحدة: «رسم المسار من موقعي»…'],
+  [26.3, 31.35, 'مسار مشي واضح، بالمسافة والوقت، يُحدّث ما تبقّى وأنت تمشي…'],
+  [31.5, 34.4, 'وإن سلكت طريقاً آخر، تحوّل معك.'],
+  [34.9, 40.95, 'متّجه إلى الروضة الشريفة؟ يخبرك الدليل لمن الوقت الآن… ومتى يتبدّل.'],
+  [41.5, 47.25, 'وللزائرات: 35 مكاناً في لمسة واحدة…'],
+  [47.45, 50.9, 'الأبواب، ودورات المياه، والمصليات.'],
+  [51.4, 53.75, 'وحول الحرم، كل ما تحتاجه:'],
+  [53.9, 59.35, 'دورات المياه، والفنادق، والمطاعم، والمواقف، والخدمات المهمة.'],
+  [59.85, 65.25, 'وبالسيارة؟ يوصلك إلى المواقف تحت الحرم، ثم مشياً إلى وجهتك.'],
+  [65.75, 72.7, 'ومعالم المدينة… قصص مصوّرة لتسعة معالم، من قباء إلى أحد.'],
+  [73.2, 78.5, 'بـ 26 لغة… من المتصفح مباشرة، بلا تنزيل من المتجر،'],
+  [78.7, 81.85, 'ولا يطلب موقعك إلا حين تحتاجه.'],
+  [82.4, 89.55, 'دليل زوار المسجد النبوي… افتحه الآن، لتصل بيُسر، وتتفرّغ لزيارتك.'],
+]);
+
+window.__timelines['main'] = tl;
+</script>
+</body>
+</html>

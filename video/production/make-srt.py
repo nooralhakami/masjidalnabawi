@@ -18,6 +18,25 @@ EN = {
         "Right from the browser — no app-store download, no permissions to run.",
         "Prophet's Mosque Visitor Guide — arrive with ease, and give your visit your heart.",
     ],
+    'promo': [
+        "112 gates and doors around the Prophet's Mosque…",
+        "So where do you start?",
+        "Prophet's Mosque Visitor Guide… everything around the Haram, on one map in your hand.",
+        "Type a door's number or name… see its side, nearest gate and nearest street.",
+        "One tap: \"Draw route from my location\"…",
+        "A clear walking route, with distance and time, updating as you walk…",
+        "Take another way, and it switches with you.",
+        "Heading to the Noble Rawdah? See whose time it is now… and when it changes.",
+        "For women visitors: 35 places in one tap…",
+        "Doors, restrooms and prayer areas.",
+        "Around the Haram, everything you need:",
+        "Restrooms, hotels, restaurants, parking and key services.",
+        "By car? It takes you to the parking under the Haram, then on foot.",
+        "Madinah's landmarks… illustrated stories of nine sites, from Quba to Uhud.",
+        "In 26 languages… straight from the browser, no app-store download,",
+        "and it asks for your location only when you need it.",
+        "Visitor Guide… open it now: arrive with ease, give your visit your heart.",
+    ],
     'guide': [
         "Looking for your gate — or the nearest women's facility?",
         "Scan the code or open the link — right in your browser.",
@@ -49,7 +68,7 @@ def wrap(text, width=42):
 
 out = HERE / 'out'
 out.mkdir(exist_ok=True)
-for name in ('official', 'guide'):
+for name in ('official', 'guide', 'promo'):
     cs = cues(name)
     assert len(cs) == len(EN[name]), name
     for lang, texts in (('ar', [c[2] for c in cs]), ('en', EN[name])):

@@ -9,3 +9,5 @@ out/final/*.mp4
 out/*.png
 out/work-*/
 out/.*transaction*/
+out/final-v2/*.mp4
+out/qa-*.png

@@ -12,7 +12,9 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '../..');
 const VIDEO = path.join(REPO, 'video');
 const require = createRequire(path.join(REPO, 'package.json'));
-const PROJECTS = ['official', 'guide'];
+const PROJECTS = ['official', 'guide', 'promo'];
+// Icons come from the app checkout the screens were captured from (APP_SRC), so the film matches it.
+const APP_SRC = process.env.APP_SRC || REPO;
 export const APP_URL = 'https://masjidalnabawi.vercel.app';
 
 const cp = (from, to) => { fs.mkdirSync(path.dirname(to), { recursive: true }); fs.copyFileSync(from, to); };
@@ -43,7 +45,7 @@ function fontCss(destFonts) {
 
 // ---------- the app's icon set (src/ui/icons.ts PATHS) ----------
 function icons() {
-  const src = read(path.join(REPO, 'src/ui/icons.ts'));
+  const src = read(path.join(APP_SRC, 'src/ui/icons.ts'));
   const start = src.indexOf('{', src.indexOf('const PATHS ='));
   const end = src.indexOf('\n} as const;', start) + 2;
   return Function(`return (${src.slice(start, end)});`)();
@@ -94,12 +96,14 @@ for (const name of PROJECTS.filter((n) => fs.existsSync(path.join(HERE, 'src', `
   cp(path.join(VIDEO, 'assets/brand/haramain-logo-hires.png'), path.join(assets, 'brand/haramain-logo.png'));
   cp(path.join(VIDEO, 'assets/brand/app-icon.svg'), path.join(assets, 'brand/app-icon.svg'));
   fs.writeFileSync(path.join(assets, 'qr.svg'), QR);
-  for (const dir of ['assets/phone/clean', 'assets/screens-dark', 'assets/phone/new']) {
+  for (const dir of ['assets/phone/clean', 'assets/screens-dark', 'assets/phone/new', 'assets/phone/v2', 'assets/screens-v2']) {
     const abs = path.join(VIDEO, dir);
     if (!fs.existsSync(abs)) continue;
     for (const f of fs.readdirSync(abs)) if (/\.(png|jpe?g)$/i.test(f)) cp(path.join(abs, f), path.join(assets, 'screens', f));
   }
   sfx(path.join(assets, 'sfx'));
+  const pad = path.join(VIDEO, 'assets/audio/music/pad.wav');
+  if (name === 'promo' && fs.existsSync(pad)) cp(pad, path.join(assets, 'music/pad.wav'));
   // Voice-over takes, when provided (video/assets/audio/vo/<project>-ar/NN.wav).
   const vo = path.join(VIDEO, 'assets/audio/vo', `${name}-ar`);
   if (fs.existsSync(vo)) for (const f of fs.readdirSync(vo)) cp(path.join(vo, f), path.join(assets, 'vo', f));
