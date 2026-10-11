@@ -61,7 +61,10 @@
         { "t": "سعودي بيديا: مسجد القبلتين", "u": "https://saudipedia.com/%D9%85%D8%B3%D8%AC%D8%AF-%D8%A7%D9%84%D9%82%D8%A8%D9%84%D8%AA%D9%8A%D9%86" },
         { "t": "الشرق الأوسط: مسجد القبلتين.. قصة تحوُّل القبلة", "u": "https://aawsat.com/node/407391" }
       ],
-      "images": []
+      "images": [
+        { "src": "visits/543-1.webp", "alt": { "ar": "مسجد القبلتين بقبته البيضاء ومنارتيه تحت سماء صافية", "en": "Al-Qiblatayn Mosque with its white dome and two minarets under a clear sky" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
+        { "src": "visits/543-2.webp", "focus": "80% 50%", "alt": { "ar": "منارتا مسجد القبلتين وقبته من الجهة الأمامية", "en": "The two minarets and the dome of Al-Qiblatayn Mosque seen from the front" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+      ]
     },
     {
       "id": 547,
