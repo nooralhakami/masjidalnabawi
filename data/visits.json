@@ -93,7 +93,11 @@
         { "t": "عرق: جبل الرماة", "u": "https://areq.net/m/جبل_الرماة.html" },
         { "t": "صحيفة المدينة: غزوة أحد", "u": "https://www.al-madina.com/ampArticle/665709" }
       ],
-      "images": []
+      "images": [
+        { "src": "visits/546-1.webp", "alt": { "ar": "زوّار على جبل الرماة، وخلفهم المسجد وجبل أحد", "en": "Visitors on Jabal al-Rumat, with the mosque and Mount Uhud behind" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
+        { "src": "visits/546-2.webp", "alt": { "ar": "زوّار يصعدون جبل الرماة وينزلون منه", "en": "Visitors going up and down Jabal al-Rumat" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
+        { "src": "visits/546-3.webp", "alt": { "ar": "جبل الرماة والطيور تحلّق فوق الزوّار", "en": "Jabal al-Rumat with birds flying over the visitors" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+      ]
     },
     {
       "id": 516,
