@@ -29,7 +29,10 @@
         { "t": "زوروا المدينة: Baqi' Al-Gharqad", "u": "https://visitmadinahsa.com/sa-en/destinations/Baqi'-Al-Gharqad-" },
         { "t": "ويكيبيديا: List of burials at al-Baqi Cemetery", "u": "https://en.wikipedia.org/wiki/List_of_burials_at_al-Baqi_Cemetery" }
       ],
-      "images": []
+      "images": [
+        { "src": "visits/531-1.webp", "alt": { "ar": "مقبرة البقيع تحت سماء غائمة، وخلفها مآذن المسجد النبوي والقبة الخضراء", "en": "Al-Baqi' cemetery under a cloudy sky, with the minarets of the Prophet's Mosque and the Green Dome behind" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
+        { "src": "visits/531-2.webp", "alt": { "ar": "قبور البقيع ومن ورائها القبة الخضراء ومآذن المسجد النبوي", "en": "Graves of Al-Baqi' with the Green Dome and the minarets of the Prophet's Mosque beyond" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+      ]
     },
     {
       "id": 544,
