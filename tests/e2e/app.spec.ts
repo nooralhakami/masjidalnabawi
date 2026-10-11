@@ -24,6 +24,16 @@ test.describe('landing', () => {
   });
 });
 
+test("the landing page's number of places is the number the map offers (All + parking)", async ({ page, errors: _ }) => {
+  await page.goto('./');
+  const places = Number((await page.locator('.stats dd').first().textContent())!.trim());
+  await openMap(page);
+  const all = await count(page);
+  await page.locator('.pill[data-f="parking"]').click();
+  const parking = await count(page);
+  expect(places).toBe(all + parking);
+});
+
 test.describe('filters', () => {
   const EXPECTED: [string, number][] = [
     ['all', 303],

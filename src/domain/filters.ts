@@ -1,3 +1,4 @@
+import { HIDDEN_SUBCATEGORIES } from '../data/hidden';
 import type { Category, Poi } from '../data/types';
 import type { Facilities } from './facilities';
 import { isClosed } from './facilities';
@@ -42,12 +43,7 @@ export interface FilterState {
   searching: boolean;
 }
 
-/**
- * Places kept in the data but not shown anywhere (map, search, filters, links).
- * Owner decision 2026-10-10: the wheelchair areas inside the mosque are not useful for now.
- * Remove a sub-category from this set to bring its places back.
- */
-export const HIDDEN_SUBCATEGORIES: ReadonlySet<string> = new Set(['wheelchair_zone']);
+export { HIDDEN_SUBCATEGORIES };
 
 export const isHidden = (p: Poi): boolean => HIDDEN_SUBCATEGORIES.has(p.subCategory);
 

@@ -4,11 +4,13 @@ import { createServer, type Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { HIDDEN_SUBCATEGORIES } from './src/data/hidden';
 
-const POIS: { category: string }[] = JSON.parse(readFileSync(resolve(import.meta.dirname, 'data/pois.json'), 'utf8'));
+const POIS: { category: string; subCategory: string }[] = JSON.parse(readFileSync(resolve(import.meta.dirname, 'data/pois.json'), 'utf8'));
 const DEFINE = {
   __POI_COUNTS__: JSON.stringify({
-    places: POIS.length,
+    // The places a visitor can actually find (hidden ones, such as the wheelchair areas, are not counted).
+    places: POIS.filter((p) => !HIDDEN_SUBCATEGORIES.has(p.subCategory)).length,
     gates: POIS.filter((p) => p.category === 'gates').length,
     parking: POIS.filter((p) => p.category === 'parking').length,
   }),
