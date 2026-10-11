@@ -33,7 +33,7 @@ EN = {
         "Restrooms, hotels, restaurants, parking and key services.",
         "By car? It takes you to the parking under the Haram, then on foot.",
         "Madinah's landmarks… illustrated stories of nine sites, from Quba to Uhud.",
-        "In 26 languages… straight from the browser, no app-store download,",
+        "26 languages… straight from the browser, no app-store download,",
         "and it asks for your location only when you need it.",
         "Visitor Guide… open it now: arrive with ease, give your visit your heart.",
     ],
