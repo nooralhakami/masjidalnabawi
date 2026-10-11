@@ -83,6 +83,8 @@ export interface VisitImage {
   alt: Partial<Record<LangCode, string>> & { ar: string; en: string };
   by: string;
   license: string;
+  /** CSS object-position when the photo is cropped to the screen (e.g. '20% 50%' keeps the left part). */
+  focus?: string;
   /** Page where the photo and its licence can be checked. */
   url?: string;
 }

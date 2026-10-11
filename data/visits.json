@@ -45,7 +45,11 @@
         { "t": "موسوعة محتويات: من معالم المدينة المنورة", "u": "https://mhtwyat.com/?p=212177" },
         { "t": "ويكي بيانات: Battle of Uhud (Q488278)", "u": "https://www.wikidata.org/wiki/Q488278" }
       ],
-      "images": []
+      "images": [
+        { "src": "visits/544-1.webp", "focus": "22% 50%", "alt": { "ar": "جبل أحد ومسجد أبيض بقبة ومنارتين عند سفحه", "en": "Mount Uhud with a white mosque, a dome and two minarets at its foot" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
+        { "src": "visits/544-2.webp", "alt": { "ar": "زوّار عند سياج مقبرة شهداء أحد وجبل أحد خلفها", "en": "Visitors at the fence of the Uhud martyrs' cemetery, with Mount Uhud behind" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
+        { "src": "visits/544-3.webp", "alt": { "ar": "منظر جوي لمنطقة شهداء أحد", "en": "Aerial view of the Uhud martyrs' area" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+      ]
     },
     {
       "id": 543,

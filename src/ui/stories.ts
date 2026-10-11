@@ -167,11 +167,11 @@ export class Stories {
     const v = VISIT_LIST[this.pos.site];
     const lang = getLang();
     const prayer = isPrayerSlide(v, this.pos.slide);
-    const img = prayer ? imageFor(v, 0) : imageFor(v, this.pos.slide);
+    const img = imageFor(v, this.pos.slide);
     const count = readSalawat();
     const bars = VISIT_LIST.map(() => `<span class="st-bar"><i></i></span>`).join('');
     const media = img
-      ? `<img class="st-img" src="${esc(img.src)}" alt="${esc(img.alt[lang] ?? img.alt.en)}" decoding="async" />`
+      ? `<img class="st-img" src="${esc(img.src)}" alt="${esc(img.alt[lang] ?? img.alt.en)}" decoding="async"${img.focus ? ` style="object-position:${esc(img.focus)}"` : ''} />`
       : `<div class="st-art" aria-hidden="true">${icon('landmark', 120)}</div>`;
     let body: string;
     if (prayer) {
@@ -185,7 +185,7 @@ export class Stories {
       const s = v.slides[this.pos.slide];
       body = `<p class="st-text" lang="${slideLang(s, lang)}" dir="auto">${esc(slideText(s, lang))}</p>`;
     }
-    const credit = img && !prayer ? `<p class="st-credit">${esc(t('st_image_by', { by: img.by, license: img.license }))}</p>` : '';
+    const credit = img ? `<p class="st-credit">${esc(t('st_image_by', { by: img.by, license: img.license }))}</p>` : '';
     const keep = this.root.contains(document.activeElement) ? (document.activeElement as HTMLElement).dataset.act : undefined;
     this.root.setAttribute('aria-label', t('st_open'));
     this.root.classList.toggle('is-paused', this.paused);

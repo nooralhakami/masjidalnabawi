@@ -37,6 +37,7 @@ describe('must-visit data', () => {
         expect(img.license.trim()).not.toBe('');
         expect(img.alt.ar.trim()).not.toBe('');
         expect(img.alt.en.trim()).not.toBe('');
+        if (img.focus) expect(img.focus).toMatch(/^\d{1,3}% \d{1,3}%$/);
       }
     }
   });
