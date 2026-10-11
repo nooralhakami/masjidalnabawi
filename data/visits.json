@@ -125,7 +125,10 @@
         { "t": "سعودي بيديا: بئر رومة", "u": "https://saudipedia.com/ar/بئر-رومة" },
         { "t": "الألوكة: آبار المدينة المنورة", "u": "https://www.alukah.net/personal_pages/11439/97247/%d8%a2%d8%a8%d8%a7%d8%b1-%d8%a7%d9%84%d9%85%d8%af%d9%8a%d9%86%d8%a9-%d8%a7%d9%84%d9%85%d9%86%d9%88%d8%b1%d8%a9/" }
       ],
-      "images": []
+      "images": [
+        { "src": "visits/549-1.webp", "focus": "40% 50%", "alt": { "ar": "لوحة «مزرعة بئر عثمان» على سياج المزرعة وبين النخيل", "en": "The sign “Uthman's Well Farm” on the farm fence, among palm trees" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
+        { "src": "visits/549-2.webp", "focus": "70% 50%", "alt": { "ar": "فتحة بئر رومة وحولها سور من الحجارة البركانية", "en": "The opening of the well of Rumah, ringed by a wall of volcanic stone" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+      ]
     },
     {
       "id": 548,
