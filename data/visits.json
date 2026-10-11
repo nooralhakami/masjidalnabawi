@@ -12,7 +12,11 @@
         { "t": "صحيفة اليوم: أول مسجد بني في الإسلام", "u": "https://www.alyaum.com/articles/6647338/الرأي/كلمة-ومقال/أول-مسجد-بني-في-الإسلام" },
         { "t": "صحيفة المدينة: ما أول مسجد أسس في الإسلام", "u": "https://www.al-madina.com/article/989221/أخيرة/ما-أول-مسجد-أسس-في-الإسلام" }
       ],
-      "images": []
+      "images": [
+        { "src": "visits/542-1.webp", "alt": { "ar": "مسجد قباء ليلاً بمآذنه وقبابه المضيئة بين النخيل", "en": "Quba Mosque at night, its minarets and domes lit among palm trees" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
+        { "src": "visits/542-2.webp", "alt": { "ar": "مسجد قباء عند الغروب بمآذنه الأربع وقبابه البيضاء", "en": "Quba Mosque at sunset, with its four white minarets and domes" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
+        { "src": "visits/542-3.webp", "alt": { "ar": "ممشى المصلين نحو مسجد قباء وقت الغروب", "en": "Worshippers walking along the avenue towards Quba Mosque at dusk" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+      ]
     },
     {
       "id": 531,
