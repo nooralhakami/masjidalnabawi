@@ -77,7 +77,10 @@
         { "t": "صحيفة المدينة: المساجد السبعة.. شاهدة على تاريخ غزوة الخندق", "u": "https://www.al-madina.com/ampArticle/168613" },
         { "t": "سعودي بيديا: المساجد السبعة", "u": "https://saudipedia.com/article/10579" }
       ],
-      "images": []
+      "images": [
+        { "src": "visits/547-1.webp", "alt": { "ar": "مسجد الفتح ومئذنته عند سفح جبل سلع", "en": "Al-Fath Mosque and its minaret at the foot of Mount Sal'" }, "by": "hana_almadina (الاسم الظاهر على الصورة)", "license": "بانتظار تأكيد الإذن" },
+        { "src": "visits/547-2.webp", "alt": { "ar": "مئذنة المسجد وجبل سلع خلفها وقت الغروب", "en": "The mosque minaret with Mount Sal' behind it at dusk" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+      ]
     },
     {
       "id": 546,
