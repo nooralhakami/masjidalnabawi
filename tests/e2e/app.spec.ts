@@ -171,7 +171,7 @@ test.describe('walking route', () => {
     await page.locator('[data-act="route"]').click();
     const box = page.locator('.route-box');
     await expect(box).toBeVisible();
-    const meters = Number((await box.locator('.fact-v').first().textContent())!.match(/\d+/)![0]);
+    const meters = Number((await box.locator('.rs-v').first().textContent())!.match(/\d+/)![0]);
     // ≈510 m since the owner's west-plaza walkways (2026-10-08); it was ≈615 m round the old ring.
     expect(meters).toBeGreaterThan(470);
     expect(meters).toBeLessThan(550);
@@ -485,7 +485,7 @@ test.describe('travelling by car', () => {
     await page.locator('[data-act="route"]').click();
     await expect(page.locator('path.route-line')).toHaveCount(1);
     await expect(page.locator('path.route-drive')).toHaveCount(0);
-    const meters = Number((await page.locator('.route-box .fact-v').first().textContent())!.replace(/\D/g, ''));
+    const meters = Number((await page.locator('.route-box .rs-v').first().textContent())!.replace(/\D/g, ''));
     expect(meters).toBeGreaterThan(1300);
     expect(meters).toBeLessThan(2600);
   });
@@ -566,19 +566,29 @@ test.describe('alternative routes', () => {
   const START = { latitude: 24.4668, longitude: 39.6111, accuracy: 8 };
   test.use({ geolocation: START, permissions: ['geolocation'] });
 
-  test('up to three routes are offered; tapping one in the sheet makes it the route', async ({ page, errors: _ }) => {
+  test('the sheet is a slim summary with no route buttons; the other routes are faint on the map and tapping one chooses it', async ({ page, errors: _ }) => {
     await page.goto('map.html?poi=21');
     await page.locator('[data-act="route"]').click();
-    const options = page.locator('.route-option');
-    await expect(options.first()).toBeVisible();
-    const n = await options.count();
-    expect(n).toBeGreaterThan(1);
-    expect(n).toBeLessThanOrEqual(3);
-    await expect(options.first()).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('path.route-alt')).toHaveCount(n - 1);
-    await options.nth(1).click();
-    await expect(page.locator('.route-option').nth(1)).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('.route-option').first()).toHaveAttribute('aria-pressed', 'false');
+    const stats = page.locator('.route-stats');
+    await expect(stats).toBeVisible();
+    // No «route 1 / route 2» buttons any more, and the sheet stays small (the map keeps the room).
+    await expect(page.locator('.route-option')).toHaveCount(0);
+    const sheetBox = (await page.locator('.sheet').boundingBox())!;
+    // Measured once the sheet has settled: its height animates for a moment after the route is drawn.
+    await expect
+      .poll(() => page.evaluate(() => window.innerHeight - document.querySelector('.sheet')!.getBoundingClientRect().top), { message: 'visible sheet height' })
+      .toBeLessThan(230);
+    expect(sheetBox.height).toBeGreaterThan(0);
+    // The other routes are drawn, but nearly transparent.
+    const alts = page.locator('path.route-alt');
+    const n = await alts.count();
+    expect(n).toBeGreaterThanOrEqual(1);
+    expect(n).toBeLessThanOrEqual(2);
+    expect(Number(await alts.first().evaluate((el) => getComputedStyle(el).strokeOpacity))).toBeLessThanOrEqual(0.2);
+    // Tapping one on the map (its time label) makes it the route: the summary changes.
+    const before = await stats.textContent();
+    await page.locator('.route-alt-label').first().click();
+    await expect(stats).not.toHaveText(before!);
   });
 
   test('walking onto another offered route switches to it, without re-planning', async ({ page, context, errors: _ }) => {
@@ -587,13 +597,108 @@ test.describe('alternative routes', () => {
     const eastLng = Math.max(...ring.map((p) => p[1]));
     await page.goto('map.html?poi=21');
     await page.locator('[data-act="route"]').click();
-    await expect(page.locator('.route-option').first()).toHaveAttribute('aria-pressed', 'true');
+    const stats = page.locator('.route-stats');
+    await expect(stats).toBeVisible();
+    const before = await stats.textContent();
     // Walking north up the east side, ~30 m a step.
     for (let i = 0; i < 5; i++) {
       await context.setGeolocation({ latitude: 24.4674 + (i * 30) / 111_320, longitude: eastLng, accuracy: 8 });
       await page.waitForTimeout(900);
     }
-    await expect(page.locator('.route-option').nth(1)).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('.toast')).toContainText('تحوّل المسار');
+    await expect(stats).not.toHaveText(before!);
+  });
+});
+
+test.describe('landmark stories', () => {
+  test('open from the map button: one segment per site, Quba first; tapping moves on; close returns to the map', async ({ page, errors: _ }) => {
+    await openMap(page);
+    await page.locator('.mc-btn.is-stories').click();
+    const stories = page.locator('.stories');
+    await expect(stories).toBeVisible();
+    await expect(stories).toHaveAttribute('aria-modal', 'true');
+    await expect(page.locator('.st-bar')).toHaveCount(9);
+    await expect(page.locator('.st-name')).toHaveText('مسجد قباء');
+    await expect(page.locator('.st-rank')).toHaveText('1 / 9');
+    const first = await page.locator('.st-text').textContent();
+    await page.locator('[data-act="next"]').click();
+    await expect(page.locator('.st-text')).not.toHaveText(first!);
+    // Back to the first slide with the other side.
+    await page.locator('[data-act="prev"]').click();
+    await expect(page.locator('.st-text')).toHaveText(first!);
+    await page.locator('[data-act="close"]').click();
+    await expect(stories).toBeHidden();
+    await expect(page.locator('.mc-btn.is-stories')).toBeFocused();
+  });
+
+  test('every site ends with the prayer on the Prophet ﷺ; the count is kept on the device', async ({ page, errors: _ }) => {
+    await openMap(page);
+    await page.locator('.mc-btn.is-stories').click();
+    // Quba has 3 text slides, so the 4th is the prayer.
+    for (let i = 0; i < 3; i++) await page.locator('[data-act="next"]').click();
+    await expect(page.locator('.st-pray-ar')).toHaveText('اللهم صل وسلم على نبينا محمد');
+    await page.locator('.st-pray-btn').click();
+    await page.locator('.st-pray-btn').click();
+    await expect(page.locator('#st-count')).toContainText('2');
+    expect(await page.evaluate(() => localStorage.getItem('salawat-count'))).toBe('2');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.stories')).toBeHidden();
+    // Another visit continues from the saved count.
+    await page.locator('.mc-btn.is-stories').click();
+    await expect(page.locator('.st-mini b')).toHaveText('2');
+  });
+
+  test('the story advances by itself, and pauses with the pause button', async ({ page, errors: _ }) => {
+    await openMap(page);
+    await page.locator('.mc-btn.is-stories').click();
+    const first = await page.locator('.st-text').textContent();
+    await page.locator('[data-act="pause"]').click();
+    await page.waitForTimeout(6500);
+    await expect(page.locator('.st-text')).toHaveText(first!);
+    await page.locator('[data-act="pause"]').click();
+    await expect(page.locator('.st-text')).not.toHaveText(first!, { timeout: 8000 });
+  });
+
+  test('the map shows the site and the sources are listed; a shared link (?visit=) opens that site', async ({ page, errors: _ }) => {
+    await openMap(page, 'ar', '?visit=543');
+    await expect(page.locator('.st-name')).toHaveText('مسجد القبلتين');
+    await page.locator('[data-act="sources"]').click();
+    await expect(page.locator('.st-sources a')).toHaveCount(2);
+    await page.locator('[data-act="map"]').click();
+    await expect(page.locator('.stories')).toBeHidden();
+    await expect(page.locator('.sheet .sh-title')).toContainText('مسجد القبلتين');
+  });
+
+  test('texts and buttons come in the visitor\'s language', async ({ page, errors: _ }) => {
+    await openMap(page, 'tr');
+    await page.locator('.mc-btn.is-stories').click();
+    await expect(page.locator('.st-text')).toHaveAttribute('lang', 'tr');
+    await expect(page.locator('.st-text')).toContainText('İslam');
+    await expect(page.locator('[data-act="map"]')).toContainText('Haritada göster');
+  });
+
+  test('a long press pauses the story (no copy/save menu on the photo), and shows no credit line', async ({ page, errors: _ }) => {
+    await openMap(page);
+    await page.locator('.mc-btn.is-stories').click();
+    await expect(page.locator('.st-credit')).toHaveCount(0);
+    await expect(page.locator('.st-img')).toHaveCSS('pointer-events', 'none');
+    const stories = page.locator('.stories');
+    // The browser's context menu (which carries copy / save image) is cancelled.
+    const prevented = await page.evaluate(() => {
+      const ev = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+      document.querySelector('.st-img')!.dispatchEvent(ev);
+      return ev.defaultPrevented;
+    });
+    expect(prevented).toBe(true);
+    const text = await page.locator('.st-text').textContent();
+    const box = (await page.locator('.st-zone-next').boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(500);
+    await expect(stories).toHaveClass(/is-paused/);
+    await page.mouse.up();
+    await expect(stories).not.toHaveClass(/is-paused/);
+    // Releasing a hold does not count as a tap: still on the same slide.
+    await expect(page.locator('.st-text')).toHaveText(text!);
   });
 });

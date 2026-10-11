@@ -37,9 +37,11 @@ src/styles      tokens.css (all colours, light/dark), component CSS
 ## 3. Key flows
 - **Filter/search → markers:** `ui/pills`, `ui/header` → `domain/visible.visiblePois()` → `map/layer.PoiLayer.set()` → `ui/markers.markerSpec()` (pure HTML spec) → Leaflet markers, reused across moves.
 - **Select a place:** marker click / search / `?poi=ID` → `map/main.select()` → `ui/sheet.show()`.
-- **Route:** sheet "route" → `map/main.drawRoute()` → `location/LocationService` (on demand) → `routing/plan.planRoutes(from, to, mode)` → the best plan and up to two alternatives, each as legs (walk / drive / garage) → `map/route-layer.show(plans, chosen)` (alternatives in grey, tap to choose; the sheet lists them too) → `navigation/NavigationTracker.start()`.
+- **Route:** sheet "route" → `map/main.drawRoute()` → `location/LocationService` (on demand) → `routing/plan.planRoutes(from, to, mode)` → the best plan and up to two alternatives, each as legs (walk / drive / garage) → `map/route-layer.show(plans, chosen)` (alternatives drawn as a very faint trace, tap one on the map to choose it; the sheet shows only a slim distance · time · side row) → `navigation/NavigationTracker.start()`.
 - **Trip planner (`routing/plan.ts`):** collects candidate routes — inside the Haram the plaza walkways and other ways along them (`walk.walkPaths`); otherwise streets-only and another street way, streets + each of the best gates + walkways, or a short cut across the plazas for the best gate pairs; driving → each public lot via its best ramp, aisles round the Haram (`ringPath`), stairs up, walk; or straight to a place outside the Haram. None may cross the mosque building or Al-Baqi' (only the stretch to an inner gate on the wall may run inside it). `routing/alternatives.pickRoutes` keeps the best and up to two others that are ≤ 30% longer and ≤ 70% shared with a route already kept; on a re-route a route starting with a U-turn ranks lower.
 - **Live location:** `LocationService` (watchPosition, Kalman `filter.ts`, compass) → `MeMarker` (glide) and `NavigationTracker` (progress via `progress.ts`, away/off-route). Off the route on one of the alternatives (2 readings) → switch to it, no re-planning; off every route (3 readings, 8 s apart at most once) → re-plan from the visitor's position with their heading, redrawn in place without the draw-in.
+
+- **Landmark stories:** map button (`stories-request`) or `?visit=ID` → `ui/stories.Stories.open()` → slides from `domain/visits` (`nextPos`/`prevPos`/`segmentFill`, pure) → «show on map» / «route» hand the place back to `map/main` (`select`, `drawRoute`). Photos live in `public/visits/` and are excluded from the PWA precache; the prayer count is in `localStorage` (`salawat-count`) only.
 
 ## 4. Data and how it is built
 | File | What | Built by |
@@ -50,6 +52,7 @@ src/styles      tokens.css (all colours, light/dark), component CSS
 | `data/streets.json` | walk/drive street graph (OSM) | `scripts/streets-from-osm.py docs/routes/osm/roads-*.json` |
 | `data/rules.json` | facility rules, Rawdah gate, map config | hand edits (owner decisions) |
 | `data/overrides.json` | metre nudges of positions | hand edits |
+| `data/visits.json` | must-visit sites in order of importance: place id, text slides (ar, en; other languages after approval), two or more sources, photos with credit and licence. Their markers glow at every zoom and `ui/stories.ts` plays them (`domain/visits.ts` holds the pure flow) | hand edits (owner decides the order; texts need two sources) |
 Sources and decisions: `docs/places/PLACES.md`, `docs/routes/NETWORK.md`. Raw extracts are kept under `docs/` so every build is reproducible.
 
 ## 5. Integration points (for embedding, e.g. in Nusuk)

@@ -11,6 +11,8 @@
 3. [`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md) — قواعد العمل، وتعريف «تم»، والدروس المستفادة.
 4. [`docs/PERF.md`](docs/PERF.md) و`npm run perf` — ميزانية السلاسة. [`docs/places/PLACES.md`](docs/places/PLACES.md) و[`docs/routes/NETWORK.md`](docs/routes/NETWORK.md) — مصادر البيانات وبناؤها.
 
+5. [`docs/VISIT-STORIES.md`](docs/VISIT-STORIES.md) — «معالم المدينة»: قصص مصوّرة بالنصوص والمصادر والصور والصلاة على النبي ﷺ، وما بقي قبل النشر. [`docs/PLAN-VISIT-STORIES.md`](docs/PLAN-VISIT-STORIES.md) خطتها، و[`docs/VISIT-PHOTOS.md`](docs/VISIT-PHOTOS.md) إضافة الصور.
+
 البرومبتات القديمة لـ v0 والمواصفات الأولى (`PROMPT.md`) أصبحت أرشيفاً في `docs/history/`، والتطبيق القديم للمقارنة في `reference/current-app.html`.
 
 ---

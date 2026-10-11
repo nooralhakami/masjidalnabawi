@@ -53,6 +53,8 @@ const PATHS = {
   phone: '<rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
   languages: '<path d="M4 5h9M8.5 3v2M6 5c.5 3 2.5 6 6 7.5"/><path d="M11 5c-.5 3-3 6.5-7 8"/><path d="M13 21l4-9 4 9M14.5 17.5h5"/>',
   dome: '<path d="M4 20h16"/><path d="M5.5 20v-6.5a6.5 6.5 0 0 1 13 0V20"/><path d="M12 7V3.5"/><path d="M10.5 4.5h3"/>',
+  pause: '<path d="M8 5v14M16 5v14"/>',
+  play: '<path d="M7 4.5v15l12-7.5z"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   car: '<path d="M5 17h14v-4.5l-1.8-4.7A2 2 0 0 0 15.3 6.5H8.7a2 2 0 0 0-1.9 1.3L5 12.5z"/><path d="M5 12.5h14"/><circle cx="8" cy="17" r="1.8"/><circle cx="16" cy="17" r="1.8"/>',
   walk: '<circle cx="13" cy="4" r="1.8"/><path d="M9 21l2.5-6.5L14 17v4"/><path d="M7 11l3-3.5h3.5l2 4 2.5 1"/><path d="M11.5 14.5L13 7.5"/>',

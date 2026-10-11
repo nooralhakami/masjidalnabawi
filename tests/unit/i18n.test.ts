@@ -4,6 +4,7 @@ import type { LangCode, Poi } from '../../src/data';
 import { LANGS, MORE_LANGS, ds, latinDigits, nm, t } from '../../src/i18n';
 import { EXTRA_UI } from '../../src/i18n/strings';
 import { LANDING_UI } from '../../src/i18n/landing-strings';
+import { STORIES_UI } from '../../src/i18n/stories-strings';
 import { FILTERS, TOILET_SUBS } from '../../src/domain/filters';
 
 const P = (id: number): Poi => POI_BY_ID.get(id)!;
@@ -34,8 +35,21 @@ describe('translations are complete', () => {
     }
   });
 
+  it('every story key exists in every language, non-empty, with matching placeholders', () => {
+    const keys = Object.keys(STORIES_UI.ar).sort();
+    const ph = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort().join();
+    for (const l of LANGS) {
+      expect(Object.keys(STORIES_UI[l]).sort(), l).toEqual(keys);
+      for (const k of keys) {
+        expect(STORIES_UI[l][k].trim(), `${l}.${k}`).not.toBe('');
+        expect(ph(STORIES_UI[l][k]), `${l}.${k}`).toBe(ph(STORIES_UI.ar[k]));
+      }
+    }
+  });
+
   it('added keys never collide with data keys', () => {
-    for (const k of [...Object.keys(EXTRA_UI.ar), ...Object.keys(LANDING_UI.ar)]) expect(I18N.ar.ui[k], k).toBeUndefined();
+    for (const k of [...Object.keys(EXTRA_UI.ar), ...Object.keys(LANDING_UI.ar), ...Object.keys(STORIES_UI.ar)]) expect(I18N.ar.ui[k], k).toBeUndefined();
+    for (const k of Object.keys(STORIES_UI.ar)) expect(EXTRA_UI.ar[k] ?? LANDING_UI.ar[k], k).toBeUndefined();
   });
 
   it('placeholders match across languages', () => {

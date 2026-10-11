@@ -25,15 +25,12 @@ const CATEGORY_LABEL: Record<Category, string> = {
 
 export type SheetState = 'closed' | 'half' | 'full';
 
-/** What the sheet shows about the route being followed, and the other routes offered. */
+/** What the sheet shows about the route being followed. */
 export interface RouteSummary {
   meters: number;
   minutes: number;
   nearestEntrance?: number;
   drive?: { meters: number; lot?: number; walkMeters: number };
-  /** Every route offered (the chosen one included); a choice appears when there is more than one. */
-  options?: { minutes: number; meters: number }[];
-  chosen?: number;
 }
 
 const WALK_M_PER_MIN = 80;
@@ -61,7 +58,7 @@ export class Sheet {
 
   constructor(
     private fac: Facilities,
-    private on: { close(): void; goTo(p: Poi): void; route(p: Poi): void; pickRoute(i: number): void; endRoute(): void; share(p: Poi): void; state(s: SheetState): void },
+    private on: { close(): void; goTo(p: Poi): void; route(p: Poi): void; endRoute(): void; share(p: Poi): void; state(s: SheetState): void },
   ) {
     this.root = document.createElement('section');
     this.root.className = 'sheet';
@@ -126,10 +123,12 @@ export class Sheet {
   private halfHeight(): number {
     if (this.route) {
       // Route mode: exactly the compact summary + the end button, never more than 45% of the screen.
-      // The body stretches to fill the sheet, so measure its last child (offsets are relative to the sheet).
+      // The body stretches to fill the sheet, so measure its last child from the sheet's top edge
+      // (rects, not offsetTop: the grab handle sits above the body and offsetTop would leave it out).
       const last = this.body.lastElementChild as HTMLElement | null;
       const pad = parseFloat(getComputedStyle(this.body).paddingBottom) || 0;
-      const content = (last ? last.offsetTop + last.offsetHeight : 0) + pad + this.foot.offsetHeight;
+      const top = this.root.getBoundingClientRect().top;
+      const content = (last ? last.getBoundingClientRect().bottom - top : 0) + pad + this.foot.offsetHeight;
       return Math.min(this.root.offsetHeight, Math.ceil(content), Math.round(window.innerHeight * 0.45));
     }
     return Math.min(this.root.offsetHeight, Math.round(window.innerHeight * 0.55));
@@ -226,7 +225,6 @@ export class Sheet {
     else if (act === 'grab') this.setState(this.state === 'full' ? 'half' : 'full');
     else if (act === 'route') this.on.route(this.poi);
     else if (act === 'endroute') this.on.endRoute();
-    else if (act === 'pickroute') this.on.pickRoute(Number(b.dataset.i));
     else if (act === 'share') this.on.share(this.poi);
     else if (act === 'travel') {
       this.mode = b.dataset.mode === 'drive' ? 'drive' : 'walk';
@@ -312,21 +310,12 @@ export class Sheet {
       </div>`;
 
     const r = this.route;
-    const options = r?.options && r.options.length > 1 ? r.options : null;
-    const routeChoice = options
-      ? `<div class="route-options" role="group" aria-label="${esc(t('r_options'))}">${options
-          .map(
-            (o, i) =>
-              `<button type="button" class="route-option" data-act="pickroute" data-i="${i}" aria-pressed="${i === (r!.chosen ?? 0)}"><span class="route-option-n">${esc(t('r_option', { n: i + 1 }))}</span><span class="route-option-t">${esc(t('r_min', { t: o.minutes }))} <small>· ${esc(t('meters', { m: num(Math.round(o.meters / 5) * 5) }))}</small></span></button>`,
-          )
-          .join('')}</div>`
-      : '';
     const routeBox = r
       ? `<div class="route-box" role="status">
-          <div class="facts facts-3">
-            <div class="fact"><span class="fact-k">${esc(t('r_dist'))}</span><span class="fact-v big">${esc(t('meters', { m: num(Math.round(r.meters / 5) * 5) }))}</span></div>
-            <div class="fact"><span class="fact-k">${esc(t(r.drive ? 'r_time_total' : 'r_time'))}</span><span class="fact-v big">${esc(t('r_min', { t: r.minutes }))}</span></div>
-            <div class="fact"><span class="fact-k"><span class="dot" style="--c:${dirVar(p)}"></span>${esc(t('side', { d: '' }).trim())}</span><span class="fact-v">${esc(dirName(p.direction))}</span></div>
+          <div class="route-stats">
+            <span class="rs"><span class="sr-only">${esc(t('r_dist'))}: </span><span class="rs-v">${esc(t('meters', { m: num(Math.round(r.meters / 5) * 5) }))}</span></span>
+            <span class="rs"><span class="sr-only">${esc(t(r.drive ? 'r_time_total' : 'r_time'))}: </span><span class="rs-v">${esc(t('r_min', { t: r.minutes }))}</span></span>
+            <span class="rs rs-side"><span class="dot" style="--c:${dirVar(p)}"></span><span class="sr-only">${esc(t('side', { d: '' }).trim())}: </span>${esc(dirName(p.direction))}</span>
           </div>
           ${r.nearestEntrance ? `<div class="route-nearest">${esc(t('park_nearest', { n: r.nearestEntrance }))}</div>` : ''}
           ${
@@ -349,7 +338,6 @@ export class Sheet {
           <div style="flex:1;min-width:0"><div class="sh-kicker">${esc(t(r.drive ? 'r_title_drive' : 'r_title'))}</div><h2 class="sh-title" tabindex="-1">${esc(nm(p))}</h2></div>
           <button type="button" class="icon-btn lg" data-act="close" aria-label="${esc(t('l_close'))}">${icon('close', 18)}</button>
         </div>
-        ${routeChoice}
         ${routeBox}`;
       this.foot.innerHTML = `<button type="button" class="btn block danger" data-act="endroute">${icon('close', 20)}${esc(t('route_end'))}</button>`;
       return;

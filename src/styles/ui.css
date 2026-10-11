@@ -691,14 +691,9 @@ body.is-navigating .leaflet-bottom.leaflet-right {
   gap: 8px;
 }
 .sheet[data-route='active'] .route-box {
-  padding: 10px;
-  gap: 8px;
-}
-.sheet[data-route='active'] .route-box .fact {
-  padding: 8px 6px;
-}
-.sheet[data-route='active'] .route-box .fact-v.big {
-  font-size: 1rem;
+  padding: 6px 12px;
+  gap: 4px;
+  border-radius: 14px;
 }
 .sheet[data-route='active'] .route-box .note {
   font-size: 0.75rem;
@@ -1078,15 +1073,30 @@ body.is-navigating .leaflet-bottom.leaflet-right {
   font-weight: 700;
   color: var(--heading);
 }
-.facts-3 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+/* Route summary: one slim row (distance · time · side), so the sheet stays small and the map stays in view. */
+.route-stats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 14px;
+  row-gap: 2px;
+  font-weight: 700;
 }
-.facts-3 .fact {
-  padding: 10px;
+.route-stats .rs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
 }
-.fact-v.big {
-  font-size: 19px;
+.route-stats .rs-v {
+  font-size: 18px;
+  color: var(--ink);
+}
+.route-stats .rs-side {
+  margin-inline-start: auto;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 /* Searching or opening the language menu during a route restores the full header. */
@@ -1187,48 +1197,6 @@ body.is-navigating .leaflet-bottom.leaflet-right {
   color: var(--heading);
   box-shadow: var(--shadow);
 }
-/* Choice between the offered routes (sheet, while a route is shown). */
-.route-options {
-  display: flex;
-  gap: 8px;
-  margin: 2px 0 10px;
-  overflow-x: auto;
-}
-.route-option {
-  flex: 1 0 0;
-  min-width: 88px;
-  min-height: 44px;
-  padding: 6px 10px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  color: var(--ink);
-  display: grid;
-  gap: 1px;
-  text-align: start;
-  cursor: pointer;
-  font: 600 12px var(--font-ui);
-}
-.route-option-n {
-  color: var(--muted);
-  font-size: 11px;
-}
-.route-option-t {
-  font-size: 15px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.route-option-t small {
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 600;
-}
-.route-option[aria-pressed='true'] {
-  border-color: var(--green-700);
-  background: var(--tint-green);
-  color: var(--heading);
-}
-
 .route-legs {
   display: flex;
   flex-wrap: wrap;
