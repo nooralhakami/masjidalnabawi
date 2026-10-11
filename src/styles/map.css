@@ -516,14 +516,15 @@
 /* ---------- alternative routes (tap to choose) ---------- */
 .route-alt-under {
   stroke: #fff;
-  stroke-opacity: 0.7;
+  stroke-opacity: 0.08;
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
 }
+/* The other routes are barely there: a faint trace, still tappable through the wide hit area. */
 .route-alt {
   stroke: var(--muted);
-  stroke-opacity: 0.9;
+  stroke-opacity: 0.16;
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
@@ -550,6 +551,7 @@
   font: 700 12px var(--font-ui);
   white-space: nowrap;
   cursor: pointer;
+  opacity: 0.55;
 }
 
 /* ---------- walking route ---------- */

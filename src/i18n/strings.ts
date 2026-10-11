@@ -6,8 +6,6 @@ import type { LangCode } from '../data/types';
  */
 export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
   ar: {
-    r_option: 'مسار {n}',
-    r_options: 'خيارات المسار',
     r_switched: 'تحوّل المسار إلى الطريق الذي تسلكه',
     lang_more: 'لغات أخرى',
     nav_away: 'أنت تبتعد عن الوجهة',
@@ -91,8 +89,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'انتقال',
   },
   en: {
-    r_option: 'Route {n}',
-    r_options: 'Route options',
     r_switched: 'Switched to the route you are on',
     lang_more: 'More languages',
     nav_away: 'You are walking away from the destination',
@@ -176,8 +172,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Go',
   },
   tr: {
-    r_option: 'Rota {n}',
-    r_options: 'Rota seçenekleri',
     r_switched: 'Yürüdüğünüz rotaya geçildi',
     lang_more: 'Diğer diller',
     nav_away: 'Hedeften uzaklaşıyorsunuz',
@@ -261,8 +255,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Git',
   },
   ur: {
-    r_option: 'راستہ {n}',
-    r_options: 'راستے کے اختیارات',
     r_switched: 'آپ جس راستے پر ہیں اسی پر منتقل کر دیا گیا',
     lang_more: 'مزید زبانیں',
     nav_away: 'آپ منزل سے دور جا رہے ہیں',
@@ -346,8 +338,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'جائیں',
   },
   id: {
-    r_option: 'Rute {n}',
-    r_options: 'Pilihan rute',
     r_switched: 'Beralih ke rute yang sedang Anda lalui',
     lang_more: 'Bahasa lainnya',
     nav_away: 'Anda menjauhi tujuan',
@@ -431,8 +421,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Buka',
   },
   uz: {
-    r_option: 'Yo‘nalish {n}',
-    r_options: 'Yo‘nalish variantlari',
     r_switched: 'Siz yurayotgan yo‘nalishga o‘tildi',
     lang_more: 'Boshqa tillar',
     nav_away: 'Siz manzildan uzoqlashyapsiz',
@@ -516,8 +504,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'O‘tish',
   },
   bn: {
-    r_option: 'পথ {n}',
-    r_options: 'পথের বিকল্প',
     r_switched: 'আপনি যে পথে আছেন সেটিতে বদলানো হয়েছে',
     lang_more: 'আরও ভাষা',
     nav_away: 'আপনি গন্তব্য থেকে দূরে সরে যাচ্ছেন',
@@ -608,8 +594,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'যান',
   },
   fr: {
-    r_option: 'Itinéraire {n}',
-    r_options: 'Choix d’itinéraire',
     r_switched: 'Passage à l’itinéraire que vous suivez',
     lang_more: 'Autres langues',
     nav_away: 'Vous vous éloignez de la destination',
@@ -700,8 +684,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Y aller',
   },
   fa: {
-    r_option: 'مسیر {n}',
-    r_options: 'گزینه‌های مسیر',
     r_switched: 'به مسیری که در آن هستید تغییر یافت',
     lang_more: 'زبان‌های بیشتر',
     nav_away: 'شما در حال دور شدن از مقصد هستید',
@@ -792,8 +774,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'برو',
   },
   ru: {
-    r_option: 'Маршрут {n}',
-    r_options: 'Варианты маршрута',
     r_switched: 'Переключено на маршрут, по которому вы идёте',
     lang_more: 'Другие языки',
     nav_away: 'Вы удаляетесь от цели',
@@ -884,8 +864,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Идти',
   },
   ms: {
-    r_option: 'Laluan {n}',
-    r_options: 'Pilihan laluan',
     r_switched: 'Bertukar ke laluan yang anda lalui',
     lang_more: 'Bahasa lain',
     nav_away: 'Anda semakin jauh dari destinasi',
@@ -976,8 +954,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Pergi',
   },
   ha: {
-    r_option: 'Hanya ta {n}',
-    r_options: 'Zaɓuɓɓukan hanya',
     r_switched: 'An canja zuwa hanyar da kake bi',
     lang_more: 'Ƙarin harsuna',
     nav_away: 'Kana nisanta daga inda za ka',
@@ -1068,8 +1044,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Je',
   },
   ml: {
-    r_option: 'വഴി {n}',
-    r_options: 'വഴി ഓപ്ഷനുകൾ',
     r_switched: 'നിങ്ങൾ പോകുന്ന വഴിയിലേക്ക് മാറി',
     lang_more: 'കൂടുതൽ ഭാഷകൾ',
     nav_away: 'നിങ്ങൾ ലക്ഷ്യസ്ഥാനത്തുനിന്ന് അകന്നുപോകുന്നു',
@@ -1160,8 +1134,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'പോകുക',
   },
   sw: {
-    r_option: 'Njia {n}',
-    r_options: 'Chaguo za njia',
     r_switched: 'Imebadilishwa kwenda njia unayopita',
     lang_more: 'Lugha zaidi',
     nav_away: 'Unaondoka mbali na unakokwenda',
@@ -1252,8 +1224,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Nenda',
   },
   ps: {
-    r_option: 'لار {n}',
-    r_options: 'د لارې انتخابونه',
     r_switched: 'هغې لارې ته واوښت چې تاسو پرې روان یاست',
     lang_more: 'نورې ژبې',
     nav_away: 'تاسو له منزل څخه لرې کېږئ',
@@ -1344,8 +1314,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'لاړ شه',
   },
   so: {
-    r_option: 'Jidka {n}',
-    r_options: 'Doorashooyinka jidka',
     r_switched: 'Waxaa loo beddelay jidka aad ku socoto',
     lang_more: 'Luqado kale',
     nav_away: 'Waxaad ka fogaanaysaa meesha aad u socoto',
@@ -1436,8 +1404,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Tag',
   },
   ta: {
-    r_option: 'வழி {n}',
-    r_options: 'வழி விருப்பங்கள்',
     r_switched: 'நீங்கள் செல்லும் வழிக்கு மாற்றப்பட்டது',
     lang_more: 'மேலும் மொழிகள்',
     nav_away: 'நீங்கள் சேருமிடத்திலிருந்து விலகிச் செல்கிறீர்கள்',
@@ -1528,8 +1494,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'செல்',
   },
   hi: {
-    r_option: 'रास्ता {n}',
-    r_options: 'रास्ते के विकल्प',
     r_switched: 'आप जिस रास्ते पर हैं उस पर बदल दिया गया',
     lang_more: 'और भाषाएँ',
     nav_away: 'आप मंज़िल से दूर जा रहे हैं',
@@ -1620,8 +1584,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'जाएँ',
   },
   bs: {
-    r_option: 'Ruta {n}',
-    r_options: 'Opcije rute',
     r_switched: 'Prebačeno na rutu kojom idete',
     lang_more: 'Više jezika',
     nav_away: 'Udaljavate se od odredišta',
@@ -1712,8 +1674,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Idi',
   },
   de: {
-    r_option: 'Route {n}',
-    r_options: 'Routenoptionen',
     r_switched: 'Zur Route gewechselt, auf der Sie gehen',
     lang_more: 'Weitere Sprachen',
     nav_away: 'Sie entfernen sich vom Ziel',
@@ -1804,8 +1764,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Los',
   },
   zh: {
-    r_option: '路线{n}',
-    r_options: '路线选项',
     r_switched: '已切换到您正在走的路线',
     lang_more: '更多语言',
     nav_away: '您正在远离目的地',
@@ -1896,8 +1854,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: '前往',
   },
   am: {
-    r_option: 'መንገድ {n}',
-    r_options: 'የመንገድ አማራጮች',
     r_switched: 'ወደሚሄዱበት መንገድ ተቀይሯል',
     lang_more: 'ተጨማሪ ቋንቋዎች',
     nav_away: 'ከመድረሻዎ እየራቁ ነው',
@@ -1988,8 +1944,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'ሂድ',
   },
   ku: {
-    r_option: 'Rê {n}',
-    r_options: 'Vebijarkên rê',
     r_switched: 'Hat guhertin bo riya ku tu li ser î',
     lang_more: 'Zimanên din',
     nav_away: 'Tu ji armancê dûr dikevî',
@@ -2080,8 +2034,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Biçe',
   },
   az: {
-    r_option: 'Marşrut {n}',
-    r_options: 'Marşrut variantları',
     r_switched: 'Getdiyiniz marşruta keçildi',
     lang_more: 'Digər dillər',
     nav_away: 'Təyinat yerindən uzaqlaşırsınız',
@@ -2172,8 +2124,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Get',
   },
   th: {
-    r_option: 'เส้นทาง {n}',
-    r_options: 'ตัวเลือกเส้นทาง',
     r_switched: 'เปลี่ยนไปยังเส้นทางที่คุณกำลังเดิน',
     lang_more: 'ภาษาอื่นๆ',
     nav_away: 'คุณกำลังออกห่างจากจุดหมาย',
@@ -2264,8 +2214,6 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'ไป',
   },
   es: {
-    r_option: 'Ruta {n}',
-    r_options: 'Opciones de ruta',
     r_switched: 'Cambiado a la ruta que estás siguiendo',
     lang_more: 'Más idiomas',
     nav_away: 'Te estás alejando del destino',

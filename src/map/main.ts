@@ -79,7 +79,7 @@ function showPlans(next: Plan[], i: number, animate: boolean) {
   return info;
 }
 
-/** The visitor chose another of the offered routes (on the map or in the sheet). */
+/** The visitor tapped another of the offered routes on the map. */
 function pickRoute(i: number) {
   if (i === chosen || !plans[i] || !route.active) return;
   showPlans(plans, i, false);
@@ -172,7 +172,6 @@ const sheet = new Sheet(fac, {
   close: () => deselect(),
   goTo: (p) => select(p, true),
   route: (p) => void drawRoute(p),
-  pickRoute: (i) => pickRoute(i),
   share: (p) => void sharePlace(p),
   endRoute: () => {
     navigation.stop();
