@@ -546,6 +546,21 @@ test.describe('compass', () => {
   });
 });
 
+test('a pair of restrooms shows its number between its two markers (251 and 252, men)', async ({ page, errors: _ }) => {
+  await page.goto('map.html?poi=251');
+  await expect(page.locator('.sheet .sh-title')).toContainText('251');
+  await page.locator('.sheet [data-act="close"]').click(); // the card closes; every marker is back
+  const label = page.locator('.pair-no', { hasText: '251' });
+  await expect(label).toBeVisible();
+  const a = (await page.locator('.mk[title*="251"]').first().boundingBox())!;
+  const b = (await page.locator('.mk[title*="252"]').first().boundingBox())!;
+  const n = (await label.boundingBox())!;
+  const mid = (r: { y: number; height: number }) => r.y + r.height / 2;
+  expect(mid(n)).toBeGreaterThan(Math.min(mid(a), mid(b)));
+  expect(mid(n)).toBeLessThan(Math.max(mid(a), mid(b)));
+  await expect(page.locator('.pair-no', { hasText: '253' })).toHaveCount(1);
+});
+
 test.describe('alternative routes', () => {
   // South plaza → Gate 21 (north): round the mosque by the west or by the east side.
   const START = { latitude: 24.4668, longitude: 39.6111, accuracy: 8 };

@@ -54,6 +54,8 @@ export interface Poi {
   status?: Status;
   /** The facility across the walkway that leads to the same restrooms. */
   pairWith?: number;
+  /** The number shown between the two markers of a pair on the map (both facilities carry it). */
+  pairNo?: number;
   gender?: Gender;
   /** Inner gate inside the women's section. */
   women?: boolean;

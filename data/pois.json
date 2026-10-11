@@ -2221,7 +2221,9 @@
   "direction": "west",
   "description_ar": "مجمع دورات مياه مخصص للرجال 🔵",
   "status": "open",
-  "gender": "men"
+  "gender": "men",
+  "pairWith": 252,
+  "pairNo": 251
  },
  {
   "id": 252,
@@ -2233,7 +2235,9 @@
   "direction": "west",
   "description_ar": "مجمع دورات مياه مخصص للرجال 🔵",
   "status": "open",
-  "gender": "men"
+  "gender": "men",
+  "pairWith": 251,
+  "pairNo": 251
  },
  {
   "id": 253,
@@ -2245,7 +2249,9 @@
   "direction": "west",
   "description_ar": "مجمع دورات مياه مخصص للنساء 🟣",
   "status": "open",
-  "gender": "women"
+  "gender": "women",
+  "pairWith": 254,
+  "pairNo": 253
  },
  {
   "id": 254,
@@ -2257,7 +2263,9 @@
   "direction": "west",
   "description_ar": "مجمع دورات مياه مخصص للنساء 🟣",
   "status": "open",
-  "gender": "women"
+  "gender": "women",
+  "pairWith": 253,
+  "pairNo": 253
  },
  {
   "id": 521,

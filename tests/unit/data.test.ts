@@ -71,6 +71,20 @@ describe('pois.json', () => {
     expect(count((p) => p.subCategory === 'toilet_accessible')).toBe(0);
   });
 
+  it('west plaza restrooms pair too: men 251↔252, women 253↔254, each pair with its number (owner, 2026-10-11)', () => {
+    for (const [a, b, no, gender] of [
+      [251, 252, 251, 'men'],
+      [253, 254, 253, 'women'],
+    ] as const) {
+      for (const [id, other] of [[a, b], [b, a]]) {
+        const p = POI_BY_ID.get(id)!;
+        expect(p.pairWith, `pair of ${id}`).toBe(other);
+        expect(p.pairNo, `number of ${id}`).toBe(no);
+        expect(p.gender).toBe(gender);
+      }
+    }
+  });
+
   it('toilet facilities 201–236 pair up (201↔202 … 235↔236)', () => {
     for (let id = 201; id <= 235; id += 2) {
       expect(POI_BY_ID.get(id)?.pairWith, `pair of ${id}`).toBe(id + 1);

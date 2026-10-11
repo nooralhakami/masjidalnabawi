@@ -4,7 +4,7 @@ import type { Facilities } from '../domain/facilities';
 import type { FilterId } from '../domain/filters';
 import { nm } from '../i18n';
 import { esc } from '../ui/dom';
-import { HIT, chipSize, gateLabelVisible, markerSpec, overlaps, tierOf, visibleAtZoom, zoomClass } from '../ui/markers';
+import { HIT, chipSize, gateLabelVisible, markerSpec, overlaps, pairLabelSpec, pairLabelVisible, tierOf, visibleAtZoom, zoomClass } from '../ui/markers';
 
 /**
  * Draws the visible POIs. Only markers inside the viewport (+25%) exist, and after each move the
@@ -125,6 +125,24 @@ export class PoiLayer {
               interactive: false,
             }), seen);
         }
+      }
+    }
+    // The number of a pair of restrooms, between its two markers (only while both are on the map).
+    if (this.selected === null && !this.hidden && pairLabelVisible(zoom)) {
+      const shown = new Map(this.pois.map((q) => [q.id, q]));
+      for (const a of this.pois) {
+        const b = a.pairNo !== undefined && a.pairWith !== undefined && a.id < a.pairWith ? shown.get(a.pairWith) : undefined;
+        if (!b) continue;
+        const mid: [number, number] = [(a.lat + b.lat) / 2, (a.lng + b.lng) / 2];
+        if (!bounds.contains(mid)) continue;
+        const spec = pairLabelSpec(a);
+        this.put(`n${a.id}`, `${a.pairNo}|${spec.className}`, () =>
+          L.marker(mid, {
+            icon: L.divIcon({ html: spec.html, className: spec.className, iconSize: spec.size, iconAnchor: [spec.size[0] / 2, spec.size[1] / 2] }),
+            zIndexOffset: 250,
+            keyboard: false,
+            interactive: false,
+          }), seen);
       }
     }
     // Whatever was not drawn this time has left the view (or the filter): remove it.

@@ -7,6 +7,15 @@ import { icon, type IconName } from './icons';
 export type Tier = 's' | 'm' | 'l';
 export const tierOf = (zoom: number): Tier => (zoom <= 16 ? 's' : zoom < 19 ? 'm' : 'l');
 
+/** The number between the two markers of a pair: from zoom 18, when the markers are far enough apart to leave room. */
+export const pairLabelVisible = (zoom: number): boolean => zoom >= 18;
+
+/** Its look: the colour of the pair's restrooms (men blue, women purple, mixed purple). */
+export function pairLabelSpec(a: Poi): { html: string; className: string; size: [number, number] } {
+  const c = a.gender === 'men' ? 'var(--cat-men)' : 'var(--cat-women)';
+  return { html: `<span class="pair-no" style="--c:${c}">${a.pairNo}</span>`, className: 'pair-no-wrap', size: [44, 22] };
+}
+
 export const gateLabelVisible = (p: Poi, zoom: number): boolean => p.subCategory === 'gate_inner' && zoom >= 19 && p.name_ar !== `باب رقم ${p.id}`;
 
 /** Facility marker diameter per tier: ≤16 → 8px (a plain dot), 17 → 14px, ≥18 → 20px (with icon). */

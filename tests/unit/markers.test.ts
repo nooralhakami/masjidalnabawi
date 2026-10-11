@@ -1,8 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { POIS, POI_BY_ID } from '../../src/data';
-import { FACILITY_SIZE, gateLabelVisible, markerSpec, tierOf, visibleAtZoom, zoomClass } from '../../src/ui/markers';
+import { FACILITY_SIZE, gateLabelVisible, markerSpec, pairLabelSpec, pairLabelVisible, tierOf, visibleAtZoom, zoomClass } from '../../src/ui/markers';
 
 const P = (id: number) => POI_BY_ID.get(id)!;
+
+describe('the number between a pair of restrooms', () => {
+  it('shows from zoom 18, when the two markers leave room for it', () => {
+    expect([16, 17, 18, 19].map(pairLabelVisible)).toEqual([false, false, true, true]);
+  });
+  it('carries the pair number, in blue for men and purple for women', () => {
+    expect(pairLabelSpec(P(251)).html).toContain('>251<');
+    expect(pairLabelSpec(P(251)).html).toContain('--cat-men');
+    expect(pairLabelSpec(P(253)).html).toContain('>253<');
+    expect(pairLabelSpec(P(253)).html).toContain('--cat-women');
+  });
+  it('leaves the markers of the pair as they were (a dot or icon each, no number on them)', () => {
+    for (const id of [251, 252, 253, 254]) expect(markerSpec(P(id), 'l', 'open', false).html).not.toMatch(/>25[1-4]</);
+  });
+});
 
 describe('markers', () => {
   it('zoom tiers', () => {
