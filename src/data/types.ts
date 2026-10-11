@@ -77,7 +77,7 @@ export interface Poi {
 /** One text slide of a must-visit site. `ar` and `en` are required; other languages are added after the texts are approved. */
 export type VisitText = { ar: string; en: string } & Partial<Record<LangCode, string>>;
 
-/** A photo of a site: file under public/visits/, with the credit shown under it. */
+/** A photo of a site: file under public/visits/. `by` and `license` are the owner's record of where it came from (not shown in the app). */
 export interface VisitImage {
   src: string;
   alt: Partial<Record<LangCode, string>> & { ar: string; en: string };

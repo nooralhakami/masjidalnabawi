@@ -1,148 +1,933 @@
 {
-  "_note": "Must-visit sites of Madinah, most important first (owner-approved order, 2026-10-11). `id` is a place in data/pois.json. Each text slide has Arabic and English; the other 24 languages are added after the owner approves the texts (until then the app shows English). Only facts that two sources agree on; every site lists them in `sources`. `images` is empty until the owner supplies photos with their credit and licence (docs/VISIT-PHOTOS.md). Add Jabal Uhud, Dhul Hulayfah, Dar Al-Madinah Museum and the King Fahd Quran Complex once their positions are confirmed (docs/places/CANDIDATES-2026-10-11.md).",
+  "_note": "Must-visit sites of Madinah, most important first (owner-approved order, 2026-10-11). `id` is a place in data/pois.json. Each text slide has Arabic and English; the other 24 languages were translated 2026-10-11 and still need a native speaker's review. Only facts that two sources agree on; every site lists them in `sources`. `images` is empty until the owner supplies photos with their credit and licence (docs/VISIT-PHOTOS.md). Add Jabal Uhud, Dhul Hulayfah, Dar Al-Madinah Museum and the King Fahd Quran Complex once their positions are confirmed (docs/places/CANDIDATES-2026-10-11.md).",
   "sites": [
     {
       "id": 542,
       "slides": [
-        { "ar": "أول مسجد أُسِّس في الإسلام. بناه النبي ﷺ عند وصوله إلى المدينة مهاجراً، وشارك أصحابه في بنائه.", "en": "The first mosque founded in Islam. The Prophet ﷺ built it on reaching Madinah as a migrant, and took part in its building with his Companions." },
-        { "ar": "كان النبي ﷺ يأتي مسجد قباء كل سبت، ماشياً أو راكباً، ويصلي فيه ركعتين.", "en": "Every Saturday the Prophet ﷺ would come to Quba Mosque, on foot or riding, and pray two rak'ahs in it." },
-        { "ar": "ورد في الحديث: «الصلاة في مسجد قباء كعمرة» (رواه الترمذي وابن ماجه).", "en": "In the hadith: “Prayer in Quba Mosque is like an Umrah” (narrated by al-Tirmidhi and Ibn Majah)." }
+        {
+          "ar": "أول مسجد أُسِّس في الإسلام. بناه النبي ﷺ عند وصوله إلى المدينة مهاجراً، وشارك أصحابه في بنائه.",
+          "en": "The first mosque founded in Islam. The Prophet ﷺ built it on reaching Madinah as a migrant, and took part in its building with his Companions.",
+          "tr": "İslam'da kurulan ilk mescit. Peygamber ﷺ, hicretle Medine'ye varınca onu inşa etti ve inşasına ashabıyla birlikte katıldı.",
+          "ur": "اسلام میں قائم ہونے والی پہلی مسجد۔ نبی ﷺ نے ہجرت کر کے مدینہ پہنچتے ہی اسے تعمیر کیا اور صحابہ کے ساتھ اس کی تعمیر میں شریک ہوئے۔",
+          "id": "Masjid pertama yang didirikan dalam Islam. Nabi ﷺ membangunnya ketika tiba di Madinah sebagai muhajir, dan ikut membangunnya bersama para sahabat.",
+          "uz": "Islomda barpo etilgan birinchi masjid. Payg‘ambar ﷺ hijrat qilib Madinaga yetib kelganida uni qurdi va sahobalari bilan birga qurilishida ishtirok etdi.",
+          "bn": "ইসলামে প্রতিষ্ঠিত প্রথম মসজিদ। নবী ﷺ হিজরত করে মদিনায় পৌঁছে এটি নির্মাণ করেন এবং সাহাবীদের সঙ্গে নির্মাণে অংশ নেন।",
+          "fr": "La première mosquée fondée en Islam. Le Prophète ﷺ la bâtit en arrivant à Médine après l'Hégire, et participa à sa construction avec ses Compagnons.",
+          "fa": "نخستین مسجدی که در اسلام بنا شد. پیامبر ﷺ هنگام رسیدن به مدینه پس از هجرت آن را ساخت و همراه یارانش در ساخت آن شرکت کرد.",
+          "ru": "Первая мечеть, основанная в исламе. Пророк ﷺ построил её, прибыв в Медину после переселения, и участвовал в строительстве вместе со своими сподвижниками.",
+          "ms": "Masjid pertama yang diasaskan dalam Islam. Nabi ﷺ membinanya ketika tiba di Madinah selepas berhijrah, dan turut serta membinanya bersama para sahabat.",
+          "ha": "Masallaci na farko da aka kafa a Musulunci. Annabi ﷺ ya gina shi lokacin da ya isa Madina a matsayin mai hijira, kuma ya shiga ginin tare da Sahabbansa.",
+          "ml": "ഇസ്ലാമിൽ സ്ഥാപിക്കപ്പെട്ട ആദ്യത്തെ പള്ളി. ഹിജ്റ ചെയ്ത് മദീനയിലെത്തിയപ്പോൾ നബി ﷺ അത് നിർമ്മിച്ചു; സ്വഹാബികളോടൊപ്പം നിർമ്മാണത്തിൽ പങ്കെടുത്തു.",
+          "sw": "Msikiti wa kwanza ulioanzishwa katika Uislamu. Mtume ﷺ aliujenga alipofika Madina kama muhajir, na akashiriki katika ujenzi wake pamoja na Maswahaba.",
+          "ps": "په اسلام کې جوړ شوی لومړنی جومات. پیغمبر ﷺ هغه وخت جوړ کړ کله چې د هجرت وروسته مدینې ته ورسېد، او د اصحابو سره یې په جوړولو کې برخه واخیسته.",
+          "so": "Masjidka ugu horreeyay ee lagu aasaasay Islaamka. Nabiga ﷺ ayaa dhisay markii uu Madiina yimid isagoo muhaajir ah, wuxuuna la qayb galay dhismihiisa asxaabtiisa.",
+          "ta": "இஸ்லாத்தில் நிறுவப்பட்ட முதல் பள்ளிவாசல். நபி ﷺ ஹிஜ்ரத் செய்து மதீனாவை அடைந்தபோது இதைக் கட்டினார்கள்; தம் தோழர்களுடன் இதன் கட்டுமானத்தில் பங்கேற்றார்கள்.",
+          "hi": "इस्लाम में स्थापित पहली मस्जिद। नबी ﷺ ने हिजरत करके मदीना पहुँचने पर इसे बनाया और सहाबा के साथ इसके निर्माण में हिस्सा लिया।",
+          "bs": "Prva džamija osnovana u islamu. Poslanik ﷺ ju je sagradio kad je stigao u Medinu kao muhadžir i učestvovao u gradnji zajedno sa ashabima.",
+          "de": "Die erste im Islam gegründete Moschee. Der Prophet ﷺ baute sie, als er als Auswanderer in Medina ankam, und beteiligte sich mit seinen Gefährten am Bau.",
+          "zh": "伊斯兰教中建立的第一座清真寺。先知 ﷺ 迁徙抵达麦地那时建造了它，并与众圣门弟子一同参与修建。",
+          "am": "በእስልምና የተመሰረተ የመጀመሪያው መስጊድ። ነቢዩ ﷺ ሂጅራ አድርገው መዲና ሲደርሱ ሠሩት፤ ከሶሓቦቻቸው ጋር በግንባታው ተሳትፈዋል።",
+          "ku": "Yekem mizgefta ku di Îslamê de hat avakirin. Pêxember ﷺ gava piştî koçê gihîşt Medîneyê ew çêkir û bi hevalên xwe re beşdarî avakirinê bû.",
+          "az": "İslamda qurulan ilk məscid. Peyğəmbər ﷺ hicrət edib Mədinəyə çatanda onu tikdi və səhabələri ilə birlikdə tikintidə iştirak etdi.",
+          "th": "มัสยิดแห่งแรกที่ก่อตั้งในอิสลาม ท่านนบี ﷺ สร้างขึ้นเมื่อเดินทางอพยพถึงมะดีนะฮ์ และร่วมสร้างพร้อมเหล่าเศาะฮาบะฮ์",
+          "es": "La primera mezquita fundada en el Islam. El Profeta ﷺ la construyó al llegar a Medina como emigrante, y participó en su edificación junto a sus Compañeros."
+        },
+        {
+          "ar": "كان النبي ﷺ يأتي مسجد قباء كل سبت، ماشياً أو راكباً، ويصلي فيه ركعتين.",
+          "en": "Every Saturday the Prophet ﷺ would come to Quba Mosque, on foot or riding, and pray two rak'ahs in it.",
+          "tr": "Peygamber ﷺ her cumartesi, yürüyerek ya da binekle Kuba Mescidi'ne gelir ve orada iki rekât namaz kılardı.",
+          "ur": "نبی ﷺ ہر ہفتے مسجد قباء تشریف لاتے، پیدل یا سوار ہو کر، اور اس میں دو رکعت نماز پڑھتے۔",
+          "id": "Setiap hari Sabtu Nabi ﷺ datang ke Masjid Quba, berjalan kaki atau berkendara, dan shalat dua rakaat di dalamnya.",
+          "uz": "Payg‘ambar ﷺ har shanba kuni Quba masjidiga piyoda yoki ulovda kelib, u yerda ikki rakat namoz o‘qirdilar.",
+          "bn": "নবী ﷺ প্রতি শনিবার হেঁটে বা বাহনে করে কুবা মসজিদে আসতেন এবং সেখানে দুই রাকাত নামাজ পড়তেন।",
+          "fr": "Chaque samedi, le Prophète ﷺ venait à la mosquée de Qouba, à pied ou à dos de monture, et y accomplissait deux rakats.",
+          "fa": "پیامبر ﷺ هر شنبه پیاده یا سواره به مسجد قبا می‌آمد و در آن دو رکعت نماز می‌گزارد.",
+          "ru": "Каждую субботу Пророк ﷺ приходил в мечеть Куба, пешком или верхом, и совершал в ней два раката молитвы.",
+          "ms": "Setiap hari Sabtu Nabi ﷺ datang ke Masjid Quba, berjalan kaki atau menunggang, dan bersolat dua rakaat di dalamnya.",
+          "ha": "Kowace Asabar Annabi ﷺ yakan zo Masallacin Kuba, a ƙafa ko a kan abin hawa, ya yi raka'a biyu a cikinsa.",
+          "ml": "എല്ലാ ശനിയാഴ്ചയും നബി ﷺ നടന്നോ വാഹനത്തിലോ ഖുബാ പള്ളിയിൽ വന്ന് അവിടെ രണ്ട് റക്അത്ത് നമസ്കരിക്കുമായിരുന്നു.",
+          "sw": "Kila Jumamosi Mtume ﷺ alikuja Msikiti wa Quba, kwa miguu au akiwa amepanda, na akaswali rakaa mbili ndani yake.",
+          "ps": "هر شنبه پیغمبر ﷺ په پښو یا په سورلۍ د قبا جومات ته راتلو او په هغه کې به یې دوه رکعته لمونځ کاوه.",
+          "so": "Sabti kasta Nabiga ﷺ wuxuu imaan jiray Masjidka Qubaa, isagoo lug ah ama fuushan, wuxuuna ku tukan jiray laba rakcadood.",
+          "ta": "ஒவ்வொரு சனிக்கிழமையும் நபி ﷺ நடந்தோ வாகனத்திலோ குபா பள்ளிவாசலுக்கு வந்து அங்கு இரண்டு ரக்அத் தொழுவார்கள்.",
+          "hi": "हर शनिवार नबी ﷺ पैदल या सवारी पर मस्जिद क़ुबा आते और उसमें दो रकअत नमाज़ पढ़ते थे।",
+          "bs": "Svake subote Poslanik ﷺ bi dolazio u džamiju Kuba, pješice ili jašući, i klanjao u njoj dva rekata.",
+          "de": "Jeden Samstag kam der Prophet ﷺ zur Quba-Moschee, zu Fuß oder reitend, und betete darin zwei Rak'a.",
+          "zh": "每个星期六，先知 ﷺ 都会步行或骑乘前往古巴清真寺，并在其中礼两拜。",
+          "am": "በየቅዳሜው ነቢዩ ﷺ በእግር ወይም በመጓጓዣ ወደ ቁባ መስጊድ ይመጡ ነበር፤ በውስጡም ሁለት ረከዓ ይሰግዱ ነበር።",
+          "ku": "Her şemiyê Pêxember ﷺ bi lingan an bi siwarî dihat mizgefta Qubayê û li wir du reket nimêj dikir.",
+          "az": "Hər şənbə Peyğəmbər ﷺ piyada və ya minik üstündə Quba məscidinə gəlir və orada iki rükət namaz qılırdı.",
+          "th": "ทุกวันเสาร์ท่านนบี ﷺ จะมายังมัสยิดกุบาอ์ ทั้งเดินเท้าหรือขี่พาหนะ และละหมาดสองร็อกอะฮ์ในมัสยิดนั้น",
+          "es": "Cada sábado el Profeta ﷺ venía a la mezquita de Quba, a pie o montado, y hacía en ella dos rak'as."
+        },
+        {
+          "ar": "ورد في الحديث: «الصلاة في مسجد قباء كعمرة» (رواه الترمذي وابن ماجه).",
+          "en": "In the hadith: “Prayer in Quba Mosque is like an Umrah” (narrated by al-Tirmidhi and Ibn Majah).",
+          "tr": "Hadiste şöyle buyrulur: “Kuba Mescidi'nde namaz kılmak umre gibidir.” (Tirmizî ve İbn Mâce rivayeti)",
+          "ur": "حدیث میں ہے: “مسجد قباء میں نماز عمرے کی طرح ہے۔” (ترمذی اور ابن ماجہ نے روایت کی)",
+          "id": "Dalam hadis: “Shalat di Masjid Quba itu seperti umrah” (diriwayatkan oleh at-Tirmidzi dan Ibnu Majah).",
+          "uz": "Hadisda: “Quba masjidida namoz o‘qish umra kabidir” (Termiziy va Ibn Moja rivoyati).",
+          "bn": "হাদিসে এসেছে: “কুবা মসজিদে নামাজ পড়া উমরার মতো।” (তিরমিজি ও ইবনে মাজা বর্ণিত)",
+          "fr": "Dans le hadith : « La prière dans la mosquée de Qouba équivaut à une Omra » (rapporté par at-Tirmidhi et Ibn Majah).",
+          "fa": "در حدیث آمده است: «نماز در مسجد قبا مانند عمره است.» (روایت ترمذی و ابن ماجه)",
+          "ru": "В хадисе сказано: «Молитва в мечети Куба подобна умре» (передали ат-Тирмизи и Ибн Маджа).",
+          "ms": "Dalam hadis: “Solat di Masjid Quba adalah seperti umrah” (riwayat at-Tirmizi dan Ibn Majah).",
+          "ha": "A cikin hadisi: “Sallah a Masallacin Kuba kamar Umra take” (Tirmizi da Ibn Majah ne suka ruwaito).",
+          "ml": "ഹദീസിൽ: “ഖുബാ പള്ളിയിലെ നമസ്കാരം ഉംറ പോലെയാണ്.” (തിർമിദിയും ഇബ്നു മാജയും റിപ്പോർട്ട് ചെയ്തത്)",
+          "sw": "Katika hadithi: “Swala katika Msikiti wa Quba ni kama Umra” (imepokelewa na at-Tirmidhi na Ibn Majah).",
+          "ps": "په حدیث کې راغلي: «د قبا په جومات کې لمونځ د عمرې په څېر دی.» (ترمذي او ابن ماجه روایت کړی)",
+          "so": "Xadiis ayaa leh: “Salaadda Masjidka Qubaa waa sida Cumro” (waxaa wariyey at-Tirmidhi iyo Ibn Maajah).",
+          "ta": "ஹதீஸில்: “குபா பள்ளிவாசலில் தொழுவது உம்ரா போன்றது.” (திர்மிதீ, இப்னு மாஜா அறிவித்தது)",
+          "hi": "हदीस में है: “मस्जिद क़ुबा में नमाज़ उमरा के समान है।” (तिर्मिज़ी और इब्ने माजा द्वारा वर्णित)",
+          "bs": "U hadisu stoji: “Namaz u džamiji Kuba je kao umra” (bilježe et-Tirmizi i Ibn Madže).",
+          "de": "Im Hadith heißt es: „Das Gebet in der Quba-Moschee ist wie eine Umra“ (überliefert von at-Tirmidhi und Ibn Madscha).",
+          "zh": "圣训中说：“在古巴清真寺礼拜，如同副朝。”（提尔密济与伊本·马哲传述）",
+          "am": "በሐዲስ፦ “በቁባ መስጊድ መስገድ እንደ ዑምራ ነው።” (ቲርሚዚና ኢብን ማጃ ዘግበዋል)",
+          "ku": "Di hedîsê de: “Nimêj di mizgefta Qubayê de mîna umreyê ye” (Tirmîzî û Îbn Mace rêwayet kirine).",
+          "az": "Hədisdə deyilir: “Quba məscidində namaz qılmaq ümrə kimidir.” (Tirmizi və İbn Macə rəvayət edib)",
+          "th": "ในหะดีษว่า “การละหมาดในมัสยิดกุบาอ์เสมือนการทำอุมเราะฮ์” (บันทึกโดยอัต-ติรมิซีย์และอิบน์ มาญะฮ์)",
+          "es": "En el hadiz: «La oración en la mezquita de Quba es como una Umra» (transmitido por at-Tirmidhi e Ibn Maya)."
+        }
       ],
       "sources": [
-        { "t": "صحيفة اليوم: أول مسجد بني في الإسلام", "u": "https://www.alyaum.com/articles/6647338/الرأي/كلمة-ومقال/أول-مسجد-بني-في-الإسلام" },
-        { "t": "صحيفة المدينة: ما أول مسجد أسس في الإسلام", "u": "https://www.al-madina.com/article/989221/أخيرة/ما-أول-مسجد-أسس-في-الإسلام" }
+        {
+          "t": "صحيفة اليوم: أول مسجد بني في الإسلام",
+          "u": "https://www.alyaum.com/articles/6647338/الرأي/كلمة-ومقال/أول-مسجد-بني-في-الإسلام"
+        },
+        {
+          "t": "صحيفة المدينة: ما أول مسجد أسس في الإسلام",
+          "u": "https://www.al-madina.com/article/989221/أخيرة/ما-أول-مسجد-أسس-في-الإسلام"
+        }
       ],
       "images": [
-        { "src": "visits/542-1.webp", "alt": { "ar": "مسجد قباء ليلاً بمآذنه وقبابه المضيئة بين النخيل", "en": "Quba Mosque at night, its minarets and domes lit among palm trees" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
-        { "src": "visits/542-2.webp", "alt": { "ar": "مسجد قباء عند الغروب بمآذنه الأربع وقبابه البيضاء", "en": "Quba Mosque at sunset, with its four white minarets and domes" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
-        { "src": "visits/542-3.webp", "alt": { "ar": "ممشى المصلين نحو مسجد قباء وقت الغروب", "en": "Worshippers walking along the avenue towards Quba Mosque at dusk" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+        {
+          "src": "visits/542-1.webp",
+          "alt": {
+            "ar": "مسجد قباء ليلاً بمآذنه وقبابه المضيئة بين النخيل",
+            "en": "Quba Mosque at night, its minarets and domes lit among palm trees"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        },
+        {
+          "src": "visits/542-2.webp",
+          "alt": {
+            "ar": "مسجد قباء عند الغروب بمآذنه الأربع وقبابه البيضاء",
+            "en": "Quba Mosque at sunset, with its four white minarets and domes"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        },
+        {
+          "src": "visits/542-3.webp",
+          "alt": {
+            "ar": "ممشى المصلين نحو مسجد قباء وقت الغروب",
+            "en": "Worshippers walking along the avenue towards Quba Mosque at dusk"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        }
       ]
     },
     {
       "id": 531,
       "slides": [
-        { "ar": "المقبرة الرئيسة لأهل المدينة منذ عهد النبي ﷺ. يسمّى «بقيع الغرقد» لشجر الغرقد الذي كان ينبت فيه.", "en": "The main cemetery of Madinah since the Prophet's ﷺ time. It is called Baqi' al-Gharqad after the gharqad bushes that once grew there." },
-        { "ar": "فيه قبور عدد كبير من الصحابة وأهل بيت النبي ﷺ، ومنهم زوجاته (عدا خديجة وميمونة رضي الله عنهن) وابنه إبراهيم وعمه العباس والخليفة عثمان بن عفان رضي الله عنهم.", "en": "It holds the graves of many Companions and members of the Prophet's ﷺ family, among them his wives (except Khadijah and Maymunah, may God be pleased with them), his son Ibrahim, his uncle al-Abbas and the caliph Uthman ibn Affan." }
+        {
+          "ar": "المقبرة الرئيسة لأهل المدينة منذ عهد النبي ﷺ. يسمّى «بقيع الغرقد» لشجر الغرقد الذي كان ينبت فيه.",
+          "en": "The main cemetery of Madinah since the Prophet's ﷺ time. It is called Baqi' al-Gharqad after the gharqad bushes that once grew there.",
+          "tr": "Peygamber'in ﷺ döneminden beri Medine'nin ana mezarlığıdır. Eskiden burada biten garkad çalılarından dolayı “Bakî‘ü'l-Garkad” adıyla anılır.",
+          "ur": "نبی ﷺ کے زمانے سے مدینہ کا مرکزی قبرستان۔ اسے “بقیع الغرقد” اس لیے کہتے ہیں کہ یہاں غرقد کی جھاڑیاں اگتی تھیں۔",
+          "id": "Pemakaman utama Madinah sejak zaman Nabi ﷺ. Dinamai Baqi' al-Gharqad karena semak gharqad yang dahulu tumbuh di sana.",
+          "uz": "Payg‘ambar ﷺ davridan beri Madinaning asosiy qabristoni. Bu yerda o‘sgan g‘arqad butalari sababli “Baqi’ al-G‘arqad” deb ataladi.",
+          "bn": "নবী ﷺ-এর যুগ থেকে মদিনার প্রধান কবরস্থান। এখানে গারকাদ গুল্ম জন্মাত বলে একে “জান্নাতুল বাকি” বা “বাকি আল-গারকাদ” বলা হয়।",
+          "fr": "Le principal cimetière de Médine depuis l'époque du Prophète ﷺ. On l'appelle Baqi' al-Gharqad d'après les buissons de gharqad qui y poussaient.",
+          "fa": "از زمان پیامبر ﷺ قبرستان اصلی مدینه بوده است. به سبب بوته‌های غرقد که در آن می‌رویید «بقیع الغرقد» نامیده می‌شود.",
+          "ru": "Главное кладбище Медины со времён Пророка ﷺ. Называется Бакиъ аль-Гаркад по кустам гаркада, которые здесь росли.",
+          "ms": "Tanah perkuburan utama Madinah sejak zaman Nabi ﷺ. Dinamakan Baqi' al-Gharqad sempena pokok gharqad yang dahulu tumbuh di situ.",
+          "ha": "Babbar makabartar Madina tun zamanin Annabi ﷺ. Ana kiranta Baƙi' al-Gharkad saboda bishiyoyin gharkad da suke girma a wurin.",
+          "ml": "നബി ﷺ യുടെ കാലം മുതൽ മദീനയിലെ പ്രധാന ഖബർസ്ഥാൻ. ഇവിടെ വളർന്നിരുന്ന ഗർഖദ് കുറ്റിച്ചെടികളിൽ നിന്നാണ് “ബഖീഉൽ ഗർഖദ്” എന്ന പേര്.",
+          "sw": "Makaburi makuu ya Madina tangu zama za Mtume ﷺ. Yanaitwa Baqi' al-Gharqad kwa sababu ya vichaka vya gharqad vilivyokuwa vikiota hapo.",
+          "ps": "د پیغمبر ﷺ له وخته د مدینې اصلي هديره. د «بقیع الغرقد» نوم یې د غرقد بوټو له امله دی چې دلته شنه کېدل.",
+          "so": "Xabaalaha ugu weyn ee Madiina tan iyo xilligii Nabiga ﷺ. Waxaa loo yaqaan Baqii' al-Gharqad sababtoo ah geedaha gharqad ee halkaas ka soo baxi jiray.",
+          "ta": "நபி ﷺ அவர்களின் காலம் முதல் மதீனாவின் முதன்மை அடக்கத்தலம். இங்கு வளர்ந்த கர்கத் புதர்களால் “பகீஉல் கர்கத்” என்று அழைக்கப்படுகிறது.",
+          "hi": "नबी ﷺ के समय से मदीना का मुख्य क़ब्रिस्तान। यहाँ उगने वाली ग़रक़द की झाड़ियों के कारण इसे “बक़ीउल ग़रक़द” कहा जाता है।",
+          "bs": "Glavno groblje Medine od vremena Poslanika ﷺ. Zove se Bekija’ el-Garkad po grmlju garkad koje je ovdje raslo.",
+          "de": "Der Hauptfriedhof Medinas seit der Zeit des Propheten ﷺ. Er heißt Baqi' al-Gharqad nach den Gharqad-Sträuchern, die hier wuchsen.",
+          "zh": "自先知 ﷺ 时代起就是麦地那的主要墓地。因这里曾生长盖勒盖德灌木而被称为“白几尔·盖勒盖德”。",
+          "am": "ከነቢዩ ﷺ ዘመን ጀምሮ የመዲና ዋና መቃብር ቦታ። እዚህ በሚበቅለው የገርቀድ ቁጥቋጦ ምክንያት “በቂዑል ገርቀድ” ይባላል።",
+          "ku": "Ji dema Pêxember ﷺ ve goristana sereke ya Medîneyê. Jê re Baqî' el-Xerqed tê gotin ji ber dara xerqedê ku li wir şîn dibû.",
+          "az": "Peyğəmbər ﷺ dövründən bəri Mədinənin əsas qəbiristanlığı. Burada bitən qərqəd kolluqlarına görə “Bəqiül-Qərqəd” adlanır.",
+          "th": "สุสานหลักของมะดีนะฮ์ตั้งแต่สมัยท่านนบี ﷺ เรียกว่า บะกีอ์ อัล-เฆาะรกอด ตามพุ่มเฆาะรกอดที่เคยขึ้นอยู่ที่นี่",
+          "es": "El principal cementerio de Medina desde la época del Profeta ﷺ. Se llama Baqi' al-Gharqad por los arbustos de gharqad que crecían allí."
+        },
+        {
+          "ar": "فيه قبور عدد كبير من الصحابة وأهل بيت النبي ﷺ، ومنهم زوجاته (عدا خديجة وميمونة رضي الله عنهن) وابنه إبراهيم وعمه العباس والخليفة عثمان بن عفان رضي الله عنهم.",
+          "en": "It holds the graves of many Companions and members of the Prophet's ﷺ family, among them his wives (except Khadijah and Maymunah, may God be pleased with them), his son Ibrahim, his uncle al-Abbas and the caliph Uthman ibn Affan.",
+          "tr": "Burada çok sayıda sahabenin ve Peygamber'in ﷺ ailesinden kişilerin kabri vardır: hanımları (Hatice ve Meymûne hariç, Allah onlardan razı olsun), oğlu İbrahim, amcası Abbas ve halife Osman b. Affân.",
+          "ur": "یہاں بہت سے صحابہ اور نبی ﷺ کے اہلِ بیت کی قبریں ہیں، جن میں آپ ﷺ کی ازواج (سوائے خدیجہ اور میمونہ کے، اللہ ان سے راضی ہو)، آپ کے صاحبزادے ابراہیم، چچا عباس اور خلیفہ عثمان بن عفان شامل ہیں۔",
+          "id": "Di sini terdapat makam banyak sahabat dan keluarga Nabi ﷺ, di antaranya istri-istri beliau (kecuali Khadijah dan Maimunah, radhiyallahu 'anhunna), putra beliau Ibrahim, paman beliau al-Abbas, dan khalifah Utsman bin Affan.",
+          "uz": "Bu yerda ko‘plab sahobalar va Payg‘ambar ﷺ oilasidan kishilarning qabrlari bor: ayollari (Xadija va Maymunadan tashqari, Alloh ulardan rozi bo‘lsin), o‘g‘li Ibrohim, amakisi Abbos va xalifa Usmon ibn Affon.",
+          "bn": "এখানে বহু সাহাবী ও নবী ﷺ-এর পরিবারের সদস্যদের কবর রয়েছে, যাদের মধ্যে তাঁর স্ত্রীগণ (খাদিজা ও মায়মুনা ব্যতীত, আল্লাহ তাঁদের প্রতি সন্তুষ্ট হোন), পুত্র ইবরাহিম, চাচা আব্বাস এবং খলিফা উসমান ইবনে আফফান।",
+          "fr": "Il abrite les tombes de nombreux Compagnons et de membres de la famille du Prophète ﷺ, dont ses épouses (sauf Khadija et Maymouna, qu'Allah les agrée), son fils Ibrahim, son oncle al-Abbas et le calife Othmane ibn Affan.",
+          "fa": "قبر شمار بسیاری از صحابه و اهل‌بیت پیامبر ﷺ در آن است، از جمله همسران ایشان (به جز خدیجه و میمونه، خدا از آنان خشنود باشد)، پسرش ابراهیم، عمویش عباس و خلیفه عثمان بن عفان.",
+          "ru": "Здесь покоятся многие сподвижники и члены семьи Пророка ﷺ, среди них его жёны (кроме Хадиджи и Маймуны, да будет доволен ими Аллах), его сын Ибрахим, его дядя аль-Аббас и халиф Усман ибн Аффан.",
+          "ms": "Di sini terdapat makam ramai sahabat dan ahli keluarga Nabi ﷺ, antaranya isteri-isteri baginda (kecuali Khadijah dan Maimunah, radhiyallahu 'anhunna), putera baginda Ibrahim, bapa saudara baginda al-Abbas dan khalifah Uthman bin Affan.",
+          "ha": "Tana ɗauke da kaburburan Sahabbai da yawa da 'yan gidan Annabi ﷺ, ciki har da matansa (sai dai Khadija da Maimuna, Allah ya yarda da su), ɗansa Ibrahim, kawunsa al-Abbas da halifa Usman ɗan Affan.",
+          "ml": "നിരവധി സ്വഹാബികളുടെയും നബി ﷺ യുടെ കുടുംബാംഗങ്ങളുടെയും ഖബറുകൾ ഇവിടെയുണ്ട്: അവിടുത്തെ പത്നിമാർ (ഖദീജ, മൈമൂന എന്നിവർ ഒഴികെ; അല്ലാഹു അവരിൽ തൃപ്തിപ്പെടട്ടെ), പുത്രൻ ഇബ്റാഹീം, പിതൃവ്യൻ അബ്ബാസ്, ഖലീഫ ഉസ്മാൻ ഇബ്നു അഫ്ഫാൻ.",
+          "sw": "Yana makaburi ya Maswahaba wengi na wanafamilia wa Mtume ﷺ, kati yao wake zake (isipokuwa Khadija na Maymuna, Mwenyezi Mungu awaridhie), mwanawe Ibrahim, ami yake al-Abbas na khalifa Uthman bin Affan.",
+          "ps": "دلته د ډېرو اصحابو او د پیغمبر ﷺ د کورنۍ د غړو قبرونه دي، په دې کې د هغه ﷺ ښځې (پرته له خدیجې او میمونې، الله دې له دوی راضي وي)، زوی یې ابراهیم، تره یې عباس او خلیفه عثمان بن عفان.",
+          "so": "Waxay ka kooban tahay qabriyada asxaab badan iyo xubno ka mid ah qoyska Nabiga ﷺ, oo ay ka mid yihiin xaasaskiisa (marka laga reebo Khadiija iyo Maymuuna, Alle ha ka raalli noqdo), wiilkiisa Ibraahim, adeerkiis al-Cabbaas iyo khaliifkii Cusmaan ibn Caffaan.",
+          "ta": "பல தோழர்களின், நபி ﷺ அவர்களின் குடும்பத்தினரின் கப்றுகள் இங்கு உள்ளன; அவர்களின் மனைவியர் (கதீஜா, மைமூனா தவிர; அல்லாஹ் அவர்களைப் பொருந்திக்கொள்வானாக), அவர்களின் மகன் இப்ராஹீம், பெரிய தந்தை அப்பாஸ், கலீஃபா உஸ்மான் இப்னு அஃப்பான் ஆகியோர் அவர்களில் அடங்குவர்.",
+          "hi": "यहाँ बहुत-से सहाबा और नबी ﷺ के परिवारजनों की क़ब्रें हैं, जिनमें आपकी पत्नियाँ (ख़दीजा और मैमूना को छोड़कर, अल्लाह उनसे राज़ी हो), पुत्र इब्राहीम, चचा अब्बास और ख़लीफ़ा उस्मान बिन अफ़्फ़ान शामिल हैं।",
+          "bs": "Ovdje su kabrovi mnogih ashaba i članova porodice Poslanika ﷺ, među njima njegovih supruga (osim Hatidže i Mejmune, Allah bio zadovoljan njima), sina Ibrahima, amidže Abbasa i halife Osmana ibn Affana.",
+          "de": "Hier liegen die Gräber vieler Gefährten und Familienmitglieder des Propheten ﷺ, darunter seine Frauen (außer Khadidscha und Maimuna, Allah habe Wohlgefallen an ihnen), sein Sohn Ibrahim, sein Onkel al-Abbas und der Kalif Uthman ibn Affan.",
+          "zh": "这里有许多圣门弟子和先知 ﷺ 家人的坟墓，其中有他的妻子们（除赫蒂彻和麦穆娜外，愿真主喜悦她们）、儿子易卜拉欣、叔父阿拔斯和哈里发奥斯曼·本·阿凡。",
+          "am": "የብዙ ሶሓቦችና የነቢዩ ﷺ ቤተሰቦች መቃብር እዚህ አለ፤ ከእነዚህም ሚስቶቻቸው (ከኸዲጃና ከመይሙና በስተቀር፣ አላህ ይውደዳቸው)፣ ልጃቸው ኢብራሂም፣ አጎታቸው አልዓባስ እና ኸሊፋ ዑስማን ኢብን ዐፋን ይገኙበታል።",
+          "ku": "Gorên gelek hevalan û endamên malbata Pêxember ﷺ li vir in, di nav wan de jinên wî (ji bilî Xedîce û Meymûne, Xwedê ji wan razî be), kurê wî Îbrahîm, apê wî Ebbas û xelîfe Osman bin Effan.",
+          "az": "Burada çoxlu səhabənin və Peyğəmbər ﷺ ailəsindən olanların qəbirləri var; onların arasında zövcələri (Xədicə və Meymunə istisna olmaqla, Allah onlardan razı olsun), oğlu İbrahim, əmisi Abbas və xəlifə Osman ibn Əffan.",
+          "th": "ที่นี่มีหลุมศพของเศาะฮาบะฮ์จำนวนมากและสมาชิกครอบครัวของท่านนบี ﷺ ซึ่งรวมถึงภริยาของท่าน (ยกเว้นเคาะดีญะฮ์และมัยมูนะฮ์ ขอพระองค์ทรงพอพระทัยพวกนาง) บุตรชายอิบรอฮีม ลุงอัล-อับบาส และเคาะลีฟะฮ์อุษมาน อิบน์ อัฟฟาน",
+          "es": "Alberga las tumbas de muchos Compañeros y de miembros de la familia del Profeta ﷺ, entre ellos sus esposas (excepto Jadiya y Maymuna, Allah esté complacido con ellas), su hijo Ibrahim, su tío al-Abbas y el califa Uzmán ibn Affan."
+        }
       ],
       "sources": [
-        { "t": "سعودي بيديا: Al-Baqi Cemetery", "u": "https://saudipedia.com/en/al-baqi-cemetery" },
-        { "t": "زوروا المدينة: Baqi' Al-Gharqad", "u": "https://visitmadinahsa.com/sa-en/destinations/Baqi'-Al-Gharqad-" },
-        { "t": "ويكيبيديا: List of burials at al-Baqi Cemetery", "u": "https://en.wikipedia.org/wiki/List_of_burials_at_al-Baqi_Cemetery" }
+        {
+          "t": "سعودي بيديا: Al-Baqi Cemetery",
+          "u": "https://saudipedia.com/en/al-baqi-cemetery"
+        },
+        {
+          "t": "زوروا المدينة: Baqi' Al-Gharqad",
+          "u": "https://visitmadinahsa.com/sa-en/destinations/Baqi'-Al-Gharqad-"
+        },
+        {
+          "t": "ويكيبيديا: List of burials at al-Baqi Cemetery",
+          "u": "https://en.wikipedia.org/wiki/List_of_burials_at_al-Baqi_Cemetery"
+        }
       ],
       "images": [
-        { "src": "visits/531-1.webp", "alt": { "ar": "مقبرة البقيع تحت سماء غائمة، وخلفها مآذن المسجد النبوي والقبة الخضراء", "en": "Al-Baqi' cemetery under a cloudy sky, with the minarets of the Prophet's Mosque and the Green Dome behind" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
-        { "src": "visits/531-2.webp", "alt": { "ar": "قبور البقيع ومن ورائها القبة الخضراء ومآذن المسجد النبوي", "en": "Graves of Al-Baqi' with the Green Dome and the minarets of the Prophet's Mosque beyond" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+        {
+          "src": "visits/531-1.webp",
+          "alt": {
+            "ar": "مقبرة البقيع تحت سماء غائمة، وخلفها مآذن المسجد النبوي والقبة الخضراء",
+            "en": "Al-Baqi' cemetery under a cloudy sky, with the minarets of the Prophet's Mosque and the Green Dome behind"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        },
+        {
+          "src": "visits/531-2.webp",
+          "alt": {
+            "ar": "قبور البقيع ومن ورائها القبة الخضراء ومآذن المسجد النبوي",
+            "en": "Graves of Al-Baqi' with the Green Dome and the minarets of the Prophet's Mosque beyond"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        }
       ]
     },
     {
       "id": 544,
       "slides": [
-        { "ar": "فيها قبور شهداء غزوة أحد، التي وقعت في السنة الثالثة للهجرة.", "en": "It holds the graves of the martyrs of the Battle of Uhud, fought in the 3rd year after the Hijrah." },
-        { "ar": "أشهرهم عمّ النبي ﷺ حمزة بن عبدالمطلب رضي الله عنه، «سيد الشهداء». ويذكر أن عدد الشهداء سبعون.", "en": "The best known is the Prophet's ﷺ uncle Hamzah ibn Abd al-Muttalib, “Master of the Martyrs”. The martyrs are reported to be seventy." }
+        {
+          "ar": "فيها قبور شهداء غزوة أحد، التي وقعت في السنة الثالثة للهجرة.",
+          "en": "It holds the graves of the martyrs of the Battle of Uhud, fought in the 3rd year after the Hijrah.",
+          "tr": "Hicretin 3. yılında yapılan Uhud Savaşı'nın şehitlerinin kabirleri buradadır.",
+          "ur": "یہاں غزوۂ احد کے شہداء کی قبریں ہیں، جو ہجرت کے تیسرے سال پیش آیا۔",
+          "id": "Di sini terdapat makam para syuhada Perang Uhud, yang terjadi pada tahun ke-3 Hijriah.",
+          "uz": "Bu yerda hijratning 3-yilida bo‘lgan Uhud jangi shahidlarining qabrlari bor.",
+          "bn": "এখানে হিজরির তৃতীয় বছরে সংঘটিত উহুদ যুদ্ধের শহিদদের কবর রয়েছে।",
+          "fr": "Il abrite les tombes des martyrs de la bataille d'Ouhoud, livrée en l'an 3 de l'Hégire.",
+          "fa": "قبر شهیدان غزوه احد، که در سال سوم هجرت رخ داد، در اینجاست.",
+          "ru": "Здесь покоятся шахиды битвы при Ухуде, состоявшейся в 3 году хиджры.",
+          "ms": "Di sini terdapat makam para syuhada Perang Uhud, yang berlaku pada tahun ke-3 Hijrah.",
+          "ha": "Tana ɗauke da kaburburan shahidan Yaƙin Uhudu, wanda aka yi a shekara ta 3 bayan hijira.",
+          "ml": "ഹിജ്റ മൂന്നാം വർഷം നടന്ന ഉഹ്ദ് യുദ്ധത്തിലെ രക്തസാക്ഷികളുടെ ഖബറുകൾ ഇവിടെയാണ്.",
+          "sw": "Yana makaburi ya mashahidi wa Vita vya Uhud, vilivyotokea mwaka wa 3 baada ya Hijra.",
+          "ps": "دلته د احد د جګړې د شهیدانو قبرونه دي، چې د هجرت په درېیمه کال وشوه.",
+          "so": "Waxay ka kooban tahay qabriyada shuhadadii dagaalkii Uxud, oo dhacay sannadkii 3-aad ee Hijrada.",
+          "ta": "ஹிஜ்ரீ 3-ஆம் ஆண்டில் நடந்த உஹது போரின் உயிர்த்தியாகிகளின் கப்றுகள் இங்கு உள்ளன.",
+          "hi": "यहाँ उहुद की जंग के शहीदों की क़ब्रें हैं, जो हिजरी के तीसरे वर्ष में हुई थी।",
+          "bs": "Ovdje su kabrovi šehida Bitke na Uhudu, vođene u 3. godini po hidžri.",
+          "de": "Hier liegen die Gräber der Märtyrer der Schlacht von Uhud, die im 3. Jahr nach der Hidschra stattfand.",
+          "zh": "这里有伍候德战役烈士的坟墓，该战役发生在伊历3年。",
+          "am": "በሂጅራ 3ኛ ዓመት የተካሄደው የኡሑድ ጦርነት ሰማዕታት መቃብር እዚህ አለ።",
+          "ku": "Gorên şehîdên şerê Uhudê li vir in, ku di sala 3an a koçê de qewimî.",
+          "az": "Burada hicrətin 3-cü ilində baş vermiş Uhud döyüşü şəhidlərinin qəbirləri var.",
+          "th": "ที่นี่มีหลุมศพของชะฮีดแห่งสงครามอุฮุด ซึ่งเกิดขึ้นในปีฮิจเราะฮ์ที่ 3",
+          "es": "Alberga las tumbas de los mártires de la batalla de Uhud, librada en el año 3 de la Hégira."
+        },
+        {
+          "ar": "أشهرهم عمّ النبي ﷺ حمزة بن عبدالمطلب رضي الله عنه، «سيد الشهداء». ويذكر أن عدد الشهداء سبعون.",
+          "en": "The best known is the Prophet's ﷺ uncle Hamzah ibn Abd al-Muttalib, “Master of the Martyrs”. The martyrs are reported to be seventy.",
+          "tr": "En tanınmışı Peygamber'in ﷺ amcası Hamza b. Abdülmuttalib'dir, “Şehitlerin Efendisi”. Şehitlerin yetmiş kişi olduğu rivayet edilir.",
+          "ur": "ان میں سب سے مشہور نبی ﷺ کے چچا حمزہ بن عبدالمطلب ہیں، “سید الشہداء”۔ روایت ہے کہ شہداء ستر تھے۔",
+          "id": "Yang paling dikenal ialah paman Nabi ﷺ, Hamzah bin Abdul Muthalib, “Penghulu para Syuhada”. Disebutkan bahwa para syuhada berjumlah tujuh puluh orang.",
+          "uz": "Eng mashhuri Payg‘ambar ﷺ ning amakisi Hamza ibn Abdulmuttalib, “Shahidlar sardori”. Shahidlar yetmish kishi bo‘lgani aytiladi.",
+          "bn": "সবচেয়ে পরিচিত নবী ﷺ-এর চাচা হামজা ইবনে আবদুল মুত্তালিব, “শহিদদের নেতা”। শহিদদের সংখ্যা সত্তর বলে বর্ণিত আছে।",
+          "fr": "Le plus connu est l'oncle du Prophète ﷺ, Hamza ibn Abd al-Muttalib, « le Maître des martyrs ». On rapporte que les martyrs furent soixante-dix.",
+          "fa": "شناخته‌شده‌ترین آنان عموی پیامبر ﷺ، حمزه بن عبدالمطلب، «سیدالشهدا» است. روایت شده که شهیدان هفتاد تن بودند.",
+          "ru": "Самый известный из них — дядя Пророка ﷺ Хамза ибн Абд аль-Мутталиб, «Господин шахидов». Сообщается, что шахидов было семьдесят.",
+          "ms": "Yang paling terkenal ialah bapa saudara Nabi ﷺ, Hamzah bin Abdul Muttalib, “Penghulu para Syuhada”. Dikatakan para syuhada berjumlah tujuh puluh orang.",
+          "ha": "Wanda aka fi sani shi ne kawun Annabi ﷺ, Hamza ɗan Abdulmuɗɗalib, “Shugaban Shahidai”. Ana ruwaitowa cewa shahidan su saba'in ne.",
+          "ml": "ഏറ്റവും പ്രശസ്തൻ നബി ﷺ യുടെ പിതൃവ്യൻ ഹംസ ഇബ്നു അബ്ദുൽ മുത്തലിബ്, “രക്തസാക്ഷികളുടെ നേതാവ്”. രക്തസാക്ഷികൾ എഴുപത് പേരാണെന്ന് രേഖപ്പെടുത്തപ്പെട്ടിരിക്കുന്നു.",
+          "sw": "Anayejulikana zaidi ni ami wa Mtume ﷺ, Hamza bin Abdul Muttalib, “Bwana wa Mashahidi”. Inasimuliwa kuwa mashahidi walikuwa sabini.",
+          "ps": "تر ټولو مشهور د پیغمبر ﷺ تره حمزه بن عبدالمطلب دی، «د شهیدانو سردار». روایت شوی چې شهیدان اویا تنه وو.",
+          "so": "Kan ugu caansan waa adeerkii Nabiga ﷺ, Xamsa ibn Cabdulmudalib, “Sayidka Shuhadada”. Waxaa la weriyey in shuhadadu ay ahaayeen toddobaatan.",
+          "ta": "மிகவும் அறியப்பட்டவர் நபி ﷺ அவர்களின் பெரிய தந்தை ஹம்ஸா இப்னு அப்துல் முத்தலிப், “உயிர்த்தியாகிகளின் தலைவர்”. உயிர்த்தியாகிகள் எழுபது பேர் என்று அறிவிக்கப்படுகிறது.",
+          "hi": "सबसे प्रसिद्ध नबी ﷺ के चचा हमज़ा बिन अब्दुल मुत्तलिब हैं, “शहीदों के सरदार”। वर्णन है कि शहीद सत्तर थे।",
+          "bs": "Najpoznatiji je Poslanikov ﷺ amidža Hamza ibn Abdulmuttalib, “Prvak šehida”. Prenosi se da je šehida bilo sedamdeset.",
+          "de": "Der bekannteste ist der Onkel des Propheten ﷺ, Hamza ibn Abd al-Muttalib, „der Herr der Märtyrer“. Es wird berichtet, dass es siebzig Märtyrer waren.",
+          "zh": "最著名的是先知 ﷺ 的叔父哈姆扎·本·阿卜杜勒·穆塔利卜，“烈士之长”。据传烈士共七十人。",
+          "am": "በጣም የታወቁት የነቢዩ ﷺ አጎት ሐምዛ ኢብን ዐብዱልሙጦሊብ፣ “የሰማዕታት አለቃ” ናቸው። ሰማዕታቱ ሰባ እንደነበሩ ተዘግቧል።",
+          "ku": "Ya herî navdar apê Pêxember ﷺ, Hemze bin Ebdulmuttelib e, “Seyîdê Şehîdan”. Tê rêwayet kirin ku şehîd heftê kes bûn.",
+          "az": "Ən tanınmışı Peyğəmbər ﷺ əmisi Həmzə ibn Əbdülmüttəlibdir, “Şəhidlərin ağası”. Şəhidlərin yetmiş nəfər olduğu rəvayət edilir.",
+          "th": "ผู้ที่เป็นที่รู้จักมากที่สุดคือลุงของท่านนบี ﷺ ฮัมซะฮ์ อิบน์ อับดุลมุฏเฏาะลิบ “ผู้นำของเหล่าชะฮีด” มีรายงานว่าชะฮีดมีเจ็ดสิบคน",
+          "es": "El más conocido es el tío del Profeta ﷺ, Hamza ibn Abd al-Muttalib, «el Señor de los mártires». Se cuenta que los mártires fueron setenta."
+        }
       ],
       "sources": [
-        { "t": "صحيفة المدينة: شهداء أحد", "u": "https://www.al-madina.com/ampArticle/665709" },
-        { "t": "موسوعة محتويات: من معالم المدينة المنورة", "u": "https://mhtwyat.com/?p=212177" },
-        { "t": "ويكي بيانات: Battle of Uhud (Q488278)", "u": "https://www.wikidata.org/wiki/Q488278" }
+        {
+          "t": "صحيفة المدينة: شهداء أحد",
+          "u": "https://www.al-madina.com/ampArticle/665709"
+        },
+        {
+          "t": "موسوعة محتويات: من معالم المدينة المنورة",
+          "u": "https://mhtwyat.com/?p=212177"
+        },
+        {
+          "t": "ويكي بيانات: Battle of Uhud (Q488278)",
+          "u": "https://www.wikidata.org/wiki/Q488278"
+        }
       ],
       "images": [
-        { "src": "visits/544-1.webp", "focus": "22% 50%", "alt": { "ar": "جبل أحد ومسجد أبيض بقبة ومنارتين عند سفحه", "en": "Mount Uhud with a white mosque, a dome and two minarets at its foot" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
-        { "src": "visits/544-2.webp", "alt": { "ar": "زوّار عند سياج مقبرة شهداء أحد وجبل أحد خلفها", "en": "Visitors at the fence of the Uhud martyrs' cemetery, with Mount Uhud behind" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
-        { "src": "visits/544-3.webp", "alt": { "ar": "منظر جوي لمنطقة شهداء أحد", "en": "Aerial view of the Uhud martyrs' area" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+        {
+          "src": "visits/544-1.webp",
+          "focus": "22% 50%",
+          "alt": {
+            "ar": "جبل أحد ومسجد أبيض بقبة ومنارتين عند سفحه",
+            "en": "Mount Uhud with a white mosque, a dome and two minarets at its foot"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        },
+        {
+          "src": "visits/544-2.webp",
+          "alt": {
+            "ar": "زوّار عند سياج مقبرة شهداء أحد وجبل أحد خلفها",
+            "en": "Visitors at the fence of the Uhud martyrs' cemetery, with Mount Uhud behind"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        },
+        {
+          "src": "visits/544-3.webp",
+          "alt": {
+            "ar": "منظر جوي لمنطقة شهداء أحد",
+            "en": "Aerial view of the Uhud martyrs' area"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        }
       ]
     },
     {
       "id": 543,
       "slides": [
-        { "ar": "في هذا الموضع نزل الأمر بتحويل القبلة من بيت المقدس إلى الكعبة المشرفة أثناء الصلاة، في السنة الثانية للهجرة.", "en": "Here the command came, during prayer, to turn the qiblah from Jerusalem to the Kaaba, in the 2nd year after the Hijrah." },
-        { "ar": "سُمّي «القبلتين» لأن المسلمين صلّوا فيه إلى القبلتين. وقد ورد ذلك في سورة البقرة، الآية 144.", "en": "It is called “of the Two Qiblahs” because the Muslims prayed in it towards both. This is mentioned in Surat al-Baqarah, verse 144." }
+        {
+          "ar": "في هذا الموضع نزل الأمر بتحويل القبلة من بيت المقدس إلى الكعبة المشرفة أثناء الصلاة، في السنة الثانية للهجرة.",
+          "en": "Here the command came, during prayer, to turn the qiblah from Jerusalem to the Kaaba, in the 2nd year after the Hijrah.",
+          "tr": "Hicretin 2. yılında, namaz sırasında kıblenin Kudüs'ten Kâbe'ye çevrilmesi emri burada geldi.",
+          "ur": "ہجرت کے دوسرے سال، نماز کے دوران یہیں بیت المقدس سے کعبہ کی طرف قبلہ بدلنے کا حکم آیا۔",
+          "id": "Di sinilah turun perintah, saat shalat, untuk mengalihkan kiblat dari Baitul Maqdis ke Ka'bah, pada tahun ke-2 Hijriah.",
+          "uz": "Hijratning 2-yilida namoz paytida qiblani Baytul Maqdisdan Ka’baga burish haqidagi amr shu yerda nozil bo‘ldi.",
+          "bn": "হিজরির দ্বিতীয় বছরে নামাজের মধ্যেই এখানে কিবলা বাইতুল মাকদিস থেকে কাবার দিকে ফেরানোর নির্দেশ আসে।",
+          "fr": "C'est ici que vint, pendant la prière, l'ordre de tourner la qibla de Jérusalem vers la Kaaba, en l'an 2 de l'Hégire.",
+          "fa": "در سال دوم هجرت، در همین‌جا و در میان نماز، فرمان تغییر قبله از بیت‌المقدس به کعبه رسید.",
+          "ru": "Здесь во время молитвы пришло повеление повернуть киблу от Иерусалима к Каабе, во 2 году хиджры.",
+          "ms": "Di sinilah turunnya perintah, semasa solat, untuk menukar kiblat dari Baitulmaqdis ke Kaabah, pada tahun ke-2 Hijrah.",
+          "ha": "A nan ne umarni ya zo, yayin sallah, na juya alƙibla daga Baitul Makdis zuwa Ka'aba, a shekara ta 2 bayan hijira.",
+          "ml": "ഹിജ്റ രണ്ടാം വർഷം, നമസ്കാരത്തിനിടെ ഖിബ്ല ബൈത്തുൽ മഖ്ദിസിൽ നിന്ന് കഅ്ബയിലേക്ക് തിരിക്കാനുള്ള കൽപ്പന ഇവിടെയാണ് വന്നത്.",
+          "sw": "Hapa ndipo amri ilipokuja, wakati wa swala, ya kugeuza kibla kutoka Baitul Maqdis kuelekea Al-Kaaba, mwaka wa 2 baada ya Hijra.",
+          "ps": "د هجرت په دویم کال، په لمانځه کې همدلته د قبلې د بیت المقدس څخه کعبې ته د اړولو حکم راغی.",
+          "so": "Halkan ayaa amarku yimid, inta salaadda lagu jiray, in qiblada laga rogo Baytul Maqdis una jeesto Kacbada, sannadkii 2-aad ee Hijrada.",
+          "ta": "ஹிஜ்ரீ 2-ஆம் ஆண்டில், தொழுகையின் போது கிப்லாவை பைத்துல் முகத்திஸிலிருந்து கஅபாவை நோக்கித் திருப்பும் கட்டளை இங்கு வந்தது.",
+          "hi": "हिजरी के दूसरे वर्ष में, नमाज़ के दौरान यहीं क़िब्ला बैतुल मक़दिस से काबा की ओर मोड़ने का आदेश आया।",
+          "bs": "Ovdje je, tokom namaza, stigla naredba da se kibla okrene od Jeruzalema prema Kabi, u 2. godini po hidžri.",
+          "de": "Hier erging während des Gebets der Befehl, die Gebetsrichtung von Jerusalem zur Kaaba zu wenden, im 2. Jahr nach der Hidschra.",
+          "zh": "伊历2年，礼拜之中，将朝向由耶路撒冷改为天房的命令就是在这里降示的。",
+          "am": "በሂጅራ 2ኛ ዓመት፣ በሶላት ላይ ሳሉ ቂብላን ከበይተልመቅዲስ ወደ ካዕባ እንዲያዞሩ የሚያዝ ትእዛዝ እዚህ መጣ።",
+          "ku": "Di sala 2yan a koçê de, di nimêjê de, li vir fermana zivirandina qibleyê ji Beytulmeqdîsê ber bi Kebeyê hat.",
+          "az": "Hicrətin 2-ci ilində namaz əsnasında qiblənin Beytül-Müqəddəsdən Kəbəyə döndərilməsi əmri burada gəldi.",
+          "th": "ในปีฮิจเราะฮ์ที่ 2 ขณะละหมาด คำสั่งให้เปลี่ยนกิบละฮ์จากบัยตุลมักดิสไปยังกะอ์บะฮ์ได้มาถึงที่นี่",
+          "es": "Aquí llegó, durante la oración, la orden de girar la qibla de Jerusalén a la Kaaba, en el año 2 de la Hégira."
+        },
+        {
+          "ar": "سُمّي «القبلتين» لأن المسلمين صلّوا فيه إلى القبلتين. وقد ورد ذلك في سورة البقرة، الآية 144.",
+          "en": "It is called “of the Two Qiblahs” because the Muslims prayed in it towards both. This is mentioned in Surat al-Baqarah, verse 144.",
+          "tr": "“İki Kıbleli” denmesinin sebebi, Müslümanların burada her iki kıbleye yönelerek namaz kılmış olmasıdır. Bakara Sûresi'nin 144. ayetinde zikredilir.",
+          "ur": "اسے “دو قبلوں والی” اس لیے کہتے ہیں کہ مسلمانوں نے اس میں دونوں قبلوں کی طرف نماز پڑھی۔ اس کا ذکر سورۃ البقرہ کی آیت 144 میں ہے۔",
+          "id": "Dinamai “Dua Kiblat” karena kaum Muslimin shalat di dalamnya menghadap kedua kiblat. Hal ini disebut dalam Surah al-Baqarah ayat 144.",
+          "uz": "“Ikki qibla” deb atalishiga sabab, musulmonlar bu yerda ikkala qiblaga qarab namoz o‘qiganlar. Bu Baqara surasining 144-oyatida zikr qilingan.",
+          "bn": "একে “দুই কিবলার মসজিদ” বলা হয়, কারণ মুসলমানরা এখানে উভয় কিবলার দিকে নামাজ পড়েছিলেন। এর উল্লেখ সুরা বাকারার ১৪৪ নম্বর আয়াতে আছে।",
+          "fr": "On l'appelle « aux deux qiblas » parce que les musulmans y ont prié vers les deux. Cela est mentionné dans la sourate al-Baqara, verset 144.",
+          "fa": "به آن «دو قبله» می‌گویند چون مسلمانان در آن به هر دو قبله نماز خواندند. این در سوره بقره، آیه ۱۴۴ آمده است.",
+          "ru": "Её называют «мечеть двух киблей», потому что мусульмане молились в ней в сторону обеих. Это упоминается в суре аль-Бакара, аят 144.",
+          "ms": "Dinamakan “Dua Kiblat” kerana umat Islam bersolat di dalamnya menghadap kedua-dua kiblat. Ini disebut dalam Surah al-Baqarah ayat 144.",
+          "ha": "Ana kiransa “na Alƙibla Biyu” saboda Musulmai sun yi sallah a cikinsa zuwa dukkan alƙiblolin biyu. An ambaci wannan a Suratul Baƙara, aya ta 144.",
+          "ml": "മുസ്ലിംകൾ ഇവിടെ രണ്ട് ഖിബ്ലകളിലേക്കും നമസ്കരിച്ചതിനാലാണ് “രണ്ട് ഖിബ്ലകളുടെ പള്ളി” എന്ന് പേര്. സൂറത്തുൽ ബഖറ, ആയത്ത് 144 ൽ ഇത് പരാമർശിക്കുന്നു.",
+          "sw": "Unaitwa “wa Kibla Mbili” kwa sababu Waislamu waliswali ndani yake kuelekea zote mbili. Hili limetajwa katika Surat al-Baqara, aya ya 144.",
+          "ps": "دې ته «د دوو قبلو جومات» ورکول کېږي ځکه مسلمانانو پکې دواړو قبلو ته لمونځ کړی. دا په سورة البقره، ۱۴۴ آیت کې یاد شوی.",
+          "so": "Waxaa loo yaqaan “Laba Qiblo” sababtoo ah muslimiintu waxay ku tukadeen labada qiblo. Tan waxaa lagu xusay Suuratul Baqara, aayadda 144.",
+          "ta": "முஸ்லிம்கள் இங்கு இரு கிப்லாக்களையும் நோக்கித் தொழுததால் “இரு கிப்லாக்களின் பள்ளி” எனப்படுகிறது. இது சூரத்துல் பகரா, வசனம் 144 இல் குறிப்பிடப்பட்டுள்ளது.",
+          "hi": "इसे “दो क़िब्लों वाली” इसलिए कहते हैं कि मुसलमानों ने इसमें दोनों क़िब्लों की ओर नमाज़ पढ़ी। इसका उल्लेख सूरह अल-बक़रा, आयत 144 में है।",
+          "bs": "Zove se “Dvije kible” jer su muslimani u njoj klanjali prema objema. To se spominje u suri El-Bekare, ajet 144.",
+          "de": "Sie heißt „die Moschee der zwei Gebetsrichtungen“, weil die Muslime darin in beide Richtungen beteten. Dies wird in Sure al-Baqara, Vers 144, erwähnt.",
+          "zh": "称为“两个朝向的清真寺”，因为穆斯林曾在其中朝着两个方向礼拜。此事见于《古兰经》黄牛章第144节。",
+          "am": "“ሁለት ቂብላ ያለው” ይባላል ምክንያቱም ሙስሊሞች በውስጡ ወደ ሁለቱም ቂብላዎች ሰግደዋል። ይህ በሱረቱል በቀራ፣ አንቀጽ 144 ተጠቅሷል።",
+          "ku": "Jê re “Du Qible” tê gotin ji ber ku misilmanan lê ber bi her du qibleyan nimêj kirine. Ev di sûreya Beqereyê, ayeta 144an de hatiye gotin.",
+          "az": "“İki qibləli” adlanır, çünki müsəlmanlar burada hər iki qibləyə doğru namaz qılıblar. Bu, Bəqərə surəsinin 144-cü ayəsində zikr olunur.",
+          "th": "เรียกว่า “สองกิบละฮ์” เพราะมุสลิมละหมาดในมัสยิดนี้โดยหันไปทั้งสองกิบละฮ์ ปรากฏในซูเราะฮ์อัล-บะเกาะเราะฮ์ อายะฮ์ที่ 144",
+          "es": "Se llama «de las Dos Qiblas» porque los musulmanes rezaron en ella hacia ambas. Se menciona en la sura al-Baqara, aleya 144."
+        }
       ],
       "sources": [
-        { "t": "سعودي بيديا: مسجد القبلتين", "u": "https://saudipedia.com/%D9%85%D8%B3%D8%AC%D8%AF-%D8%A7%D9%84%D9%82%D8%A8%D9%84%D8%AA%D9%8A%D9%86" },
-        { "t": "الشرق الأوسط: مسجد القبلتين.. قصة تحوُّل القبلة", "u": "https://aawsat.com/node/407391" }
+        {
+          "t": "سعودي بيديا: مسجد القبلتين",
+          "u": "https://saudipedia.com/%D9%85%D8%B3%D8%AC%D8%AF-%D8%A7%D9%84%D9%82%D8%A8%D9%84%D8%AA%D9%8A%D9%86"
+        },
+        {
+          "t": "الشرق الأوسط: مسجد القبلتين.. قصة تحوُّل القبلة",
+          "u": "https://aawsat.com/node/407391"
+        }
       ],
       "images": [
-        { "src": "visits/543-1.webp", "alt": { "ar": "مسجد القبلتين بقبته البيضاء ومنارتيه تحت سماء صافية", "en": "Al-Qiblatayn Mosque with its white dome and two minarets under a clear sky" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
-        { "src": "visits/543-2.webp", "focus": "80% 50%", "alt": { "ar": "منارتا مسجد القبلتين وقبته من الجهة الأمامية", "en": "The two minarets and the dome of Al-Qiblatayn Mosque seen from the front" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+        {
+          "src": "visits/543-1.webp",
+          "alt": {
+            "ar": "مسجد القبلتين بقبته البيضاء ومنارتيه تحت سماء صافية",
+            "en": "Al-Qiblatayn Mosque with its white dome and two minarets under a clear sky"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        },
+        {
+          "src": "visits/543-2.webp",
+          "focus": "80% 50%",
+          "alt": {
+            "ar": "منارتا مسجد القبلتين وقبته من الجهة الأمامية",
+            "en": "The two minarets and the dome of Al-Qiblatayn Mosque seen from the front"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        }
       ]
     },
     {
       "id": 547,
       "slides": [
-        { "ar": "عند السفح الغربي لجبل سلع، في موضع الخندق الذي حفره النبي ﷺ وأصحابه دفاعاً عن المدينة في غزوة الخندق (الأحزاب) سنة 5هـ.", "en": "At the western foot of Mount Sal', on the line of the trench the Prophet ﷺ and his Companions dug to defend Madinah in the Battle of the Trench (al-Ahzab), 5 AH." },
-        { "ar": "كان سلمان الفارسي رضي الله عنه صاحب فكرة حفر الخندق، فأقرّها النبي ﷺ.", "en": "Salman al-Farisi, may God be pleased with him, proposed digging the trench, and the Prophet ﷺ approved it." },
-        { "ar": "اشتهرت بـ«المساجد السبعة»، وبعض المصادر تعدّها ستة. وتنسب أسماؤها إلى من رابط في مواضعها.", "en": "Known as “the Seven Mosques”, though some sources count six. Their names go back to those who kept guard at their sites." }
+        {
+          "ar": "عند السفح الغربي لجبل سلع، في موضع الخندق الذي حفره النبي ﷺ وأصحابه دفاعاً عن المدينة في غزوة الخندق (الأحزاب) سنة 5هـ.",
+          "en": "At the western foot of Mount Sal', on the line of the trench the Prophet ﷺ and his Companions dug to defend Madinah in the Battle of the Trench (al-Ahzab), 5 AH.",
+          "tr": "Sel‘ Dağı'nın batı eteğinde, Peygamber'in ﷺ ve ashabının Hendek Savaşı'nda (Ahzâb, hicri 5) Medine'yi savunmak için kazdığı hendeğin hattı üzerindedir.",
+          "ur": "جبلِ سلع کے مغربی دامن میں، اس خندق کی لکیر پر جو نبی ﷺ اور صحابہ نے غزوۂ خندق (احزاب، سن 5 ہجری) میں مدینہ کے دفاع کے لیے کھودی۔",
+          "id": "Di kaki barat Gunung Sal', pada garis parit yang digali Nabi ﷺ dan para sahabat untuk membela Madinah dalam Perang Khandaq (al-Ahzab), tahun 5 H.",
+          "uz": "Sal’ tog‘ining g‘arbiy etagida, Payg‘ambar ﷺ va sahobalari Xandaq jangida (Ahzob, hijriy 5) Madinani himoya qilish uchun qazigan handaq chizig‘ida joylashgan.",
+          "bn": "সাল‘ পাহাড়ের পশ্চিম পাদদেশে, খন্দক যুদ্ধে (আহজাব, ৫ হিজরি) নবী ﷺ ও সাহাবীরা মদিনা রক্ষায় যে পরিখা খনন করেছিলেন তার রেখার ওপর অবস্থিত।",
+          "fr": "Au pied ouest du mont Sal', sur le tracé de la tranchée que le Prophète ﷺ et ses Compagnons creusèrent pour défendre Médine lors de la bataille de la Tranchée (al-Ahzab), an 5 de l'Hégire.",
+          "fa": "در دامنه غربی کوه سلع، بر خط خندقی که پیامبر ﷺ و یارانش در غزوه خندق (احزاب، سال ۵ هجری) برای دفاع از مدینه کندند.",
+          "ru": "У западного подножия горы Саль, на линии рва, который Пророк ﷺ и его сподвижники вырыли для защиты Медины в битве у Рва (аль-Ахзаб), 5 год хиджры.",
+          "ms": "Di kaki barat Gunung Sal', pada garisan parit yang digali oleh Nabi ﷺ dan para sahabat untuk mempertahankan Madinah dalam Perang Khandaq (al-Ahzab), tahun 5 H.",
+          "ha": "A gindin yammacin Dutsen Sal', a kan layin ramin da Annabi ﷺ da Sahabbansa suka haƙa don kare Madina a Yaƙin Ramin (al-Ahzab), shekara ta 5 bayan hijira.",
+          "ml": "സൽഅ് മലയുടെ പടിഞ്ഞാറൻ താഴ്വാരത്ത്, ഖന്ദഖ് യുദ്ധത്തിൽ (അഹ്സാബ്, ഹിജ്റ 5) മദീനയെ പ്രതിരോധിക്കാൻ നബി ﷺ യും സ്വഹാബികളും കുഴിച്ച കിടങ്ങിന്റെ നിരയിൽ.",
+          "sw": "Kwenye mteremko wa magharibi wa Mlima Sal', kwenye mstari wa handaki walilochimba Mtume ﷺ na Maswahaba wake kulinda Madina katika Vita vya Handaki (al-Ahzab), mwaka wa 5 H.",
+          "ps": "د سلع غره په لویدیځ لمن کې، د هغه خندق په کرښه چې پیغمبر ﷺ او اصحابو یې د خندق په غزا (احزاب، ۵ هجري) کې د مدینې د دفاع لپاره کیندلی.",
+          "so": "Dhinaca galbeed ee buurta Sal', xariiqda godka ay Nabiga ﷺ iyo asxaabtiisu qodeen si ay uga difaacaan Madiina dagaalkii Godka (al-Axsaab), 5 H.",
+          "ta": "ஸல்உ மலையின் மேற்குச் சரிவில், அகழ்ப் போரில் (அல்-அஹ்ஸாப், ஹிஜ்ரீ 5) மதீனாவைப் பாதுகாக்க நபி ﷺ அவர்களும் தோழர்களும் தோண்டிய அகழின் வரிசையில் அமைந்துள்ளது.",
+          "hi": "सल्अ पर्वत के पश्चिमी तलहटी में, उस ख़ंदक़ की रेखा पर जो नबी ﷺ और सहाबा ने ख़ंदक़ की जंग (अहज़ाब, 5 हिजरी) में मदीना की रक्षा के लिए खोदी थी।",
+          "bs": "Na zapadnom podnožju planine Sal', na liniji rova koji su Poslanik ﷺ i ashabi iskopali da brane Medinu u Bici na Hendeku (El-Ahzab), 5. godine po hidžri.",
+          "de": "Am Westfuß des Berges Sal', auf der Linie des Grabens, den der Prophet ﷺ und seine Gefährten zur Verteidigung Medinas in der Grabenschlacht (al-Ahzab, 5 n. H.) aushoben.",
+          "zh": "位于塞勒阿山西麓，处在壕沟战役（联军战役，伊历5年）中先知 ﷺ 与圣门弟子为保卫麦地那所挖壕沟的沿线上。",
+          "am": "በሰልዕ ተራራ ምዕራባዊ ግርጌ፣ ነቢዩ ﷺ እና ሶሓቦቻቸው በኸንደቅ ጦርነት (አል-አሕዛብ፣ ሂጅራ 5) መዲናን ለመከላከል በቆፈሩት ጉድጓድ መስመር ላይ ይገኛል።",
+          "ku": "Li binê rojavayî yê çiyayê Sel', li ser xeta xendeqa ku Pêxember ﷺ û hevalên wî di Şerê Xendeqê (Ehzab, sala 5an a koçê) de ji bo parastina Medîneyê kolan.",
+          "az": "Səl’ dağının qərb ətəyində, Xəndək döyüşündə (Əhzab, hicri 5) Peyğəmbər ﷺ və səhabələrin Mədinəni müdafiə üçün qazdığı xəndəyin xətti üzərində.",
+          "th": "ที่เชิงเขาสัลอ์ทางตะวันตก บนแนวสนามเพลาะที่ท่านนบี ﷺ และเหล่าเศาะฮาบะฮ์ขุดเพื่อป้องกันมะดีนะฮ์ในสงครามสนามเพลาะ (อัล-อะห์ซาบ ฮ.ศ. 5)",
+          "es": "Al pie occidental del monte Sal', en la línea de la zanja que el Profeta ﷺ y sus Compañeros cavaron para defender Medina en la batalla de la Zanja (al-Ahzab), año 5 de la Hégira."
+        },
+        {
+          "ar": "كان سلمان الفارسي رضي الله عنه صاحب فكرة حفر الخندق، فأقرّها النبي ﷺ.",
+          "en": "Salman al-Farisi, may God be pleased with him, proposed digging the trench, and the Prophet ﷺ approved it.",
+          "tr": "Hendek'i kazma fikrini Selmân-ı Fârisî (Allah ondan razı olsun) ortaya attı, Peygamber ﷺ da bunu onayladı.",
+          "ur": "خندق کھودنے کی رائے سلمان فارسی رضی اللہ عنہ نے دی، اور نبی ﷺ نے اسے منظور فرمایا۔",
+          "id": "Salman al-Farisi radhiyallahu 'anhu mengusulkan penggalian parit, dan Nabi ﷺ menyetujuinya.",
+          "uz": "Handaq qazish fikrini Salmon Forsiy (Alloh undan rozi bo‘lsin) bildirdi, Payg‘ambar ﷺ buni ma’qulladilar.",
+          "bn": "সালমান ফারসি (আল্লাহ তাঁর প্রতি সন্তুষ্ট হোন) পরিখা খননের প্রস্তাব দেন, আর নবী ﷺ তা অনুমোদন করেন।",
+          "fr": "Salman al-Farisi, qu'Allah l'agrée, proposa de creuser la tranchée, et le Prophète ﷺ l'approuva.",
+          "fa": "سلمان فارسی (خدا از او خشنود باشد) پیشنهاد کندن خندق را داد و پیامبر ﷺ آن را پذیرفت.",
+          "ru": "Сальман аль-Фариси, да будет доволен им Аллах, предложил вырыть ров, и Пророк ﷺ одобрил это.",
+          "ms": "Salman al-Farisi radhiyallahu 'anhu mencadangkan penggalian parit, dan Nabi ﷺ menyetujuinya.",
+          "ha": "Salman al-Farisi, Allah ya yarda da shi, shi ne ya ba da shawarar haƙa ramin, Annabi ﷺ kuma ya amince.",
+          "ml": "കിടങ്ങ് കുഴിക്കാൻ നിർദേശിച്ചത് സൽമാനുൽ ഫാരിസി (അല്ലാഹു അദ്ദേഹത്തിൽ തൃപ്തിപ്പെടട്ടെ) ആണ്; നബി ﷺ അത് അംഗീകരിച്ചു.",
+          "sw": "Salman al-Farisi, Mwenyezi Mungu amridhie, alipendekeza kuchimba handaki, na Mtume ﷺ akalikubali.",
+          "ps": "د خندق د کیندلو مشوره سلمان فارسي (الله دې ترې راضي وي) ورکړه، او پیغمبر ﷺ ومنله.",
+          "so": "Salmaan al-Faarisi, Alle ha ka raalli noqdo, ayaa soo jeediyey qodista godka, Nabiga ﷺ wuuna oggolaaday.",
+          "ta": "அகழ் தோண்டும் யோசனையை சல்மான் அல்-ஃபாரிஸீ (அல்லாஹ் அவரைப் பொருந்திக்கொள்வானாக) கூறினார்; நபி ﷺ அதை ஏற்றுக்கொண்டார்கள்.",
+          "hi": "ख़ंदक़ खोदने का सुझाव सलमान फ़ारसी (अल्लाह उनसे राज़ी हो) ने दिया और नबी ﷺ ने उसे स्वीकार किया।",
+          "bs": "Selman el-Farisi, Allah bio zadovoljan njim, predložio je kopanje rova, a Poslanik ﷺ ga je odobrio.",
+          "de": "Salman al-Farisi, Allah habe Wohlgefallen an ihm, schlug vor, den Graben auszuheben, und der Prophet ﷺ stimmte zu.",
+          "zh": "挖壕沟的建议由赛勒曼·法尔西（愿真主喜悦他）提出，先知 ﷺ 予以认可。",
+          "am": "ጉድጓዱን የመቆፈር ሐሳብ ያቀረቡት ሰልማን አልፋሪሲ (አላህ ይውደዳቸው) ሲሆኑ ነቢዩ ﷺ ተቀበሉት።",
+          "ku": "Selmanê Farisî (Xwedê jê razî be) pêşniyar kir ku xendeq bê kolan, û Pêxember ﷺ pejirand.",
+          "az": "Xəndək qazmaq fikrini Salman Farisi (Allah ondan razı olsun) irəli sürdü, Peyğəmbər ﷺ isə bunu bəyəndi.",
+          "th": "ซัลมาน อัล-ฟาริซีย์ (ขอพระองค์ทรงพอพระทัยท่าน) เสนอให้ขุดสนามเพลาะ และท่านนบี ﷺ ทรงเห็นชอบ",
+          "es": "Salman al-Farisi, Allah esté complacido con él, propuso cavar la zanja, y el Profeta ﷺ lo aprobó."
+        },
+        {
+          "ar": "اشتهرت بـ«المساجد السبعة»، وبعض المصادر تعدّها ستة. وتنسب أسماؤها إلى من رابط في مواضعها.",
+          "en": "Known as “the Seven Mosques”, though some sources count six. Their names go back to those who kept guard at their sites.",
+          "tr": "“Yedi Mescit” diye bilinir; bazı kaynaklar altı sayar. Adları, buralarda nöbet tutanlara nisbet edilir.",
+          "ur": "یہ “سات مساجد” کے نام سے مشہور ہیں، اگرچہ بعض مآخذ انہیں چھ شمار کرتے ہیں۔ ان کے نام ان لوگوں سے منسوب ہیں جنہوں نے ان مقامات پر پہرہ دیا۔",
+          "id": "Dikenal sebagai “Tujuh Masjid”, meski sebagian sumber menghitungnya enam. Nama-namanya dinisbatkan kepada orang-orang yang berjaga di tempat-tempat itu.",
+          "uz": "“Yetti masjid” deb mashhur, ba’zi manbalar ularni oltita deb sanaydi. Nomlari o‘sha joylarda qorovullik qilganlarga nisbat beriladi.",
+          "bn": "“সাত মসজিদ” নামে পরিচিত, যদিও কিছু সূত্র এগুলোকে ছয়টি গণ্য করে। এগুলোর নাম সেসব স্থানে পাহারাদারদের সঙ্গে সম্পর্কিত।",
+          "fr": "Connues comme « les Sept Mosquées », bien que certaines sources en comptent six. Leurs noms remontent à ceux qui montaient la garde à ces endroits.",
+          "fa": "به «مساجد سبعه» شناخته می‌شود، هرچند برخی منابع آن‌ها را شش مسجد می‌شمارند. نام‌هایشان به کسانی برمی‌گردد که در آن مکان‌ها نگهبانی می‌دادند.",
+          "ru": "Известны как «Семь мечетей», хотя некоторые источники насчитывают шесть. Их названия связаны с теми, кто нёс караул на этих местах.",
+          "ms": "Dikenali sebagai “Tujuh Masjid”, walaupun sesetengah sumber mengiranya enam. Nama-namanya dinisbahkan kepada mereka yang berkawal di tempat-tempat itu.",
+          "ha": "Ana kiransu “Masallatai Bakwai”, ko da yake wasu madogara suna ƙidaya shida. Sunayensu na komawa ga waɗanda suka yi gadi a wuraren.",
+          "ml": "“ഏഴ് പള്ളികൾ” എന്ന് അറിയപ്പെടുന്നു; ചില സ്രോതസ്സുകൾ ആറെന്ന് എണ്ണുന്നു. അവയുടെ പേരുകൾ ആ സ്ഥലങ്ങളിൽ കാവൽ നിന്നവരിലേക്ക് ചേർക്കപ്പെടുന്നു.",
+          "sw": "Unajulikana kama “Misikiti Saba”, ingawa baadhi ya vyanzo vinahesabu sita. Majina yake yanahusishwa na waliolinda katika maeneo hayo.",
+          "ps": "د «اوو جوماتونو» په نوم پېژندل کېږي، که څه هم ځینې سرچینې یې شپږ شمېري. نومونه یې د هغو کسانو ته منسوب دي چې په دغو ځایونو کې یې ساتنه کوله.",
+          "so": "Waxaa loo yaqaan “Toddobada Masjid”, in kasta oo ilo qaar ay u tiriyaan lix. Magacyadooda waxaa loo nisbeeyey kuwii ilaalada ka ahaa meelahaas.",
+          "ta": "“ஏழு பள்ளிவாசல்கள்” என்று அறியப்படுகிறது; சில மூலங்கள் ஆறு என எண்ணுகின்றன. அவற்றின் பெயர்கள் அந்த இடங்களில் காவல் காத்தவர்களைச் சார்ந்தவை.",
+          "hi": "“सात मस्जिदें” के नाम से प्रसिद्ध, हालाँकि कुछ स्रोत इन्हें छह गिनते हैं। इनके नाम उन लोगों से जुड़े हैं जिन्होंने इन स्थानों पर पहरा दिया।",
+          "bs": "Poznate su kao “Sedam džamija”, iako ih neki izvori broje šest. Njihova imena potiču od onih koji su čuvali stražu na tim mjestima.",
+          "de": "Bekannt als „die Sieben Moscheen“, obwohl manche Quellen sechs zählen. Ihre Namen gehen auf diejenigen zurück, die an diesen Orten Wache hielten.",
+          "zh": "被称为“七座清真寺”，不过有些资料算作六座。它们的名称源于曾在这些地点值守的人。",
+          "am": "“ሰባቱ መስጊዶች” በመባል ይታወቃል፤ አንዳንድ ምንጮች ግን ስድስት ይቆጥራሉ። ስማቸው በእነዚያ ቦታዎች ጥበቃ ከቆሙት ጋር ይያያዛል።",
+          "ku": "Wekî “Heft Mizgeft” tê nasîn, her çend hin çavkanî wan şeş dihejmêrin. Navên wan bi kesên ku li wan deran çavdêrî kirine ve girêdayî ne.",
+          "az": "“Yeddi məscid” kimi tanınır, baxmayaraq ki, bəzi mənbələr onları altı sayır. Adları həmin yerlərdə keşik çəkənlərə nisbət olunur.",
+          "th": "รู้จักกันในชื่อ “เจ็ดมัสยิด” แม้บางแหล่งข้อมูลจะนับว่าหกแห่ง ชื่อเหล่านี้เกี่ยวโยงกับผู้ที่เฝ้ายามในที่เหล่านั้น",
+          "es": "Conocidas como «las Siete Mezquitas», aunque algunas fuentes cuentan seis. Sus nombres remiten a quienes montaban guardia en esos lugares."
+        }
       ],
       "sources": [
-        { "t": "صحيفة المدينة: المساجد السبعة.. شاهدة على تاريخ غزوة الخندق", "u": "https://www.al-madina.com/ampArticle/168613" },
-        { "t": "سعودي بيديا: المساجد السبعة", "u": "https://saudipedia.com/article/10579" }
+        {
+          "t": "صحيفة المدينة: المساجد السبعة.. شاهدة على تاريخ غزوة الخندق",
+          "u": "https://www.al-madina.com/ampArticle/168613"
+        },
+        {
+          "t": "سعودي بيديا: المساجد السبعة",
+          "u": "https://saudipedia.com/article/10579"
+        }
       ],
       "images": [
-        { "src": "visits/547-1.webp", "alt": { "ar": "مسجد الفتح ومئذنته عند سفح جبل سلع", "en": "Al-Fath Mosque and its minaret at the foot of Mount Sal'" }, "by": "hana_almadina (الاسم الظاهر على الصورة)", "license": "بانتظار تأكيد الإذن" },
-        { "src": "visits/547-2.webp", "alt": { "ar": "مئذنة المسجد وجبل سلع خلفها وقت الغروب", "en": "The mosque minaret with Mount Sal' behind it at dusk" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+        {
+          "src": "visits/547-1.webp",
+          "alt": {
+            "ar": "مسجد الفتح ومئذنته عند سفح جبل سلع",
+            "en": "Al-Fath Mosque and its minaret at the foot of Mount Sal'"
+          },
+          "by": "hana_almadina (الاسم الظاهر على الصورة)",
+          "license": "بانتظار تأكيد الإذن"
+        },
+        {
+          "src": "visits/547-2.webp",
+          "alt": {
+            "ar": "مئذنة المسجد وجبل سلع خلفها وقت الغروب",
+            "en": "The mosque minaret with Mount Sal' behind it at dusk"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        }
       ]
     },
     {
       "id": 546,
       "slides": [
-        { "ar": "تلّة صغيرة جنوب جبل أحد. أمر النبي ﷺ فيها جماعة من الرماة (خمسين رامياً) بقيادة عبدالله بن جبير رضي الله عنه أن يثبتوا في موضعهم.", "en": "A small hill south of Mount Uhud. The Prophet ﷺ stationed a group of archers (fifty) here under Abdullah ibn Jubayr, may God be pleased with him, and told them to hold their position." },
-        { "ar": "ولذلك سُمّي «جبل الرماة»، وهو من أبرز مواضع غزوة أحد.", "en": "That is why it is called Jabal al-Rumat, “Hill of the Archers”, a key site of the Battle of Uhud." }
+        {
+          "ar": "تلّة صغيرة جنوب جبل أحد. أمر النبي ﷺ فيها جماعة من الرماة (خمسين رامياً) بقيادة عبدالله بن جبير رضي الله عنه أن يثبتوا في موضعهم.",
+          "en": "A small hill south of Mount Uhud. The Prophet ﷺ stationed a group of archers (fifty) here under Abdullah ibn Jubayr, may God be pleased with him, and told them to hold their position.",
+          "tr": "Uhud Dağı'nın güneyinde küçük bir tepe. Peygamber ﷺ burada Abdullah b. Cübeyr (Allah ondan razı olsun) komutasında bir grup okçuyu (elli kişi) görevlendirdi ve yerlerini terk etmemelerini emretti.",
+          "ur": "جبلِ احد کے جنوب میں ایک چھوٹی پہاڑی۔ نبی ﷺ نے یہاں عبداللہ بن جبیر رضی اللہ عنہ کی قیادت میں تیر اندازوں کا ایک گروہ (پچاس) مقرر فرمایا اور انہیں اپنی جگہ پر ڈٹے رہنے کا حکم دیا۔",
+          "id": "Bukit kecil di selatan Gunung Uhud. Di sini Nabi ﷺ menempatkan sekelompok pemanah (lima puluh orang) di bawah pimpinan Abdullah bin Jubair radhiyallahu 'anhu, dan memerintahkan mereka tetap di posisinya.",
+          "uz": "Uhud tog‘ining janubidagi kichik tepalik. Payg‘ambar ﷺ bu yerga Abdulloh ibn Jubayr (Alloh undan rozi bo‘lsin) boshchiligida bir guruh kamonchini (ellik kishi) joylashtirib, o‘z o‘rinlarini tark etmaslikni buyurdilar.",
+          "bn": "উহুদ পাহাড়ের দক্ষিণে একটি ছোট টিলা। নবী ﷺ এখানে আবদুল্লাহ ইবনে জুবায়ের (আল্লাহ তাঁর প্রতি সন্তুষ্ট হোন)-এর নেতৃত্বে একদল তিরন্দাজকে (পঞ্চাশজন) মোতায়েন করেন এবং নিজ অবস্থানে অটল থাকতে বলেন।",
+          "fr": "Une petite colline au sud du mont Ouhoud. Le Prophète ﷺ y plaça un groupe d'archers (cinquante) sous le commandement d'Abdallah ibn Joubayr, qu'Allah l'agrée, et leur ordonna de tenir leur position.",
+          "fa": "تپه‌ای کوچک در جنوب کوه احد. پیامبر ﷺ در اینجا گروهی تیرانداز (پنجاه نفر) را به فرماندهی عبدالله بن جبیر (خدا از او خشنود باشد) گمارد و به آنان فرمود جای خود را رها نکنند.",
+          "ru": "Небольшой холм к югу от горы Ухуд. Пророк ﷺ поставил здесь отряд лучников (пятьдесят человек) под началом Абдуллаха ибн Джубайра, да будет доволен им Аллах, и велел им удерживать позицию.",
+          "ms": "Sebuah bukit kecil di selatan Gunung Uhud. Di sini Nabi ﷺ menempatkan sekumpulan pemanah (lima puluh orang) di bawah pimpinan Abdullah bin Jubair radhiyallahu 'anhu, dan memerintahkan mereka kekal di kedudukan mereka.",
+          "ha": "Ƙaramin tudu a kudancin Dutsen Uhudu. A nan Annabi ﷺ ya sanya ƙungiyar maharba (hamsin) ƙarƙashin Abdullahi ɗan Jubair, Allah ya yarda da shi, ya umarce su su tsaya a matsayinsu.",
+          "ml": "ഉഹ്ദ് മലയുടെ തെക്കുള്ള ഒരു ചെറിയ കുന്ന്. ഇവിടെ നബി ﷺ അബ്ദുല്ലാഹ് ഇബ്നു ജുബൈറിന്റെ (അല്ലാഹു അദ്ദേഹത്തിൽ തൃപ്തിപ്പെടട്ടെ) നേതൃത്വത്തിൽ ഒരു കൂട്ടം അമ്പെയ്ത്തുകാരെ (അമ്പത് പേർ) നിർത്തി; സ്ഥാനം വിടരുതെന്ന് കൽപ്പിച്ചു.",
+          "sw": "Kilima kidogo kusini mwa Mlima Uhud. Hapa Mtume ﷺ aliwaweka kikundi cha wapiga mishale (hamsini) chini ya Abdullah bin Jubair, Mwenyezi Mungu amridhie, na akawaamuru wabaki katika nafasi yao.",
+          "ps": "د احد غره سویل ته یوه وړه غونډۍ. دلته پیغمبر ﷺ د عبدالله بن جبیر (الله دې ترې راضي وي) په مشرۍ یوه ډله غشي ویشتونکي (پنځوس تنه) ودرول او حکم یې وکړ چې خپل ځای مه پرېږدئ.",
+          "so": "Buur yar oo koonfurta Buurta Uxud ah. Halkan Nabiga ﷺ wuxuu dhigay koox tiirtiirayaal ah (konton) oo hoos imanaya Cabdullaahi ibn Jubayr, Alle ha ka raalli noqdo, wuxuuna ku amray inay joogaan boosaskooda.",
+          "ta": "உஹது மலையின் தெற்கே ஒரு சிறிய குன்று. இங்கு நபி ﷺ அப்துல்லாஹ் இப்னு ஜுபைர் (அல்லாஹ் அவரைப் பொருந்திக்கொள்வானாக) தலைமையில் ஒரு வில்லாளர் குழுவை (ஐம்பது பேர்) நிறுத்தி, தம் இடத்தை விட்டு நகர வேண்டாம் என்று கட்டளையிட்டார்கள்.",
+          "hi": "उहुद पर्वत के दक्षिण में एक छोटी पहाड़ी। यहाँ नबी ﷺ ने अब्दुल्लाह बिन जुबैर (अल्लाह उनसे राज़ी हो) के नेतृत्व में तीरंदाज़ों की एक टुकड़ी (पचास) तैनात की और उन्हें अपनी जगह डटे रहने का आदेश दिया।",
+          "bs": "Malo brdo južno od planine Uhud. Ovdje je Poslanik ﷺ postavio skupinu strijelaca (pedeset) pod vodstvom Abdullaha ibn Džubejra, Allah bio zadovoljan njim, i naredio im da održe položaj.",
+          "de": "Ein kleiner Hügel südlich des Berges Uhud. Hier stellte der Prophet ﷺ eine Gruppe von Bogenschützen (fünfzig) unter Abdullah ibn Dschubair, Allah habe Wohlgefallen an ihm, auf und befahl ihnen, ihre Stellung zu halten.",
+          "zh": "伍候德山以南的一座小山丘。先知 ﷺ 在此部署了一队弓箭手（五十人），由阿卜杜拉·本·朱拜尔（愿真主喜悦他）率领，并命令他们坚守阵地。",
+          "am": "ከኡሑድ ተራራ በስተደቡብ ያለ ትንሽ ኮረብታ። እዚህ ነቢዩ ﷺ በዐብዱላህ ኢብን ጁበይር (አላህ ይውደዳቸው) መሪነት የቀስተኞች ቡድን (ሃምሳ) አቆሙ፤ ቦታቸውን እንዳይለቁም አዘዟቸው።",
+          "ku": "Girekî biçûk li başûrê çiyayê Uhudê. Li vir Pêxember ﷺ komek tîravêj (pêncî kes) bin serokatiya Evdullah bin Cubeyr (Xwedê jê razî be) de bi cih kir û ferman da wan ku li cihê xwe bimînin.",
+          "az": "Uhud dağının cənubunda kiçik təpə. Burada Peyğəmbər ﷺ Abdullah ibn Cübeyrin (Allah ondan razı olsun) başçılığı ilə bir qrup oxatanı (əlli nəfər) yerləşdirdi və onlara mövqelərini tərk etməməyi əmr etdi.",
+          "th": "เนินเล็กทางใต้ของภูเขาอุฮุด ที่นี่ท่านนบี ﷺ ทรงจัดให้นักธนูกลุ่มหนึ่ง (ห้าสิบคน) ภายใต้การนำของอับดุลลอฮ์ อิบน์ ญุบัยร์ (ขอพระองค์ทรงพอพระทัยท่าน) และทรงสั่งให้รักษาตำแหน่งไว้",
+          "es": "Una pequeña colina al sur del monte Uhud. Aquí el Profeta ﷺ situó a un grupo de arqueros (cincuenta) al mando de Abdullah ibn Yubair, Allah esté complacido con él, y les ordenó mantener su posición."
+        },
+        {
+          "ar": "ولذلك سُمّي «جبل الرماة»، وهو من أبرز مواضع غزوة أحد.",
+          "en": "That is why it is called Jabal al-Rumat, “Hill of the Archers”, a key site of the Battle of Uhud.",
+          "tr": "Bu yüzden “Cebelü'r-Rümât”, yani “Okçular Tepesi” denir; Uhud Savaşı'nın önemli yerlerindendir.",
+          "ur": "اسی لیے اسے “جبلِ رماۃ” یعنی “تیر اندازوں کی پہاڑی” کہتے ہیں، جو غزوۂ احد کا اہم مقام ہے۔",
+          "id": "Karena itulah disebut Jabal Rumat, “Bukit Para Pemanah”, tempat penting dalam Perang Uhud.",
+          "uz": "Shu sababli u “Jabal ar-Rumot”, ya’ni “Kamonchilar tepaligi” deb ataladi va Uhud jangining muhim joyidir.",
+          "bn": "তাই একে “জাবাল আর-রুমাত”, অর্থাৎ “তিরন্দাজদের টিলা” বলা হয়; এটি উহুদ যুদ্ধের একটি গুরুত্বপূর্ণ স্থান।",
+          "fr": "C'est pourquoi on l'appelle Jabal ar-Roumat, « la colline des archers », un lieu clé de la bataille d'Ouhoud.",
+          "fa": "از این رو «جبل الرماة» یعنی «تپه تیراندازان» نامیده می‌شود و از جایگاه‌های مهم غزوه احد است.",
+          "ru": "Поэтому его называют Джабаль ар-Румат, «Холм лучников», — ключевое место битвы при Ухуде.",
+          "ms": "Kerana itulah ia dipanggil Jabal Rumat, “Bukit Para Pemanah”, tempat penting dalam Perang Uhud.",
+          "ha": "Don haka ake kiransa Jabal Rumat, “Tudun Maharba”, wani muhimmin wuri na Yaƙin Uhudu.",
+          "ml": "അതുകൊണ്ടാണ് ഇതിനെ “ജബലുർറുമാത്” അഥവാ “അമ്പെയ്ത്തുകാരുടെ കുന്ന്” എന്ന് വിളിക്കുന്നത്; ഉഹ്ദ് യുദ്ധത്തിലെ പ്രധാന സ്ഥലം.",
+          "sw": "Ndiyo maana kinaitwa Jabal Rumat, “Kilima cha Wapiga Mishale”, mahali muhimu pa Vita vya Uhud.",
+          "ps": "نو له همدې امله ورته «جبل الرماة»، یعني «د غشي ویشتونکو غونډۍ» وايي، چې د احد د جګړې مهم ځای دی.",
+          "so": "Sidaas darteed waxaa loo yaqaan Jabal Rumaat, “Buurta Tiirtiirayaasha”, meel muhiim ah oo dagaalkii Uxud ah.",
+          "ta": "எனவே இது “ஜபலுர் ருமாத்”, அதாவது “வில்லாளர்களின் குன்று” என்று அழைக்கப்படுகிறது; உஹது போரின் முக்கிய இடம்.",
+          "hi": "इसीलिए इसे “जबलुर्रुमात” यानी “तीरंदाज़ों की पहाड़ी” कहते हैं, जो उहुद की जंग का एक प्रमुख स्थल है।",
+          "bs": "Zato se zove Džebel er-Rumat, “Brdo strijelaca”, ključno mjesto Bitke na Uhudu.",
+          "de": "Deshalb heißt er Dschabal ar-Rumat, „Hügel der Bogenschützen“, ein Schlüsselort der Schlacht von Uhud.",
+          "zh": "因此称为“射手山”（杰拜勒·鲁马特），是伍候德战役的关键地点。",
+          "am": "ስለዚህ “ጀበል አር-ሩማት” ማለትም “የቀስተኞች ኮረብታ” ይባላል፤ በኡሑድ ጦርነት ቁልፍ ቦታ ነው።",
+          "ku": "Ji ber vê yekê jê re “Cebel er-Rumat”, ango “Girê Tîravêjan” tê gotin, cihekî girîng ê Şerê Uhudê.",
+          "az": "Buna görə ona “Cəbəl ər-Rumat”, yəni “Oxatanlar təpəsi” deyilir; Uhud döyüşünün əsas yerlərindəndir.",
+          "th": "จึงเรียกว่า ญะบัลอัร-รุมาต “เนินนักธนู” เป็นสถานที่สำคัญของสงครามอุฮุด",
+          "es": "Por eso se llama Yabal ar-Rumat, «la colina de los arqueros», un lugar clave de la batalla de Uhud."
+        }
       ],
       "sources": [
-        { "t": "موضوع: أين وقعت غزوة أحد", "u": "https://mawdoo3.com/أين_وقعت_غزوة_أحد" },
-        { "t": "عرق: جبل الرماة", "u": "https://areq.net/m/جبل_الرماة.html" },
-        { "t": "صحيفة المدينة: غزوة أحد", "u": "https://www.al-madina.com/ampArticle/665709" }
+        {
+          "t": "موضوع: أين وقعت غزوة أحد",
+          "u": "https://mawdoo3.com/أين_وقعت_غزوة_أحد"
+        },
+        {
+          "t": "عرق: جبل الرماة",
+          "u": "https://areq.net/m/جبل_الرماة.html"
+        },
+        {
+          "t": "صحيفة المدينة: غزوة أحد",
+          "u": "https://www.al-madina.com/ampArticle/665709"
+        }
       ],
       "images": [
-        { "src": "visits/546-1.webp", "alt": { "ar": "زوّار على جبل الرماة، وخلفهم المسجد وجبل أحد", "en": "Visitors on Jabal al-Rumat, with the mosque and Mount Uhud behind" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
-        { "src": "visits/546-2.webp", "alt": { "ar": "زوّار يصعدون جبل الرماة وينزلون منه", "en": "Visitors going up and down Jabal al-Rumat" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
-        { "src": "visits/546-3.webp", "alt": { "ar": "جبل الرماة والطيور تحلّق فوق الزوّار", "en": "Jabal al-Rumat with birds flying over the visitors" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+        {
+          "src": "visits/546-1.webp",
+          "alt": {
+            "ar": "زوّار على جبل الرماة، وخلفهم المسجد وجبل أحد",
+            "en": "Visitors on Jabal al-Rumat, with the mosque and Mount Uhud behind"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        },
+        {
+          "src": "visits/546-2.webp",
+          "alt": {
+            "ar": "زوّار يصعدون جبل الرماة وينزلون منه",
+            "en": "Visitors going up and down Jabal al-Rumat"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        },
+        {
+          "src": "visits/546-3.webp",
+          "alt": {
+            "ar": "جبل الرماة والطيور تحلّق فوق الزوّار",
+            "en": "Jabal al-Rumat with birds flying over the visitors"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        }
       ]
     },
     {
       "id": 516,
       "slides": [
-        { "ar": "في الموضع الذي كان يُعرف بـ«المُصلّى» غرب المسجد النبوي، وصلّى فيه النبي ﷺ العيد وصلاة الاستسقاء.", "en": "On the spot once known as “the Musalla”, west of the Prophet's Mosque, where the Prophet ﷺ prayed the Eid prayers and the prayer for rain." },
-        { "ar": "يُنسب بناء المسجد إلى عمر بن عبدالعزيز حين كان والياً على المدينة، وجُدّد مراراً في العهود اللاحقة.", "en": "The mosque is attributed to Umar ibn Abd al-Aziz when he was governor of Madinah, and was renovated many times since." }
+        {
+          "ar": "في الموضع الذي كان يُعرف بـ«المُصلّى» غرب المسجد النبوي، وصلّى فيه النبي ﷺ العيد وصلاة الاستسقاء.",
+          "en": "On the spot once known as “the Musalla”, west of the Prophet's Mosque, where the Prophet ﷺ prayed the Eid prayers and the prayer for rain.",
+          "tr": "Mescid-i Nebevî'nin batısında, eskiden “Musallâ” denilen yerdedir; Peygamber ﷺ burada bayram namazlarını ve yağmur duası namazını kıldı.",
+          "ur": "مسجدِ نبوی کے مغرب میں اس جگہ پر جو کبھی “مصلیٰ” کہلاتی تھی، جہاں نبی ﷺ نے عید کی نمازیں اور نمازِ استسقاء ادا فرمائیں۔",
+          "id": "Di tempat yang dahulu dikenal sebagai “Musalla”, di sebelah barat Masjid Nabawi, tempat Nabi ﷺ melaksanakan shalat Id dan shalat istisqa (minta hujan).",
+          "uz": "Payg‘ambar masjidining g‘arbida, ilgari “Musalla” deb atalgan joyda; Payg‘ambar ﷺ bu yerda hayit namozlarini va istisqo (yomg‘ir so‘rash) namozini o‘qiganlar.",
+          "bn": "মসজিদে নববির পশ্চিমে, যে স্থান একসময় “মুসাল্লা” নামে পরিচিত ছিল, যেখানে নবী ﷺ ঈদের নামাজ ও বৃষ্টির নামাজ পড়েছিলেন।",
+          "fr": "À l'endroit autrefois appelé « le Moussalla », à l'ouest de la Mosquée du Prophète, où le Prophète ﷺ accomplit les prières de l'Aïd et la prière pour la pluie.",
+          "fa": "در جایی که زمانی «مصلی» نامیده می‌شد، غرب مسجد النبی، جایی که پیامبر ﷺ نماز عید و نماز باران را خواند.",
+          "ru": "На месте, прежде известном как «Мусалла», к западу от Мечети Пророка, где Пророк ﷺ совершал праздничные молитвы и молитву о дожде.",
+          "ms": "Di tempat yang dahulu dikenali sebagai “Musalla”, di barat Masjid Nabawi, tempat Nabi ﷺ menunaikan solat hari raya dan solat istisqa (memohon hujan).",
+          "ha": "A wurin da ake kira “Musalla” a da, yammacin Masallacin Annabi, inda Annabi ﷺ ya yi sallolin Idi da sallar roƙon ruwa.",
+          "ml": "മസ്ജിദുന്നബവിയുടെ പടിഞ്ഞാറ്, മുമ്പ് “മുസ്വല്ല” എന്നറിയപ്പെട്ട സ്ഥലത്ത്; ഇവിടെ നബി ﷺ പെരുന്നാൾ നമസ്കാരങ്ങളും മഴക്കായുള്ള നമസ്കാരവും നിർവഹിച്ചു.",
+          "sw": "Mahali palipojulikana zamani kama “Musalla”, magharibi mwa Msikiti wa Mtume, ambapo Mtume ﷺ alisali swala za Idi na swala ya kuomba mvua.",
+          "ps": "په هغه ځای کې چې پخوا «مصلی» بلل کېده، د مسجد نبوي لویدیځ ته، چېرته چې پیغمبر ﷺ د اختر لمونځونه او د باران غوښتنې لمونځ کړی.",
+          "so": "Meeshii hore loogu yiqiin “Musalla”, galbeedka Masjidka Nabiga, halkaas oo Nabiga ﷺ ku tukaday salaadaha Ciidda iyo salaadda roob-doonka.",
+          "ta": "முன்பு “முஸல்லா” என்று அறியப்பட்ட இடத்தில், மஸ்ஜிதுன் நபவியின் மேற்கில்; இங்கு நபி ﷺ பெருநாள் தொழுகைகளையும் மழை வேண்டும் தொழுகையையும் தொழுதார்கள்.",
+          "hi": "उस स्थान पर जो कभी “मुसल्ला” कहलाता था, मस्जिदे नबवी के पश्चिम में, जहाँ नबी ﷺ ने ईद की नमाज़ें और बारिश की नमाज़ पढ़ी।",
+          "bs": "Na mjestu koje se nekad zvalo “Musalla”, zapadno od Poslanikove džamije, gdje je Poslanik ﷺ klanjao bajram-namaze i namaz za kišu.",
+          "de": "An der Stelle, die einst „der Musalla“ hieß, westlich der Prophetenmoschee, wo der Prophet ﷺ die Festgebete und das Regengebet verrichtete.",
+          "zh": "在先知寺以西，曾被称为“穆萨拉”的地方，先知 ﷺ 曾在此礼开斋节和宰牲节会礼以及求雨拜。",
+          "am": "ቀደም ሲል “ሙሰላ” ተብሎ በሚታወቀው ቦታ፣ ከነቢዩ መስጊድ በስተምዕራብ፣ ነቢዩ ﷺ የዒድ ሶላቶችንና የዝናብ ሶላትን የሰገዱበት።",
+          "ku": "Li cihê ku berê jê re “Musella” digotin, li rojavayê Mizgefta Pêxember, ku Pêxember ﷺ nimêjên cejnê û nimêja baranê lê kir.",
+          "az": "Əvvəllər “Müsəlla” adlanan yerdə, Peyğəmbər məscidinin qərbində; Peyğəmbər ﷺ burada bayram namazlarını və yağış namazını qılıb.",
+          "th": "ณ สถานที่ที่เคยเรียกว่า “มุศ็อลลา” ทางตะวันตกของมัสยิดนบี ที่ท่านนบี ﷺ ทรงละหมาดอีดและละหมาดขอฝน",
+          "es": "En el lugar antes conocido como «el Musalla», al oeste de la Mezquita del Profeta, donde el Profeta ﷺ hizo las oraciones de la fiesta y la oración para pedir lluvia."
+        },
+        {
+          "ar": "يُنسب بناء المسجد إلى عمر بن عبدالعزيز حين كان والياً على المدينة، وجُدّد مراراً في العهود اللاحقة.",
+          "en": "The mosque is attributed to Umar ibn Abd al-Aziz when he was governor of Madinah, and was renovated many times since.",
+          "tr": "Mescidin yapımı, Medine valisi iken Ömer b. Abdülazîz'e nisbet edilir; sonrasında defalarca yenilenmiştir.",
+          "ur": "مسجد کی تعمیر عمر بن عبدالعزیز سے منسوب ہے جب وہ مدینہ کے گورنر تھے، اور بعد میں کئی بار اس کی تجدید ہوئی۔",
+          "id": "Masjid ini dinisbatkan kepada Umar bin Abdul Aziz ketika menjadi gubernur Madinah, dan telah beberapa kali direnovasi sejak itu.",
+          "uz": "Masjidning qurilishi Madina noibi bo‘lgan Umar ibn Abdulaziz nomi bilan bog‘lanadi va keyinchalik ko‘p marta ta’mirlangan.",
+          "bn": "মসজিদটির নির্মাণ মদিনার গভর্নর থাকাকালে উমর ইবনে আবদুল আজিজের দিকে সম্পর্কিত করা হয়, এবং এরপর বহুবার সংস্কার করা হয়েছে।",
+          "fr": "La mosquée est attribuée à Omar ibn Abd al-Aziz lorsqu'il était gouverneur de Médine, et elle a été rénovée à de nombreuses reprises depuis.",
+          "fa": "ساخت مسجد به عمر بن عبدالعزیز، آن‌گاه که والی مدینه بود، نسبت داده می‌شود و پس از آن بارها بازسازی شده است.",
+          "ru": "Строительство мечети приписывают Умару ибн Абд аль-Азизу, когда тот был правителем Медины; с тех пор её много раз обновляли.",
+          "ms": "Masjid ini dinisbahkan kepada Umar bin Abdul Aziz ketika beliau menjadi gabenor Madinah, dan telah dibaik pulih berkali-kali sejak itu.",
+          "ha": "Ana danganta ginin masallacin ga Umar ɗan Abdulaziz lokacin da yake gwamnan Madina, kuma an gyara shi sau da yawa tun daga lokacin.",
+          "ml": "പള്ളിയുടെ നിർമ്മാണം മദീന ഗവർണറായിരുന്ന ഉമർ ഇബ്നു അബ്ദുൽ അസീസിലേക്ക് ചേർക്കപ്പെടുന്നു; പിന്നീട് പലതവണ പുതുക്കി.",
+          "sw": "Msikiti huu unahusishwa na Umar bin Abdul Aziz alipokuwa gavana wa Madina, na umekarabatiwa mara nyingi tangu hapo.",
+          "ps": "د جومات جوړول عمر بن عبدالعزیز ته منسوب دي کله چې هغه د مدینې والي و، او له هغه وروسته څو ځله ترمیم شوی.",
+          "so": "Dhismaha masjidka waxaa loo nisbeeyey Cumar ibn Cabdulcasiis markuu ahaa guddoomiyaha Madiina, waxaana dhowr jeer dib loo hagaajiyey tan iyo markaas.",
+          "ta": "பள்ளிவாசலின் கட்டுமானம் மதீனாவின் ஆளுநராக இருந்தபோது உமர் இப்னு அப்துல் அஸீஸுடன் தொடர்புபடுத்தப்படுகிறது; அதன்பின் பலமுறை புதுப்பிக்கப்பட்டது.",
+          "hi": "मस्जिद का निर्माण उमर बिन अब्दुल अज़ीज़ से जोड़ा जाता है जब वे मदीना के गवर्नर थे, और उसके बाद कई बार इसका जीर्णोद्धार हुआ।",
+          "bs": "Izgradnja džamije pripisuje se Omeru ibn Abdul-Azizu dok je bio namjesnik Medine, a od tada je više puta obnavljana.",
+          "de": "Die Moschee wird Umar ibn Abd al-Aziz zugeschrieben, als er Statthalter von Medina war, und wurde seither oft erneuert.",
+          "zh": "这座清真寺相传由担任麦地那总督时的欧麦尔·本·阿卜杜勒·阿齐兹所建，此后多次翻修。",
+          "am": "የመስጊዱ ግንባታ የመዲና አስተዳዳሪ ከነበሩት ዑመር ኢብን ዐብዱልዐዚዝ ጋር ይያያዛል፤ ከዚያ በኋላ ብዙ ጊዜ ታድሷል።",
+          "ku": "Avakirina mizgeftê bi Umer bin Ebdulezîz ve tê girêdan gava ew waliyê Medîneyê bû, û ji wê hingê ve gelek caran hatiye nûkirin.",
+          "az": "Məscidin tikintisi Mədinə valisi olarkən Ömər ibn Əbdüləzizə nisbət edilir və sonra dəfələrlə təmir olunub.",
+          "th": "การสร้างมัสยิดนี้เชื่อมโยงกับอุมัร อิบน์ อับดุลอะซีซ ขณะเป็นเจ้าเมืองมะดีนะฮ์ และได้รับการบูรณะหลายครั้งนับแต่นั้น",
+          "es": "La mezquita se atribuye a Umar ibn Abd al-Aziz cuando era gobernador de Medina, y ha sido renovada muchas veces desde entonces."
+        }
       ],
       "sources": [
-        { "t": "صحيفة عاجل: مسجد الغمامة", "u": "https://ajel.sa/local/9u6yopy85r" },
-        { "t": "صحيفة المدينة: مسجد الغمامة يعيد زواره لزمن النبوة", "u": "https://www.al-madina.com/article/664963/آخر-الأخبار/المدينة-المنورة-مسجد-الغمامة-يعيد-زواره-لزمن-النبوة" }
+        {
+          "t": "صحيفة عاجل: مسجد الغمامة",
+          "u": "https://ajel.sa/local/9u6yopy85r"
+        },
+        {
+          "t": "صحيفة المدينة: مسجد الغمامة يعيد زواره لزمن النبوة",
+          "u": "https://www.al-madina.com/article/664963/آخر-الأخبار/المدينة-المنورة-مسجد-الغمامة-يعيد-زواره-لزمن-النبوة"
+        }
       ],
       "images": [
-        { "src": "visits/516-1.webp", "alt": { "ar": "مسجد الغمامة بقبابه ومئذنته وسط الساحة", "en": "Al-Ghamamah Mosque with its domes and minaret in its square" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
-        { "src": "visits/516-2.webp", "focus": "35% 50%", "alt": { "ar": "قباب مسجد الغمامة وجدرانه الحجرية والحمام يحلّق حوله", "en": "The domes and stone walls of Al-Ghamamah Mosque, with pigeons flying around" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
-        { "src": "visits/516-3.webp", "alt": { "ar": "باب مسجد الغمامة الخشبي المزخرف وفوقه لوحة اسم المسجد", "en": "The ornate wooden door of Al-Ghamamah Mosque, with its name plate above" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+        {
+          "src": "visits/516-1.webp",
+          "alt": {
+            "ar": "مسجد الغمامة بقبابه ومئذنته وسط الساحة",
+            "en": "Al-Ghamamah Mosque with its domes and minaret in its square"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        },
+        {
+          "src": "visits/516-2.webp",
+          "focus": "35% 50%",
+          "alt": {
+            "ar": "قباب مسجد الغمامة وجدرانه الحجرية والحمام يحلّق حوله",
+            "en": "The domes and stone walls of Al-Ghamamah Mosque, with pigeons flying around"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        },
+        {
+          "src": "visits/516-3.webp",
+          "alt": {
+            "ar": "باب مسجد الغمامة الخشبي المزخرف وفوقه لوحة اسم المسجد",
+            "en": "The ornate wooden door of Al-Ghamamah Mosque, with its name plate above"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        }
       ]
     },
     {
       "id": 549,
       "slides": [
-        { "ar": "بئر رومة، من أعذب آبار المدينة. رغّب النبي ﷺ في شرائها للمسلمين، فاشتراها عثمان بن عفان رضي الله عنه ووقفها عليهم.", "en": "The well of Rumah, among the sweetest in Madinah. The Prophet ﷺ encouraged buying it for the Muslims, and Uthman ibn Affan, may God be pleased with him, bought it and made it a waqf for them." },
-        { "ar": "ولا يزال وقفها قائماً إلى اليوم، وفق شرط الواقف.", "en": "The waqf still stands today, under the founder's condition." }
+        {
+          "ar": "بئر رومة، من أعذب آبار المدينة. رغّب النبي ﷺ في شرائها للمسلمين، فاشتراها عثمان بن عفان رضي الله عنه ووقفها عليهم.",
+          "en": "The well of Rumah, among the sweetest in Madinah. The Prophet ﷺ encouraged buying it for the Muslims, and Uthman ibn Affan, may God be pleased with him, bought it and made it a waqf for them.",
+          "tr": "Rûme Kuyusu, Medine'nin en tatlı sulu kuyularındandır. Peygamber ﷺ Müslümanlar için satın alınmasını teşvik etti; Osman b. Affân (Allah ondan razı olsun) onu satın alıp Müslümanlara vakfetti.",
+          "ur": "بئرِ رومہ، مدینہ کے میٹھے ترین کنوؤں میں سے۔ نبی ﷺ نے اسے مسلمانوں کے لیے خریدنے کی ترغیب دی، تو عثمان بن عفان رضی اللہ عنہ نے اسے خرید کر مسلمانوں کے لیے وقف کر دیا۔",
+          "id": "Sumur Rumah, salah satu yang paling tawar airnya di Madinah. Nabi ﷺ menganjurkan membelinya untuk kaum Muslimin, lalu Utsman bin Affan radhiyallahu 'anhu membelinya dan mewakafkannya untuk mereka.",
+          "uz": "Rumo quduqi — Madinadagi eng chuchuk suvli quduqlardan biri. Payg‘ambar ﷺ uni musulmonlar uchun sotib olishga targ‘ib qildilar va Usmon ibn Affon (Alloh undan rozi bo‘lsin) uni sotib olib, musulmonlarga vaqf qildi.",
+          "bn": "রুমা কূপ, মদিনার সবচেয়ে সুমিষ্ট পানির কূপগুলোর একটি। নবী ﷺ মুসলমানদের জন্য এটি কিনতে উৎসাহিত করেন, আর উসমান ইবনে আফফান (আল্লাহ তাঁর প্রতি সন্তুষ্ট হোন) তা কিনে মুসলমানদের জন্য ওয়াকফ করে দেন।",
+          "fr": "Le puits de Roumah, parmi les plus doux de Médine. Le Prophète ﷺ encouragea à l'acheter pour les musulmans, et Othmane ibn Affan, qu'Allah l'agrée, l'acheta et le constitua en waqf pour eux.",
+          "fa": "چاه رومه، از شیرین‌ترین چاه‌های مدینه. پیامبر ﷺ به خرید آن برای مسلمانان تشویق کرد و عثمان بن عفان (خدا از او خشنود باشد) آن را خرید و برای مسلمانان وقف کرد.",
+          "ru": "Колодец Рума, один из самых сладких в Медине. Пророк ﷺ призвал выкупить его для мусульман, и Усман ибн Аффан, да будет доволен им Аллах, купил его и сделал вакфом для них.",
+          "ms": "Perigi Rumah, antara yang paling tawar airnya di Madinah. Nabi ﷺ menggalakkan agar ia dibeli untuk umat Islam, lalu Uthman bin Affan radhiyallahu 'anhu membelinya dan mewakafkannya untuk mereka.",
+          "ha": "Rijiyar Ruma, ɗaya daga cikin mafi daɗin ruwa a Madina. Annabi ﷺ ya ƙarfafa a saye ta don Musulmai, Usman ɗan Affan, Allah ya yarda da shi, ya saye ta ya mayar da ita waƙafi a gare su.",
+          "ml": "റൂമ കിണർ, മദീനയിലെ ഏറ്റവും മധുരമുള്ള വെള്ളമുള്ള കിണറുകളിലൊന്ന്. മുസ്ലിംകൾക്കായി അത് വാങ്ങാൻ നബി ﷺ പ്രോത്സാഹിപ്പിച്ചു; ഉസ്മാൻ ഇബ്നു അഫ്ഫാൻ (അല്ലാഹു അദ്ദേഹത്തിൽ തൃപ്തിപ്പെടട്ടെ) അത് വാങ്ങി അവർക്കായി വഖ്ഫ് ചെയ്തു.",
+          "sw": "Kisima cha Ruma, kimoja kati ya vilivyo na maji matamu zaidi Madina. Mtume ﷺ alihimiza kukinunua kwa ajili ya Waislamu, na Uthman bin Affan, Mwenyezi Mungu amridhie, akakinunua na kukifanya waqfu kwao.",
+          "ps": "د رومه څاه، د مدینې له تر ټولو خوږو اوبو څخه یو. پیغمبر ﷺ مسلمانانو ته د اخیستلو هڅونه وکړه، او عثمان بن عفان (الله دې ترې راضي وي) واخیست او د مسلمانانو لپاره یې وقف کړ.",
+          "so": "Ceelka Ruumah, mid ka mid ah kuwa biyahoodu ugu macaanyihiin Madiina. Nabiga ﷺ wuxuu dhiirrigeliyey in loo iibsado muslimiinta, Cusmaan ibn Caffaan, Alle ha ka raalli noqdo, ayaa iibsaday oo u waqfiyay.",
+          "ta": "ரூமா கிணறு, மதீனாவின் மிக இனிய நீர்க் கிணறுகளில் ஒன்று. முஸ்லிம்களுக்காக அதை வாங்க நபி ﷺ ஊக்குவித்தார்கள்; உஸ்மான் இப்னு அஃப்பான் (அல்லாஹ் அவரைப் பொருந்திக்கொள்வானாக) அதை வாங்கி அவர்களுக்காக வக்ஃப் செய்தார்.",
+          "hi": "रूमा का कुआँ, मदीना के सबसे मीठे पानी के कुओं में से एक। नबी ﷺ ने इसे मुसलमानों के लिए ख़रीदने की प्रेरणा दी, और उस्मान बिन अफ़्फ़ान (अल्लाह उनसे राज़ी हो) ने इसे ख़रीदकर उनके लिए वक़्फ़ कर दिया।",
+          "bs": "Bunar Ruma, među najslađim u Medini. Poslanik ﷺ je podstakao da se kupi za muslimane, pa ga je Osman ibn Affan, Allah bio zadovoljan njim, kupio i učinio vakufom za njih.",
+          "de": "Der Brunnen Ruma, einer der süßesten Medinas. Der Prophet ﷺ ermunterte, ihn für die Muslime zu kaufen, und Uthman ibn Affan, Allah habe Wohlgefallen an ihm, kaufte ihn und machte ihn zu einer Stiftung (Waqf) für sie.",
+          "zh": "鲁迈水井，麦地那最甘甜的水井之一。先知 ﷺ 鼓励为穆斯林买下它，奥斯曼·本·阿凡（愿真主喜悦他）买下并为穆斯林设为瓦合甫。",
+          "am": "የሩማ ጉድጓድ፣ ከመዲና ጣፋጭ ውሃ ካላቸው ጉድጓዶች አንዱ። ነቢዩ ﷺ ለሙስሊሞች እንዲገዛ አበረታቱ፤ ዑስማን ኢብን ዐፋን (አላህ ይውደዳቸው) ገዝተው ለእነርሱ ዋቅፍ አደረጉት።",
+          "ku": "Bîra Rûmayê, yek ji şîrîntirîn avên Medîneyê. Pêxember ﷺ teşwîq kir ku ji bo misilmanan bê kirîn, û Osman bin Effan (Xwedê jê razî be) ew kirî û ji bo wan kir wext.",
+          "az": "Rumə quyusu, Mədinənin ən şirin sulu quyularından biri. Peyğəmbər ﷺ onun müsəlmanlar üçün alınmasına təşviq etdi, Osman ibn Əffan (Allah ondan razı olsun) onu alıb onlar üçün vəqf etdi.",
+          "th": "บ่อรูเมาะฮ์ หนึ่งในบ่อที่น้ำหวานที่สุดในมะดีนะฮ์ ท่านนบี ﷺ ทรงส่งเสริมให้ซื้อไว้เพื่อมุสลิม และอุษมาน อิบน์ อัฟฟาน (ขอพระองค์ทรงพอพระทัยท่าน) ซื้อแล้วอุทิศเป็นวะกัฟแก่พวกเขา",
+          "es": "El pozo de Rumah, entre los más dulces de Medina. El Profeta ﷺ animó a comprarlo para los musulmanes, y Uzmán ibn Affan, Allah esté complacido con él, lo compró y lo constituyó en waqf para ellos."
+        },
+        {
+          "ar": "ولا يزال وقفها قائماً إلى اليوم، وفق شرط الواقف.",
+          "en": "The waqf still stands today, under the founder's condition.",
+          "tr": "Vakıf, vakfedenin şartı uyarınca bugün de devam etmektedir.",
+          "ur": "یہ وقف آج بھی واقف کی شرط کے مطابق قائم ہے۔",
+          "id": "Wakaf itu masih berdiri hingga kini, sesuai syarat sang pewakaf.",
+          "uz": "Vaqf bugungi kunda ham vaqf qiluvchining sharti bo‘yicha amal qilmoqda.",
+          "bn": "ওয়াকফটি আজও ওয়াকফকারীর শর্ত অনুযায়ী বহাল আছে।",
+          "fr": "Le waqf existe toujours aujourd'hui, selon la condition du fondateur.",
+          "fa": "این وقف هنوز هم بنا بر شرط واقف برقرار است.",
+          "ru": "Вакф существует и сегодня, согласно условию завещателя.",
+          "ms": "Wakaf itu masih kekal hingga hari ini, menurut syarat pewakafnya.",
+          "ha": "Waƙafin yana nan har yau, bisa sharaɗin mai waƙafin.",
+          "ml": "വഖ്ഫ് ഇന്നും വഖ്ഫ് ചെയ്തയാളുടെ നിബന്ധന പ്രകാരം നിലനിൽക്കുന്നു.",
+          "sw": "Waqfu huo bado upo hadi leo, kwa sharti la mwenye kuweka waqfu.",
+          "ps": "دا وقف نن هم د وقف کوونکي د شرط له مخې پاتې دی.",
+          "so": "Waqfigu wuu sii jiraa maanta, sida shuruudda waqfiyaha.",
+          "ta": "வக்ஃப் இன்றும் வக்ஃப் செய்தவரின் நிபந்தனைப்படி நிலைத்துள்ளது.",
+          "hi": "वक़्फ़ आज भी वक़्फ़ करने वाले की शर्त के अनुसार क़ायम है।",
+          "bs": "Vakuf i danas postoji, prema uvjetu vakifa.",
+          "de": "Die Stiftung besteht bis heute, gemäß der Bedingung des Stifters.",
+          "zh": "这项瓦合甫至今仍依立瓦合甫者的条件延续。",
+          "am": "ዋቅፉ ዛሬም በዋቂፉ ቅድመ ሁኔታ መሠረት ቀጥሏል።",
+          "ku": "Wext îro jî li gorî şerta wextkar berdewam e.",
+          "az": "Vəqf bu gün də vəqf edənin şərtinə uyğun olaraq davam edir.",
+          "th": "วะกัฟนั้นยังคงอยู่จนถึงทุกวันนี้ ตามเงื่อนไขของผู้อุทิศ",
+          "es": "El waqf sigue en pie hoy, según la condición del fundador."
+        }
       ],
       "sources": [
-        { "t": "سعودي بيديا: بئر رومة", "u": "https://saudipedia.com/ar/بئر-رومة" },
-        { "t": "الألوكة: آبار المدينة المنورة", "u": "https://www.alukah.net/personal_pages/11439/97247/%d8%a2%d8%a8%d8%a7%d8%b1-%d8%a7%d9%84%d9%85%d8%af%d9%8a%d9%86%d8%a9-%d8%a7%d9%84%d9%85%d9%86%d9%88%d8%b1%d8%a9/" }
+        {
+          "t": "سعودي بيديا: بئر رومة",
+          "u": "https://saudipedia.com/ar/بئر-رومة"
+        },
+        {
+          "t": "الألوكة: آبار المدينة المنورة",
+          "u": "https://www.alukah.net/personal_pages/11439/97247/%d8%a2%d8%a8%d8%a7%d8%b1-%d8%a7%d9%84%d9%85%d8%af%d9%8a%d9%86%d8%a9-%d8%a7%d9%84%d9%85%d9%86%d9%88%d8%b1%d8%a9/"
+        }
       ],
       "images": [
-        { "src": "visits/549-1.webp", "focus": "40% 50%", "alt": { "ar": "لوحة «مزرعة بئر عثمان» على سياج المزرعة وبين النخيل", "en": "The sign “Uthman's Well Farm” on the farm fence, among palm trees" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
-        { "src": "visits/549-2.webp", "focus": "70% 50%", "alt": { "ar": "فتحة بئر رومة وحولها سور من الحجارة البركانية", "en": "The opening of the well of Rumah, ringed by a wall of volcanic stone" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+        {
+          "src": "visits/549-1.webp",
+          "focus": "40% 50%",
+          "alt": {
+            "ar": "لوحة «مزرعة بئر عثمان» على سياج المزرعة وبين النخيل",
+            "en": "The sign “Uthman's Well Farm” on the farm fence, among palm trees"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        },
+        {
+          "src": "visits/549-2.webp",
+          "focus": "70% 50%",
+          "alt": {
+            "ar": "فتحة بئر رومة وحولها سور من الحجارة البركانية",
+            "en": "The opening of the well of Rumah, ringed by a wall of volcanic stone"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        }
       ]
     },
     {
       "id": 548,
       "slides": [
-        { "ar": "الموضع الذي أدركت النبي ﷺ فيه أول صلاة جمعة بعد الهجرة، وهو في طريقه من قباء إلى المدينة.", "en": "The spot where the Prophet ﷺ was overtaken by the first Friday prayer after the Hijrah, on his way from Quba to Madinah." },
-        { "ar": "يقع في بطن وادي رانوناء عند ديار بني سالم بن عوف، ومن أسمائه مسجد الوادي ومسجد عاتكة.", "en": "It lies in the bed of Wadi Ranuna', among the homes of Banu Salim ibn Awf. It is also called Masjid al-Wadi and Masjid Atikah." }
+        {
+          "ar": "الموضع الذي أدركت النبي ﷺ فيه أول صلاة جمعة بعد الهجرة، وهو في طريقه من قباء إلى المدينة.",
+          "en": "The spot where the Prophet ﷺ was overtaken by the first Friday prayer after the Hijrah, on his way from Quba to Madinah.",
+          "tr": "Hicretten sonraki ilk cuma namazı vaktinin, Kuba'dan Medine'ye giderken Peygamber'i ﷺ yolda yakaladığı yer.",
+          "ur": "وہ مقام جہاں ہجرت کے بعد پہلی جمعہ کی نماز کا وقت نبی ﷺ کو قباء سے مدینہ جاتے ہوئے راستے میں آ پہنچا۔",
+          "id": "Tempat Nabi ﷺ didatangi waktu shalat Jumat pertama setelah hijrah, dalam perjalanan dari Quba ke Madinah.",
+          "uz": "Hijratdan keyingi birinchi juma namozi vaqti Payg‘ambar ﷺ ni Qubodan Madinaga ketayotganda yo‘lda qarshi olgan joy.",
+          "bn": "হিজরতের পর প্রথম জুমার নামাজের সময় নবী ﷺ-কে কুবা থেকে মদিনায় যাওয়ার পথে যেখানে পেয়েছিল, সেই স্থান।",
+          "fr": "L'endroit où l'heure de la première prière du vendredi après l'Hégire surprit le Prophète ﷺ, en chemin de Qouba vers Médine.",
+          "fa": "جایی که وقت نخستین نماز جمعه پس از هجرت، پیامبر ﷺ را در راه قبا به مدینه دریافت.",
+          "ru": "Место, где время первой пятничной молитвы после хиджры застало Пророка ﷺ на пути из Кубы в Медину.",
+          "ms": "Tempat Nabi ﷺ dijemput waktu solat Jumaat pertama selepas hijrah, dalam perjalanan dari Quba ke Madinah.",
+          "ha": "Wurin da lokacin sallar Juma'a ta farko bayan hijira ya riski Annabi ﷺ a hanyarsa daga Kuba zuwa Madina.",
+          "ml": "ഹിജ്റയ്ക്ക് ശേഷമുള്ള ആദ്യ ജുമുഅ നമസ്കാര സമയം ഖുബായിൽ നിന്ന് മദീനയിലേക്കുള്ള യാത്രയ്ക്കിടെ നബി ﷺ യെ എത്തിച്ചേർന്ന സ്ഥലം.",
+          "sw": "Mahali ambapo wakati wa swala ya kwanza ya Ijumaa baada ya Hijra ulimkuta Mtume ﷺ njiani kutoka Quba kwenda Madina.",
+          "ps": "هغه ځای چېرته چې د هجرت وروسته د لومړي جمعې لمانځه وخت پیغمبر ﷺ ته د قبا څخه مدینې ته په لاره کې ورسېد.",
+          "so": "Meesha ay waqtiga salaaddii Jimcaha ugu horreysay ee Hijrada ka dib Nabiga ﷺ ka heshay jidka Qubaa ilaa Madiina.",
+          "ta": "ஹிஜ்ரத்துக்குப் பின் முதல் ஜுமுஆ தொழுகை நேரம், குபாவிலிருந்து மதீனாவுக்குச் செல்லும் வழியில் நபி ﷺ அவர்களை அடைந்த இடம்.",
+          "hi": "वह स्थान जहाँ हिजरत के बाद पहली जुमे की नमाज़ का समय क़ुबा से मदीना जाते हुए नबी ﷺ को रास्ते में आ पहुँचा।",
+          "bs": "Mjesto gdje je Poslanika ﷺ, na putu od Kube do Medine, zatekao vakat prvog džuma-namaza nakon hidžre.",
+          "de": "Die Stelle, an der den Propheten ﷺ auf dem Weg von Quba nach Medina die Zeit des ersten Freitagsgebets nach der Hidschra einholte.",
+          "zh": "这里是伊历迁徙后第一个主麻礼拜的时间在先知 ﷺ 从古巴前往麦地那的途中追上他的地方。",
+          "am": "ከሂጅራ በኋላ የመጀመሪያው የጁምዓ ሶላት ጊዜ ከቁባ ወደ መዲና በሚጓዙበት መንገድ ነቢዩን ﷺ ያገኘበት ቦታ።",
+          "ku": "Cihê ku dema yekem nimêja înê piştî koçê li ser rêya Qubayê ber bi Medîneyê Pêxember ﷺ dît.",
+          "az": "Hicrətdən sonrakı ilk cümə namazının vaxtı Peyğəmbər ﷺ Qubadan Mədinəyə gedərkən yolda onu haqladığı yer.",
+          "th": "สถานที่ที่เวลาละหมาดวันศุกร์ครั้งแรกหลังฮิจเราะฮ์มาถึงท่านนบี ﷺ ระหว่างทางจากกุบาอ์ไปมะดีนะฮ์",
+          "es": "El lugar donde la hora de la primera oración del viernes tras la Hégira alcanzó al Profeta ﷺ en su camino de Quba a Medina."
+        },
+        {
+          "ar": "يقع في بطن وادي رانوناء عند ديار بني سالم بن عوف، ومن أسمائه مسجد الوادي ومسجد عاتكة.",
+          "en": "It lies in the bed of Wadi Ranuna', among the homes of Banu Salim ibn Awf. It is also called Masjid al-Wadi and Masjid Atikah.",
+          "tr": "Râvnâ Vadisi'nin yatağında, Benî Sâlim b. Avf'ın yurtları arasında yer alır. Mescidü'l-Vâdî ve Mescid-i Âtike adlarıyla da bilinir.",
+          "ur": "یہ وادیٔ رانوناء کے بیچ، بنو سالم بن عوف کی بستیوں کے درمیان واقع ہے۔ اسے مسجد الوادی اور مسجد عاتکہ بھی کہتے ہیں۔",
+          "id": "Terletak di dasar Lembah Ranuna', di antara kediaman Bani Salim bin Auf. Juga disebut Masjid al-Wadi dan Masjid Atikah.",
+          "uz": "Ronuno‘ vodiysining o‘rtasida, Banu Solim ibn Avf yashagan joylar orasida joylashgan. “Masjid al-Vodiy” va “Masjid Atiqa” deb ham ataladi.",
+          "bn": "এটি রানুনা উপত্যকার তলদেশে, বনু সালিম ইবনে আওফের বসতির মধ্যে অবস্থিত। একে মসজিদুল ওয়াদি ও মসজিদে আতিকাও বলা হয়।",
+          "fr": "Elle se trouve dans le lit de l'oued Ranouna', parmi les demeures des Banou Salim ibn Awf. On l'appelle aussi Masjid al-Wadi et Masjid Atika.",
+          "fa": "در بستر وادی رانوناء، میان خانه‌های بنی‌سالم بن عوف قرار دارد. مسجد الوادی و مسجد عاتکه نیز نامیده می‌شود.",
+          "ru": "Расположена в русле вади Рануна, среди жилищ рода Бану Салим ибн Ауф. Также называется мечеть аль-Вади и мечеть Атика.",
+          "ms": "Terletak di dasar Lembah Ranuna', di antara kediaman Bani Salim bin Auf. Ia juga dipanggil Masjid al-Wadi dan Masjid Atikah.",
+          "ha": "Yana cikin kwarin Ranuna', a tsakanin gidajen Banu Salim ɗan Auf. Ana kuma kiransa Masallacin al-Wadi da Masallacin Atika.",
+          "ml": "റാനൂനാ താഴ്വരയുടെ അടിത്തട്ടിൽ, ബനൂ സാലിം ഇബ്നു ഔഫിന്റെ വാസസ്ഥലങ്ങൾക്കിടയിൽ. മസ്ജിദുൽ വാദി, മസ്ജിദ് ആതിക എന്നും അറിയപ്പെടുന്നു.",
+          "sw": "Uko kwenye kitanda cha Bonde la Ranuna', kati ya makazi ya Banu Salim bin Awf. Pia huitwa Msikiti wa al-Wadi na Msikiti wa Atika.",
+          "ps": "د رانوناء د وادۍ په بستر کې، د بنو سالم بن عوف د استوګنځایونو ترمنځ پروت دی. مسجد الوادي او مسجد عاتکه هم ورته ویل کېږي.",
+          "so": "Waxay ku taal dhulka dooxada Ranuunaa', dhexdeeda guryaha Banu Saalim ibn Cawf. Waxaa kale oo loo yaqaan Masjidka al-Waadi iyo Masjidka Caatika.",
+          "ta": "ரானூனா பள்ளத்தாக்கின் படுகையில், பனூ சாலிம் இப்னு அவ்ஃபின் குடியிருப்புகளுக்கு இடையே அமைந்துள்ளது. மஸ்ஜிதுல் வாதி, மஸ்ஜித் ஆதிகா என்றும் அழைக்கப்படுகிறது.",
+          "hi": "यह वादी-ए-रानूना के तल में, बनू सालिम बिन औफ़ की बस्तियों के बीच स्थित है। इसे मस्जिदुल वादी और मस्जिद आतिका भी कहते हैं।",
+          "bs": "Nalazi se u koritu doline Ranuna', među kućama plemena Benu Salim ibn Avf. Zove se i Mesdžid el-Vadi i Mesdžid Atika.",
+          "de": "Sie liegt im Bett des Wadi Ranuna', zwischen den Wohnstätten der Banu Salim ibn Awf. Sie heißt auch Masdschid al-Wadi und Masdschid Atika.",
+          "zh": "位于拉努纳谷谷底，在班努·萨利姆·本·奥夫的居住区之间。也称瓦迪清真寺和阿提卡清真寺。",
+          "am": "በራኑና ሸለቆ ወለል ላይ፣ በበኑ ሳሊም ኢብን ዐውፍ መኖሪያዎች መካከል ይገኛል። መስጂዱል ዋዲ እና መስጂድ ዐቲቃ ተብሎም ይጠራል።",
+          "ku": "Li nav gemarê newala Rannûnayê, di nav mal û cihên Benî Salim bin Evf de ye. Jê re Mizgefta el-Wadî û Mizgefta Atîqe jî tê gotin.",
+          "az": "Ranunə vadisinin dibində, Bəni Salim ibn Əvfin məskənləri arasında yerləşir. Məscidül-Vadi və Məscid Atiqə də adlanır.",
+          "th": "ตั้งอยู่ในท้องหุบเขารอนูนาอ์ ท่ามกลางที่อยู่อาศัยของบนูสาลิม อิบน์ เอาฟ์ เรียกอีกชื่อว่ามัสยิดอัล-วาดีและมัสยิดอาติกะฮ์",
+          "es": "Se halla en el cauce del valle de Ranuna', entre las moradas de los Banu Salim ibn Awf. También se llama Masjid al-Wadi y Masjid Atika."
+        }
       ],
       "sources": [
-        { "t": "سعودي بيديا: مسجد الجمعة", "u": "https://saudipedia.com/%D9%85%D8%B3%D8%AC%D8%AF-%D8%A7%D9%84%D8%AC%D9%85%D8%B9%D8%A9" },
-        { "t": "سبق: مسجد الوادي.. هنا كانت أول صلاة جمعة في الإسلام", "u": "https://sabq.org/saudia/ctmcxr" }
+        {
+          "t": "سعودي بيديا: مسجد الجمعة",
+          "u": "https://saudipedia.com/%D9%85%D8%B3%D8%AC%D8%AF-%D8%A7%D9%84%D8%AC%D9%85%D8%B9%D8%A9"
+        },
+        {
+          "t": "سبق: مسجد الوادي.. هنا كانت أول صلاة جمعة في الإسلام",
+          "u": "https://sabq.org/saudia/ctmcxr"
+        }
       ],
       "images": [
-        { "src": "visits/548-1.webp", "focus": "30% 50%", "alt": { "ar": "مسجد الجمعة بقبابه البيضاء ومئذنته تحت سماء صافية", "en": "Al-Jumu'ah Mosque with its white domes and minaret under a clear sky" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
-        { "src": "visits/548-2.webp", "alt": { "ar": "لوحة إرشادية تشير إلى مسجد قباء ومسجد الجمعة ومسجد عتبان بن مالك", "en": "A direction sign pointing to Quba Mosque, Jumu'ah Mosque and Atban ibn Malik Mosque" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+        {
+          "src": "visits/548-1.webp",
+          "focus": "30% 50%",
+          "alt": {
+            "ar": "مسجد الجمعة بقبابه البيضاء ومئذنته تحت سماء صافية",
+            "en": "Al-Jumu'ah Mosque with its white domes and minaret under a clear sky"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        },
+        {
+          "src": "visits/548-2.webp",
+          "alt": {
+            "ar": "لوحة إرشادية تشير إلى مسجد قباء ومسجد الجمعة ومسجد عتبان بن مالك",
+            "en": "A direction sign pointing to Quba Mosque, Jumu'ah Mosque and Atban ibn Malik Mosque"
+          },
+          "by": "مقدَّمة من مالك التطبيق",
+          "license": "بانتظار تأكيد المصوّر والإذن"
+        }
       ]
     }
   ]

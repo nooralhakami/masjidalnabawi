@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { POI_BY_ID, VISITS } from '../../src/data';
+import { LANGS } from '../../src/i18n';
 import { FEATURED_IDS, SLIDE_MS, VISIT_LIST, imageFor, isPrayerSlide, nextPos, prevPos, segmentFill, slideCount, slideLang, slideText, visitRank } from '../../src/domain/visits';
 import { markerSpec } from '../../src/ui/markers';
 
@@ -25,6 +26,22 @@ describe('must-visit data', () => {
         expect(sl.en.trim().length, `${v.id} en`).toBeGreaterThan(20);
         expect(sl.ar.length, 'slides stay short').toBeLessThan(260);
         expect(sl.en).not.toMatch(/\p{Extended_Pictographic}/u);
+      }
+    }
+  });
+
+  it('every slide is translated into every language, and keeps the ﷺ sign where the Arabic has it', () => {
+    for (const v of VISIT_LIST) {
+      for (const sl of v.slides) {
+        for (const l of LANGS) {
+          const text = sl[l];
+          expect(text?.trim().length ?? 0, `${v.id} ${l}`).toBeGreaterThan(15);
+          expect(text!.length, `${v.id} ${l} stays short`).toBeLessThan(420);
+          expect(text!.includes('ﷺ'), `${v.id} ${l} ﷺ`).toBe(sl.ar.includes('ﷺ'));
+          expect(text, `${v.id} ${l} no emoji`).not.toMatch(/\p{Extended_Pictographic}/u);
+        }
+        // A translation is not a copy of the English (unless a language writes the same).
+        for (const l of LANGS.filter((x) => x !== 'ar' && x !== 'en')) expect(sl[l], `${v.id} ${l} differs from English`).not.toBe(sl.en);
       }
     }
   });

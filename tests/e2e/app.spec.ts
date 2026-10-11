@@ -632,10 +632,36 @@ test.describe('landmark stories', () => {
     await expect(page.locator('.sheet .sh-title')).toContainText('مسجد القبلتين');
   });
 
-  test('English falls back for untranslated texts, and every language opens the stories', async ({ page, errors: _ }) => {
+  test('texts and buttons come in the visitor\'s language', async ({ page, errors: _ }) => {
     await openMap(page, 'tr');
     await page.locator('.mc-btn.is-stories').click();
-    await expect(page.locator('.st-text')).toHaveAttribute('lang', 'en');
+    await expect(page.locator('.st-text')).toHaveAttribute('lang', 'tr');
+    await expect(page.locator('.st-text')).toContainText('İslam');
     await expect(page.locator('[data-act="map"]')).toContainText('Haritada göster');
+  });
+
+  test('a long press pauses the story (no copy/save menu on the photo), and shows no credit line', async ({ page, errors: _ }) => {
+    await openMap(page);
+    await page.locator('.mc-btn.is-stories').click();
+    await expect(page.locator('.st-credit')).toHaveCount(0);
+    await expect(page.locator('.st-img')).toHaveCSS('pointer-events', 'none');
+    const stories = page.locator('.stories');
+    // The browser's context menu (which carries copy / save image) is cancelled.
+    const prevented = await page.evaluate(() => {
+      const ev = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+      document.querySelector('.st-img')!.dispatchEvent(ev);
+      return ev.defaultPrevented;
+    });
+    expect(prevented).toBe(true);
+    const text = await page.locator('.st-text').textContent();
+    const box = (await page.locator('.st-zone-next').boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(500);
+    await expect(stories).toHaveClass(/is-paused/);
+    await page.mouse.up();
+    await expect(stories).not.toHaveClass(/is-paused/);
+    // Releasing a hold does not count as a tap: still on the same slide.
+    await expect(page.locator('.st-text')).toHaveText(text!);
   });
 });

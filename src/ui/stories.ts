@@ -84,6 +84,9 @@ export class Stories {
     this.root.addEventListener('click', (e) => this.onClick(e));
     this.root.addEventListener('keydown', (e) => this.onKey(e));
     this.root.addEventListener('pointerdown', (e) => this.onDown(e));
+    // A long press on a photo must pause the story, not open the browser's copy/save menu.
+    this.root.addEventListener('contextmenu', (e) => e.preventDefault());
+    this.root.addEventListener('dragstart', (e) => e.preventDefault());
     this.root.addEventListener('pointerup', (e) => this.onUp(e));
     this.root.addEventListener('pointercancel', () => this.endHold());
     document.addEventListener('langchange', () => this.isOpen && this.render());
@@ -183,9 +186,11 @@ export class Stories {
         </div>`;
     } else {
       const s = v.slides[this.pos.slide];
-      body = `<p class="st-text" lang="${slideLang(s, lang)}" dir="auto">${esc(slideText(s, lang))}</p>`;
+      const text = slideText(s, lang);
+      // Long translations get a smaller size so they stay on the dark band, clear of the header.
+      const size = text.length > 300 ? ' is-xl' : text.length > 200 ? ' is-long' : '';
+      body = `<p class="st-text${size}" lang="${slideLang(s, lang)}" dir="auto">${esc(text)}</p>`;
     }
-    const credit = img ? `<p class="st-credit">${esc(t('st_image_by', { by: img.by, license: img.license }))}</p>` : '';
     const keep = this.root.contains(document.activeElement) ? (document.activeElement as HTMLElement).dataset.act : undefined;
     this.root.setAttribute('aria-label', t('st_open'));
     this.root.classList.toggle('is-paused', this.paused);
@@ -203,7 +208,6 @@ export class Stories {
       <button type="button" class="st-zone st-zone-next" data-act="next" aria-label="${esc(t('st_next'))}"></button>
       <footer class="st-foot">
         ${body}
-        ${credit}
         <div class="st-actions">
           <button type="button" class="st-btn" data-act="map">${icon('dome', 18)}<span>${esc(t('st_on_map'))}</span></button>
           <button type="button" class="st-btn" data-act="route">${icon('route', 18)}<span>${esc(t('st_route'))}</span></button>
@@ -302,7 +306,8 @@ export class Stories {
   }
 
   private onDown(e: PointerEvent): void {
-    if (!(e.target as HTMLElement).closest('.st-zone')) return;
+    // Buttons and links (other than the two tap zones) keep their own press behaviour.
+    if ((e.target as HTMLElement).closest('button:not(.st-zone), a')) return;
     this.swipe = { x: e.clientX, y: e.clientY };
     window.clearTimeout(this.holdTimer);
     this.holdTimer = window.setTimeout(() => {
@@ -328,6 +333,8 @@ export class Stories {
     if (this.held) {
       this.held = false;
       this.root.classList.toggle('is-paused', this.paused);
+      // The click that follows the release is part of the hold; forget it once it has passed.
+      window.setTimeout(() => (this.justHeld = false), 150);
     }
   }
 

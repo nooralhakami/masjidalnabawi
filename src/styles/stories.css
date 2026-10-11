@@ -10,6 +10,8 @@
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+  /* No "copy / save image" callout on a long press: that press pauses the story. */
+  -webkit-touch-callout: none;
 }
 .stories[hidden] {
   display: none;
@@ -25,6 +27,12 @@
   /* Fades out at the bottom, so the photo melts into the dark band. */
   -webkit-mask-image: linear-gradient(#000 78%, transparent);
   mask-image: linear-gradient(#000 78%, transparent);
+}
+.st-media,
+.st-img {
+  /* The photo never takes the press itself, so the press reaches the story (hold = pause). */
+  pointer-events: none;
+  -webkit-user-drag: none;
 }
 .st-img {
   width: 100%;
@@ -137,7 +145,7 @@
 .st-zone {
   position: absolute;
   top: calc(76px + env(safe-area-inset-top));
-  bottom: 190px;
+  bottom: 0;
   border: 0;
   padding: 0;
   background: none;
@@ -159,7 +167,9 @@
   bottom: 0;
   display: grid;
   gap: 12px;
-  padding: 0 18px calc(16px + env(safe-area-inset-bottom));
+  /* The dark band travels with the content: long texts (some scripts run to many lines) always sit on it. */
+  padding: 56px 18px calc(16px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgb(var(--story-scrim) / 0.96) calc(100% - 72px), rgb(var(--story-scrim) / 0));
   /* Taps on the text pass to the zones; only the buttons and links catch them. */
   pointer-events: none;
 }
@@ -174,16 +184,19 @@
   text-shadow: 0 1px 6px rgb(0 0 0 / 0.5);
   animation: st-rise 520ms var(--ease) both;
 }
+.st-text.is-long {
+  font-size: 18px;
+  line-height: 1.7;
+}
+.st-text.is-xl {
+  font-size: 16px;
+  line-height: 1.65;
+}
 @keyframes st-rise {
   from {
     opacity: 0;
     transform: translateY(18px);
   }
-}
-.st-credit {
-  margin: 0;
-  font-size: 12px;
-  color: var(--story-ink-soft);
 }
 
 .st-actions {
