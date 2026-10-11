@@ -140,7 +140,10 @@
         { "t": "سعودي بيديا: مسجد الجمعة", "u": "https://saudipedia.com/%D9%85%D8%B3%D8%AC%D8%AF-%D8%A7%D9%84%D8%AC%D9%85%D8%B9%D8%A9" },
         { "t": "سبق: مسجد الوادي.. هنا كانت أول صلاة جمعة في الإسلام", "u": "https://sabq.org/saudia/ctmcxr" }
       ],
-      "images": []
+      "images": [
+        { "src": "visits/548-1.webp", "focus": "30% 50%", "alt": { "ar": "مسجد الجمعة بقبابه البيضاء ومئذنته تحت سماء صافية", "en": "Al-Jumu'ah Mosque with its white domes and minaret under a clear sky" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
+        { "src": "visits/548-2.webp", "alt": { "ar": "لوحة إرشادية تشير إلى مسجد قباء ومسجد الجمعة ومسجد عتبان بن مالك", "en": "A direction sign pointing to Quba Mosque, Jumu'ah Mosque and Atban ibn Malik Mosque" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+      ]
     }
   ]
 }
