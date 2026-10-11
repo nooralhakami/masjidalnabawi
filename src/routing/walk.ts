@@ -1,4 +1,4 @@
-import { ROUTING } from '../data';
+import { POIS, ROUTING } from '../data';
 import type { LatLng } from '../data/types';
 import { haversine } from '../domain/geo';
 
@@ -54,6 +54,10 @@ export interface Network {
   /** Ring perimeter in metres. */
   P: number;
   obstacles: Rect[];
+  /** The restroom buildings (one same-size square each): a route may end at one, never cross another. */
+  buildings: Rect[];
+  /** Everything a route must not cross: the obstacles and the buildings. */
+  blocks: Rect[];
   /** Walkway graph: ring + branches, split where they meet. */
   nodes: XY[];
   edges: Edge[];
@@ -139,6 +143,143 @@ function buildGraph(lines: XY[][]): { nodes: XY[]; edges: Edge[] } {
   return { nodes, edges };
 }
 
+// ---------- restroom buildings ----------
+
+/** Walkways pass this far (m) from a restroom's wall, so the rounded corners of a detour stay clear of it. */
+const BUILDING_MARGIN_M = 3;
+
+/**
+ * Every restroom inside the Haram is a square building of the same size (owner, 2026-10-11), centred
+ * on its marker: a route may end at one, never cross another. Restrooms standing inside the mosque
+ * or Al-Baqi' rectangles are covered by those already.
+ */
+function toiletBuildings(obstacles: Rect[]): Rect[] {
+  const h = ROUTING.rules.toilet_building_m / 2;
+  return POIS.filter((p) => p.category === 'toilets')
+    .map((p) => toM([p.lat, p.lng]))
+    .filter((c) => !obstacles.some((r) => insideRect(c, r)))
+    .map((c) => ({ x0: c[0] - h, x1: c[0] + h, y0: c[1] - h, y1: c[1] + h }));
+}
+
+/** Where the segment a→b is inside the rectangle: parameters [t0, t1] along it, or null (Liang–Barsky). */
+function clipSegment(a: XY, b: XY, r: Rect): [number, number] | null {
+  let t0 = 0;
+  let t1 = 1;
+  const d = [b[0] - a[0], b[1] - a[1]];
+  for (const [p, q] of [
+    [-d[0], a[0] - r.x0],
+    [d[0], r.x1 - a[0]],
+    [-d[1], a[1] - r.y0],
+    [d[1], r.y1 - a[1]],
+  ] as [number, number][]) {
+    if (Math.abs(p) < 1e-12) {
+      if (q < 0) return null;
+    } else {
+      const t = q / p;
+      if (p < 0) t0 = Math.max(t0, t);
+      else t1 = Math.min(t1, t);
+    }
+  }
+  return t0 < t1 ? [t0, t1] : null;
+}
+
+/** The way from boundary point e to boundary point x round a rectangle, by its corners (the shorter way). */
+function aroundRect(e: XY, x: XY, r: Rect): XY[] {
+  const w = r.x1 - r.x0;
+  const h = r.y1 - r.y0;
+  const P = 2 * (w + h);
+  // Position along the perimeter, going clockwise from the top-left corner (y grows northwards).
+  const at = (p: XY): number => {
+    const dl = Math.abs(p[0] - r.x0);
+    const dr = Math.abs(p[0] - r.x1);
+    const dt = Math.abs(p[1] - r.y1);
+    const db = Math.abs(p[1] - r.y0);
+    const m = Math.min(dl, dr, dt, db);
+    if (m === dt) return p[0] - r.x0;
+    if (m === dr) return w + (r.y1 - p[1]);
+    if (m === db) return w + h + (r.x1 - p[0]);
+    return 2 * w + h + (p[1] - r.y0);
+  };
+  const corners: [number, XY][] = [
+    [0, [r.x0, r.y1]],
+    [w, [r.x1, r.y1]],
+    [w + h, [r.x1, r.y0]],
+    [2 * w + h, [r.x0, r.y0]],
+  ];
+  const s = at(e);
+  const f = at(x);
+  const forward = (((f - s) % P) + P) % P;
+  const out: XY[] = [];
+  if (forward <= P - forward) {
+    for (const [c, p] of corners) if ((((c - s) % P) + P) % P < forward && (((c - s) % P) + P) % P > 0) out.push(p);
+    out.sort((a, b) => ((((at(a) - s) % P) + P) % P) - ((((at(b) - s) % P) + P) % P));
+  } else {
+    const back = P - forward;
+    for (const [c, p] of corners) if ((((s - c) % P) + P) % P < back && (((s - c) % P) + P) % P > 0) out.push(p);
+    out.sort((a, b) => ((((s - at(a)) % P) + P) % P) - ((((s - at(b)) % P) + P) % P));
+  }
+  return out;
+}
+
+/**
+ * Bends a walkway round the buildings it would cross: where a line enters a building's area (its
+ * wall plus a margin) it follows that outline to where it leaves, by the shorter side. A line that
+ * starts or ends inside the area (a spur to a restroom) is left as drawn.
+ */
+export function aroundBuildings(line: XY[], buildings: Rect[], margin = BUILDING_MARGIN_M): XY[] {
+  const along = (a: XY, b: XY, t: number): XY => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  let pts = line;
+  for (const wall of buildings) {
+    const area: Rect = { x0: wall.x0 - margin, x1: wall.x1 + margin, y0: wall.y0 - margin, y1: wall.y1 + margin };
+    const out: XY[] = [];
+    let i = 0;
+    while (i < pts.length) {
+      if (insideRect(pts[i], area)) {
+        // A run of vertices inside the area: bend round it if the line really goes through the wall.
+        let j = i;
+        while (j < pts.length && insideRect(pts[j], area)) j++;
+        const before = i > 0 ? pts[i - 1] : null;
+        const after = j < pts.length ? pts[j] : null;
+        const chain = [...(before ? [before] : []), ...pts.slice(i, j), ...(after ? [after] : [])];
+        const through = chain.some((q, k) => k > 0 && clipSegment(chain[k - 1], q, wall) !== null);
+        const enter = before ? clipSegment(before, pts[i], area) : null;
+        const leave = after ? clipSegment(pts[j - 1], after, area) : null;
+        if (through && before && after && enter && leave) {
+          const e = along(before, pts[i], enter[0]);
+          const x = along(pts[j - 1], after, leave[1]);
+          out.push(e, ...aroundRect(e, x, area), x);
+        } else {
+          out.push(...pts.slice(i, j));
+        }
+        i = j;
+        continue;
+      }
+      // Both ends outside the area, but the segment crosses it.
+      if (i > 0 && !insideRect(pts[i - 1], area) && clipSegment(pts[i - 1], pts[i], wall)) {
+        const c = clipSegment(pts[i - 1], pts[i], area)!;
+        const e = along(pts[i - 1], pts[i], c[0]);
+        const x = along(pts[i - 1], pts[i], c[1]);
+        out.push(e, ...aroundRect(e, x, area), x);
+      }
+      out.push(pts[i]);
+      i++;
+    }
+    pts = out;
+  }
+  return pts;
+}
+
+const pathLen = (pts: XY[]): number => pts.reduce((s, p, i) => (i ? s + dist(pts[i - 1], p) : 0), 0);
+
+/**
+ * Whether the segment a→b passes through the rectangle, except a stretch that is the trip's own end
+ * (an end point standing inside it: a restroom reached from outside).
+ */
+function crossesInterior(a: XY, b: XY, r: Rect, ends: XY[]): boolean {
+  if (ends.some((e) => insideRect(e, r))) return false;
+  return clipSegment(a, b, r) !== null;
+}
+
 export function network(): Network {
   if (net) return net;
   const ring = ROUTING.walkway_ring.map(toM);
@@ -151,9 +292,10 @@ export function network(): Network {
     P += l;
   });
   // The mosque is shrunk 3 m so paths may hug its walls, as in the reference.
-  const obstacles = Object.entries(ROUTING.obstacles).map(([name, poly]) => rectOf(poly, name === 'mosque_building' ? 3 : 0));
-  const lines = [[...ring, ring[0]], ...(ROUTING.walkways ?? []).map((w) => w.path.map(toM))];
-  return (net = { ring, seg, P, obstacles, ...buildGraph(lines) });
+  const big = Object.entries(ROUTING.obstacles).map(([name, poly]) => rectOf(poly, name === 'mosque_building' ? 3 : 0));
+  const buildings = toiletBuildings(big);
+  const lines = [[...ring, ring[0]], ...(ROUTING.walkways ?? []).map((w) => w.path.map(toM))].map((l) => aroundBuildings(l, buildings));
+  return (net = { ring, seg, P, obstacles: big, buildings, blocks: [...big, ...buildings], ...buildGraph(lines) });
 }
 
 export const insideRect = (p: XY, r: Rect): boolean => p[0] > r.x0 && p[0] < r.x1 && p[1] > r.y0 && p[1] < r.y1;
@@ -168,7 +310,7 @@ export function segmentHits(a: XY, b: XY, r: Rect): boolean {
   return false;
 }
 
-const hitsAny = (a: XY, b: XY, N: Network) => N.obstacles.some((r) => segmentHits(a, b, r));
+const hitsAny = (a: XY, b: XY, N: Network) => N.blocks.some((r) => segmentHits(a, b, r));
 
 /** Nearest point on the ring, with its distance along the ring. */
 export function projectOnRing(p: XY, N: Network): { d: number; p: XY; t: number } {
@@ -247,7 +389,7 @@ interface Hook {
  * the nearest such edge, so the shortest path can pick the best one.
  */
 function hooks(p: XY, N: Network): Hook[] {
-  const blocking = N.obstacles.filter((r) => !insideRect(p, r));
+  const blocking = N.blocks.filter((r) => !insideRect(p, r));
   const all = N.edges.map((e) => {
     const pr = project(p, N.nodes[e.u], N.nodes[e.v]);
     return { q: pr.q, d: pr.d, e, along: pr.u * e.l, clear: !blocking.some((r) => segmentHits(p, pr.q, r)) };
@@ -348,8 +490,12 @@ export function walkPath(a: LatLng, b: LatLng): LatLng[] {
   let pts: XY[] | null = null;
   const graph = graphRoute(A, B, N);
 
-  // Open ground (the west plaza): with both ends on it, walk straight across.
-  if (openTogether(A, B) && !hitsAny(A, B, N) && (!graph || dist(A, B) < graph.length)) pts = [A, B];
+  // Open ground (the west plaza): with both ends on it, walk straight across — beside any restroom
+  // building in the way, never over it (the mosque and Al-Baqi' are not on the open ground).
+  if (openTogether(A, B) && !N.obstacles.some((r) => segmentHits(A, B, r))) {
+    const open = aroundBuildings([A, B], N.buildings);
+    if (!open.some((p, i) => i > 0 && N.blocks.some((r) => crossesInterior(open[i - 1], p, r, [A, B]))) && (!graph || pathLen(open) < graph.length)) pts = open;
+  }
 
   if (!pts && dist(A, B) < short_L_route_max_m) {
     for (const c of [

@@ -105,12 +105,12 @@ const DOOR_STRETCH_M = 40;
 function crossesObstacle(path: LatLng[]): boolean {
   const N = network();
   const ends = [toM(path[0]), toM(path[path.length - 1])];
-  const own = N.obstacles.map((r) => ends.filter((e) => insideRect(e, r)));
+  const own = N.blocks.map((r) => ends.filter((e) => insideRect(e, r)));
   for (let i = 1; i < path.length; i++) {
     const p = toM(path[i - 1]);
     const q = toM(path[i]);
-    for (let o = 0; o < N.obstacles.length; o++) {
-      const r = N.obstacles[o];
+    for (let o = 0; o < N.blocks.length; o++) {
+      const r = N.blocks[o];
       if (!segmentHits(p, q, r)) continue;
       if (!own[o].length) return true;
       // Its own obstacle: every metre of the segment inside it must be near the inner gate.

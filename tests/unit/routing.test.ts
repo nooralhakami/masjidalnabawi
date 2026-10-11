@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { POIS, POI_BY_ID, ROUTING } from '../../src/data';
 import { inHaram } from '../../src/routing/plan';
 import type { LatLng } from '../../src/data';
-import { insideRect, network, pathLength, projectOnRing, toM, walkMinutes, walkPath, walkPaths } from '../../src/routing/walk';
+import { aroundBuildings, insideRect, network, pathLength, projectOnRing, segmentHits, toM, walkMinutes, walkPath, walkPaths } from '../../src/routing/walk';
 import { MAX_ROUTES, pickRoutes, shared, turnPenalty } from '../../src/routing/alternatives';
 
 const at = (id: number): LatLng => {
@@ -192,5 +192,53 @@ describe('alternative routes (owner, 2026-10-11)', () => {
     const paths = walkPaths(at(1), at(25)); // gate 1 (south-west) to gate 25 (north)
     expect(paths.length).toBeGreaterThan(1);
     expect(pathLength(paths[0])).toBeLessThanOrEqual(Math.min(...paths.map(pathLength)) + 1);
+  });
+});
+
+describe('restrooms are buildings: routes pass beside them, never over them (owner, 2026-10-11)', () => {
+  const box = { x0: -6, x1: 6, y0: -6, y1: 6 };
+  const through = (line: [number, number][]) => line.some((p, i) => i > 0 && segmentHits(line[i - 1], p, box));
+  it('a walkway through a building is bent round it, by the shorter side', () => {
+    const bent = aroundBuildings([[-30, 1], [30, 1]], [box]);
+    expect(through(bent)).toBe(false);
+    expect(bent[0]).toEqual([-30, 1]);
+    expect(bent[bent.length - 1]).toEqual([30, 1]);
+    // y = 1 is nearer the north wall: it goes round the north side (y > 6), not the south one.
+    expect(Math.max(...bent.map((p) => p[1]))).toBeGreaterThan(6);
+    expect(Math.min(...bent.map((p) => p[1]))).toBeGreaterThanOrEqual(0.99);
+  });
+  it('a corner vertex inside the building is bent round too', () => {
+    const bent = aroundBuildings([[-30, -20], [0, 0], [30, 20]], [box]);
+    expect(through(bent)).toBe(false);
+  });
+  it('a spur that ends inside the building (the way to a restroom) is left as drawn', () => {
+    const line: [number, number][] = [[-30, 0], [0, 0]];
+    expect(aroundBuildings(line, [box])).toEqual(line);
+  });
+  it('a line that does not touch the building is unchanged', () => {
+    const line: [number, number][] = [[-30, 20], [30, 20]];
+    expect(aroundBuildings(line, [box])).toEqual(line);
+  });
+  it('the network knows every restroom as a 12 m square building', () => {
+    const N = network();
+    expect(N.buildings.length).toBe(POIS.filter((p) => p.category === 'toilets').length);
+    for (const r of N.buildings) {
+      expect(r.x1 - r.x0).toBeCloseTo(12, 6);
+      expect(r.y1 - r.y0).toBeCloseTo(12, 6);
+    }
+  });
+  it('no walkway of the network runs through a restroom building', () => {
+    const N = network();
+    for (const e of N.edges) {
+      for (const r of N.buildings) {
+        const [a, b] = [N.nodes[e.u], N.nodes[e.v]];
+        const n = Math.max(1, Math.ceil(e.l));
+        for (let k = 1; k < n; k++) {
+          const p: [number, number] = [a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n];
+          // Inside the building only where the edge is a spur that ends in it (one end inside).
+          if (insideRect(p, r) && !insideRect(a, r) && !insideRect(b, r)) throw new Error(`walkway through a restroom at ${p}`);
+        }
+      }
+    }
   });
 });

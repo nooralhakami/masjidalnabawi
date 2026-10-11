@@ -221,7 +221,7 @@ const acrossTheMosque = (path: LatLng[]) => {
 describe('the best route and its alternatives (owner, 2026-10-11)', () => {
   const trips: [string, LatLng, number, 'walk' | 'drive'][] = [
     ['hotel south-west of the Haram → Gate 37', [24.4655, 39.6085], 37, 'walk'],
-    ['east street → a west restroom', [24.4685, 39.615], 212, 'walk'],
+    ['east street → a west restroom', [24.4685, 39.615], 233, 'walk'],
     ['far south-west, by car → restroom 223', SOUTH_WEST, 223, 'drive'],
   ];
   it.each(trips)('%s: the best first, up to two others within 30% and really another way', async (_, from, to, mode) => {
@@ -272,4 +272,40 @@ describe('no route through the mosque building (found while adding alternatives,
       }
     }
   });
+});
+
+describe('routes pass beside restroom buildings, never over them (owner, 2026-10-11)', () => {
+  const origins: LatLng[] = [[24.4668, 39.6111], [24.4718, 39.6035], [24.476, 39.611], [24.4686, 39.6165], [24.4655, 39.6085], [24.4685, 39.607]];
+  it('no offered route crosses a restroom building, except one holding its own start or end', async () => {
+    const dests = Object.values(Object.fromEntries([...POI_BY_ID].map(([id, p]) => [id, p]))).filter(
+      (p) => p.subCategory === 'gate_inner' || p.subCategory === 'gate_outer' || p.category === 'toilets' || p.category === 'women' || p.category === 'emergency' || p.category === 'parking',
+    );
+    const buildings = network().buildings;
+    const bad: string[] = [];
+    let routes = 0;
+    for (const from of origins) {
+      for (const to of dests) {
+        for (const plan of await planRoutes(from, to, 'walk')) {
+          routes++;
+          const path = fullPath(plan).map(toM);
+          const ends = [path[0], path[path.length - 1]];
+          for (const r of buildings) {
+            if (ends.some((e) => insideRect(e, r))) continue;
+            for (let i = 1; i < path.length; i++) {
+              const [a, b] = [path[i - 1], path[i]];
+              const n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1])));
+              // Rounded corners may graze a wall by well under a metre; the middle of the building is never crossed.
+              const inner = { x0: r.x0 + 1, x1: r.x1 - 1, y0: r.y0 + 1, y1: r.y1 - 1 };
+              for (let k = 0; k <= n; k++) {
+                const p: [number, number] = [a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n];
+                if (insideRect(p, inner)) bad.push(`${from} → ${to.id}`);
+              }
+            }
+          }
+        }
+      }
+    }
+    expect(routes).toBeGreaterThan(500);
+    expect([...new Set(bad)].slice(0, 8)).toEqual([]);
+  }, 180_000);
 });

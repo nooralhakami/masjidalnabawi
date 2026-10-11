@@ -126,6 +126,8 @@ export interface Routing {
   rules: {
     short_L_route_max_m: number;
     corner_radius_m: number;
+    /** Side of the square building every restroom inside the Haram is treated as (routes pass beside it, never over it). */
+    toilet_building_m: number;
     walk_speed_m_per_min: number;
   };
 }

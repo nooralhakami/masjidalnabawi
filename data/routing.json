@@ -112,6 +112,7 @@
  "rules": {
   "short_L_route_max_m": 150,
   "corner_radius_m": 6,
+  "toilet_building_m": 12,
   "walk_speed_m_per_min": 80
  },
  "walkways": [
