@@ -25,6 +25,17 @@ const CATEGORY_LABEL: Record<Category, string> = {
 
 export type SheetState = 'closed' | 'half' | 'full';
 
+/** What the sheet shows about the route being followed, and the other routes offered. */
+export interface RouteSummary {
+  meters: number;
+  minutes: number;
+  nearestEntrance?: number;
+  drive?: { meters: number; lot?: number; walkMeters: number };
+  /** Every route offered (the chosen one included); a choice appears when there is more than one. */
+  options?: { minutes: number; meters: number }[];
+  chosen?: number;
+}
+
 const WALK_M_PER_MIN = 80;
 
 /**
@@ -44,13 +55,13 @@ export class Sheet {
   private foot: HTMLElement;
   private state: SheetState = 'closed';
   private poi: Poi | null = null;
-  private route: { meters: number; minutes: number; nearestEntrance?: number; drive?: { meters: number; lot?: number; walkMeters: number } } | null = null;
+  private route: RouteSummary | null = null;
   /** How the visitor travels: walking by default, or by car (remembered). */
   private mode: 'walk' | 'drive' = savedTravel();
 
   constructor(
     private fac: Facilities,
-    private on: { close(): void; goTo(p: Poi): void; route(p: Poi): void; endRoute(): void; share(p: Poi): void; state(s: SheetState): void },
+    private on: { close(): void; goTo(p: Poi): void; route(p: Poi): void; pickRoute(i: number): void; endRoute(): void; share(p: Poi): void; state(s: SheetState): void },
   ) {
     this.root = document.createElement('section');
     this.root.className = 'sheet';
@@ -88,7 +99,7 @@ export class Sheet {
   }
 
   /** Show (or clear) the route summary for the current POI. */
-  setRoute(r: { meters: number; minutes: number; nearestEntrance?: number; drive?: { meters: number; lot?: number; walkMeters: number } } | null): void {
+  setRoute(r: RouteSummary | null): void {
     this.route = r;
     this.root.dataset.route = r ? 'active' : 'inactive';
     this.render();
@@ -215,6 +226,7 @@ export class Sheet {
     else if (act === 'grab') this.setState(this.state === 'full' ? 'half' : 'full');
     else if (act === 'route') this.on.route(this.poi);
     else if (act === 'endroute') this.on.endRoute();
+    else if (act === 'pickroute') this.on.pickRoute(Number(b.dataset.i));
     else if (act === 'share') this.on.share(this.poi);
     else if (act === 'travel') {
       this.mode = b.dataset.mode === 'drive' ? 'drive' : 'walk';
@@ -300,6 +312,15 @@ export class Sheet {
       </div>`;
 
     const r = this.route;
+    const options = r?.options && r.options.length > 1 ? r.options : null;
+    const routeChoice = options
+      ? `<div class="route-options" role="group" aria-label="${esc(t('r_options'))}">${options
+          .map(
+            (o, i) =>
+              `<button type="button" class="route-option" data-act="pickroute" data-i="${i}" aria-pressed="${i === (r!.chosen ?? 0)}"><span class="route-option-n">${esc(t('r_option', { n: i + 1 }))}</span><span class="route-option-t">${esc(t('r_min', { t: o.minutes }))} <small>· ${esc(t('meters', { m: num(Math.round(o.meters / 5) * 5) }))}</small></span></button>`,
+          )
+          .join('')}</div>`
+      : '';
     const routeBox = r
       ? `<div class="route-box" role="status">
           <div class="facts facts-3">
@@ -328,6 +349,7 @@ export class Sheet {
           <div style="flex:1;min-width:0"><div class="sh-kicker">${esc(t(r.drive ? 'r_title_drive' : 'r_title'))}</div><h2 class="sh-title" tabindex="-1">${esc(nm(p))}</h2></div>
           <button type="button" class="icon-btn lg" data-act="close" aria-label="${esc(t('l_close'))}">${icon('close', 18)}</button>
         </div>
+        ${routeChoice}
         ${routeBox}`;
       this.foot.innerHTML = `<button type="button" class="btn block danger" data-act="endroute">${icon('close', 20)}${esc(t('route_end'))}</button>`;
       return;

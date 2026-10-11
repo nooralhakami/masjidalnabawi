@@ -513,6 +513,45 @@
   stroke-opacity: 0.35;
 }
 
+/* ---------- alternative routes (tap to choose) ---------- */
+.route-alt-under {
+  stroke: #fff;
+  stroke-opacity: 0.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+.route-alt {
+  stroke: var(--muted);
+  stroke-opacity: 0.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+/* Wide, invisible hit area over an alternative, so a finger can pick it easily. */
+.route-alt-casing {
+  stroke: #000;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  cursor: pointer;
+}
+.route-alt-label-wrap {
+  display: grid;
+  place-items: center;
+}
+.route-alt-label {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-sm);
+  font: 700 12px var(--font-ui);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
 /* ---------- walking route ---------- */
 .route-casing {
   stroke: #fff;

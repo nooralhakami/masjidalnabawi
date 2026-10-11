@@ -3,7 +3,7 @@ import type { LatLng } from '../data/types';
 import { t } from '../i18n';
 import type { LiveFix, LocationService } from '../location/LocationService';
 import type { MeMarker } from '../location/MeMarker';
-import { AwayDetector, RouteTrack } from '../location/progress';
+import { AwayDetector, RouteTrack, onAlternative } from '../location/progress';
 import { esc } from '../ui/dom';
 
 type NavigationState = 'locating' | 'updated' | 'low-accuracy' | 'away' | 'signal-lost' | 'off-route' | 'error' | 'stopped';
@@ -22,7 +22,9 @@ const PACE = { walk: { start: 1.35, min: 0.8, max: 2 }, drive: { start: 5, min: 
 /** Worse than this, the status says so (the marker still moves). */
 const LOW_ACCURACY_M = 35;
 const OFF_ROUTE_READS = 3;
-const REROUTE_COOLDOWN_MS = 15_000;
+/** Readings on an alternative route before switching to it (it is already planned and drawn). */
+const SWITCH_READS = 2;
+const REROUTE_COOLDOWN_MS = 8_000;
 
 const LABEL: Record<NavigationState, string> = {
   'off-route': 'nav_off',
@@ -37,14 +39,18 @@ const LABEL: Record<NavigationState, string> = {
 
 /**
  * Live walking navigation on top of the shared LocationService: progress along the route
- * (forwards and backwards), remaining distance/time, walking-away and off-route detection with
- * automatic re-routing, and an optional "follow me" camera.
+ * (forwards and backwards), remaining distance/time, walking-away and off-route detection, and an
+ * optional "follow me" camera. Off the route, a visitor who has taken one of the alternative routes
+ * on the map is switched to it at once; otherwise the route is re-planned from where they are,
+ * favouring the way they are heading.
  */
 export class NavigationTracker {
   private track: RouteTrack | null = null;
   private along: number | null = null;
   private away = new AwayDetector();
   private offRouteReads = 0;
+  private alternatives: RouteTrack[] = [];
+  private altReads: number[] = [];
   private lastReroute = 0;
   private pace = PACE.walk;
   private speed = PACE.walk.start;
@@ -59,8 +65,11 @@ export class NavigationTracker {
     private location: LocationService,
     private me: MeMarker,
     private getPath: () => L.LatLng[],
-    /** Called with the visitor's position when they have left the route. */
-    private onReroute?: (from: L.LatLng) => void,
+    /** Called with the visitor's position (and heading, if known) when they have left the route. */
+    private onReroute?: (from: L.LatLng, heading: number | null) => void,
+    /** The other routes drawn on the map, and what to do when the visitor walks onto one of them. */
+    private getAlternatives: () => L.LatLng[][] = () => [],
+    private onSwitch?: (index: number) => void,
   ) {
     map.on('dragstart', () => {
       if (this.state.follow) {
@@ -112,6 +121,11 @@ export class NavigationTracker {
   routeChanged() {
     const path = this.getPath().map((p) => [p.lat, p.lng] as LatLng);
     this.track = path.length > 1 ? new RouteTrack(path) : null;
+    this.alternatives = this.getAlternatives()
+      .map((alt) => alt.map((p) => [p.lat, p.lng] as LatLng))
+      .filter((alt) => alt.length > 1)
+      .map((alt) => new RouteTrack(alt));
+    this.altReads = this.alternatives.map(() => 0);
     this.along = null;
     this.offRouteReads = 0;
     this.away.reset();
@@ -158,9 +172,16 @@ export class NavigationTracker {
 
     const offRoute = p.offset > Math.max(25, f.accuracy * 1.5);
     this.offRouteReads = offRoute ? this.offRouteReads + 1 : 0;
-    if (this.offRouteReads >= OFF_ROUTE_READS && this.onReroute && Date.now() - this.lastReroute > REROUTE_COOLDOWN_MS) {
+    // Off the route but on one of the alternatives already drawn: switch to it.
+    const alt = offRoute ? onAlternative(this.alternatives, pos, f.accuracy) : -1;
+    this.altReads = this.altReads.map((n, i) => (i === alt ? n + 1 : 0));
+    if (alt >= 0 && this.altReads[alt] >= SWITCH_READS && this.onSwitch) {
+      this.onSwitch(alt);
+      return; // routeChanged() follows; the next reading continues on the chosen route
+    }
+    if (this.offRouteReads >= OFF_ROUTE_READS && alt < 0 && this.onReroute && Date.now() - this.lastReroute > REROUTE_COOLDOWN_MS) {
       this.lastReroute = Date.now();
-      this.onReroute(L.latLng(f.lat, f.lng));
+      this.onReroute(L.latLng(f.lat, f.lng), f.heading);
       return; // routeChanged() resets progress; the next reading continues on the new route
     }
     const walkingAway = this.away.push(f.time, p.remaining);

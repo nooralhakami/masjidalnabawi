@@ -1187,6 +1187,48 @@ body.is-navigating .leaflet-bottom.leaflet-right {
   color: var(--heading);
   box-shadow: var(--shadow);
 }
+/* Choice between the offered routes (sheet, while a route is shown). */
+.route-options {
+  display: flex;
+  gap: 8px;
+  margin: 2px 0 10px;
+  overflow-x: auto;
+}
+.route-option {
+  flex: 1 0 0;
+  min-width: 88px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--ink);
+  display: grid;
+  gap: 1px;
+  text-align: start;
+  cursor: pointer;
+  font: 600 12px var(--font-ui);
+}
+.route-option-n {
+  color: var(--muted);
+  font-size: 11px;
+}
+.route-option-t {
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.route-option-t small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.route-option[aria-pressed='true'] {
+  border-color: var(--green-700);
+  background: var(--tint-green);
+  color: var(--heading);
+}
+
 .route-legs {
   display: flex;
   flex-wrap: wrap;

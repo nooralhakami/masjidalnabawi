@@ -91,6 +91,25 @@ export class AwayDetector {
   }
 }
 
+/**
+ * Which alternative route (if any) the visitor is walking on: the index of the nearest one they are
+ * within `tolerance` metres of, or -1. Used when they have left the chosen route, so a switch to a
+ * route already on the map needs no re-planning.
+ */
+export function onAlternative(tracks: readonly RouteTrack[], pos: LatLng, accuracy: number): number {
+  const tolerance = Math.max(12, Math.min(accuracy, 20));
+  let best = -1;
+  let bestOffset = Infinity;
+  tracks.forEach((track, i) => {
+    const { offset } = track.locate(pos);
+    if (offset <= tolerance && offset < bestOffset) {
+      best = i;
+      bestOffset = offset;
+    }
+  });
+  return best;
+}
+
 /** Smallest angle between two bearings (0–180). */
 export function angleBetween(a: number, b: number): number {
   const d = Math.abs(((a - b) % 360) + 360) % 360;

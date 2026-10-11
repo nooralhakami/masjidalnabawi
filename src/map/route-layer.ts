@@ -12,6 +12,9 @@ export interface RouteInfo {
   nearestEntrance?: number;
   /** By car: the drive, the lot, and the walk from it. */
   drive?: { meters: number; lot?: number; walkMeters: number };
+  /** Every route offered (the chosen one included), and which one is chosen. */
+  options: { minutes: number; meters: number }[];
+  chosen: number;
 }
 
 const ARROW_EVERY_M = 55;
@@ -20,16 +23,55 @@ function bearing(a: L.Point, b: L.Point): number {
   return (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
 }
 
+/** Point at a share (0–1) of a path's length, for a label on it. */
+function pointAlong(path: LatLng[], share: number): LatLng {
+  const pts = path.map((p) => L.latLng(p));
+  const total = pts.reduce((s, p, i) => (i ? s + pts[i - 1].distanceTo(p) : 0), 0);
+  let left = total * share;
+  for (let i = 1; i < pts.length; i++) {
+    const seg = pts[i - 1].distanceTo(pts[i]);
+    if (left <= seg && seg > 0) {
+      const f = left / seg;
+      return [pts[i - 1].lat + (pts[i].lat - pts[i - 1].lat) * f, pts[i - 1].lng + (pts[i].lng - pts[i - 1].lng) * f];
+    }
+    left -= seg;
+  }
+  return path[path.length - 1];
+}
+
 /**
  * Draws a trip: walking legs as a green line with gold flow dashes, the drive in blue, the stretch
  * inside the underground car park dashed; direction arrows, start/end dots and car-park markers.
+ * Alternative routes are drawn underneath in grey, each with its time; tapping one chooses it.
  */
 export class RouteLayer {
   private group = L.featureGroup();
   private path: LatLng[] = [];
+  private others: LatLng[][] = [];
+  private labels: { marker: L.Marker; path: LatLng[] }[] = [];
 
   constructor(private map: L.Map) {
     map.on('zoomend', () => this.path.length && this.drawArrows());
+    map.on('moveend', () => this.placeLabels());
+  }
+
+  /**
+   * Slide each alternative's time label along its line to where it is clearest on screen: away from
+   * the side edges, where the map controls are (a handful of points per label, after each move).
+   */
+  private placeLabels() {
+    if (!this.labels.length) return;
+    const size = this.map.getSize();
+    for (const { marker, path } of this.labels) {
+      let best: { ll: LatLng; score: number } | null = null;
+      for (let s = 0.2; s <= 0.81; s += 0.1) {
+        const ll = pointAlong(path, s);
+        const pt = this.map.latLngToContainerPoint(ll);
+        const score = pt.y < 0 || pt.y > size.y ? -1 : Math.min(pt.x, size.x - pt.x);
+        if (!best || score > best.score) best = { ll, score };
+      }
+      if (best) marker.setLatLng(best.ll);
+    }
   }
 
   get active(): boolean {
@@ -40,12 +82,44 @@ export class RouteLayer {
     return this.path.map((p) => L.latLng(p));
   }
 
-  show(plan: Plan): RouteInfo {
+  /** The alternative routes on the map, in plan order without the chosen one. */
+  get alternatives(): L.LatLng[][] {
+    return this.others.map((path) => path.map((p) => L.latLng(p)));
+  }
+
+  /**
+   * Draw `plans[chosen]` as the route and the other plans as alternatives. `animate: false` (a switch
+   * or a re-route while walking) redraws without the draw-in, so nothing jumps at the visitor.
+   */
+  show(plans: Plan[], chosen = 0, opts: { animate?: boolean; onPick?: (i: number) => void } = {}): RouteInfo {
     this.clear();
+    const plan = plans[chosen];
     this.path = fullPath(plan);
     const from = this.path[0];
     const to = this.path[this.path.length - 1];
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduce = opts.animate === false || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    plans.forEach((other, i) => {
+      if (i === chosen) return;
+      const path = fullPath(other);
+      this.others.push(path);
+      const pick = (e: L.LeafletEvent) => {
+        L.DomEvent.stop(e as L.LeafletMouseEvent);
+        opts.onPick?.(i);
+      };
+      const casing = L.polyline(path, { className: 'route-alt-casing', weight: 16, opacity: 0, bubblingMouseEvents: false });
+      const under = L.polyline(path, { className: 'route-alt-under', weight: 10, interactive: false });
+      const line = L.polyline(path, { className: 'route-alt', weight: 6, interactive: false });
+      const label = L.marker(pointAlong(path, 0.5), {
+        icon: L.divIcon({ className: 'route-alt-label-wrap', html: `<span class="route-alt-label">${esc(t('r_min', { t: other.minutes }))}</span>`, iconSize: [64, 24], iconAnchor: [32, 12] }),
+        keyboard: false,
+        bubblingMouseEvents: false,
+        zIndexOffset: 900,
+      });
+      casing.on('click', pick);
+      label.on('click', pick);
+      this.labels.push({ marker: label, path });
+      this.group.addLayer(under).addLayer(line).addLayer(casing).addLayer(label);
+    });
     let line: L.Polyline | null = null;
     for (const leg of plan.legs) {
       if (leg.path.length < 2) continue;
@@ -124,9 +198,12 @@ export class RouteLayer {
     return {
       meters: plan.walkM + plan.driveM,
       minutes: plan.minutes,
-      bounds: L.latLngBounds(this.path),
+      // Frame every offered route, so the alternatives can be seen (and tapped) too.
+      bounds: L.latLngBounds([...this.path, ...this.others.flat()]),
       ...(parking ? { nearestEntrance: parking.nearest.id } : {}),
       ...(plan.mode === 'drive' ? { drive: { meters: plan.driveM, lot: plan.lot ? plan.lot.id - 900 : undefined, walkMeters: plan.walkM } } : {}),
+      options: plans.map((p) => ({ minutes: p.minutes, meters: p.walkM + p.driveM })),
+      chosen,
     };
   }
 
@@ -169,5 +246,7 @@ export class RouteLayer {
     this.arrows.clearLayers();
     this.arrows.remove();
     this.path = [];
+    this.others = [];
+    this.labels = [];
   }
 }

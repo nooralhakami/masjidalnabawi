@@ -22,7 +22,7 @@ import { LocationService } from '../location/LocationService';
 import { MeMarker } from '../location/MeMarker';
 import { RouteLayer } from './route-layer';
 import { createMap } from './setup';
-import { planRoute } from '../routing/plan';
+import { planRoutes, type Plan } from '../routing/plan';
 import { addWeatherChip } from '../ui/weather-chip';
 import { trackMotion } from './motion';
 import { NavigationTracker } from '../navigation/NavigationTracker';
@@ -62,17 +62,51 @@ geo.onStatus((s, extra) => {
   if (s === 'idle' || s === 'denied' || s === 'far') me.remove();
 });
 const route = new RouteLayer(map);
-const navigation = new NavigationTracker(map, geo, me, () => route.latLngs, (from) => {
-  // Left the route: redraw it from where the visitor actually is, the same way (walking or driving).
-  const dest = state.selected !== null ? POI_BY_ID.get(state.selected) : undefined;
-  if (!dest || !route.active) return;
-  void planRoute([from.lat, from.lng], dest, sheet.travel).then((plan) => {
-    if (state.selected !== dest.id || !route.active) return;
-    sheet.setRoute(route.show(plan));
-    navigation.routeChanged();
-    toast(t('rerouted'));
-  });
-});
+/** The routes offered for the current trip (best first) and the one being followed. */
+let plans: Plan[] = [];
+let chosen = 0;
+
+/** Draw the offered routes with `plans[i]` as the one to follow, and keep the sheet and navigation in step. */
+function showPlans(next: Plan[], i: number, animate: boolean) {
+  plans = next;
+  chosen = i;
+  const info = route.show(plans, chosen, { animate, onPick: (j) => pickRoute(j) });
+  sheet.setRoute(info);
+  navigation.routeChanged();
+  return info;
+}
+
+/** The visitor chose another of the offered routes (on the map or in the sheet). */
+function pickRoute(i: number) {
+  if (i === chosen || !plans[i] || !route.active) return;
+  showPlans(plans, i, false);
+}
+
+const navigation = new NavigationTracker(
+  map,
+  geo,
+  me,
+  () => route.latLngs,
+  (from, heading) => {
+    // Left the route: re-plan from where the visitor actually is, the same way (walking or driving),
+    // favouring the way they are heading; redrawn in place, without the draw-in or a camera jump.
+    const dest = state.selected !== null ? POI_BY_ID.get(state.selected) : undefined;
+    if (!dest || !route.active) return;
+    void planRoutes([from.lat, from.lng], dest, sheet.travel, { heading }).then((next) => {
+      if (state.selected !== dest.id || !route.active || !next.length) return;
+      showPlans(next, 0, false);
+      toast(t('rerouted'));
+    });
+  },
+  () => route.alternatives,
+  (alt) => {
+    // Walking along one of the alternatives on the map: it becomes the route.
+    const others = plans.map((_, k) => k).filter((k) => k !== chosen);
+    if (others[alt] === undefined) return;
+    showPlans(plans, others[alt], false);
+    toast(t('r_switched'));
+  },
+);
 
 navigation.onChange((s) => document.body.classList.toggle('is-navigating', s.state !== 'stopped'));
 
@@ -121,6 +155,7 @@ const sheet = new Sheet(fac, {
   close: () => deselect(),
   goTo: (p) => select(p, true),
   route: (p) => void drawRoute(p),
+  pickRoute: (i) => pickRoute(i),
   share: (p) => void sharePlace(p),
   endRoute: () => {
     navigation.stop();
@@ -177,16 +212,17 @@ async function drawRoute(p: Poi) {
   const fix = geo.fresh() ?? (await geo.start());
   if (!fix || state.selected !== p.id) return;
   const travel = sheet.travel;
-  const plan = await planRoute([fix.lat, fix.lng], p, travel);
-  if (state.selected !== p.id) return;
+  const next = await planRoutes([fix.lat, fix.lng], p, travel);
+  if (state.selected !== p.id || !next.length) return;
+  const plan = next[0];
   if (travel === 'drive' && plan.mode === 'walk') toast(t('drive_fallback'), 5000);
-  const info = route.show(plan);
-  sheet.setRoute(info);
+  const info = showPlans(next, 0, true);
   await navigation.start(plan.mode);
   const topH = top.getBoundingClientRect().bottom;
   map.fitBounds(info.bounds, {
-    paddingTopLeft: [40, topH + 24],
-    paddingBottomRight: [40, sheet.visibleHeight() + 24],
+    // Room on both sides for the map controls, so a route or an alternative's label is not hidden under them.
+    paddingTopLeft: [72, topH + 24],
+    paddingBottomRight: [72, sheet.visibleHeight() + 24],
     maxZoom: 19,
   });
 }

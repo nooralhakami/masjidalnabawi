@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MotionHeading, PositionFilter, bearing, metres } from '../../src/location/filter';
-import { AwayDetector, RouteTrack, angleBetween } from '../../src/location/progress';
+import { AwayDetector, RouteTrack, angleBetween, onAlternative } from '../../src/location/progress';
 import { walkPath } from '../../src/routing/walk';
 import { POI_BY_ID } from '../../src/data';
 import type { LatLng } from '../../src/data';
@@ -141,5 +141,20 @@ describe('route progress', () => {
     expect(away.push(5000, 390)).toBe(false);
     expect(away.push(10_000, 400)).toBe(false);
     expect(away.push(15_000, 410)).toBe(true);
+  });
+});
+
+describe('switching to an alternative route while walking', () => {
+  const north = [BASE, offset(BASE, 200, 0)];
+  const east = [BASE, offset(BASE, 0, 150), offset(BASE, 200, 150)];
+  const tracks = [new RouteTrack(north), new RouteTrack(east)];
+  it('finds the alternative the visitor is walking on, or none', () => {
+    expect(onAlternative(tracks, offset(BASE, 100, 4), 8)).toBe(0);
+    expect(onAlternative(tracks, offset(BASE, 2, 90), 8)).toBe(1);
+    expect(onAlternative(tracks, offset(BASE, 100, 70), 8)).toBe(-1); // on neither
+  });
+  it('allows more room for a poor GPS reading, within limits', () => {
+    expect(onAlternative(tracks, offset(BASE, 100, 18), 30)).toBe(0);
+    expect(onAlternative(tracks, offset(BASE, 100, 18), 5)).toBe(-1);
   });
 });

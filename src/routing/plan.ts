@@ -2,7 +2,8 @@ import { POIS } from '../data';
 import type { LatLng, Poi } from '../data/types';
 import { parkingAccess, parkingEntrances } from '../domain/parking';
 import { loadStreets, type Reach, type Streets } from './streets';
-import { fromM, insideRect, network, openTogether, pathLength, ringPath, segmentHits, toM, walkPath, type XY } from './walk';
+import { pickRoutes, turnPenalty } from './alternatives';
+import { fromM, insideRect, network, openTogether, pathLength, ringPath, segmentHits, toM, walkPath, walkPaths, type XY } from './walk';
 
 /**
  * Plans a trip as legs:
@@ -89,16 +90,37 @@ function streetPath(S: Streets, r: Reach, k: number, start: LatLng, reverse: boo
   return reverse ? p.reverse() : p;
 }
 
-/** Whether a path crosses the mosque building or Al-Baqi' (street data has footways there too). */
+/**
+ * Inside its own obstacle a trip may only cover the stretch to (or from) its inner gate: as far from
+ * the gate as the gate lies inside the obstacle's rectangle (the building is not a perfect
+ * rectangle, so a gate can sit well inside it), plus 40 m.
+ */
+const DOOR_STRETCH_M = 40;
+
+/**
+ * Whether a path crosses the mosque building or Al-Baqi' (street data has footways there too).
+ * The trip's own start or end may lie inside an obstacle (an inner gate on the mosque wall): then
+ * only the stretch within 40 m of that gate may run inside it — never across the building.
+ */
 function crossesObstacle(path: LatLng[]): boolean {
   const N = network();
-  // The trip's own start or end may lie inside an obstacle (an inner gate); any other point may not.
   const ends = [toM(path[0]), toM(path[path.length - 1])];
-  const own = N.obstacles.filter((r) => ends.some((e) => insideRect(e, r)));
+  const own = N.obstacles.map((r) => ends.filter((e) => insideRect(e, r)));
   for (let i = 1; i < path.length; i++) {
     const p = toM(path[i - 1]);
     const q = toM(path[i]);
-    if (N.obstacles.some((r) => !own.includes(r) && segmentHits(p, q, r))) return true;
+    for (let o = 0; o < N.obstacles.length; o++) {
+      const r = N.obstacles[o];
+      if (!segmentHits(p, q, r)) continue;
+      if (!own[o].length) return true;
+      // Its own obstacle: every metre of the segment inside it must be near the inner gate.
+      const reach = own[o].map((e) => ({ e, m: Math.min(e[0] - r.x0, r.x1 - e[0], e[1] - r.y0, r.y1 - e[1]) + DOOR_STRETCH_M }));
+      const n = Math.max(1, Math.ceil(Math.hypot(q[0] - p[0], q[1] - p[1]) / 2));
+      for (let s = 0; s <= n; s++) {
+        const x: XY = [p[0] + ((q[0] - p[0]) * s) / n, p[1] + ((q[1] - p[1]) * s) / n];
+        if (insideRect(x, r) && !reach.some(({ e, m }) => Math.hypot(x[0] - e[0], x[1] - e[1]) <= m)) return true;
+      }
+    }
   }
   return false;
 }
@@ -138,60 +160,81 @@ function gateCosts(S: Streets, r: Reach): { gate: Poi; k: number; cost: number }
 }
 
 /**
- * Walk a → b, the shortest sensible way:
- *  - both in the Haram: the plaza walkways;
- *  - otherwise the best of: streets all the way (not every trip needs to pass through the Haram —
- *    a hotel behind it, a garden on its edge), or streets to an outer gate and the walkways from it,
- *    or (both outside) a short cut across the plazas from one gate to another.
- * No candidate may cross the mosque building or Al-Baqi'.
+ * Ways to walk a → b (each a full path), for choosing the best and the alternatives:
+ *  - both in the Haram: the plaza walkways, and up to two other ways along them;
+ *  - otherwise: streets all the way (not every trip needs to pass through the Haram — a hotel behind
+ *    it, a garden on its edge) and another way on the streets; or streets to an outer gate and the
+ *    walkways from it, through each of the best few gates; or (both outside) a short cut across the
+ *    plazas, in at one gate and out at another, for the best few pairs of gates.
+ * None may cross the mosque building or Al-Baqi'.
  */
-async function walkLegs(a: LatLng, b: LatLng): Promise<LatLng[]> {
+async function walkOptions(a: LatLng, b: LatLng): Promise<LatLng[][]> {
   const ia = inHaram(a);
   const ib = inHaram(b);
-  if (ia && ib) return walkPath(a, b);
+  if (ia && ib) {
+    // The walkway route always stands; another way along the walkways only if it stays clear too.
+    const [first, ...others] = walkPaths(a, b);
+    return [first, ...others.filter((p) => !crossesObstacle(p))];
+  }
   const S = await loadStreets();
-  if (!S) return walkPath(a, b); // no street data (offline before first load): the old straight approach
+  if (!S) return [walkPath(a, b)]; // no street data (offline before first load): the old straight approach
   const options: LatLng[][] = [];
   const ra = S.reach(a, 'walk')!;
 
-  // 1) Streets all the way.
+  // 1) Streets all the way, and another way on the streets (its streets made dearer).
   const kb = bestNear(S, ra, b, 'walk');
-  if (Number.isFinite(ra.dist[kb])) options.push([...streetPath(S, ra, kb, a, false), b]);
+  if (Number.isFinite(ra.dist[kb])) {
+    options.push([...streetPath(S, ra, kb, a, false), b]);
+    const avoid = new Uint8Array(S.size);
+    S.nodesTo(ra, kb).forEach((k) => (avoid[k] = 1));
+    const ra2 = S.reach(a, 'walk', false, avoid);
+    if (ra2) {
+      const k2 = bestNear(S, ra2, b, 'walk');
+      if (Number.isFinite(ra2.dist[k2])) options.push([...streetPath(S, ra2, k2, a, false), b]);
+    }
+  }
 
   if (ia !== ib) {
-    // 2) Streets on the outside end, through the best gate, walkways on the inside end.
+    // 2) Streets on the outside end, through a gate, walkways on the inside end: the best few gates.
     const outside = ia ? b : a;
     const inside = ia ? a : b;
     const r = ia ? S.reach(outside, 'walk')! : ra;
-    const best = gateCosts(S, r)
+    const gates = gateCosts(S, r)
       .slice(0, 16)
       .map((g) => ({ ...g, total: g.cost + len(walkPath(at(g.gate), inside)) }))
-      .sort((x, y) => x.total - y.total)[0];
-    if (best) {
-      const street = [...streetPath(S, r, best.k, outside, false), at(best.gate)];
-      options.push(ia ? [...walkPath(inside, at(best.gate)), ...street.reverse().slice(1)] : [...street, ...walkPath(at(best.gate), inside).slice(1)]);
+      .sort((x, y) => x.total - y.total)
+      .slice(0, GATE_OPTIONS);
+    for (const g of gates) {
+      const street = [...streetPath(S, r, g.k, outside, false), at(g.gate)];
+      options.push(ia ? [...walkPath(inside, at(g.gate)), ...street.reverse().slice(1)] : [...street, ...walkPath(at(g.gate), inside).slice(1)]);
     }
   } else {
     // 3) Both outside: maybe a short cut across the plazas, in at one gate and out at another.
     const rb = S.reach(b, 'walk')!;
     const ins = gateCosts(S, ra).slice(0, 8);
     const outs = gateCosts(S, rb).slice(0, 8);
-    let best: { total: number; gi: (typeof ins)[number]; go: (typeof outs)[number]; plaza: LatLng[] } | null = null;
+    const pairs: { total: number; gi: (typeof ins)[number]; go: (typeof outs)[number]; plaza: LatLng[] }[] = [];
     for (const gi of ins) {
       for (const go of outs) {
         const plaza = gi.gate === go.gate ? [at(gi.gate)] : walkPath(at(gi.gate), at(go.gate));
-        const total = gi.cost + len(plaza) + go.cost;
-        if (!best || total < best.total) best = { total, gi, go, plaza };
+        pairs.push({ total: gi.cost + len(plaza) + go.cost, gi, go, plaza });
       }
     }
-    if (best) {
+    for (const best of pairs.sort((x, y) => x.total - y.total).slice(0, GATE_OPTIONS)) {
       const toGate = [...streetPath(S, ra, best.gi.k, a, false), at(best.gi.gate)];
       const fromGate = [...streetPath(S, rb, best.go.k, b, false), at(best.go.gate)].reverse();
       options.push([...toGate, ...best.plaza.slice(1), ...fromGate.slice(1)]);
     }
   }
-  const ok = options.filter((p) => !crossesObstacle(p)).sort((x, y) => len(x) - len(y));
-  return ok[0] ?? walkPath(a, b);
+  return options.filter((p) => !crossesObstacle(p));
+}
+
+/** How many gates (or pairs of gates) are tried as alternatives. */
+const GATE_OPTIONS = 4;
+
+/** Walk a → b, the shortest sensible way. */
+async function walkLegs(a: LatLng, b: LatLng): Promise<LatLng[]> {
+  return pickRoutes((await walkOptions(a, b)).map((path) => ({ path, item: path })))[0] ?? walkPath(a, b);
 }
 
 /** Of a lot's four entrances (the facilities round it), the one nearest on foot. */
@@ -204,8 +247,12 @@ export function nearestEntrance(from: LatLng, p: Poi): { entrance: Poi; path: La
   return candidates.reduce((best, c) => (c.length < best.length ? c : best));
 }
 
-/** Walking: to a lot, the route ends at the nearest of its four entrances. */
-async function planWalk(from: LatLng, to: Poi): Promise<Plan> {
+/**
+ * Walking: the best route and its sensible alternatives (routing/alternatives.ts). To a lot, the
+ * route ends at the nearest of its four entrances. With the visitor's heading (on a re-route), a
+ * route that starts by turning them round ranks lower.
+ */
+async function planWalks(from: LatLng, to: Poi, heading?: number | null): Promise<Plan[]> {
   let target = to;
   let extra: Partial<Plan> = {};
   if (to.category === 'parking') {
@@ -213,9 +260,12 @@ async function planWalk(from: LatLng, to: Poi): Promise<Plan> {
     target = n.entrance;
     extra = { entrances: parkingEntrances(to), nearest: n.entrance };
   }
-  const path = await walkLegs(from, at(target));
-  const walkM = len(path);
-  return { mode: 'walk', legs: [{ kind: 'walk', path }], walkM, driveM: 0, minutes: Math.max(1, Math.ceil(walkM / WALK_M_PER_MIN)), ...extra };
+  const options = await walkOptions(from, at(target));
+  const paths = pickRoutes((options.length ? options : [walkPath(from, at(target))]).map((path) => ({ path, item: path, penalty: turnPenalty(path, heading) })));
+  return paths.map((path) => {
+    const walkM = len(path);
+    return { mode: 'walk', legs: [{ kind: 'walk', path }], walkM, driveM: 0, minutes: Math.max(1, Math.ceil(walkM / WALK_M_PER_MIN)), ...extra };
+  });
 }
 
 /**
@@ -223,30 +273,32 @@ async function planWalk(from: LatLng, to: Poi): Promise<Plan> {
  * makes the whole trip quickest (public lots, unless the destination is itself a lot), then walk up
  * through the lot's nearest entrance to the destination.
  */
-async function planDrive(from: LatLng, to: Poi): Promise<Plan | null> {
+async function planDrive(from: LatLng, to: Poi): Promise<Plan[]> {
   const S = await loadStreets();
-  if (!S || !S.garageNodes.length) return null;
+  if (!S || !S.garageNodes.length) return [];
   const r = S.reach(from, 'drive');
-  if (!r) return null;
+  if (!r) return [];
   // A place outside the Haram (a hotel, a restaurant): drive to the street at its door, walk the rest.
   if (to.category !== 'parking' && !inHaram(at(to))) {
     const k = bestNear(S, r, at(to), 'drive');
-    if (!Number.isFinite(r.dist[k])) return null;
+    if (!Number.isFinite(r.dist[k])) return [];
     const drive = streetPath(S, r, k, from, false);
     const kerb = fromM(S.xy[k]);
     const walk = len([kerb, at(to)]) > 2 ? await walkLegs(kerb, at(to)) : [];
     const driveM = len(drive);
     const walkM = len(walk);
-    return {
-      mode: 'drive',
-      legs: [{ kind: 'drive', path: drive }, ...(walk.length > 1 ? [{ kind: 'walk' as const, path: walk }] : [])],
-      walkM,
-      driveM,
-      minutes: Math.max(1, Math.ceil(driveM / DRIVE_M_PER_MIN + walkM / WALK_M_PER_MIN)),
-    };
+    return [
+      {
+        mode: 'drive',
+        legs: [{ kind: 'drive', path: drive }, ...(walk.length > 1 ? [{ kind: 'walk' as const, path: walk }] : [])],
+        walkM,
+        driveM,
+        minutes: Math.max(1, Math.ceil(driveM / DRIVE_M_PER_MIN + walkM / WALK_M_PER_MIN)),
+      },
+    ];
   }
   const lots = to.category === 'parking' ? [to] : LOTS.filter((p) => parkingAccess(p) === 'public');
-  let best: { cost: number; plan: Plan } | null = null;
+  const plans: Plan[] = [];
   for (const lot of lots) {
     const L = toM(at(lot));
     // The ramp that gets there quickest: driving to it, then along the car park, which is one
@@ -288,18 +340,31 @@ async function planDrive(from: LatLng, to: Poi): Promise<Plan | null> {
       { kind: 'garage', path: garage },
       ...(up ? [{ kind: 'walk' as const, path: up.path }] : []),
     ];
-    if (!best || minutes < best.cost) best = { cost: minutes, plan: { mode: 'drive', legs, walkM, driveM, minutes: Math.max(1, minutes), lot } };
+    plans.push({ mode: 'drive', legs, walkM, driveM, minutes: Math.max(1, minutes), lot });
   }
-  return best?.plan ?? null;
+  // The quickest lot, and other lots reached a really different way within 30% of its time.
+  return pickRoutes(
+    plans.map((plan) => ({ path: plan.legs[0].path, item: plan })),
+    (c) => c.item.driveM / DRIVE_M_PER_MIN + c.item.walkM / WALK_M_PER_MIN,
+  );
 }
 
-/** The trip from a point to a place. Driving falls back to walking when no car route is found. */
-export async function planRoute(from: LatLng, to: Poi, mode: Mode = 'walk'): Promise<Plan> {
+/**
+ * The trip from a point to a place: the best route first, then up to two sensible alternatives.
+ * Driving falls back to walking when no car route is found. `heading` (degrees, on a re-route)
+ * favours routes that carry on ahead of the visitor.
+ */
+export async function planRoutes(from: LatLng, to: Poi, mode: Mode = 'walk', opts: { heading?: number | null } = {}): Promise<Plan[]> {
   if (mode === 'drive') {
     const p = await planDrive(from, to);
-    if (p) return p;
+    if (p.length) return p;
   }
-  return planWalk(from, to);
+  return planWalks(from, to, opts.heading);
+}
+
+/** The best trip from a point to a place. */
+export async function planRoute(from: LatLng, to: Poi, mode: Mode = 'walk'): Promise<Plan> {
+  return (await planRoutes(from, to, mode))[0];
 }
 
 /** All legs as one path (for live navigation and fitting the map). */

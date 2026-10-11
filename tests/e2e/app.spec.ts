@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { count, expect, openMap, search, test } from './fixtures';
 
 test.describe('landing', () => {
@@ -532,5 +533,42 @@ test.describe('compass', () => {
     // The map content (and with it north) turned clockwise by the bearing; the needle must follow north.
     expect(Math.abs(pane)).toBeCloseTo(15, 0);
     expect(needle).toBeCloseTo(pane, 0);
+  });
+});
+
+test.describe('alternative routes', () => {
+  // South plaza → Gate 21 (north): round the mosque by the west or by the east side.
+  const START = { latitude: 24.4668, longitude: 39.6111, accuracy: 8 };
+  test.use({ geolocation: START, permissions: ['geolocation'] });
+
+  test('up to three routes are offered; tapping one in the sheet makes it the route', async ({ page, errors: _ }) => {
+    await page.goto('map.html?poi=21');
+    await page.locator('[data-act="route"]').click();
+    const options = page.locator('.route-option');
+    await expect(options.first()).toBeVisible();
+    const n = await options.count();
+    expect(n).toBeGreaterThan(1);
+    expect(n).toBeLessThanOrEqual(3);
+    await expect(options.first()).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('path.route-alt')).toHaveCount(n - 1);
+    await options.nth(1).click();
+    await expect(page.locator('.route-option').nth(1)).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.route-option').first()).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('walking onto another offered route switches to it, without re-planning', async ({ page, context, errors: _ }) => {
+    // The best route goes round the west side; the other one up the east side of the walkway ring.
+    const ring = (JSON.parse(readFileSync('data/routing.json', 'utf8')) as { walkway_ring: [number, number][] }).walkway_ring;
+    const eastLng = Math.max(...ring.map((p) => p[1]));
+    await page.goto('map.html?poi=21');
+    await page.locator('[data-act="route"]').click();
+    await expect(page.locator('.route-option').first()).toHaveAttribute('aria-pressed', 'true');
+    // Walking north up the east side, ~30 m a step.
+    for (let i = 0; i < 5; i++) {
+      await context.setGeolocation({ latitude: 24.4674 + (i * 30) / 111_320, longitude: eastLng, accuracy: 8 });
+      await page.waitForTimeout(900);
+    }
+    await expect(page.locator('.route-option').nth(1)).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.toast')).toContainText('تحوّل المسار');
   });
 });

@@ -258,15 +258,20 @@ function hooks(p: XY, N: Network): Hook[] {
   return pool.filter((h) => h.d <= best + 40);
 }
 
-/** Shortest walk a → network → b, as points (without corner rounding), or null. */
-function graphRoute(A: XY, B: XY, N: Network): { pts: XY[]; length: number } | null {
+/**
+ * Shortest walk a → network → b, as points (without corner rounding), or null. With `avoid`,
+ * walkways between two avoided nodes cost more (to find another way for an alternative route);
+ * `length` is then the real length, and `nodes` the network nodes the walk passes.
+ */
+function graphRoute(A: XY, B: XY, N: Network, avoid?: Uint8Array): { pts: XY[]; length: number; nodes: number[] } | null {
   const n = N.nodes.length;
   const S = n;
   const T = n + 1;
   const adj: [number, number][][] = Array.from({ length: n + 2 }, () => []);
   for (const e of N.edges) {
-    adj[e.u].push([e.v, e.l]);
-    adj[e.v].push([e.u, e.l]);
+    const w = avoid && avoid[e.u] && avoid[e.v] ? e.l * AVOID_FACTOR : e.l;
+    adj[e.u].push([e.v, w]);
+    adj[e.v].push([e.u, w]);
   }
   const hs = hooks(A, N);
   const ht = hooks(B, N);
@@ -298,13 +303,13 @@ function graphRoute(A: XY, B: XY, N: Network): { pts: XY[]; length: number } | n
       }
     }
   }
-  let best: { pts: XY[]; length: number } | null = null;
+  let best: { pts: XY[]; length: number; nodes: number[] } | null = null;
   // Both ends on the same edge: walk along it directly.
   for (const s of hs) {
     for (const t of ht) {
       if (s.e !== t.e) continue;
       const length = s.d + Math.abs(s.along - t.along) + t.d;
-      if (!best || length < best.length) best = { pts: [A, s.q, t.q, B], length };
+      if (!best || length < best.length) best = { pts: [A, s.q, t.q, B], length, nodes: [] };
     }
   }
   if (D[T] < Infinity && (!best || D[T] < best.length)) {
@@ -321,10 +326,15 @@ function graphRoute(A: XY, B: XY, N: Network): { pts: XY[]; length: number } | n
       const c = h.e.u === last ? h.d + h.along : h.e.v === last ? h.d + h.e.l - h.along : Infinity;
       return c < m.c ? { h, c } : m;
     }, { h: ht[0], c: Infinity }).h;
-    best = { pts: [A, hS.q, ...chain.map((k) => N.nodes[k]), hT.q, B], length: D[T] };
+    const pts: XY[] = [A, hS.q, ...chain.map((k) => N.nodes[k]), hT.q, B];
+    best = { pts, length: avoid ? lengthOf(pts) : D[T], nodes: chain };
   }
   return best;
 }
+
+/** Walkways shared with a route already found cost this much more when looking for another way. */
+const AVOID_FACTOR = 1.8;
+const lengthOf = (pts: XY[]) => pts.reduce((s, p, i) => (i ? s + dist(pts[i - 1], p) : 0), 0);
 
 /**
  * Route from a to b along the walkway network (shortest path). A short trip (< 150 m) may instead
@@ -368,6 +378,26 @@ export function walkPath(a: LatLng, b: LatLng): LatLng[] {
  * Along the main ring only, the shorter way round, from a to b (each joined to the ring by a straight
  * line). The underground car park runs round the Haram in this shape (owner, 2026-10-08).
  */
+/**
+ * The walkway route from a to b (walkPath) and up to two other ways along the walkways, each found
+ * by making the walkways of the routes already found dearer. The caller keeps only the sensible ones
+ * (routing/alternatives.ts: at most 30% longer, mostly different).
+ */
+export function walkPaths(a: LatLng, b: LatLng): LatLng[][] {
+  const out = [walkPath(a, b)];
+  const N = network();
+  const A = toM(a);
+  const B = toM(b);
+  const avoid = new Uint8Array(N.nodes.length);
+  let route = graphRoute(A, B, N);
+  for (let i = 0; i < 2 && route?.nodes.length; i++) {
+    route.nodes.forEach((k) => (avoid[k] = 1));
+    route = graphRoute(A, B, N, avoid);
+    if (route) out.push(roundCorners(route.pts, ROUTING.rules.corner_radius_m).map(fromM));
+  }
+  return out;
+}
+
 export function ringPath(a: LatLng, b: LatLng): LatLng[] {
   const N = network();
   const A = toM(a);

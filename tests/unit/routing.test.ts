@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { POIS, POI_BY_ID, ROUTING } from '../../src/data';
 import { inHaram } from '../../src/routing/plan';
 import type { LatLng } from '../../src/data';
-import { insideRect, network, pathLength, projectOnRing, toM, walkMinutes, walkPath } from '../../src/routing/walk';
+import { insideRect, network, pathLength, projectOnRing, toM, walkMinutes, walkPath, walkPaths } from '../../src/routing/walk';
+import { MAX_ROUTES, pickRoutes, shared, turnPenalty } from '../../src/routing/alternatives';
 
 const at = (id: number): LatLng => {
   const p = POI_BY_ID.get(id)!;
@@ -149,5 +150,47 @@ describe('walkway network', () => {
       expect(w.kind).toBe('women');
     }
     expect(ROUTING.women_prayer_areas.map((a) => a.id)).toEqual(['north-west', 'north-east']);
+  });
+});
+
+describe('alternative routes (owner, 2026-10-11)', () => {
+  // A straight 100 m walk east, and paths around it.
+  const A: LatLng = [24.4685, 39.6084];
+  const east = (m: number, n = 0): LatLng => [A[0] + n / 111_320, A[1] + m / (111_320 * Math.cos((A[0] * Math.PI) / 180))];
+  const straight = [A, east(100)];
+  const viaNorth = [A, east(0, 30), east(100, 30), east(100)]; // 160 m: 60% longer
+  const shortHook = [A, east(0, 12), east(100, 12), east(100)]; // 124 m, 12 m to the side
+  const nearlySame = [A, east(50, 4), east(100)]; // 100.3 m, runs along the straight line
+
+  it('measures how much of a route runs along another', () => {
+    expect(shared(straight, straight)).toBe(1);
+    expect(shared(nearlySame, straight)).toBe(1);
+    expect(shared(viaNorth, straight)).toBeLessThan(0.3);
+  });
+
+  it('keeps the shortest first, drops routes more than 30% longer and routes that are mostly the same', () => {
+    const picked = pickRoutes([straight, viaNorth, nearlySame, shortHook].map((path, i) => ({ path, item: i })));
+    expect(picked[0]).toBe(0); // the straight walk
+    expect(picked).not.toContain(1); // 60% longer
+    expect(picked).not.toContain(2); // the same way
+    expect(picked).toContain(3); // 24% longer and another way
+  });
+
+  it('offers at most three routes', () => {
+    const fan = [0, 6, 7, 8, 9].map((n) => [A, east(0, n * 2.5), east(100, n * 2.5), east(100)]);
+    const many = fan.map((path, i) => ({ path, item: i }));
+    expect(pickRoutes(many).length).toBeLessThanOrEqual(MAX_ROUTES);
+  });
+
+  it('charges a route that starts by turning the visitor round (on a re-route)', () => {
+    expect(turnPenalty(straight, 90)).toBe(0); // heading east, route goes east
+    expect(turnPenalty(straight, 270)).toBeGreaterThan(0); // heading west: a U-turn
+    expect(turnPenalty(straight, null)).toBe(0);
+  });
+
+  it('on the plazas, the walkways give another way round the mosque when there is one', () => {
+    const paths = walkPaths(at(1), at(25)); // gate 1 (south-west) to gate 25 (north)
+    expect(paths.length).toBeGreaterThan(1);
+    expect(pathLength(paths[0])).toBeLessThanOrEqual(Math.min(...paths.map(pathLength)) + 1);
   });
 });

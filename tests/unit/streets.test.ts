@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { POI_BY_ID } from '../../src/data';
 import type { LatLng } from '../../src/data';
 import streetsJson from '../../data/streets.json';
-import { inHaram, planRoute } from '../../src/routing/plan';
+import { fullPath, inHaram, planRoute, planRoutes } from '../../src/routing/plan';
+import { initialBearing, shared, turnPenalty } from '../../src/routing/alternatives';
 import { loadStreets } from '../../src/routing/streets';
 import { insideRect, network, pathLength, toM } from '../../src/routing/walk';
 
@@ -193,4 +194,82 @@ describe('to the historic sites round Madinah', () => {
       }
     });
   }
+});
+
+/**
+ * Whether a path goes through an obstacle: inside one, only the stretch to its own inner gate is
+ * allowed (as deep as that gate lies inside the rectangle, plus 40 m).
+ */
+const acrossTheMosque = (path: LatLng[]) => {
+  const end = toM(path[path.length - 1]);
+  for (let i = 1; i < path.length; i++) {
+    const [a, b] = [toM(path[i - 1]), toM(path[i])];
+    const n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1])));
+    for (let k = 0; k <= n; k++) {
+      const p: [number, number] = [a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n];
+      for (const r of network().obstacles) {
+        if (!insideRect(p, r)) continue;
+        if (!insideRect(end, r)) return true;
+        const depth = Math.min(end[0] - r.x0, r.x1 - end[0], end[1] - r.y0, r.y1 - end[1]);
+        if (Math.hypot(p[0] - end[0], p[1] - end[1]) > depth + 40) return true;
+      }
+    }
+  }
+  return false;
+};
+
+describe('the best route and its alternatives (owner, 2026-10-11)', () => {
+  const trips: [string, LatLng, number, 'walk' | 'drive'][] = [
+    ['hotel south-west of the Haram → Gate 37', [24.4655, 39.6085], 37, 'walk'],
+    ['east street → a west restroom', [24.4685, 39.615], 212, 'walk'],
+    ['far south-west, by car → restroom 223', SOUTH_WEST, 223, 'drive'],
+  ];
+  it.each(trips)('%s: the best first, up to two others within 30% and really another way', async (_, from, to, mode) => {
+    const plans = await planRoutes(from, P(to), mode);
+    expect(plans.length).toBeGreaterThan(1);
+    expect(plans.length).toBeLessThanOrEqual(3);
+    expect(plans[0]).toEqual(await planRoute(from, P(to), mode));
+    const cost = (p: (typeof plans)[number]) => (mode === 'drive' ? p.driveM / 300 + p.walkM / 80 : pathLength(fullPath(p)));
+    for (const p of plans.slice(1)) {
+      expect(cost(p)).toBeLessThanOrEqual(cost(plans[0]) * 1.3 + 1e-6);
+      expect(acrossTheMosque(fullPath(p))).toBe(false); // never through the mosque or Al-Baqi'
+    }
+    for (let i = 1; i < plans.length; i++) for (let j = 0; j < i; j++) expect(shared(fullPath(plans[i]), fullPath(plans[j]))).toBeLessThanOrEqual(0.7);
+  });
+
+  it('on a re-route, a route carrying on ahead is preferred to a U-turn of similar length', async () => {
+    const from: LatLng = [24.4655, 39.6085];
+    const plans = await planRoutes(from, P(37), 'walk');
+    const second = plans[1];
+    const heading = initialBearing(fullPath(second))!; // walking the way the second route starts
+    const again = await planRoutes(from, P(37), 'walk', { heading });
+    expect(turnPenalty(fullPath(again[0]), heading)).toBe(0);
+  });
+});
+
+describe('no route through the mosque building (found while adding alternatives, 2026-10-11)', () => {
+  // Before, a trip to an inner gate exempted the whole building from the obstacle check, and routes
+  // from the north ring road to gates 5, 38 and 39 cut ~230 m through it. The mosque rectangle is
+  // ~400 × 280 m, so a route crossing it passes points well over 200 m from its gate.
+  const deepest = (path: LatLng[]) => {
+    const end = toM(path[path.length - 1]);
+    let m = 0;
+    for (let i = 1; i < path.length; i++) {
+      const [a, b] = [toM(path[i - 1]), toM(path[i])];
+      const n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1])));
+      for (let k = 0; k <= n; k++) {
+        const p: [number, number] = [a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n];
+        if (network().obstacles.some((r) => insideRect(p, r))) m = Math.max(m, Math.hypot(p[0] - end[0], p[1] - end[1]));
+      }
+    }
+    return m;
+  };
+  it('from three sides of the Haram to every inner gate, no offered route crosses the building', async () => {
+    const gates = [1, 5, 13, 21, 25, 29, 34, 37, 38, 39, 41, 42];
+    for (const from of [NORTH_RING, EAST_STREET, WEST_STREET]) {
+      for (const id of gates) {
+        for (const p of await planRoutes(from, P(id), 'walk')) expect(deepest(fullPath(p)), `${from} → ${id}`).toBeLessThan(200);
+      }
+    }
+  });
 });

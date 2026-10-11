@@ -23,6 +23,8 @@ export type Travel = 'walk' | 'drive';
  * Avenue, the pedestrianised King Fahd Road) and underpasses are not penalised.
  */
 export const FOOTWAY_PENALTY = 1.8;
+/** Streets shared with a route already found cost this much more when looking for another way. */
+const AVOID_FACTOR = 1.8;
 const BIT: Record<Travel, number> = { drive: 1, walk: 2 };
 
 interface Edge {
@@ -235,9 +237,10 @@ export class Streets {
   /**
    * Distances from `from` to every node. A driver joins the nearest street in its direction of
    * travel; a walker joins it either way. With `reverse`, distances are *to* `from` (for cars this
-   * follows one-way streets backwards).
+   * follows one-way streets backwards). With `avoid`, streets between two avoided nodes cost more
+   * (to find another way for an alternative route; distances are then not real metres).
    */
-  reach(from: LatLng, t: Travel, reverse = false): Reach | null {
+  reach(from: LatLng, t: Travel, reverse = false, avoid?: Uint8Array): Reach | null {
     const p = toM(from);
     const j = this.join(p, t);
     if (!j) return null;
@@ -267,7 +270,8 @@ export class Streets {
     while (heap.size) {
       const [c, k] = heap.pop();
       if (c > dist[k]) continue;
-      for (const [m, l] of arcs[k]) {
+      for (const [m, l0] of arcs[k]) {
+        const l = avoid && avoid[k] && avoid[m] ? l0 * AVOID_FACTOR : l0;
         if (c + l < dist[m]) {
           dist[m] = c + l;
           prev[m] = k;
@@ -276,6 +280,13 @@ export class Streets {
       }
     }
     return { dist, prev, joinedAt: j.q, offset: j.d };
+  }
+
+  /** Node indices from the start of `r` to node `k`. */
+  nodesTo(r: Reach, k: number): number[] {
+    const out: number[] = [];
+    for (let i = k; i >= 0; i = r.prev[i]) out.unshift(i);
+    return out;
   }
 
   /** Node chain from the start of `r` to node `k`, as metric points. */
