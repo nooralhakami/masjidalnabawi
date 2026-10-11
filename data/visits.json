@@ -109,7 +109,11 @@
         { "t": "صحيفة عاجل: مسجد الغمامة", "u": "https://ajel.sa/local/9u6yopy85r" },
         { "t": "صحيفة المدينة: مسجد الغمامة يعيد زواره لزمن النبوة", "u": "https://www.al-madina.com/article/664963/آخر-الأخبار/المدينة-المنورة-مسجد-الغمامة-يعيد-زواره-لزمن-النبوة" }
       ],
-      "images": []
+      "images": [
+        { "src": "visits/516-1.webp", "alt": { "ar": "مسجد الغمامة بقبابه ومئذنته وسط الساحة", "en": "Al-Ghamamah Mosque with its domes and minaret in its square" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
+        { "src": "visits/516-2.webp", "focus": "35% 50%", "alt": { "ar": "قباب مسجد الغمامة وجدرانه الحجرية والحمام يحلّق حوله", "en": "The domes and stone walls of Al-Ghamamah Mosque, with pigeons flying around" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" },
+        { "src": "visits/516-3.webp", "alt": { "ar": "باب مسجد الغمامة الخشبي المزخرف وفوقه لوحة اسم المسجد", "en": "The ornate wooden door of Al-Ghamamah Mosque, with its name plate above" }, "by": "مقدَّمة من مالك التطبيق", "license": "بانتظار تأكيد المصوّر والإذن" }
+      ]
     },
     {
       "id": 549,
