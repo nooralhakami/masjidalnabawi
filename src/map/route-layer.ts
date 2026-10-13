@@ -11,7 +11,7 @@ export interface RouteInfo {
   bounds: L.LatLngBounds;
   nearestEntrance?: number;
   /** By car: the drive, the lot, and the walk from it. */
-  drive?: { meters: number; lot?: number; walkMeters: number };
+  drive?: { meters: number; lot?: number; walkMeters: number; entrance?: 'quba' | 'sultana'; unsure?: boolean };
   /** Every route offered (the chosen one included), and which one is chosen. */
   options: { minutes: number; meters: number }[];
   chosen: number;
@@ -135,7 +135,11 @@ export class RouteLayer {
           .addLayer(L.polyline(leg.path, { className: 'route-casing', weight: 12, interactive: false }))
           .addLayer(L.polyline(leg.path, { className: 'route-drive', weight: 7, interactive: false }));
       } else {
-        this.group.addLayer(L.polyline(leg.path, { className: 'route-garage', weight: 5, interactive: false }));
+        // Underground: a solid line with light dashes along it (a tunnel), cased like the other legs.
+        this.group
+          .addLayer(L.polyline(leg.path, { className: 'route-casing', weight: 11, interactive: false }))
+          .addLayer(L.polyline(leg.path, { className: 'route-garage', weight: 6, interactive: false }))
+          .addLayer(L.polyline(leg.path, { className: 'route-garage-dash', weight: 2, interactive: false }));
         this.group.addLayer(
           L.marker(leg.path[0], {
             icon: L.divIcon({ className: 'route-ramp', html: '<span>P</span>', iconSize: [24, 24] }),
@@ -146,6 +150,18 @@ export class RouteLayer {
           }),
         );
       }
+    }
+    // Where the car turns into its lot (right after the lot's first facility, as in the owner's drawing).
+    if (plan.gate && plan.lot) {
+      this.group.addLayer(
+        L.marker(plan.gate, {
+          icon: L.divIcon({ className: 'route-lot-gate', html: `<span>P${plan.lot.id - 900}</span>`, iconSize: [30, 22] }),
+          title: t('r_lot', { n: plan.lot.id - 900 }),
+          interactive: false,
+          keyboard: false,
+          zIndexOffset: 1001,
+        }),
+      );
     }
     const start = L.circleMarker(from, { className: 'route-start', radius: 6, weight: 3, interactive: false });
     const end = L.circleMarker(to, { className: 'route-end', radius: 7, weight: 3, interactive: false });
@@ -201,7 +217,9 @@ export class RouteLayer {
       // Frame every offered route, so the alternatives can be seen (and tapped) too.
       bounds: L.latLngBounds([...this.path, ...this.others.flat()]),
       ...(parking ? { nearestEntrance: parking.nearest.id } : {}),
-      ...(plan.mode === 'drive' ? { drive: { meters: plan.driveM, lot: plan.lot ? plan.lot.id - 900 : undefined, walkMeters: plan.walkM } } : {}),
+      ...(plan.mode === 'drive'
+        ? { drive: { meters: plan.driveM, lot: plan.lot ? plan.lot.id - 900 : undefined, walkMeters: plan.walkM, entrance: plan.entrance, unsure: plan.garageCertain === false } }
+        : {}),
       options: plans.map((p) => ({ minutes: p.minutes, meters: p.walkM + p.driveM })),
       chosen,
     };

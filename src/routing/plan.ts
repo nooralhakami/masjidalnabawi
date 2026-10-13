@@ -3,6 +3,7 @@ import type { LatLng, Poi } from '../data/types';
 import { parkingAccess, parkingEntrances } from '../domain/parking';
 import { loadStreets, type Reach, type Streets } from './streets';
 import { pickRoutes, turnPenalty } from './alternatives';
+import { ENTRANCES, garageRoute, type EntranceId } from './garage';
 import { fromM, insideRect, network, openTogether, pathLength, ringPath, segmentHits, toM, walkPath, walkPaths, type XY } from './walk';
 
 /**
@@ -24,8 +25,13 @@ export interface Plan {
   walkM: number;
   driveM: number;
   minutes: number;
-  /** Driving: the lot parked in. */
+  /** Driving: the lot parked in, and the car park entrance used. */
   lot?: Poi;
+  entrance?: EntranceId;
+  /** Driving: where the car turns into the lot. */
+  gate?: LatLng;
+  /** Driving: false when the way inside the car park uses roads the owner is not sure of yet (the east side). */
+  garageCertain?: boolean;
   /** Walking to a lot: its four entrances and the nearest one. */
   entrances?: Poi[];
   nearest?: Poi;
@@ -298,13 +304,37 @@ async function planDrive(from: LatLng, to: Poi): Promise<Plan[]> {
     ];
   }
   const lots = to.category === 'parking' ? [to] : LOTS.filter((p) => parkingAccess(p) === 'public');
+  // The car park's two entrances (Quba, Sultana) as street nodes the car can reach.
+  const gates = ENTRANCES.map((e) => ({ e, k: S.nearestNode(toM(e.street), 'drive') })).filter((g) => g.k >= 0 && Number.isFinite(r.dist[g.k]));
   const plans: Plan[] = [];
   for (const lot of lots) {
+    // Up through the lot's nearest entrance (one of its four surrounding facilities) to the destination.
+    const up = to.category === 'parking' ? null : parkingEntrances(lot).reduce<{ e: Poi; path: LatLng[]; m: number } | null>((m, e) => {
+      const path = walkPath(at(e), at(to));
+      const pm = len(path);
+      return !m || pm < m.m ? { e, path, m: pm } : m;
+    }, null);
+    // In by each entrance (owner's drawing, routing/garage.ts): streets to the ramp, the car park's
+    // roads to the lot, along its aisle to the bay nearest those stairs.
+    const ways = gates
+      .map((g) => ({ g, way: garageRoute(g.e.id, lot, up ? at(up.e) : null) }))
+      .filter((x): x is { g: (typeof gates)[number]; way: NonNullable<ReturnType<typeof garageRoute>> } => x.way !== null);
+    for (const { g, way } of ways) {
+      const drive = [...streetPath(S, r, g.k, from, false), g.e.street];
+      const stairs: LatLng[] = up ? [way.bay, at(up.e)] : [];
+      const driveM = len(drive) + way.meters;
+      const walkM = up ? len(stairs) + up.m : 0;
+      const minutes = Math.ceil(driveM / DRIVE_M_PER_MIN + walkM / WALK_M_PER_MIN);
+      const legs: Leg[] = [
+        { kind: 'drive', path: drive },
+        { kind: 'garage', path: [...way.path, ...stairs.slice(1)] },
+        ...(up ? [{ kind: 'walk' as const, path: up.path }] : []),
+      ];
+      plans.push({ mode: 'drive', legs, walkM, driveM, minutes: Math.max(1, minutes), lot, entrance: g.e.id, gate: way.gate, garageCertain: way.certain });
+    }
+    if (ways.length) continue;
+    // A lot missing from the drawing: the nearest ramp, then aisles along the ring round the Haram.
     const L = toM(at(lot));
-    // The ramp that gets there quickest: driving to it, then along the car park, which is one
-    // connected garage running round the Haram under the plazas (owner, 2026-10-08) — so its
-    // aisles follow the shape of the main walkway ring and never cross the mosque.
-    // Aisles are slow (×1.5); a ramp's straight-line distance to the lot rules out far ones early.
     let ramp = -1;
     let rampCost = Infinity;
     let aisle: LatLng[] = [];
@@ -314,8 +344,7 @@ async function planDrive(from: LatLng, to: Poi): Promise<Plan[]> {
       .sort((x, y) => x.d - y.d)
       .slice(0, 12);
     for (const { k } of byNear) {
-      const rampAt = fromM(S.xy[k]);
-      const inside = ringPath(rampAt, at(lot));
+      const inside = ringPath(fromM(S.xy[k]), at(lot));
       const c = r.dist[k] + 1.5 * len(inside);
       if (c < rampCost) {
         rampCost = c;
@@ -323,28 +352,23 @@ async function planDrive(from: LatLng, to: Poi): Promise<Plan[]> {
         aisle = inside;
       }
     }
+    if (ramp < 0) continue;
     const drive = streetPath(S, r, ramp, from, false);
-    // Up through the lot's nearest entrance (one of its four surrounding facilities) to the destination.
-    const up = to.category === 'parking' ? null : parkingEntrances(lot).reduce<{ e: Poi; path: LatLng[]; m: number } | null>((m, e) => {
-      const path = walkPath(at(e), at(to));
-      const pm = len(path);
-      return !m || pm < m.m ? { e, path, m: pm } : m;
-    }, null);
     const stairs: LatLng[] = up ? [at(lot), at(up.e)] : [];
-    const garage: LatLng[] = [...aisle, ...stairs.slice(1)];
     const driveM = len(drive) + len(aisle);
     const walkM = up ? len(stairs) + up.m : 0;
-    const minutes = Math.ceil(driveM / DRIVE_M_PER_MIN + walkM / WALK_M_PER_MIN);
     const legs: Leg[] = [
       { kind: 'drive', path: drive },
-      { kind: 'garage', path: garage },
+      { kind: 'garage', path: [...aisle, ...stairs.slice(1)] },
       ...(up ? [{ kind: 'walk' as const, path: up.path }] : []),
     ];
-    plans.push({ mode: 'drive', legs, walkM, driveM, minutes: Math.max(1, minutes), lot });
+    plans.push({ mode: 'drive', legs, walkM, driveM, minutes: Math.max(1, Math.ceil(driveM / DRIVE_M_PER_MIN + walkM / WALK_M_PER_MIN)), lot });
   }
-  // The quickest lot, and other lots reached a really different way within 30% of its time.
+  // The quickest lot, and other lots (or the other entrance) within 30% of its time. Two plans are
+  // compared on what follows the streets: all cars come in by one of only two entrances, so the
+  // street part is often the same while the lot, and the way to it underground, is not.
   return pickRoutes(
-    plans.map((plan) => ({ path: plan.legs[0].path, item: plan })),
+    plans.map((plan) => ({ path: plan.legs.length > 1 ? plan.legs.slice(1).flatMap((l) => l.path) : plan.legs[0].path, item: plan })),
     (c) => c.item.driveM / DRIVE_M_PER_MIN + c.item.walkM / WALK_M_PER_MIN,
   );
 }

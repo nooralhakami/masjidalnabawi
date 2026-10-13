@@ -1218,6 +1218,16 @@ body.is-navigating .leaflet-bottom.leaflet-right {
 .route-legs .leg-drive {
   color: var(--cat-men);
 }
+.route-legs .leg-ent {
+  background: var(--surface-2);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+}
+.route-unsure {
+  margin-top: 6px;
+  color: var(--muted);
+  font: 500 12px/1.4 var(--font-ui);
+}
 .route-legs .leg-lot {
   background: var(--cat-men);
   color: #fff;

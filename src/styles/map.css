@@ -679,7 +679,14 @@
 /* Inside the underground car park (and up its stairs): dashed. */
 .route-garage {
   stroke: var(--cat-men);
-  stroke-dasharray: 2 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+.route-garage-dash {
+  stroke: #fff;
+  stroke-opacity: 0.85;
+  stroke-dasharray: 4 7;
   stroke-linecap: round;
   fill: none;
 }
@@ -693,6 +700,19 @@
   color: #fff;
   font: 700 13px/1 var(--font-ui);
   box-shadow: 0 0 0 2px #fff, var(--shadow);
+}
+/* Where the car turns into its lot (owner's car park drawing). */
+.route-lot-gate span {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 22px;
+  border-radius: 7px;
+  background: #fff;
+  color: var(--cat-men);
+  border: 2px solid var(--cat-men);
+  font: 700 12px/1 var(--font-ui);
+  box-shadow: var(--shadow);
 }
 
 /* ---------- zoomed out: every marker in its place, just smaller ---------- */

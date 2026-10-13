@@ -4,6 +4,7 @@ import type { LatLng } from '../../src/data';
 import streetsJson from '../../data/streets.json';
 import { fullPath, inHaram, planRoute, planRoutes } from '../../src/routing/plan';
 import { initialBearing, shared, turnPenalty } from '../../src/routing/alternatives';
+import { GARAGE, KEEP_RIGHT_M } from '../../src/routing/garage';
 import { loadStreets } from '../../src/routing/streets';
 import { insideRect, network, pathLength, toM } from '../../src/routing/walk';
 
@@ -123,23 +124,27 @@ describe('driving to the car park under the Haram', () => {
     expect(last[last.length - 1][0]).toBeCloseTo(P(223).lat, 6);
     expect(p.driveM).toBeGreaterThan(1000);
     expect(p.walkM).toBeLessThan(400);
-    // The car-park stretch runs under the plazas, never under the mosque or Al-Baqi’, and follows
-    // the ring round the Haram (one connected garage in that shape).
-    expect(enters(p.legs[1].path)).toBe(false);
-    const N = network();
-    const offRing = (ll: LatLng) => {
+    // The car-park stretch starts at one of the two entrances and follows the roads the owner
+    // drew (data/garage.json), on the right-hand side, until it turns into the lot.
+    expect(['quba', 'sultana']).toContain(p.entrance);
+    const roads = GARAGE.lanes.filter((l) => l.kind === 'entry' || l.kind === 'shared').map((l) => l.path.map(toM));
+    const offRoad = (ll: LatLng) => {
       const q = toM(ll);
       return Math.min(
-        ...N.seg.map((s) => {
-          const dx = s.b[0] - s.a[0];
-          const dy = s.b[1] - s.a[1];
-          const u = Math.max(0, Math.min(1, ((q[0] - s.a[0]) * dx + (q[1] - s.a[1]) * dy) / (dx * dx + dy * dy)));
-          return Math.hypot(q[0] - s.a[0] - dx * u, q[1] - s.a[1] - dy * u);
-        }),
+        ...roads.flatMap((pts) =>
+          pts.slice(1).map((b, i) => {
+            const a = pts[i];
+            const dx = b[0] - a[0];
+            const dy = b[1] - a[1];
+            const u = Math.max(0, Math.min(1, ((q[0] - a[0]) * dx + (q[1] - a[1]) * dy) / (dx * dx + dy * dy || 1)));
+            return Math.hypot(q[0] - a[0] - dx * u, q[1] - a[1] - dy * u);
+          }),
+        ),
       );
     };
-    const aisle = p.legs[1].path.slice(2, -3); // between the ramp/lot links and the stairs up
-    for (const pt of aisle) expect(offRing(pt)).toBeLessThan(7);
+    const onRoads = p.legs[1].path.slice(1, -5); // between the ramp and the lot (then the aisle and the stairs)
+    expect(onRoads.length).toBeGreaterThan(3);
+    for (const pt of onRoads) expect(offRoad(pt)).toBeLessThan(KEEP_RIGHT_M * 1.6);
   });
 
   it('never parks in a subscribers-only lot unless that lot is the destination', async () => {
@@ -222,7 +227,7 @@ describe('the best route and its alternatives (owner, 2026-10-11)', () => {
   const trips: [string, LatLng, number, 'walk' | 'drive'][] = [
     ['hotel south-west of the Haram → Gate 37', [24.4655, 39.6085], 37, 'walk'],
     ['east street → a west restroom', [24.4685, 39.615], 233, 'walk'],
-    ['far south-west, by car → restroom 223', SOUTH_WEST, 223, 'drive'],
+    ['far south-west, by car → Gate 21', SOUTH_WEST, 21, 'drive'],
   ];
   it.each(trips)('%s: the best first, up to two others within 30% and really another way', async (_, from, to, mode) => {
     const plans = await planRoutes(from, P(to), mode);
@@ -234,7 +239,9 @@ describe('the best route and its alternatives (owner, 2026-10-11)', () => {
       expect(cost(p)).toBeLessThanOrEqual(cost(plans[0]) * 1.3 + 1e-6);
       expect(acrossTheMosque(fullPath(p))).toBe(false); // never through the mosque or Al-Baqi'
     }
-    for (let i = 1; i < plans.length; i++) for (let j = 0; j < i; j++) expect(shared(fullPath(plans[i]), fullPath(plans[j]))).toBeLessThanOrEqual(0.7);
+    // By car, plans are compared on what follows the streets (every car comes in by one of two entrances).
+    const way = (p: (typeof plans)[number]) => (mode === 'drive' ? p.legs.slice(1).flatMap((l) => l.path) : fullPath(p));
+    for (let i = 1; i < plans.length; i++) for (let j = 0; j < i; j++) expect(shared(way(plans[i]), way(plans[j]))).toBeLessThanOrEqual(0.7);
   });
 
   it('on a re-route, a route carrying on ahead is preferred to a U-turn of similar length', async () => {

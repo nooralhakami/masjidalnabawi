@@ -6,6 +6,9 @@ import type { LangCode } from '../data/types';
  */
 export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
   ar: {
+    g_in_quba: 'عبر مدخل قباء',
+    g_in_sultana: 'عبر مدخل سلطانة',
+    g_unsure: 'طرق الجهة الشرقية في المواقف تقريبية',
     r_switched: 'تحوّل المسار إلى الطريق الذي تسلكه',
     lang_more: 'لغات أخرى',
     nav_away: 'أنت تبتعد عن الوجهة',
@@ -89,6 +92,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'انتقال',
   },
   en: {
+    g_in_quba: 'via the Quba entrance',
+    g_in_sultana: 'via the Sultana entrance',
+    g_unsure: 'Car park roads on the east side are approximate',
     r_switched: 'Switched to the route you are on',
     lang_more: 'More languages',
     nav_away: 'You are walking away from the destination',
@@ -172,6 +178,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Go',
   },
   tr: {
+    g_in_quba: 'Kuba girişinden',
+    g_in_sultana: 'Sultana girişinden',
+    g_unsure: 'Otoparkın doğu tarafındaki yollar yaklaşıktır',
     r_switched: 'Yürüdüğünüz rotaya geçildi',
     lang_more: 'Diğer diller',
     nav_away: 'Hedeften uzaklaşıyorsunuz',
@@ -255,6 +264,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Git',
   },
   ur: {
+    g_in_quba: 'قباء کے داخلے سے',
+    g_in_sultana: 'سلطانہ کے داخلے سے',
+    g_unsure: 'پارکنگ کی مشرقی جانب کے راستے تقریبی ہیں',
     r_switched: 'آپ جس راستے پر ہیں اسی پر منتقل کر دیا گیا',
     lang_more: 'مزید زبانیں',
     nav_away: 'آپ منزل سے دور جا رہے ہیں',
@@ -338,6 +350,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'جائیں',
   },
   id: {
+    g_in_quba: 'lewat pintu masuk Quba',
+    g_in_sultana: 'lewat pintu masuk Sultanah',
+    g_unsure: 'Jalan parkir di sisi timur masih perkiraan',
     r_switched: 'Beralih ke rute yang sedang Anda lalui',
     lang_more: 'Bahasa lainnya',
     nav_away: 'Anda menjauhi tujuan',
@@ -421,6 +436,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Buka',
   },
   uz: {
+    g_in_quba: 'Quba kirish joyi orqali',
+    g_in_sultana: 'Sultona kirish joyi orqali',
+    g_unsure: 'Avtoturargohning sharqiy tomonidagi yo‘llar taxminiy',
     r_switched: 'Siz yurayotgan yo‘nalishga o‘tildi',
     lang_more: 'Boshqa tillar',
     nav_away: 'Siz manzildan uzoqlashyapsiz',
@@ -504,6 +522,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'O‘tish',
   },
   bn: {
+    g_in_quba: 'কুবা প্রবেশপথ দিয়ে',
+    g_in_sultana: 'সুলতানা প্রবেশপথ দিয়ে',
+    g_unsure: 'পার্কিংয়ের পূর্ব দিকের পথগুলো আনুমানিক',
     r_switched: 'আপনি যে পথে আছেন সেটিতে বদলানো হয়েছে',
     lang_more: 'আরও ভাষা',
     nav_away: 'আপনি গন্তব্য থেকে দূরে সরে যাচ্ছেন',
@@ -594,6 +615,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'যান',
   },
   fr: {
+    g_in_quba: 'par l’entrée de Quba',
+    g_in_sultana: 'par l’entrée de Sultana',
+    g_unsure: 'Les voies du parking côté est sont approximatives',
     r_switched: 'Passage à l’itinéraire que vous suivez',
     lang_more: 'Autres langues',
     nav_away: 'Vous vous éloignez de la destination',
@@ -684,6 +708,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Y aller',
   },
   fa: {
+    g_in_quba: 'از ورودی قبا',
+    g_in_sultana: 'از ورودی سلطانه',
+    g_unsure: 'مسیرهای پارکینگ در سمت شرق تقریبی است',
     r_switched: 'به مسیری که در آن هستید تغییر یافت',
     lang_more: 'زبان‌های بیشتر',
     nav_away: 'شما در حال دور شدن از مقصد هستید',
@@ -774,6 +801,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'برو',
   },
   ru: {
+    g_in_quba: 'через въезд Куба',
+    g_in_sultana: 'через въезд Султана',
+    g_unsure: 'Проезды парковки с восточной стороны указаны приблизительно',
     r_switched: 'Переключено на маршрут, по которому вы идёте',
     lang_more: 'Другие языки',
     nav_away: 'Вы удаляетесь от цели',
@@ -864,6 +894,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Идти',
   },
   ms: {
+    g_in_quba: 'melalui pintu masuk Quba',
+    g_in_sultana: 'melalui pintu masuk Sultanah',
+    g_unsure: 'Laluan tempat letak kereta di sebelah timur adalah anggaran',
     r_switched: 'Bertukar ke laluan yang anda lalui',
     lang_more: 'Bahasa lain',
     nav_away: 'Anda semakin jauh dari destinasi',
@@ -954,6 +987,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Pergi',
   },
   ha: {
+    g_in_quba: 'ta ƙofar shiga ta Quba',
+    g_in_sultana: 'ta ƙofar shiga ta Sultana',
+    g_unsure: 'Hanyoyin wurin ajiye motoci a gefen gabas kimantawa ne',
     r_switched: 'An canja zuwa hanyar da kake bi',
     lang_more: 'Ƙarin harsuna',
     nav_away: 'Kana nisanta daga inda za ka',
@@ -1044,6 +1080,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Je',
   },
   ml: {
+    g_in_quba: 'ഖുബാ പ്രവേശന കവാടം വഴി',
+    g_in_sultana: 'സുൽത്താന പ്രവേശന കവാടം വഴി',
+    g_unsure: 'പാർക്കിങ്ങിന്റെ കിഴക്കുഭാഗത്തെ വഴികൾ ഏകദേശമാണ്',
     r_switched: 'നിങ്ങൾ പോകുന്ന വഴിയിലേക്ക് മാറി',
     lang_more: 'കൂടുതൽ ഭാഷകൾ',
     nav_away: 'നിങ്ങൾ ലക്ഷ്യസ്ഥാനത്തുനിന്ന് അകന്നുപോകുന്നു',
@@ -1134,6 +1173,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'പോകുക',
   },
   sw: {
+    g_in_quba: 'kupitia lango la kuingia la Quba',
+    g_in_sultana: 'kupitia lango la kuingia la Sultana',
+    g_unsure: 'Njia za maegesho upande wa mashariki ni za makadirio',
     r_switched: 'Imebadilishwa kwenda njia unayopita',
     lang_more: 'Lugha zaidi',
     nav_away: 'Unaondoka mbali na unakokwenda',
@@ -1224,6 +1266,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Nenda',
   },
   ps: {
+    g_in_quba: 'د قبا د ننوتو له لارې',
+    g_in_sultana: 'د سلطانې د ننوتو له لارې',
+    g_unsure: 'د پارکینګ ختیځ اړخ لارې اټکلي دي',
     r_switched: 'هغې لارې ته واوښت چې تاسو پرې روان یاست',
     lang_more: 'نورې ژبې',
     nav_away: 'تاسو له منزل څخه لرې کېږئ',
@@ -1314,6 +1359,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'لاړ شه',
   },
   so: {
+    g_in_quba: 'adiga oo maraya albaabka Quba',
+    g_in_sultana: 'adiga oo maraya albaabka Sultana',
+    g_unsure: 'Waddooyinka baarkinka dhinaca bari waa qiyaas',
     r_switched: 'Waxaa loo beddelay jidka aad ku socoto',
     lang_more: 'Luqado kale',
     nav_away: 'Waxaad ka fogaanaysaa meesha aad u socoto',
@@ -1404,6 +1452,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Tag',
   },
   ta: {
+    g_in_quba: 'குபா நுழைவாயில் வழியாக',
+    g_in_sultana: 'சுல்தானா நுழைவாயில் வழியாக',
+    g_unsure: 'வாகன நிறுத்தத்தின் கிழக்குப் பகுதி வழிகள் தோராயமானவை',
     r_switched: 'நீங்கள் செல்லும் வழிக்கு மாற்றப்பட்டது',
     lang_more: 'மேலும் மொழிகள்',
     nav_away: 'நீங்கள் சேருமிடத்திலிருந்து விலகிச் செல்கிறீர்கள்',
@@ -1494,6 +1545,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'செல்',
   },
   hi: {
+    g_in_quba: 'क़ुबा प्रवेश द्वार से',
+    g_in_sultana: 'सुल्ताना प्रवेश द्वार से',
+    g_unsure: 'पार्किंग के पूर्वी हिस्से के रास्ते अनुमानित हैं',
     r_switched: 'आप जिस रास्ते पर हैं उस पर बदल दिया गया',
     lang_more: 'और भाषाएँ',
     nav_away: 'आप मंज़िल से दूर जा रहे हैं',
@@ -1584,6 +1638,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'जाएँ',
   },
   bs: {
+    g_in_quba: 'kroz ulaz Kuba',
+    g_in_sultana: 'kroz ulaz Sultana',
+    g_unsure: 'Putevi parkinga na istočnoj strani su približni',
     r_switched: 'Prebačeno na rutu kojom idete',
     lang_more: 'Više jezika',
     nav_away: 'Udaljavate se od odredišta',
@@ -1674,6 +1731,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Idi',
   },
   de: {
+    g_in_quba: 'über die Einfahrt Quba',
+    g_in_sultana: 'über die Einfahrt Sultana',
+    g_unsure: 'Die Fahrwege der Tiefgarage auf der Ostseite sind ungefähr',
     r_switched: 'Zur Route gewechselt, auf der Sie gehen',
     lang_more: 'Weitere Sprachen',
     nav_away: 'Sie entfernen sich vom Ziel',
@@ -1764,6 +1824,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Los',
   },
   zh: {
+    g_in_quba: '经库巴入口',
+    g_in_sultana: '经苏尔塔纳入口',
+    g_unsure: '停车场东侧的车道为大致位置',
     r_switched: '已切换到您正在走的路线',
     lang_more: '更多语言',
     nav_away: '您正在远离目的地',
@@ -1854,6 +1917,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: '前往',
   },
   am: {
+    g_in_quba: 'በቁባ መግቢያ በኩል',
+    g_in_sultana: 'በሱልጣና መግቢያ በኩል',
+    g_unsure: 'በምሥራቅ በኩል ያሉት የመኪና ማቆሚያ መንገዶች ግምታዊ ናቸው',
     r_switched: 'ወደሚሄዱበት መንገድ ተቀይሯል',
     lang_more: 'ተጨማሪ ቋንቋዎች',
     nav_away: 'ከመድረሻዎ እየራቁ ነው',
@@ -1944,6 +2010,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'ሂድ',
   },
   ku: {
+    g_in_quba: 'bi riya deriyê Quba',
+    g_in_sultana: 'bi riya deriyê Sultana',
+    g_unsure: 'Rêyên parkê yên aliyê rojhilat texmînî ne',
     r_switched: 'Hat guhertin bo riya ku tu li ser î',
     lang_more: 'Zimanên din',
     nav_away: 'Tu ji armancê dûr dikevî',
@@ -2034,6 +2103,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Biçe',
   },
   az: {
+    g_in_quba: 'Quba girişindən',
+    g_in_sultana: 'Sultana girişindən',
+    g_unsure: 'Dayanacağın şərq tərəfindəki yollar təxminidir',
     r_switched: 'Getdiyiniz marşruta keçildi',
     lang_more: 'Digər dillər',
     nav_away: 'Təyinat yerindən uzaqlaşırsınız',
@@ -2124,6 +2196,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Get',
   },
   th: {
+    g_in_quba: 'ผ่านทางเข้ากุบาอ์',
+    g_in_sultana: 'ผ่านทางเข้าสุลฏอนะฮ์',
+    g_unsure: 'ทางวิ่งในลานจอดรถฝั่งตะวันออกเป็นตำแหน่งโดยประมาณ',
     r_switched: 'เปลี่ยนไปยังเส้นทางที่คุณกำลังเดิน',
     lang_more: 'ภาษาอื่นๆ',
     nav_away: 'คุณกำลังออกห่างจากจุดหมาย',
@@ -2214,6 +2289,9 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'ไป',
   },
   es: {
+    g_in_quba: 'por la entrada de Quba',
+    g_in_sultana: 'por la entrada de Sultana',
+    g_unsure: 'Los carriles del aparcamiento en el lado este son aproximados',
     r_switched: 'Cambiado a la ruta que estás siguiendo',
     lang_more: 'Más idiomas',
     nav_away: 'Te estás alejando del destino',

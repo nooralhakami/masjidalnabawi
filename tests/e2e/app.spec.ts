@@ -561,6 +561,21 @@ test('a pair of restrooms shows its number between its two markers (251 and 252,
   await expect(page.locator('.pair-no', { hasText: '252' })).toHaveCount(1); // the women's pair 253↔254 shows 252
 });
 
+test.describe('by car to the car park under the Haram (owner’s drawing, 2026-10-13)', () => {
+  test.use({ geolocation: { latitude: 24.476, longitude: 39.611, accuracy: 8 }, permissions: ['geolocation'] }); // north, First Ring Road
+  test('choosing a lot shows the way in: streets to the entrance, the car park roads, and where to turn into the lot', async ({ page, errors: _ }) => {
+    await page.addInitScript(() => localStorage.setItem('travel', 'drive'));
+    await page.goto('map.html?poi=909');
+    await page.locator('[data-act="route"]').click();
+    await expect(page.locator('.route-legs .leg-ent')).toContainText('سلطانة', { timeout: 30_000 });
+    await expect(page.locator('.route-legs .leg-lot')).toContainText('9');
+    await expect(page.locator('.route-lot-gate')).toContainText('P9');
+    await expect(page.locator('path.route-garage')).toHaveCount(1);
+    // Lot 9 is on the north side, which the owner is sure of: no note about the east side.
+    await expect(page.locator('.route-unsure')).toHaveCount(0);
+  });
+});
+
 test.describe('alternative routes', () => {
   // South plaza → Gate 21 (north): round the mosque by the west or by the east side.
   const START = { latitude: 24.4668, longitude: 39.6111, accuracy: 8 };

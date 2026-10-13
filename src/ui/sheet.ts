@@ -30,7 +30,7 @@ export interface RouteSummary {
   meters: number;
   minutes: number;
   nearestEntrance?: number;
-  drive?: { meters: number; lot?: number; walkMeters: number };
+  drive?: { meters: number; lot?: number; walkMeters: number; entrance?: 'quba' | 'sultana'; unsure?: boolean };
 }
 
 const WALK_M_PER_MIN = 80;
@@ -322,9 +322,11 @@ export class Sheet {
             r.drive
               ? `<div class="route-legs">
               <span class="leg leg-drive">${icon('car', 16)}${esc(t('r_drive'))} · ${esc(t('km', { k: (r.drive.meters / 1000).toFixed(1) }))}</span>
+              ${r.drive.entrance ? `<span class="leg leg-ent">${esc(t(r.drive.entrance === 'quba' ? 'g_in_quba' : 'g_in_sultana'))}</span>` : ''}
               ${r.drive.lot ? `<span class="leg leg-lot">${esc(t('r_lot', { n: r.drive.lot }))}</span>` : ''}
               ${r.drive.walkMeters > 5 ? `<span class="leg leg-walk">${icon('walk', 16)}${esc(t('r_walk'))} · ${esc(t('meters', { m: num(Math.round(r.drive.walkMeters / 5) * 5) }))}</span>` : ''}
-            </div>`
+            </div>
+            ${r.drive.unsure ? `<div class="route-unsure">${esc(t('g_unsure'))}</div>` : ''}`
               : ''
           }
         </div>`
