@@ -3,7 +3,7 @@ import type { LatLng, Poi } from '../data/types';
 import { parkingAccess, parkingEntrances } from '../domain/parking';
 import { loadStreets, type Reach, type Streets } from './streets';
 import { pickRoutes, turnPenalty } from './alternatives';
-import { ENTRANCES, garageRoute, type EntranceId } from './garage';
+import { ENTRANCES, EXITS, garageExit, garageRoute, type EntranceId, type Level, type RampOnWay } from './garage';
 import { fromM, insideRect, network, openTogether, pathLength, ringPath, segmentHits, toM, walkPath, walkPaths, type XY } from './walk';
 
 /**
@@ -30,6 +30,11 @@ export interface Plan {
   entrance?: EntranceId;
   /** Driving: where the car turns into the lot. */
   gate?: LatLng;
+  /** Driving: the level parked on (B below, A above) and the ramps taken between them. */
+  level?: Level;
+  ramps?: RampOnWay[];
+  /** The way out of the car park: the exit taken (otherwise the plan is the way in). */
+  exit?: EntranceId;
   /** Driving: false when the way inside the car park uses roads the owner is not sure of yet (the east side). */
   garageCertain?: boolean;
   /** Walking to a lot: its four entrances and the nearest one. */
@@ -287,7 +292,7 @@ async function planWalks(from: LatLng, to: Poi, heading?: number | null): Promis
  * makes the whole trip quickest (public lots, unless the destination is itself a lot), then walk up
  * through the lot's nearest entrance to the destination.
  */
-async function planDrive(from: LatLng, to: Poi): Promise<Plan[]> {
+async function planDrive(from: LatLng, to: Poi, level: Level = 'B'): Promise<Plan[]> {
   const S = await loadStreets();
   if (!S || !S.garageNodes.length) return [];
   const r = S.reach(from, 'drive');
@@ -340,7 +345,7 @@ async function planDrive(from: LatLng, to: Poi): Promise<Plan[]> {
     // In by each entrance (owner's drawing, routing/garage.ts): streets to the ramp, the car park's
     // roads to the lot, along its aisle to the bay nearest those stairs.
     const ways = gates
-      .map((g) => ({ g, way: garageRoute(g.e.id, lot, up ? at(up.e) : null) }))
+      .map((g) => ({ g, way: garageRoute(g.e.id, lot, up ? at(up.e) : null, level) }))
       .filter((x): x is { g: (typeof gates)[number]; way: NonNullable<ReturnType<typeof garageRoute>> } => x.way !== null);
     for (const { g, way } of ways) {
       const drive = g.approach.length ? [...streetPath(S, r, g.k, from, false), ...g.approach] : [...streetPath(S, r, g.k, from, false), g.e.street];
@@ -353,7 +358,7 @@ async function planDrive(from: LatLng, to: Poi): Promise<Plan[]> {
         { kind: 'garage', path: [...way.path, ...stairs.slice(1)] },
         ...(up ? [{ kind: 'walk' as const, path: up.path }] : []),
       ];
-      plans.push({ mode: 'drive', legs, walkM, driveM, minutes: Math.max(1, minutes), lot, entrance: g.e.id, gate: way.gate, garageCertain: way.certain });
+      plans.push({ mode: 'drive', legs, walkM, driveM, minutes: Math.max(1, minutes), lot, entrance: g.e.id, gate: way.gate, garageCertain: way.certain, level, ramps: way.ramps });
     }
     if (ways.length) continue;
     // A lot missing from the drawing: the nearest ramp, then aisles along the ring round the Haram.
@@ -401,12 +406,47 @@ async function planDrive(from: LatLng, to: Poi): Promise<Plan[]> {
  * Driving falls back to walking when no car route is found. `heading` (degrees, on a re-route)
  * favours routes that carry on ahead of the visitor.
  */
-export async function planRoutes(from: LatLng, to: Poi, mode: Mode = 'walk', opts: { heading?: number | null } = {}): Promise<Plan[]> {
+export async function planRoutes(from: LatLng, to: Poi, mode: Mode = 'walk', opts: { heading?: number | null; level?: Level } = {}): Promise<Plan[]> {
   if (mode === 'drive') {
-    const p = await planDrive(from, to);
+    const p = await planDrive(from, to, opts.level ?? 'B');
     if (p.length) return p;
   }
   return planWalks(from, to, opts.heading);
+}
+
+/**
+ * The way out of the car park from a lot: from the bay (nearest `from`, the stairs the visitor
+ * comes down; otherwise the middle of the lot) to each exit — Quba (the main one) and Sultana — then
+ * on to the streets where the owner drew it. Quickest first; the other within 30% is offered too.
+ */
+export function planExit(lot: Poi, level: Level = 'B', from: LatLng | null = null): Plan[] {
+  const plans: Plan[] = [];
+  for (const x of EXITS) {
+    const way = garageExit(lot, x.id, level, from);
+    if (!way) continue;
+    const onward = x.departure ?? [x.mouth, x.street];
+    const driveM = way.meters + len(onward);
+    plans.push({
+      mode: 'drive',
+      legs: [
+        { kind: 'garage', path: way.path },
+        { kind: 'drive', path: onward },
+      ],
+      walkM: 0,
+      driveM,
+      minutes: Math.max(1, Math.ceil(driveM / DRIVE_M_PER_MIN)),
+      lot,
+      exit: x.id,
+      gate: way.gate,
+      level,
+      ramps: way.ramps,
+      garageCertain: way.certain,
+    });
+  }
+  return pickRoutes(
+    plans.map((plan) => ({ path: plan.legs[0].path, item: plan })),
+    (c) => c.item.driveM,
+  );
 }
 
 /** The best trip from a point to a place. */

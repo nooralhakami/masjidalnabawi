@@ -30,7 +30,7 @@ export interface RouteSummary {
   meters: number;
   minutes: number;
   nearestEntrance?: number;
-  drive?: { meters: number; lot?: number; walkMeters: number; entrance?: 'quba' | 'sultana'; unsure?: boolean };
+  drive?: { meters: number; lot?: number; walkMeters: number; entrance?: 'quba' | 'sultana'; unsure?: boolean; level?: 'A' | 'B'; exit?: 'quba' | 'sultana' };
 }
 
 const WALK_M_PER_MIN = 80;
@@ -38,6 +38,15 @@ const WALK_M_PER_MIN = 80;
 /**
  * Draggable bottom sheet (closed / half / full) with a POI's details.
  */
+/** The car park level chosen for driving (B below, the default; A above), remembered. */
+function savedLevel(): 'A' | 'B' {
+  try {
+    return localStorage.getItem('level') === 'A' ? 'A' : 'B';
+  } catch {
+    return 'B';
+  }
+}
+
 function savedTravel(): 'walk' | 'drive' {
   try {
     return localStorage.getItem('travel') === 'drive' ? 'drive' : 'walk';
@@ -55,10 +64,11 @@ export class Sheet {
   private route: RouteSummary | null = null;
   /** How the visitor travels: walking by default, or by car (remembered). */
   private mode: 'walk' | 'drive' = savedTravel();
+  private lvl: 'A' | 'B' = savedLevel();
 
   constructor(
     private fac: Facilities,
-    private on: { close(): void; goTo(p: Poi): void; route(p: Poi): void; endRoute(): void; share(p: Poi): void; state(s: SheetState): void },
+    private on: { close(): void; goTo(p: Poi): void; route(p: Poi): void; wayOut(): void; endRoute(): void; share(p: Poi): void; state(s: SheetState): void },
   ) {
     this.root = document.createElement('section');
     this.root.className = 'sheet';
@@ -89,6 +99,10 @@ export class Sheet {
     this.setState(this.state === 'full' ? 'full' : 'half');
     this.body.scrollTop = 0;
     if (wasClosed) (this.root.querySelector('.sh-title') as HTMLElement | null)?.focus({ preventScroll: true });
+  }
+
+  get level(): 'A' | 'B' {
+    return this.lvl;
   }
 
   get travel(): 'walk' | 'drive' {
@@ -226,6 +240,17 @@ export class Sheet {
     else if (act === 'route') this.on.route(this.poi);
     else if (act === 'endroute') this.on.endRoute();
     else if (act === 'share') this.on.share(this.poi);
+    else if (act === 'level') {
+      this.lvl = b.dataset.level === 'A' ? 'A' : 'B';
+      try {
+        localStorage.setItem('level', this.lvl);
+      } catch {
+        /* private mode */
+      }
+      this.render();
+    }
+    else if (act === 'wayout') this.on.wayOut();
+    else if (act === 'wayin' && this.poi) this.on.route(this.poi);
     else if (act === 'travel') {
       this.mode = b.dataset.mode === 'drive' ? 'drive' : 'walk';
       try {
@@ -323,7 +348,8 @@ export class Sheet {
               ? `<div class="route-legs">
               <span class="leg leg-drive">${icon('car', 16)}${esc(t('r_drive'))} · ${esc(t('km', { k: (r.drive.meters / 1000).toFixed(1) }))}</span>
               ${r.drive.entrance ? `<span class="leg leg-ent">${esc(t(r.drive.entrance === 'quba' ? 'g_in_quba' : 'g_in_sultana'))}</span>` : ''}
-              ${r.drive.lot ? `<span class="leg leg-lot">${esc(t('r_lot', { n: r.drive.lot }))}</span>` : ''}
+              ${r.drive.exit ? `<span class="leg leg-ent">${esc(t(r.drive.exit === 'quba' ? 'g_out_quba' : 'g_out_sultana'))}</span>` : ''}
+              ${r.drive.lot ? `<span class="leg leg-lot">${esc(r.drive.level ? t('r_lot_level', { n: r.drive.lot, l: r.drive.level }) : t('r_lot', { n: r.drive.lot }))}</span>` : ''}
               ${r.drive.walkMeters > 5 ? `<span class="leg leg-walk">${icon('walk', 16)}${esc(t('r_walk'))} · ${esc(t('meters', { m: num(Math.round(r.drive.walkMeters / 5) * 5) }))}</span>` : ''}
             </div>
             ${r.drive.unsure ? `<div class="route-unsure">${esc(t('g_unsure'))}</div>` : ''}`
@@ -337,11 +363,17 @@ export class Sheet {
       this.body.innerHTML = `
         <div class="sh-head sh-head-route">
           <span class="sh-icon" style="--c:${closed ? 'var(--cat-gray)' : poiColor(p)}">${poiIcon(p, 22)}</span>
-          <div style="flex:1;min-width:0"><div class="sh-kicker">${esc(t(r.drive ? 'r_title_drive' : 'r_title'))}</div><h2 class="sh-title" tabindex="-1">${esc(nm(p))}</h2></div>
+          <div style="flex:1;min-width:0"><div class="sh-kicker">${esc(t(r.drive?.exit ? 'r_title_exit' : r.drive ? 'r_title_drive' : 'r_title'))}</div><h2 class="sh-title" tabindex="-1">${esc(nm(p))}</h2></div>
           <button type="button" class="icon-btn lg" data-act="close" aria-label="${esc(t('l_close'))}">${icon('close', 18)}</button>
         </div>
         ${routeBox}`;
-      this.foot.innerHTML = `<button type="button" class="btn block danger" data-act="endroute">${icon('close', 20)}${esc(t('route_end'))}</button>`;
+      // By car to a lot: switch between the way in and the way out of the car park.
+      const swap = r.drive?.lot
+        ? r.drive.exit
+          ? `<button type="button" class="btn" data-act="wayin">${icon('car', 20)}${esc(t('g_way_in'))}</button>`
+          : `<button type="button" class="btn" data-act="wayout">${icon('car', 20)}${esc(t('g_way_out'))}</button>`
+        : '';
+      this.foot.innerHTML = `${swap}<button type="button" class="btn block danger" data-act="endroute">${icon('close', 20)}${esc(t('route_end'))}</button>`;
       return;
     }
 
@@ -368,7 +400,14 @@ export class Sheet {
       ${facts}`;
     const travel = (m: 'walk' | 'drive', ic: 'walk' | 'car') =>
       `<button type="button" class="travel-btn" data-act="travel" data-mode="${m}" aria-pressed="${this.mode === m}" aria-label="${esc(t(m === 'walk' ? 'travel_walk' : 'travel_drive'))}" title="${esc(t(m === 'walk' ? 'travel_walk' : 'travel_drive'))}">${icon(ic, 20)}</button>`;
-    this.foot.innerHTML = `<div class="travel" role="group" aria-label="${esc(t('travel_mode'))}">${travel('walk', 'walk')}${travel('drive', 'car')}</div>
+    // By car: the car park level to park on (B below, the way in and out; A above, by the ramps).
+    const level = (l: 'A' | 'B') =>
+      `<button type="button" class="travel-btn level-btn" data-act="level" data-level="${l}" aria-pressed="${this.lvl === l}" aria-label="${esc(t('lvl_name', { l }))}" title="${esc(t('lvl_name', { l }))}">${l}</button>`;
+    const levels =
+      this.mode === 'drive'
+        ? `<div class="levels-row"><span class="levels-k">${esc(t('lvl_title'))}</span><div class="travel levels" role="group" aria-label="${esc(t('lvl_title'))}">${level('B')}${level('A')}</div></div>`
+        : '';
+    this.foot.innerHTML = `<div class="travel" role="group" aria-label="${esc(t('travel_mode'))}">${travel('walk', 'walk')}${travel('drive', 'car')}</div>${levels}
       <button type="button" class="btn block" data-act="route">${icon(this.mode === 'drive' ? 'car' : 'route', 20)}${esc(t('route'))}</button>
       <button type="button" class="btn btn-square" data-act="share" aria-label="${esc(t('share_place'))}" title="${esc(t('share_place'))}">${icon('share', 20)}</button>`;
   }

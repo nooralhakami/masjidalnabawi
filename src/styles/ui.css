@@ -1197,6 +1197,26 @@ body.is-navigating .leaflet-bottom.leaflet-right {
   color: var(--heading);
   box-shadow: var(--shadow);
 }
+/* By car: the car park level, on its own row above the buttons. */
+.sheet-foot:has(.levels-row) {
+  flex-wrap: wrap;
+}
+.levels-row {
+  order: -1;
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.levels-k {
+  color: var(--muted);
+  font: 600 13px var(--font-ui);
+}
+.level-btn {
+  width: 40px;
+  font: 700 15px/1 var(--font-ui);
+}
 .route-legs {
   display: flex;
   flex-wrap: wrap;

@@ -444,7 +444,8 @@
      716,
      318
     ]
-   ]
+   ],
+   "oneway": true
   },
   {
    "id": "north-lane",
@@ -491,7 +492,8 @@
      1618,
      320
     ]
-   ]
+   ],
+   "oneway": true
   },
   {
    "id": "east-lane",
@@ -542,7 +544,8 @@
      1588,
      900
     ]
-   ]
+   ],
+   "oneway": true
   },
   {
    "id": "south-lane",
@@ -597,7 +600,8 @@
      875,
      892
     ]
-   ]
+   ],
+   "oneway": true
   },
   {
    "id": "west-lane",
@@ -648,7 +652,8 @@
      862,
      320
     ]
-   ]
+   ],
+   "oneway": true
   },
   {
    "id": "quba-in",
@@ -715,7 +720,8 @@
      1635,
      771
     ]
-   ]
+   ],
+   "oneway": true
   },
   {
    "id": "se-shared",
@@ -734,7 +740,8 @@
      1599,
      771
     ]
-   ]
+   ],
+   "oneway": true
   },
   {
    "id": "west-link",
@@ -757,7 +764,8 @@
      875,
      892
     ]
-   ]
+   ],
+   "oneway": true
   },
   {
    "id": "exit-east-north",
@@ -765,8 +773,8 @@
    "certain": false,
    "px": [
     [
-     1630,
-     760
+     1635,
+     771
     ],
     [
      1660,
@@ -812,7 +820,8 @@
      1605,
      162.5
     ]
-   ]
+   ],
+   "oneway": true
   },
   {
    "id": "exit-north",
@@ -855,7 +864,8 @@
      507,
      153
     ]
-   ]
+   ],
+   "oneway": true
   },
   {
    "id": "exit-link-810",
@@ -878,7 +888,8 @@
      809.5,
      156.5
     ]
-   ]
+   ],
+   "oneway": true
   },
   {
    "id": "exit-link-1561",
@@ -901,7 +912,8 @@
      1563.5,
      158.5
     ]
-   ]
+   ],
+   "oneway": true
   },
   {
    "id": "exit-west",
@@ -948,7 +960,8 @@
      715,
      1182
     ]
-   ]
+   ],
+   "oneway": true
   },
   {
    "id": "exit-south-west",
@@ -979,7 +992,8 @@
      714,
      1070
     ]
-   ]
+   ],
+   "oneway": true
   },
   {
    "id": "nw-shared",
@@ -992,9 +1006,10 @@
     ],
     [
      716,
-     190
+     199.5
     ]
-   ]
+   ],
+   "oneway": true
   },
   {
    "id": "ramp-down-B",
@@ -1019,9 +1034,12 @@
     ],
     [
      784,
-     313
+     319
     ]
-   ]
+   ],
+   "from_level": "A",
+   "to_level": "B",
+   "oneway": true
   },
   {
    "id": "nw-shared-2",
@@ -1036,12 +1054,13 @@
      784,
      344.5
     ]
-   ]
+   ],
+   "oneway": true
   },
   {
    "id": "ramp-up-A",
    "kind": "ramp_up",
-   "certain": false,
+   "certain": true,
    "px": [
     [
      1596.5,
@@ -1055,7 +1074,10 @@
      1600,
      166
     ]
-   ]
+   ],
+   "from_level": "B",
+   "to_level": "A",
+   "oneway": true
   }
  ],
  "entrances": [
@@ -1285,5 +1307,11 @@
  "lots_note": "entry_lane: the road the blue arrow turns off; exit_lane: the road the dark red arrow joins (south lots leave onto the bottom road, driven westwards on the right, then the red link at x≈808 px to the west exit).",
  "extra_drawings": [
   "docs/routes/garage-sultana-2026-10-13.json"
- ]
+ ],
+ "rules_ar": {
+  "oneway": "كل طريق باتجاه واحد، بترتيب نقاطه (بطلب المالك 2026-10-13). «جميع الطرق يمين»: الحركة تدور يميناً، أي مع عقارب الساعة.",
+  "levels": "الطرق نفسها في الدورين: B السفلي وA العلوي. الدخول والخروج الرئيسيان من B فقط. الصعود إلى A بالأصفر بعد موقف 11، والنزول إلى B بالأخضر بين المرفقين 220 و222.",
+  "south_exit": "المواقف الجنوبية تخرج إلى الطريق السفلي وتكمل شرقاً، ثم شمالاً إلى الخروج الأحمر في الجهة الشرقية.",
+  "west_link": "الوصلة الزرقاء عند y≈894 من طريق الخروج الغربي إلى أول الطريق الغربي: عودة إلى حلقة الدخول (شرقاً)."
+ }
 }

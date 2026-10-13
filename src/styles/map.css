@@ -714,6 +714,25 @@
   font: 700 12px/1 var(--font-ui);
   box-shadow: var(--shadow);
 }
+/* A ramp between the car park's levels on the way: up to A, down to B. */
+.route-level-ramp span {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 22px;
+  border-radius: 7px;
+  color: var(--ink);
+  border: 2px solid #fff;
+  font: 700 12px/1 var(--font-ui);
+  box-shadow: var(--shadow);
+}
+.route-level-ramp.is-up span {
+  background: var(--ramp-up);
+}
+.route-level-ramp.is-down span {
+  background: var(--ramp-down);
+  color: #fff;
+}
 
 /* ---------- zoomed out: every marker in its place, just smaller ---------- */
 .mk-s .mk-dot {

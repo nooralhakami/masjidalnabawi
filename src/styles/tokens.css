@@ -41,6 +41,9 @@
   --cat-food: #c0601c;
   --cat-land: #5a3e9c;
   --cat-emg: #c3362c;
+  /* Car park ramps, as in the owner's drawing: yellow up to level A, green down to level B. */
+  --ramp-up: #f5d90a;
+  --ramp-down: #3f7d20;
   --women-area: #ec4f9a;
   /* Historic sites: an old-bronze tone, apart from the purple of modern landmarks. */
   --cat-hist: #8a5a1f;

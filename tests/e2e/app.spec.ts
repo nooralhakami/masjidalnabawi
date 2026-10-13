@@ -576,6 +576,26 @@ test.describe('by car to the car park under the Haram (owner’s drawing, 2026-1
     // Lot 9 is on the north side, which the owner is sure of: no note about the east side.
     await expect(page.locator('.route-unsure')).toHaveCount(0);
   });
+
+  test('level A goes up the yellow ramp; the way out comes down the green one to an exit', async ({ page, errors: _ }) => {
+    await page.addInitScript(() => localStorage.setItem('travel', 'drive'));
+    await page.goto('map.html?poi=909');
+    await expect(page.locator('[data-act="level"][data-level="B"]')).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('[data-act="level"][data-level="A"]').click();
+    await expect(page.locator('[data-act="level"][data-level="A"]')).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('[data-act="route"]').click();
+    await expect(page.locator('.route-lot-gate')).toContainText('P9A', { timeout: 30_000 });
+    await expect(page.locator('.route-level-ramp.is-up')).toHaveCount(1);
+    await expect(page.locator('.route-legs .leg-lot')).toContainText('A');
+    // The way out: from the bay, down to level B, to an exit.
+    await page.locator('[data-act="wayout"]').click();
+    await expect(page.locator('.route-legs .leg-ent')).toContainText('مخرج');
+    await expect(page.locator('.route-level-ramp.is-down')).toHaveCount(1);
+    await expect(page.locator('.sheet .sh-kicker')).toContainText('الخروج');
+    // And back to the way in.
+    await page.locator('[data-act="wayin"]').click();
+    await expect(page.locator('.route-lot-gate')).toContainText('P9A', { timeout: 30_000 });
+  });
 });
 
 test.describe('alternative routes', () => {

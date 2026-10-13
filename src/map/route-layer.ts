@@ -11,7 +11,7 @@ export interface RouteInfo {
   bounds: L.LatLngBounds;
   nearestEntrance?: number;
   /** By car: the drive, the lot, and the walk from it. */
-  drive?: { meters: number; lot?: number; walkMeters: number; entrance?: 'quba' | 'sultana'; unsure?: boolean };
+  drive?: { meters: number; lot?: number; walkMeters: number; entrance?: 'quba' | 'sultana'; unsure?: boolean; level?: 'A' | 'B'; exit?: 'quba' | 'sultana' };
   /** Every route offered (the chosen one included), and which one is chosen. */
   options: { minutes: number; meters: number }[];
   chosen: number;
@@ -140,23 +140,38 @@ export class RouteLayer {
           .addLayer(L.polyline(leg.path, { className: 'route-casing', weight: 11, interactive: false }))
           .addLayer(L.polyline(leg.path, { className: 'route-garage', weight: 6, interactive: false }))
           .addLayer(L.polyline(leg.path, { className: 'route-garage-dash', weight: 2, interactive: false }));
-        this.group.addLayer(
-          L.marker(leg.path[0], {
-            icon: L.divIcon({ className: 'route-ramp', html: '<span>P</span>', iconSize: [24, 24] }),
-            title: t('drive_ramp'),
-            interactive: false,
-            keyboard: false,
-            zIndexOffset: 1001,
-          }),
-        );
+        // The entrance ramp (the way in only: the way out starts at the parked car).
+        if (!plan.exit) {
+          this.group.addLayer(
+            L.marker(leg.path[0], {
+              icon: L.divIcon({ className: 'route-ramp', html: '<span>P</span>', iconSize: [24, 24] }),
+              title: t('drive_ramp'),
+              interactive: false,
+              keyboard: false,
+              zIndexOffset: 1001,
+            }),
+          );
+        }
       }
     }
     // Where the car turns into its lot (right after the lot's first facility, as in the owner's drawing).
     if (plan.gate && plan.lot) {
       this.group.addLayer(
         L.marker(plan.gate, {
-          icon: L.divIcon({ className: 'route-lot-gate', html: `<span>P${plan.lot.id - 900}</span>`, iconSize: [30, 22] }),
-          title: t('r_lot', { n: plan.lot.id - 900 }),
+          icon: L.divIcon({ className: 'route-lot-gate', html: `<span>P${plan.lot.id - 900}${plan.level ?? ''}</span>`, iconSize: [38, 22] }),
+          title: plan.level ? t('r_lot_level', { n: plan.lot.id - 900, l: plan.level }) : t('r_lot', { n: plan.lot.id - 900 }),
+          interactive: false,
+          keyboard: false,
+          zIndexOffset: 1001,
+        }),
+      );
+    }
+    // The ramps between the car park's levels on the way: up to A (yellow in the owner's drawing), down to B (green).
+    for (const r of plan.ramps ?? []) {
+      this.group.addLayer(
+        L.marker(r.at, {
+          icon: L.divIcon({ className: `route-level-ramp is-${r.to === 'A' ? 'up' : 'down'}`, html: `<span>${r.to === 'A' ? '↑' : '↓'}${r.to}</span>`, iconSize: [36, 22] }),
+          title: t(r.to === 'A' ? 'g_up' : 'g_down'),
           interactive: false,
           keyboard: false,
           zIndexOffset: 1001,
@@ -218,7 +233,17 @@ export class RouteLayer {
       bounds: L.latLngBounds([...this.path, ...this.others.flat()]),
       ...(parking ? { nearestEntrance: parking.nearest.id } : {}),
       ...(plan.mode === 'drive'
-        ? { drive: { meters: plan.driveM, lot: plan.lot ? plan.lot.id - 900 : undefined, walkMeters: plan.walkM, entrance: plan.entrance, unsure: plan.garageCertain === false } }
+        ? {
+            drive: {
+              meters: plan.driveM,
+              lot: plan.lot ? plan.lot.id - 900 : undefined,
+              walkMeters: plan.walkM,
+              entrance: plan.entrance,
+              exit: plan.exit,
+              level: plan.level,
+              unsure: plan.garageCertain === false,
+            },
+          }
         : {}),
       options: plans.map((p) => ({ minutes: p.minutes, meters: p.walkM + p.driveM })),
       chosen,

@@ -4,7 +4,7 @@ import type { LatLng } from '../../src/data';
 import streetsJson from '../../data/streets.json';
 import { fullPath, inHaram, planRoute, planRoutes } from '../../src/routing/plan';
 import { initialBearing, shared, turnPenalty } from '../../src/routing/alternatives';
-import { GARAGE, KEEP_RIGHT_M } from '../../src/routing/garage';
+import { GARAGE } from '../../src/routing/garage';
 import { loadStreets } from '../../src/routing/streets';
 import { insideRect, network, pathLength, toM } from '../../src/routing/walk';
 
@@ -125,7 +125,7 @@ describe('driving to the car park under the Haram', () => {
     expect(p.driveM).toBeGreaterThan(1000);
     expect(p.walkM).toBeLessThan(400);
     // The car-park stretch starts at one of the two entrances and follows the roads the owner
-    // drew (data/garage.json), on the right-hand side, until it turns into the lot.
+    // drew (data/garage.json), on their centre line (every road is one-way), until it turns into the lot.
     expect(['quba', 'sultana']).toContain(p.entrance);
     const roads = GARAGE.lanes.filter((l) => l.kind === 'entry' || l.kind === 'shared').map((l) => l.path.map(toM));
     const offRoad = (ll: LatLng) => {
@@ -144,7 +144,7 @@ describe('driving to the car park under the Haram', () => {
     };
     const onRoads = p.legs[1].path.slice(1, -5); // between the ramp and the lot (then the aisle and the stairs)
     expect(onRoads.length).toBeGreaterThan(3);
-    for (const pt of onRoads) expect(offRoad(pt)).toBeLessThan(KEEP_RIGHT_M * 1.6);
+    for (const pt of onRoads) expect(offRoad(pt)).toBeLessThan(1);
   });
 
   it('never parks in a subscribers-only lot unless that lot is the destination', async () => {

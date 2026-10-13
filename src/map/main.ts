@@ -25,7 +25,7 @@ import { LocationService } from '../location/LocationService';
 import { MeMarker } from '../location/MeMarker';
 import { RouteLayer } from './route-layer';
 import { createMap } from './setup';
-import { planRoutes, type Plan } from '../routing/plan';
+import { planExit, planRoutes, type Plan } from '../routing/plan';
 import { addWeatherChip } from '../ui/weather-chip';
 import { trackMotion } from './motion';
 import { NavigationTracker } from '../navigation/NavigationTracker';
@@ -95,7 +95,9 @@ const navigation = new NavigationTracker(
     // favouring the way they are heading; redrawn in place, without the draw-in or a camera jump.
     const dest = state.selected !== null ? POI_BY_ID.get(state.selected) : undefined;
     if (!dest || !route.active) return;
-    void planRoutes([from.lat, from.lng], dest, sheet.travel, { heading }).then((next) => {
+    // The way out of the car park is not re-planned from the street (the car is underground).
+    if (plans[chosen]?.exit) return;
+    void planRoutes([from.lat, from.lng], dest, sheet.travel, { heading, level: sheet.level }).then((next) => {
       if (state.selected !== dest.id || !route.active || !next.length) return;
       showPlans(next, 0, false);
       toast(t('rerouted'));
@@ -172,6 +174,7 @@ const sheet = new Sheet(fac, {
   close: () => deselect(),
   goTo: (p) => select(p, true),
   route: (p) => void drawRoute(p),
+  wayOut: () => showWayOut(),
   share: (p) => void sharePlace(p),
   endRoute: () => {
     navigation.stop();
@@ -228,7 +231,7 @@ async function drawRoute(p: Poi) {
   const fix = geo.fresh() ?? (await geo.start());
   if (!fix || state.selected !== p.id) return;
   const travel = sheet.travel;
-  const next = await planRoutes([fix.lat, fix.lng], p, travel);
+  const next = await planRoutes([fix.lat, fix.lng], p, travel, { level: sheet.level });
   if (state.selected !== p.id || !next.length) return;
   const plan = next[0];
   if (travel === 'drive' && plan.mode === 'walk') toast(t('drive_fallback'), 5000);
@@ -241,6 +244,24 @@ async function drawRoute(p: Poi) {
     paddingBottomRight: [72, sheet.visibleHeight() + 24],
     maxZoom: 19,
   });
+}
+
+/**
+ * The way out of the car park from the lot just driven to: from the bay (by the stairs the visitor
+ * walked up) to the exits, quickest first.
+ */
+function showWayOut() {
+  const inbound = plans[chosen];
+  if (!inbound?.lot || inbound.exit) return;
+  const garage = inbound.legs.find((l) => l.kind === 'garage');
+  const stairs = inbound.legs.length > 2 && garage ? garage.path[garage.path.length - 1] : null;
+  const out = planExit(inbound.lot, inbound.level ?? 'B', stairs);
+  if (!out.length) return;
+  // Underground there is no GPS to follow: the way out is shown, not tracked live.
+  navigation.stop();
+  const info = showPlans(out, 0, true);
+  const topH = top.getBoundingClientRect().bottom;
+  map.fitBounds(info.bounds, { paddingTopLeft: [72, topH + 24], paddingBottomRight: [72, sheet.visibleHeight() + 24], maxZoom: 19 });
 }
 
 /** Share a link that opens this exact place (map.html?poi=ID). */
