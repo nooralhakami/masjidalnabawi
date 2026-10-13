@@ -37,6 +37,23 @@ export class RouteTrack {
     this.total = this.cum[this.cum.length - 1] ?? 0;
   }
 
+  /** The stretch of the route between two distances along it (metres from the start). */
+  slice(from: number, to: number): LatLng[] {
+    const a = Math.max(0, Math.min(this.total, from));
+    const b = Math.max(a, Math.min(this.total, to));
+    const at = (d: number): LatLng => {
+      let i = 1;
+      while (i < this.cum.length - 1 && this.cum[i] < d) i++;
+      const seg = this.cum[i] - this.cum[i - 1] || 1;
+      const f = Math.max(0, Math.min(1, (d - this.cum[i - 1]) / seg));
+      const p = this.path[i - 1];
+      const q = this.path[i];
+      return [p[0] + (q[0] - p[0]) * f, p[1] + (q[1] - p[1]) * f];
+    };
+    const inner = this.path.filter((_, i) => this.cum[i] > a && this.cum[i] < b);
+    return [at(a), ...inner, at(b)];
+  }
+
   locate(pos: LatLng, previousAlong: number | null = null): Progress {
     const p = toM(pos);
     let best: { score: number; along: number; offset: number; x: number; y: number; i: number } | null = null;

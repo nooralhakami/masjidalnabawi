@@ -526,6 +526,28 @@
   stroke-opacity: 0.35;
 }
 
+/* ---------- the stretch ahead in full, the rest faint (live navigation) ---------- */
+.is-route-focus .route-base {
+  opacity: 0.35;
+}
+.route-focus-casing {
+  stroke: #fff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+.route-focus {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+.route-focus.is-walk {
+  stroke: var(--green-700);
+}
+.route-focus.is-drive {
+  stroke: var(--cat-men);
+}
+
 /* ---------- alternative routes (tap to choose) ---------- */
 .route-alt-under {
   stroke: #fff;

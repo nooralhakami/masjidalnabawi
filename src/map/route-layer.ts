@@ -127,25 +127,25 @@ export class RouteLayer {
     for (const leg of plan.legs) {
       if (leg.path.length < 2) continue;
       if (leg.kind === 'walk') {
-        const walk = L.polyline(leg.path, { className: `route-line${reduce ? '' : ' is-drawing'}`, weight: 6, interactive: false });
+        const walk = L.polyline(leg.path, { className: `route-line route-base${reduce ? '' : ' is-drawing'}`, weight: 6, interactive: false });
         this.group
-          .addLayer(L.polyline(leg.path, { className: 'route-casing', weight: 11, interactive: false }))
+          .addLayer(L.polyline(leg.path, { className: 'route-casing route-base', weight: 11, interactive: false }))
           .addLayer(walk)
-          .addLayer(L.polyline(leg.path, { className: 'route-flow', weight: 2, interactive: false }));
+          .addLayer(L.polyline(leg.path, { className: 'route-flow route-base', weight: 2, interactive: false }));
         line ??= walk;
       } else if (leg.kind === 'drive') {
         this.group
-          .addLayer(L.polyline(leg.path, { className: 'route-casing', weight: 12, interactive: false }))
-          .addLayer(L.polyline(leg.path, { className: 'route-drive', weight: 7, interactive: false }));
+          .addLayer(L.polyline(leg.path, { className: 'route-casing route-base', weight: 12, interactive: false }))
+          .addLayer(L.polyline(leg.path, { className: 'route-drive route-base', weight: 7, interactive: false }));
       } else {
         // Underground: a solid line with light dashes along it (a tunnel), cased like the other legs.
-        this.group.addLayer(L.polyline(leg.path, { className: 'route-casing', weight: 11, interactive: false }));
+        this.group.addLayer(L.polyline(leg.path, { className: 'route-casing route-base', weight: 11, interactive: false }));
         // Level A (above) gets a yellow edge, the colour of the ramp up in the owner's drawing; the
         // ramps themselves are edged yellow (up) and green (down). Level B keeps the white edge.
         let labelled = false;
         for (const part of leg.parts ?? []) {
           if (part.on === 'B') continue;
-          this.group.addLayer(L.polyline(part.path, { className: `route-casing-${part.on === 'A' ? 'level-a' : `ramp-${part.on}`}`, weight: 14, interactive: false }));
+          this.group.addLayer(L.polyline(part.path, { className: `route-base route-casing-${part.on === 'A' ? 'level-a' : `ramp-${part.on}`}`, weight: 14, interactive: false }));
           if (part.on === 'A' && !labelled && part.path.length > 1) {
             labelled = true;
             this.group.addLayer(
@@ -159,8 +159,8 @@ export class RouteLayer {
           }
         }
         this.group
-          .addLayer(L.polyline(leg.path, { className: 'route-garage', weight: 6, interactive: false }))
-          .addLayer(L.polyline(leg.path, { className: 'route-garage-dash', weight: 2, interactive: false }));
+          .addLayer(L.polyline(leg.path, { className: 'route-garage route-base', weight: 6, interactive: false }))
+          .addLayer(L.polyline(leg.path, { className: 'route-garage-dash route-base', weight: 2, interactive: false }));
         // The entrance ramp (the way in only: the way out starts at the parked car).
         if (!plan.exit) {
           this.group.addLayer(
@@ -306,7 +306,25 @@ export class RouteLayer {
     }
   }
 
+  private focusLayer = L.layerGroup();
+
+  /**
+   * Colour in full only the stretch ahead of the visitor (owner, 2026-10-13): the rest of the route
+   * stays drawn, faint. `null` shows the whole route in full again.
+   */
+  focus(path: LatLng[] | null, mode: 'walk' | 'drive' = 'walk'): void {
+    this.focusLayer.clearLayers();
+    const on = !!path && path.length > 1 && this.path.length > 0;
+    this.map.getContainer().classList.toggle('is-route-focus', on);
+    if (!on) return;
+    this.focusLayer
+      .addLayer(L.polyline(path, { className: 'route-focus-casing', weight: 13, interactive: false }))
+      .addLayer(L.polyline(path, { className: `route-focus is-${mode}`, weight: 8, interactive: false }))
+      .addTo(this.map);
+  }
+
   clear(): void {
+    this.focus(null);
     this.group.clearLayers();
     this.group.remove();
     this.arrows.clearLayers();

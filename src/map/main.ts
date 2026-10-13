@@ -113,7 +113,12 @@ const navigation = new NavigationTracker(
   },
 );
 
-navigation.onChange((s) => document.body.classList.toggle('is-navigating', s.state !== 'stopped'));
+/** Live: the next 150 m of the route in full, the rest faint (owner, 2026-10-13). */
+const AHEAD_M = 150;
+navigation.onChange((s) => {
+  document.body.classList.toggle('is-navigating', s.state !== 'stopped');
+  route.focus(s.state === 'stopped' ? null : navigation.ahead(AHEAD_M), plans[chosen]?.mode ?? 'walk');
+});
 
 const header = new Header({
   onQuery(q) {

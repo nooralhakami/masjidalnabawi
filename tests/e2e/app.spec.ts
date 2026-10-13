@@ -419,6 +419,22 @@ test.describe('live location while walking', () => {
     expect(after.y - before.y).toBeGreaterThan(15);
   });
 
+  test('while walking, the next stretch is in full colour and the rest of the route faint', async ({ page, context, errors: _ }) => {
+    await page.goto('map.html?poi=204');
+    await page.locator('[data-act="route"]').click();
+    await expect(page.locator('.navigation-status .nav-big')).toHaveCount(2);
+    for (let i = 1; i <= 3; i++) {
+      await context.setGeolocation(step(i));
+      await page.waitForTimeout(800);
+    }
+    await expect(page.locator('#map.is-route-focus, .leaflet-container.is-route-focus')).toHaveCount(1);
+    await expect(page.locator('path.route-focus')).toHaveCount(1);
+    expect(Number(await page.locator('path.route-line.route-base').first().evaluate((el) => getComputedStyle(el).opacity))).toBeLessThan(0.5);
+    // Ending the route clears it.
+    await page.locator('[data-act="endroute"]').click();
+    await expect(page.locator('path.route-focus')).toHaveCount(0);
+  });
+
   test('navigation: remaining distance falls walking on, rises walking back, and warns', async ({ page, context, errors: _ }) => {
     await page.goto('map.html?poi=204');
     await expect(page.locator('.sheet .sh-title')).toContainText('204');

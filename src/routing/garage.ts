@@ -210,6 +210,16 @@ function nodeAt(p: XY, level: Level): number {
 /** What a stretch of a way is on: a level, or a ramp going up (to A) or down (to B). */
 export type Stretch = Level | 'up' | 'down';
 
+/**
+ * One step of the way inside the car park, for step-by-step directions: head north/east/south/west,
+ * take the ramp up to A or down to B, turn into the lot or out of it.
+ */
+export interface GarageStep {
+  kind: 'n' | 'e' | 's' | 'w' | 'up' | 'down' | 'lot_in' | 'lot_out';
+  path: LatLng[];
+  meters: number;
+}
+
 function shortest(from: number, to: number): { pts: XY[]; lanes: string[]; levels: Level[]; tags: Stretch[] } | null {
   const { nodes, out } = G();
   const dist = new Array(nodes.length).fill(Infinity);
@@ -309,6 +319,8 @@ export interface GarageRoute {
   ramps: RampOnWay[];
   /** The way in stretches by level (and the ramps between), to draw level A differently. */
   parts: { on: Stretch; path: LatLng[] }[];
+  /** Step-by-step directions (GPS does not work underground, so the visitor steps through them). */
+  steps: GarageStep[];
   /** The roads taken, in order, each with the level it was driven on. */
   roads: { lane: string; level: Level }[];
   meters: number;
@@ -334,6 +346,7 @@ function finish(roads: { pts: XY[]; lanes: string[]; levels: Level[]; tags: Stre
     if (lane?.to_level && (i === 0 || roads.lanes[i - 1] !== lane.id)) ramps.push({ at: lane.path[0], to: lane.to_level });
   }
   return {
+    steps: stepsOf(roads.pts, roads.tags, gate, out),
     path: driven.map(fromM),
     gate: fromM(gate),
     level,
@@ -343,6 +356,41 @@ function finish(roads: { pts: XY[]; lanes: string[]; levels: Level[]; tags: Stre
     meters: lengthOf(driven),
     certain: lot.certain && !roads.lanes.some((l) => unsure.has(l)),
   };
+}
+
+/** Shorter stretches than this join the step before (a kink in the drawing is not a turn). */
+const MIN_STEP_M = 15;
+
+/** The compass direction of a segment (y north). */
+function heading(a: XY, b: XY): 'n' | 'e' | 's' | 'w' {
+  const deg = ((Math.atan2(b[0] - a[0], b[1] - a[1]) * 180) / Math.PI + 360) % 360;
+  return deg < 45 || deg >= 315 ? 'n' : deg < 135 ? 'e' : deg < 225 ? 's' : 'w';
+}
+
+/** The way as steps: runs in one direction (or one ramp), then into the lot (or, out, from it first). */
+function stepsOf(pts: XY[], tags: Stretch[], gate: XY, out: boolean): GarageStep[] {
+  const runs: { kind: GarageStep['kind']; pts: XY[] }[] = [];
+  for (let i = 1; i < pts.length; i++) {
+    const tag = tags[i - 1];
+    const kind: GarageStep['kind'] = tag === 'up' || tag === 'down' ? tag : heading(pts[i - 1], pts[i]);
+    const last = runs[runs.length - 1];
+    if (last && last.kind === kind) last.pts.push(pts[i]);
+    else runs.push({ kind, pts: [pts[i - 1], pts[i]] });
+  }
+  // A short run (not a ramp) joins the run before it; then runs of the same kind merge.
+  const merged: typeof runs = [];
+  for (const r of runs) {
+    const prev = merged[merged.length - 1];
+    if (prev && r.kind !== 'up' && r.kind !== 'down' && (lengthOf(r.pts) < MIN_STEP_M || prev.kind === r.kind)) prev.pts.push(...r.pts.slice(1));
+    else if (prev && prev.kind !== 'up' && prev.kind !== 'down' && lengthOf(prev.pts) < MIN_STEP_M && merged.length === 1) {
+      merged[0] = { kind: r.kind, pts: [...prev.pts, ...r.pts.slice(1)] };
+    } else merged.push({ kind: r.kind, pts: [...r.pts] });
+  }
+  const steps: GarageStep[] = merged.map((r) => ({ kind: r.kind, path: r.pts.map(fromM), meters: lengthOf(r.pts) }));
+  const lot: GarageStep = out
+    ? { kind: 'lot_out', path: [fromM(gate), fromM(pts[0])], meters: d2(gate, pts[0]) }
+    : { kind: 'lot_in', path: [fromM(pts[pts.length - 1]), fromM(gate)], meters: d2(pts[pts.length - 1], gate) };
+  return out ? [lot, ...steps] : [...steps, lot];
 }
 
 /**

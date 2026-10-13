@@ -131,6 +131,11 @@ export class NavigationTracker {
     this.away.reset();
   }
 
+  /** The stretch of the route ahead of the visitor (from where they are, `m` metres on), once located. */
+  ahead(m: number): LatLng[] | null {
+    return this.track && this.along !== null ? this.track.slice(this.along, this.along + m) : null;
+  }
+
   stop() {
     this.off.forEach((f) => f());
     this.off = [];

@@ -158,3 +158,16 @@ describe('switching to an alternative route while walking', () => {
     expect(onAlternative(tracks, offset(BASE, 100, 18), 5)).toBe(-1);
   });
 });
+
+describe('the stretch ahead of the visitor (owner, 2026-10-13)', () => {
+  const path: LatLng[] = [BASE, offset(BASE, 100, 0), offset(BASE, 100, 100)];
+  const track = new RouteTrack(path);
+  it('slices the route between two distances, through its corners', () => {
+    const s = track.slice(50, 150);
+    expect(new RouteTrack(s).total).toBeCloseTo(100, 0);
+    expect(s).toContainEqual(path[1]);
+  });
+  it('stops at the route’s end', () => {
+    expect(new RouteTrack(track.slice(180, 330)).total).toBeCloseTo(20, 0);
+  });
+});
