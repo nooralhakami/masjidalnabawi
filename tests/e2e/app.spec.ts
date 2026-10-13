@@ -575,6 +575,9 @@ test.describe('by car to the car park under the Haram (owner’s drawing, 2026-1
     await expect(page.locator('path.route-garage')).toHaveCount(1);
     // Lot 9 is on the north side, which the owner is sure of: no note about the east side.
     await expect(page.locator('.route-unsure')).toHaveCount(0);
+    // Level B: no yellow edge, no legend.
+    await expect(page.locator('path.route-casing-level-a')).toHaveCount(0);
+    await expect(page.locator('.route-legend')).toHaveCount(0);
   });
 
   test('level A goes up the yellow ramp; the way out comes down the green one to an exit', async ({ page, errors: _ }) => {
@@ -587,6 +590,10 @@ test.describe('by car to the car park under the Haram (owner’s drawing, 2026-1
     await expect(page.locator('.route-lot-gate')).toContainText('P9A', { timeout: 30_000 });
     await expect(page.locator('.route-level-ramp.is-up')).toHaveCount(1);
     await expect(page.locator('.route-legs .leg-lot')).toContainText('A');
+    // The way on level A has a yellow edge and a «الدور A» label; the card explains the edge.
+    expect(await page.locator('path.route-casing-level-a').count()).toBeGreaterThan(0);
+    await expect(page.locator('.route-level-label')).toContainText('A');
+    await expect(page.locator('.route-legend')).toBeVisible();
     // The way out: from the bay, down to level B, to an exit.
     await page.locator('[data-act="wayout"]').click();
     await expect(page.locator('.route-legs .leg-ent')).toContainText('مخرج');

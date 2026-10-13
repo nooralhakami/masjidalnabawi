@@ -6,6 +6,7 @@ import type { LangCode } from '../data/types';
  */
 export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
   ar: {
+    g_legend_a: 'الإطار الأصفر: الطريق في الدور A',
     lvl_title: 'الدور',
     lvl_name: 'الدور {l}',
     r_lot_level: 'موقف رقم {n} · الدور {l}',
@@ -102,6 +103,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'انتقال',
   },
   en: {
+    g_legend_a: 'Yellow edge: the way on level A',
     lvl_title: 'Level',
     lvl_name: 'Level {l}',
     r_lot_level: 'Parking no. {n} · Level {l}',
@@ -198,6 +200,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Go',
   },
   tr: {
+    g_legend_a: 'Sarı kenar: A katındaki yol',
     lvl_title: 'Kat',
     lvl_name: '{l} katı',
     r_lot_level: 'Otopark no. {n} · {l} katı',
@@ -294,6 +297,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Git',
   },
   ur: {
+    g_legend_a: 'پیلا کنارہ: منزل A پر راستہ',
     lvl_title: 'منزل',
     lvl_name: 'منزل {l}',
     r_lot_level: 'پارکنگ نمبر {n} · منزل {l}',
@@ -390,6 +394,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'جائیں',
   },
   id: {
+    g_legend_a: 'Tepi kuning: jalan di lantai A',
     lvl_title: 'Lantai',
     lvl_name: 'Lantai {l}',
     r_lot_level: 'Parkir no. {n} · Lantai {l}',
@@ -486,6 +491,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Buka',
   },
   uz: {
+    g_legend_a: 'Sariq chegara: A qavatdagi yo‘l',
     lvl_title: 'Qavat',
     lvl_name: '{l} qavat',
     r_lot_level: 'Avtoturargoh № {n} · {l} qavat',
@@ -582,6 +588,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'O‘tish',
   },
   bn: {
+    g_legend_a: 'হলুদ কিনারা: তলা A-র পথ',
     lvl_title: 'তলা',
     lvl_name: 'তলা {l}',
     r_lot_level: 'পার্কিং নং {n} · তলা {l}',
@@ -685,6 +692,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'যান',
   },
   fr: {
+    g_legend_a: 'Bord jaune : le trajet au niveau A',
     lvl_title: 'Niveau',
     lvl_name: 'Niveau {l}',
     r_lot_level: 'Parking n° {n} · Niveau {l}',
@@ -788,6 +796,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Y aller',
   },
   fa: {
+    g_legend_a: 'لبه زرد: مسیر در طبقه A',
     lvl_title: 'طبقه',
     lvl_name: 'طبقه {l}',
     r_lot_level: 'پارکینگ شماره {n} · طبقه {l}',
@@ -891,6 +900,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'برو',
   },
   ru: {
+    g_legend_a: 'Жёлтая кайма: путь на уровне A',
     lvl_title: 'Уровень',
     lvl_name: 'Уровень {l}',
     r_lot_level: 'Парковка № {n} · уровень {l}',
@@ -994,6 +1004,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Идти',
   },
   ms: {
+    g_legend_a: 'Tepi kuning: laluan di aras A',
     lvl_title: 'Aras',
     lvl_name: 'Aras {l}',
     r_lot_level: 'Parkir no. {n} · Aras {l}',
@@ -1097,6 +1108,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Pergi',
   },
   ha: {
+    g_legend_a: 'Gefe mai launin rawaya: hanya a bene A',
     lvl_title: 'Bene',
     lvl_name: 'Bene {l}',
     r_lot_level: 'Wurin ajiye mota na {n} · Bene {l}',
@@ -1200,6 +1212,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Je',
   },
   ml: {
+    g_legend_a: 'മഞ്ഞ അരിക്: നില A-യിലെ വഴി',
     lvl_title: 'നില',
     lvl_name: 'നില {l}',
     r_lot_level: 'പാർക്കിങ് നമ്പർ {n} · നില {l}',
@@ -1303,6 +1316,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'പോകുക',
   },
   sw: {
+    g_legend_a: 'Ukingo wa njano: njia katika ghorofa A',
     lvl_title: 'Ghorofa',
     lvl_name: 'Ghorofa {l}',
     r_lot_level: 'Maegesho na. {n} · Ghorofa {l}',
@@ -1406,6 +1420,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Nenda',
   },
   ps: {
+    g_legend_a: 'ژېړه څنډه: په A پوړ کې لار',
     lvl_title: 'پوړ',
     lvl_name: 'پوړ {l}',
     r_lot_level: 'پارکینګ شمیره {n} · پوړ {l}',
@@ -1509,6 +1524,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'لاړ شه',
   },
   so: {
+    g_legend_a: 'Geesta jaalaha ah: jidka dabaqa A',
     lvl_title: 'Dabaq',
     lvl_name: 'Dabaqa {l}',
     r_lot_level: 'Baarkinka lambar {n} · Dabaqa {l}',
@@ -1612,6 +1628,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Tag',
   },
   ta: {
+    g_legend_a: 'மஞ்சள் விளிம்பு: தளம் A-வில் உள்ள வழி',
     lvl_title: 'தளம்',
     lvl_name: 'தளம் {l}',
     r_lot_level: 'வாகன நிறுத்தம் எண் {n} · தளம் {l}',
@@ -1715,6 +1732,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'செல்',
   },
   hi: {
+    g_legend_a: 'पीला किनारा: मंज़िल A पर रास्ता',
     lvl_title: 'मंज़िल',
     lvl_name: 'मंज़िल {l}',
     r_lot_level: 'पार्किंग नं. {n} · मंज़िल {l}',
@@ -1818,6 +1836,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'जाएँ',
   },
   bs: {
+    g_legend_a: 'Žuti rub: put na nivou A',
     lvl_title: 'Nivo',
     lvl_name: 'Nivo {l}',
     r_lot_level: 'Parking br. {n} · nivo {l}',
@@ -1921,6 +1940,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Idi',
   },
   de: {
+    g_legend_a: 'Gelber Rand: der Weg auf Ebene A',
     lvl_title: 'Ebene',
     lvl_name: 'Ebene {l}',
     r_lot_level: 'Parkplatz Nr. {n} · Ebene {l}',
@@ -2024,6 +2044,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Los',
   },
   zh: {
+    g_legend_a: '黄色边框：A层的路线',
     lvl_title: '楼层',
     lvl_name: '{l}层',
     r_lot_level: '{n}号停车场 · {l}层',
@@ -2127,6 +2148,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: '前往',
   },
   am: {
+    g_legend_a: 'ቢጫ ጠርዝ፦ በፎቅ A ያለው መንገድ',
     lvl_title: 'ፎቅ',
     lvl_name: 'ፎቅ {l}',
     r_lot_level: 'የመኪና ማቆሚያ ቁጥር {n} · ፎቅ {l}',
@@ -2230,6 +2252,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'ሂድ',
   },
   ku: {
+    g_legend_a: 'Kêleka zer: rê li qata A',
     lvl_title: 'Qat',
     lvl_name: 'Qata {l}',
     r_lot_level: 'Park hejmar {n} · Qata {l}',
@@ -2333,6 +2356,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Biçe',
   },
   az: {
+    g_legend_a: 'Sarı kənar: A mərtəbəsindəki yol',
     lvl_title: 'Mərtəbə',
     lvl_name: '{l} mərtəbəsi',
     r_lot_level: 'Dayanacaq № {n} · {l} mərtəbəsi',
@@ -2436,6 +2460,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Get',
   },
   th: {
+    g_legend_a: 'ขอบสีเหลือง: เส้นทางบนชั้น A',
     lvl_title: 'ชั้น',
     lvl_name: 'ชั้น {l}',
     r_lot_level: 'ที่จอดรถหมายเลข {n} · ชั้น {l}',
@@ -2539,6 +2564,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'ไป',
   },
   es: {
+    g_legend_a: 'Borde amarillo: el recorrido en la planta A',
     lvl_title: 'Planta',
     lvl_name: 'Planta {l}',
     r_lot_level: 'Aparcamiento n.º {n} · planta {l}',

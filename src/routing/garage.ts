@@ -209,7 +209,10 @@ function nodeAt(p: XY, level: Level): number {
 }
 
 /** Shortest directed way (Dijkstra; the graph has a few hundred nodes). */
-function shortest(from: number, to: number): { pts: XY[]; lanes: string[]; levels: Level[] } | null {
+/** What a stretch of a way is on: a level, or a ramp going up (to A) or down (to B). */
+export type Stretch = Level | 'up' | 'down';
+
+function shortest(from: number, to: number): { pts: XY[]; lanes: string[]; levels: Level[]; tags: Stretch[] } | null {
   const { nodes, out } = G();
   const dist = new Array(nodes.length).fill(Infinity);
   const prev: (Edge & { from: number })[] = new Array(nodes.length);
@@ -230,10 +233,17 @@ function shortest(from: number, to: number): { pts: XY[]; lanes: string[]; level
   if (!Number.isFinite(dist[to])) return null;
   const steps: (Edge & { from: number })[] = [];
   for (let k = to; k !== from; k = prev[k].from) steps.unshift(prev[k]);
+  const rampTo = (lane: string) => GARAGE.lanes.find((l) => l.id === lane)?.to_level;
   return {
     pts: [nodes[from].p, ...steps.flatMap((s) => s.via)],
     lanes: steps.map((s) => s.lane),
     levels: [nodes[from].level, ...steps.map((s) => nodes[s.to].level)],
+    // One tag per segment between consecutive points: the level, or the ramp being climbed or descended.
+    tags: steps.flatMap((s) => {
+      const r = rampTo(s.lane);
+      const tag: Stretch = r ? (r === 'A' ? 'up' : 'down') : nodes[s.to].level;
+      return s.via.map(() => tag);
+    }),
   };
 }
 
@@ -313,6 +323,8 @@ export interface GarageRoute {
   bay: LatLng;
   level: Level;
   ramps: RampOnWay[];
+  /** The way in stretches by level (and the ramps between), to draw level A differently. */
+  parts: { on: Stretch; path: LatLng[] }[];
   /** The roads taken, in order, each with the level it was driven on. */
   roads: { lane: string; level: Level }[];
   meters: number;
@@ -320,8 +332,18 @@ export interface GarageRoute {
   certain: boolean;
 }
 
-function finish(roads: { pts: XY[]; lanes: string[]; levels: Level[] }, inLot: XY[], gate: XY, bay: XY, level: Level, lot: Lot, out: boolean): GarageRoute {
+function finish(roads: { pts: XY[]; lanes: string[]; levels: Level[]; tags: Stretch[] }, inLot: XY[], gate: XY, bay: XY, level: Level, lot: Lot, out: boolean): GarageRoute {
   const driven = out ? [...inLot, ...roads.pts] : [...roads.pts, ...inLot];
+  // A tag for every segment of the drive: inside the lot it is the lot's level.
+  const lotTags: Stretch[] = inLot.slice(1).map(() => level);
+  const tags: Stretch[] = out ? [...lotTags, level, ...roads.tags] : [...roads.tags, level, ...lotTags];
+  const parts: GarageRoute['parts'] = [];
+  for (let i = 1; i < driven.length; i++) {
+    const on = tags[i - 1] ?? level;
+    const last = parts[parts.length - 1];
+    if (last && last.on === on) last.path.push(fromM(driven[i]));
+    else parts.push({ on, path: [fromM(driven[i - 1]), fromM(driven[i])] });
+  }
   const unsure = new Set(GARAGE.lanes.filter((l) => !l.certain).map((l) => l.id));
   const ramps: RampOnWay[] = [];
   for (let i = 0; i < roads.lanes.length; i++) {
@@ -334,6 +356,7 @@ function finish(roads: { pts: XY[]; lanes: string[]; levels: Level[] }, inLot: X
     bay: fromM(bay),
     level,
     ramps,
+    parts,
     roads: roads.lanes.map((lane, i) => ({ lane, level: roads.levels[i + 1] })).filter((r, i, a) => i === 0 || r.lane !== a[i - 1].lane || r.level !== a[i - 1].level),
     meters: lengthOf(driven),
     certain: lot.certain && !roads.lanes.some((l) => unsure.has(l)),

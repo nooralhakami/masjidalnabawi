@@ -352,6 +352,7 @@ export class Sheet {
               ${r.drive.lot ? `<span class="leg leg-lot">${esc(r.drive.level ? t('r_lot_level', { n: r.drive.lot, l: r.drive.level }) : t('r_lot', { n: r.drive.lot }))}</span>` : ''}
               ${r.drive.walkMeters > 5 ? `<span class="leg leg-walk">${icon('walk', 16)}${esc(t('r_walk'))} · ${esc(t('meters', { m: num(Math.round(r.drive.walkMeters / 5) * 5) }))}</span>` : ''}
             </div>
+            ${r.drive.level === 'A' ? `<div class="route-legend"><span class="route-legend-swatch" aria-hidden="true"></span>${esc(t('g_legend_a'))}</div>` : ''}
             ${r.drive.unsure ? `<div class="route-unsure">${esc(t('g_unsure'))}</div>` : ''}`
               : ''
           }

@@ -230,3 +230,21 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
   });
 });
 
+
+describe('the way on level A is drawn apart (owner, 2026-10-13)', () => {
+  it('splits a way into stretches: level B, the ramp up, level A — joined end to end', () => {
+    const way = garageRoute('sultana', POI_BY_ID.get(905)!, null, 'A')!;
+    const kinds = way.parts.map((p) => p.on);
+    expect(kinds[0]).toBe('B');
+    expect(kinds).toContain('up');
+    expect(kinds[kinds.length - 1]).toBe('A');
+    for (let i = 1; i < way.parts.length; i++) expect(way.parts[i].path[0]).toEqual(way.parts[i - 1].path[way.parts[i - 1].path.length - 1]);
+    // On level B, one stretch only.
+    expect(garageRoute('sultana', POI_BY_ID.get(905)!, null, 'B')!.parts.map((p) => p.on)).toEqual(['B']);
+    // The way out from A: A, the ramp down, then B.
+    const out = garageExit(POI_BY_ID.get(905)!, 'quba', 'A')!.parts.map((p) => p.on);
+    expect(out[0]).toBe('A');
+    expect(out).toContain('down');
+    expect(out[out.length - 1]).toBe('B');
+  });
+});

@@ -714,6 +714,35 @@
   font: 700 12px/1 var(--font-ui);
   box-shadow: var(--shadow);
 }
+/* The way on level A (above): a yellow edge, as the ramp up in the owner's drawing; ramps edged
+   yellow (up) and green (down). Level B keeps the white edge. */
+.route-casing-level-a,
+.route-casing-ramp-up {
+  stroke: var(--ramp-up);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+.route-casing-ramp-down {
+  stroke: var(--ramp-down);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+.route-level-label span {
+  display: grid;
+  place-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--ramp-up);
+  color: #1e2a26;
+  border: 2px solid #fff;
+  font: 700 12px/1 var(--font-ui);
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+}
+
 /* A ramp between the car park's levels on the way: up to A, down to B. */
 .route-level-ramp span {
   display: grid;

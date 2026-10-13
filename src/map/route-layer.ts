@@ -136,8 +136,26 @@ export class RouteLayer {
           .addLayer(L.polyline(leg.path, { className: 'route-drive', weight: 7, interactive: false }));
       } else {
         // Underground: a solid line with light dashes along it (a tunnel), cased like the other legs.
+        this.group.addLayer(L.polyline(leg.path, { className: 'route-casing', weight: 11, interactive: false }));
+        // Level A (above) gets a yellow edge, the colour of the ramp up in the owner's drawing; the
+        // ramps themselves are edged yellow (up) and green (down). Level B keeps the white edge.
+        let labelled = false;
+        for (const part of leg.parts ?? []) {
+          if (part.on === 'B') continue;
+          this.group.addLayer(L.polyline(part.path, { className: `route-casing-${part.on === 'A' ? 'level-a' : `ramp-${part.on}`}`, weight: 14, interactive: false }));
+          if (part.on === 'A' && !labelled && part.path.length > 1) {
+            labelled = true;
+            this.group.addLayer(
+              L.marker(pointAlong(part.path, 0.5), {
+                icon: L.divIcon({ className: 'route-level-label', html: `<span>${esc(t('lvl_name', { l: 'A' }))}</span>`, iconSize: [72, 22] }),
+                interactive: false,
+                keyboard: false,
+                zIndexOffset: 1000,
+              }),
+            );
+          }
+        }
         this.group
-          .addLayer(L.polyline(leg.path, { className: 'route-casing', weight: 11, interactive: false }))
           .addLayer(L.polyline(leg.path, { className: 'route-garage', weight: 6, interactive: false }))
           .addLayer(L.polyline(leg.path, { className: 'route-garage-dash', weight: 2, interactive: false }));
         // The entrance ramp (the way in only: the way out starts at the parked car).

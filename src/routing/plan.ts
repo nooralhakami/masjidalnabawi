@@ -3,7 +3,7 @@ import type { LatLng, Poi } from '../data/types';
 import { parkingAccess, parkingEntrances } from '../domain/parking';
 import { loadStreets, type Reach, type Streets } from './streets';
 import { pickRoutes, turnPenalty } from './alternatives';
-import { ENTRANCES, EXITS, garageExit, garageRoute, type EntranceId, type Level, type RampOnWay } from './garage';
+import { ENTRANCES, EXITS, garageExit, garageRoute, type EntranceId, type Level, type RampOnWay, type Stretch } from './garage';
 import { fromM, insideRect, network, openTogether, pathLength, ringPath, segmentHits, toM, walkPath, walkPaths, type XY } from './walk';
 
 /**
@@ -18,6 +18,8 @@ export type Mode = 'walk' | 'drive';
 export interface Leg {
   kind: 'walk' | 'drive' | 'garage';
   path: LatLng[];
+  /** In the car park: the stretches by level and ramp, so level A can be drawn differently. */
+  parts?: { on: Stretch; path: LatLng[] }[];
 }
 export interface Plan {
   mode: Mode;
@@ -355,7 +357,7 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B'): Promise<Pla
       const minutes = Math.ceil(driveM / DRIVE_M_PER_MIN + walkM / WALK_M_PER_MIN);
       const legs: Leg[] = [
         { kind: 'drive', path: drive },
-        { kind: 'garage', path: [...way.path, ...stairs.slice(1)] },
+        { kind: 'garage', path: [...way.path, ...stairs.slice(1)], parts: way.parts },
         ...(up ? [{ kind: 'walk' as const, path: up.path }] : []),
       ];
       plans.push({ mode: 'drive', legs, walkM, driveM, minutes: Math.max(1, minutes), lot, entrance: g.e.id, gate: way.gate, garageCertain: way.certain, level, ramps: way.ramps });
@@ -429,7 +431,7 @@ export function planExit(lot: Poi, level: Level = 'B', from: LatLng | null = nul
     plans.push({
       mode: 'drive',
       legs: [
-        { kind: 'garage', path: way.path },
+        { kind: 'garage', path: way.path, parts: way.parts },
         { kind: 'drive', path: onward },
       ],
       walkM: 0,
