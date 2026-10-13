@@ -8,7 +8,8 @@ export const PARKING: readonly Poi[] = POIS.filter((p) => p.category === 'parkin
 export const lotNumber = (p: Poi): number => p.id - 900;
 
 /** "P5" chip label. */
-export const lotLabel = (p: Poi): string => `P${lotNumber(p)}`;
+/** "P 5": the letter apart from the number (owner, 2026-10-13). */
+export const lotLabel = (p: Poi): string => `P ${lotNumber(p)}`;
 
 /** Both levels of a lot: "5A", "5B". */
 export const levels = (p: Poi): [string, string] => [`${lotNumber(p)}A`, `${lotNumber(p)}B`];

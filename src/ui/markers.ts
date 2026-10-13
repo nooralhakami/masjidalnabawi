@@ -150,7 +150,7 @@ export function markerSpec(p: Poi, tier: Tier, status: Status | undefined, selec
   } else if (p.category === 'parking') {
     const subscriber = p.access === 'subscribers';
     const title = subscriber ? 'Subscribers only' : 'Open to all';
-    inner = `<span class="mk-park-wrap${subscriber ? ' is-sub' : ''}" title="${title}" aria-label="${title}"><span class="mk-park">P${p.id - 900}</span>${subscriber ? `<span class="mk-park-lock" aria-hidden="true">${icon('lock', 10)}</span>` : ''}</span>`;
+    inner = `<span class="mk-park-wrap${subscriber ? ' is-sub' : ''}" title="${title}" aria-label="${title}"><span class="mk-park" dir="ltr"><span class="p-l">P</span><span>${p.id - 900}</span></span>${subscriber ? `<span class="mk-park-lock" aria-hidden="true">${icon('lock', 10)}</span>` : ''}</span>`;
     z = 200;
   } else if (featured && !selected) {
     cls.push('mk-feat');

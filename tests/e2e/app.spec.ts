@@ -628,7 +628,7 @@ test.describe('by car to the car park under the Haram (owner’s drawing, 2026-1
     await page.locator('[data-act="route"]').click();
     await expect(page.locator('.route-legs .leg-ent')).toContainText('سلطانة', { timeout: 30_000 });
     await expect(page.locator('.route-legs .leg-lot')).toContainText('9');
-    await expect(page.locator('.route-lot-gate')).toContainText('P9');
+    await expect(page.locator('.route-lot-gate')).toHaveText(/P\s*9/);
     await expect(page.locator('path.route-garage')).toHaveCount(1);
     // Lot 9 is on the north side, which the owner is sure of: no note about the east side.
     await expect(page.locator('.route-unsure')).toHaveCount(0);
@@ -641,7 +641,7 @@ test.describe('by car to the car park under the Haram (owner’s drawing, 2026-1
     await page.addInitScript(() => { localStorage.setItem('travel', 'drive'); localStorage.setItem('level', 'A'); });
     await page.goto('map.html?poi=909');
     await page.locator('[data-act="route"]').click();
-    await expect(page.locator('.route-lot-gate')).toContainText('P9A', { timeout: 30_000 });
+    await expect(page.locator('.route-lot-gate')).toHaveText(/P\s*9A/, { timeout: 30_000 });
     // Drive into the car park: along its first road from the Sultana mouth (data/garage.json).
     const lane = (JSON.parse(readFileSync('data/garage.json', 'utf8')) as { lanes: { id: string; path: [number, number][] }[] }).lanes.find((l) => l.id === 'sultana-in')!.path;
     for (const p of [lane[1], lane[1], lane[1], lane[2], lane[2], lane[3]]) {
@@ -659,7 +659,7 @@ test.describe('by car to the car park under the Haram (owner’s drawing, 2026-1
     await page.locator('[data-act="level"][data-level="A"]').click();
     await expect(page.locator('[data-act="level"][data-level="A"]')).toHaveAttribute('aria-pressed', 'true');
     await page.locator('[data-act="route"]').click();
-    await expect(page.locator('.route-lot-gate')).toContainText('P9A', { timeout: 30_000 });
+    await expect(page.locator('.route-lot-gate')).toHaveText(/P\s*9A/, { timeout: 30_000 });
     await expect(page.locator('.route-level-ramp.is-up')).toHaveCount(1);
     await expect(page.locator('.route-legs .leg-lot')).toContainText('A');
     // The way on level A has a yellow edge and a «الدور A» label; the card explains the edge.
@@ -673,7 +673,7 @@ test.describe('by car to the car park under the Haram (owner’s drawing, 2026-1
     await expect(page.locator('.sheet .sh-kicker')).toContainText('الخروج');
     // And back to the way in.
     await page.locator('[data-act="wayin"]').click();
-    await expect(page.locator('.route-lot-gate')).toContainText('P9A', { timeout: 30_000 });
+    await expect(page.locator('.route-lot-gate')).toHaveText(/P\s*9A/, { timeout: 30_000 });
   });
 });
 

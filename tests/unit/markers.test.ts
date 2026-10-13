@@ -64,8 +64,8 @@ describe('markers', () => {
     expect(s.zIndex).toBe(1000);
   });
 
-  it('parking chip P1…P13; mixed restrooms split in two', () => {
-    expect(markerSpec(P(913), 'm', undefined, false).html).toContain('P13');
+  it('parking chip «P 13» (the letter apart from the number); mixed restrooms split in two', () => {
+    expect(markerSpec(P(913), 'm', undefined, false).html).toContain('<span class="p-l">P</span><span>13</span>');
     expect(markerSpec(P(202), 'l', 'open', false).html).toContain('mk-mixed');
   });
 

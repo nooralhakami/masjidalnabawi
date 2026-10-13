@@ -210,7 +210,7 @@ describe('search', () => {
 describe('parking', () => {
   it('13 lots with A/B levels between facility pairs', () => {
     expect(PARKING).toHaveLength(13);
-    expect(lotLabel(P(905))).toBe('P5');
+    expect(lotLabel(P(905))).toBe('P 5');
     expect(levels(P(905))).toEqual(['5A', '5B']);
     expect(between(P(901))).toEqual(['201/202', '203/204']);
     for (const p of PARKING) expect(between(p), String(p.id)).not.toBeNull();

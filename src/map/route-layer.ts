@@ -179,7 +179,7 @@ export class RouteLayer {
     if (plan.gate && plan.lot) {
       this.group.addLayer(
         L.marker(plan.gate, {
-          icon: L.divIcon({ className: 'route-lot-gate', html: `<span>P${plan.lot.id - 900}${plan.level ?? ''}</span>`, iconSize: [38, 22] }),
+          icon: L.divIcon({ className: 'route-lot-gate', html: `<span dir="ltr"><span class="p-l">P</span><span>${plan.lot.id - 900}${plan.level ?? ''}</span></span>`, iconSize: [52, 22] }),
           title: plan.level ? t('r_lot_level', { n: plan.lot.id - 900, l: plan.level }) : t('r_lot', { n: plan.lot.id - 900 }),
           interactive: false,
           keyboard: false,

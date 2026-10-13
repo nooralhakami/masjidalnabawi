@@ -219,6 +219,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 3px;
   min-width: 30px;
   height: 20px;
   padding: 0 6px;
@@ -227,6 +228,10 @@
   color: #fff;
   font: 700 10.5px/20px var(--font-ui);
   box-shadow: 0 0 0 2px #fff, 0 3px 8px color-mix(in srgb, var(--cat-men) 40%, transparent);
+}
+/* The letter P apart from the lot number: «P 9A» (owner, 2026-10-13). */
+.p-l {
+  font-weight: 800;
 }
 .mk-park-wrap.is-sub .mk-park {
   background: var(--cat-park-sub);
@@ -724,10 +729,13 @@
   box-shadow: 0 0 0 2px #fff, var(--shadow);
 }
 /* Where the car turns into its lot (owner's car park drawing). */
-.route-lot-gate span {
-  display: grid;
-  place-items: center;
-  width: 30px;
+.route-lot-gate > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 30px;
+  padding: 0 6px;
   height: 22px;
   border-radius: 7px;
   background: #fff;
