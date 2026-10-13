@@ -214,6 +214,35 @@
   transition: width 500ms var(--ease);
 }
 
+/* Short directions in the car park: the step now, then the next one. */
+.nav-step {
+  flex-basis: 100%;
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--cat-men) 12%, transparent);
+  color: var(--ink);
+  font: 600 15px/1.35 var(--font-ui);
+}
+.nav-step small {
+  color: var(--muted);
+  font-size: 13px;
+}
+/* Arrived: the notice, and two clear choices. */
+.navigation-status[data-state='arrived'] {
+  background: var(--tint-green);
+}
+.nav-arrived {
+  flex-basis: 100%;
+  font: 700 18px/1.3 var(--font-ui);
+  color: var(--heading);
+}
+.navigation-status .nav-end {
+  background: var(--green-700);
+  color: #fff;
+}
+
 /* ---------- motion ---------- */
 .sheet {
   transition-timing-function: var(--spring);

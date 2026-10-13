@@ -1,15 +1,20 @@
-/** Position smoothing and heading for walking visitors. Pure, so it can be unit-tested. */
+/** Position smoothing and heading for visitors on foot or by car. Pure, so it can be unit-tested. */
 
 const R_EARTH = 6_371_000;
 const RAD = Math.PI / 180;
 
-/** How sharply a walker can change speed/direction (m/s²): process noise of the model. */
-const ACCEL_SIGMA = 1.1;
-/** A walker's speed is capped so poor readings can't fling the estimate away (m/s). */
-const MAX_EST_SPEED = 3;
+/**
+ * How the filter models the visitor: how sharply they can change speed or direction (m/s², the
+ * process noise), the speed the estimate is capped at (so poor readings can't fling it away), and a
+ * pace no one reaches (a reading implying it is a glitch). A car is much faster than a walker.
+ */
+export type Pace = 'walk' | 'drive';
+const MODEL: Record<Pace, { accelSigma: number; maxEstSpeed: number; impossible: number }> = {
+  walk: { accelSigma: 1.1, maxEstSpeed: 3, impossible: 8 },
+  drive: { accelSigma: 3.5, maxEstSpeed: 30, impossible: 45 },
+};
 /** A reading this many sigmas away AND implying an impossible pace is treated as a glitch. */
 const GATE_SIGMAS = 3;
-const MAX_WALK_SPEED = 8; // m/s; faster than any walker
 /** After this many consecutive "glitches" the visitor really is there: jump to it. */
 const ACCEPT_AFTER = 2;
 /** Long silence (tunnel, app in background): start fresh from the next reading. */
@@ -53,8 +58,8 @@ class Axis {
     this.vv = 1.5 * 1.5;
   }
 
-  predict(dt: number): void {
-    const q = ACCEL_SIGMA * ACCEL_SIGMA;
+  predict(dt: number, accelSigma: number): void {
+    const q = accelSigma * accelSigma;
     this.p += this.v * dt;
     this.pp += dt * (2 * this.pv + dt * this.vv) + (q * dt ** 4) / 4;
     this.pv += dt * this.vv + (q * dt ** 3) / 2;
@@ -89,6 +94,12 @@ export class PositionFilter {
   private time = 0;
   private glitches = 0;
   private ready = false;
+  private model = MODEL.walk;
+
+  /** On foot (the default) or by car. */
+  setPace(pace: Pace): void {
+    this.model = MODEL[pace];
+  }
 
   reset(): void {
     this.ready = false;
@@ -139,22 +150,23 @@ export class PositionFilter {
     const py = this.ny.p + this.ny.v * dt;
     const dist = Math.hypot(zx - px, zy - py);
     const spread = Math.sqrt(this.ex.pp + this.ny.pp + 2 * acc * acc + (2 * dt) ** 2);
-    if (dist > GATE_SIGMAS * spread && dist / Math.max(dt, 0.5) > MAX_WALK_SPEED) {
+    if (dist > GATE_SIGMAS * spread && dist / Math.max(dt, 0.5) > this.model.impossible) {
       this.glitches++;
       if (this.glitches <= ACCEPT_AFTER) return { ...this.estimate(r.time, true), ...this.peek(px, py) };
       return this.start(r, acc);
     }
     this.glitches = 0;
 
-    this.ex.predict(dt);
-    this.ny.predict(dt);
+    this.ex.predict(dt, this.model.accelSigma);
+    this.ny.predict(dt, this.model.accelSigma);
     this.ex.update(zx, acc * acc);
     this.ny.update(zy, acc * acc);
-    // Keep the velocity to walking pace.
+    // Keep the velocity to a walking (or driving) pace.
     const sp = Math.hypot(this.ex.v, this.ny.v);
-    if (sp > MAX_EST_SPEED) {
-      this.ex.v *= MAX_EST_SPEED / sp;
-      this.ny.v *= MAX_EST_SPEED / sp;
+    const max = this.model.maxEstSpeed;
+    if (sp > max) {
+      this.ex.v *= max / sp;
+      this.ny.v *= max / sp;
     }
     this.time = r.time;
     return this.estimate(r.time, false);

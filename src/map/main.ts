@@ -26,6 +26,7 @@ import { MeMarker } from '../location/MeMarker';
 import { RouteLayer } from './route-layer';
 import { createMap } from './setup';
 import { planExit, planRoutes, type Plan } from '../routing/plan';
+import { RouteTrack } from '../location/progress';
 import { addWeatherChip } from '../ui/weather-chip';
 import { trackMotion } from './motion';
 import { NavigationTracker } from '../navigation/NavigationTracker';
@@ -65,6 +66,8 @@ geo.onStatus((s, extra) => {
   if (s === 'idle' || s === 'denied' || s === 'far') me.remove();
 });
 const route = new RouteLayer(map);
+/** Within this distance of the car park leg, the visitor is in the car park: no re-planning from the streets. */
+const IN_CAR_PARK_M = 60;
 /** The routes offered for the current trip (best first) and the one being followed. */
 let plans: Plan[] = [];
 let chosen = 0;
@@ -95,8 +98,11 @@ const navigation = new NavigationTracker(
     // favouring the way they are heading; redrawn in place, without the draw-in or a camera jump.
     const dest = state.selected !== null ? POI_BY_ID.get(state.selected) : undefined;
     if (!dest || !route.active) return;
-    // The way out of the car park is not re-planned from the street (the car is underground).
+    // In the car park (or on the way out of it) there is no other way to plan from the streets:
+    // keep the drawn route; the visitor gets back on it (GPS underground can wander).
     if (plans[chosen]?.exit) return;
+    const garage = plans[chosen]?.legs.find((l) => l.kind === 'garage');
+    if (garage && garage.path.length > 1 && new RouteTrack(garage.path).locate([from.lat, from.lng]).offset < IN_CAR_PARK_M) return;
     void planRoutes([from.lat, from.lng], dest, sheet.travel, { heading, level: sheet.level }).then((next) => {
       if (state.selected !== dest.id || !route.active || !next.length) return;
       showPlans(next, 0, false);
@@ -111,10 +117,22 @@ const navigation = new NavigationTracker(
     showPlans(plans, others[alt], false);
     toast(t('r_switched'));
   },
+  () => {
+    // Short directions inside the car park (way in or way out), with the lot's number.
+    const plan = plans[chosen];
+    const garage = plan?.legs.find((l) => l.kind === 'garage');
+    return garage?.steps?.length ? { steps: garage.steps, lot: plan.lot ? plan.lot.id - 900 : null } : null;
+  },
 );
 
 /** Live: the next 150 m of the route in full, the rest faint (owner, 2026-10-13). */
 const AHEAD_M = 150;
+// «إنهاء التتبع» in the arrival notice ends the route, like «إنهاء المسار».
+document.addEventListener('route-end-request', () => {
+  navigation.stop();
+  route.clear();
+  sheet.setRoute(null);
+});
 navigation.onChange((s) => {
   document.body.classList.toggle('is-navigating', s.state !== 'stopped');
   route.focus(s.state === 'stopped' ? null : navigation.ahead(AHEAD_M), plans[chosen]?.mode ?? 'walk');
@@ -257,9 +275,9 @@ function showWayOut() {
   if (!inbound?.lot || inbound.exit) return;
   const out = planExit(inbound.lot, inbound.level ?? 'B');
   if (!out.length) return;
-  // Underground there is no GPS to follow: the way out is shown, not tracked live.
-  navigation.stop();
+  // Tracked live like the way in (GPS works underground in this car park, owner 2026-10-13).
   const info = showPlans(out, 0, true);
+  if (!navigation.active) void navigation.start('drive');
   const topH = top.getBoundingClientRect().bottom;
   map.fitBounds(info.bounds, { paddingTopLeft: [72, topH + 24], paddingBottomRight: [72, sheet.visibleHeight() + 24], maxZoom: 19 });
 }

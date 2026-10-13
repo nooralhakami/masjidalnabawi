@@ -397,6 +397,13 @@ test('a shared place link (?poi=) opens that place, and the share button builds 
   expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/map\.html\?poi=204$/);
 });
 
+/** A place's position as the app shows it (data/pois.json with data/overrides.json applied). */
+function placeAt(id: number): [number, number] {
+  const p = (JSON.parse(readFileSync('data/pois.json', 'utf8')) as { id: number; lat: number; lng: number }[]).find((x) => x.id === id)!;
+  const o = (JSON.parse(readFileSync('data/overrides.json', 'utf8')) as Record<string, { north?: number; east?: number }>)[String(id)] ?? {};
+  return [p.lat + (o.north ?? 0) / 111_320, p.lng + (o.east ?? 0) / (111_320 * Math.cos((p.lat * Math.PI) / 180))];
+}
+
 test.describe('live location while walking', () => {
   // Walking south along the west side of the walkway ring (data/routing.json), towards restrooms 204.
   const RING_WEST_LNG = 39.608334;
@@ -433,6 +440,40 @@ test.describe('live location while walking', () => {
     // Ending the route clears it.
     await page.locator('[data-act="endroute"]').click();
     await expect(page.locator('path.route-focus')).toHaveCount(0);
+  });
+
+  test('arriving: a notice offers to end tracking; «إنهاء التتبع» ends the route', async ({ page, context, errors: _ }) => {
+    await page.goto('map.html?poi=204');
+    await page.locator('[data-act="route"]').click();
+    await expect(page.locator('.navigation-status .nav-big')).toHaveCount(2);
+    const end = placeAt(204); // the route ends at the restroom itself
+    // A jump this far is taken as real only from the third reading (src/location/filter.ts), then twice at the end.
+    for (let i = 0; i < 6; i++) {
+      await context.setGeolocation({ latitude: end[0], longitude: end[1] + i * 1e-7, accuracy: 5 });
+      await page.waitForTimeout(800);
+    }
+    await expect(page.locator('.navigation-status')).toHaveAttribute('data-state', 'arrived');
+    await expect(page.locator('.nav-arrived')).toContainText('وصلت');
+    await page.locator('[data-nav="end"]').click();
+    await expect(page.locator('.navigation-status')).toHaveCount(0);
+    await expect(page.locator('path.route-line')).toHaveCount(0);
+  });
+
+  test('«متابعة» keeps tracking and does not ask again', async ({ page, context, errors: _ }) => {
+    await page.goto('map.html?poi=204');
+    await page.locator('[data-act="route"]').click();
+    await expect(page.locator('.navigation-status .nav-big')).toHaveCount(2);
+    const end = placeAt(204); // the route ends at the restroom itself
+    // A jump this far is taken as real only from the third reading (src/location/filter.ts), then twice at the end.
+    for (let i = 0; i < 6; i++) {
+      await context.setGeolocation({ latitude: end[0], longitude: end[1] + i * 1e-7, accuracy: 5 });
+      await page.waitForTimeout(800);
+    }
+    await page.locator('[data-nav="keep"]').click();
+    await context.setGeolocation({ latitude: end[0], longitude: end[1] + 0.000001, accuracy: 5 });
+    await page.waitForTimeout(1500);
+    await expect(page.locator('.navigation-status')).not.toHaveAttribute('data-state', 'arrived');
+    await expect(page.locator('path.route-line')).toHaveCount(1);
   });
 
   test('navigation: remaining distance falls walking on, rises walking back, and warns', async ({ page, context, errors: _ }) => {
@@ -594,6 +635,21 @@ test.describe('by car to the car park under the Haram (owner’s drawing, 2026-1
     // Level B: no yellow edge, no legend.
     await expect(page.locator('path.route-casing-level-a')).toHaveCount(0);
     await expect(page.locator('.route-legend')).toHaveCount(0);
+  });
+
+  test('in the car park, a short instruction: the step now with its metres, then the next one', async ({ page, context, errors: _ }) => {
+    await page.addInitScript(() => { localStorage.setItem('travel', 'drive'); localStorage.setItem('level', 'A'); });
+    await page.goto('map.html?poi=909');
+    await page.locator('[data-act="route"]').click();
+    await expect(page.locator('.route-lot-gate')).toContainText('P9A', { timeout: 30_000 });
+    // Drive into the car park: along its first road from the Sultana mouth (data/garage.json).
+    const lane = (JSON.parse(readFileSync('data/garage.json', 'utf8')) as { lanes: { id: string; path: [number, number][] }[] }).lanes.find((l) => l.id === 'sultana-in')!.path;
+    for (const p of [lane[1], lane[1], lane[1], lane[2], lane[2], lane[3]]) {
+      await context.setGeolocation({ latitude: p[0], longitude: p[1], accuracy: 6 });
+      await page.waitForTimeout(800);
+    }
+    await expect(page.locator('.nav-step')).toBeVisible();
+    await expect(page.locator('.nav-step small')).toContainText('ثم');
   });
 
   test('level A goes up the yellow ramp; the way out comes down the green one to an exit', async ({ page, errors: _ }) => {

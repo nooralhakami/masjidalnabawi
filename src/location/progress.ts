@@ -22,6 +22,9 @@ export interface Progress {
 }
 
 const JUMP_PENALTY = 0.25; // metres of offset per metre of along-route jump
+/** Recovering after a jump: further than this from the expected place, within this of another part. */
+const RECOVER_OFF_M = 30;
+const RECOVER_ON_M = 15;
 
 export class RouteTrack {
   private pts: XY[];
@@ -56,7 +59,10 @@ export class RouteTrack {
 
   locate(pos: LatLng, previousAlong: number | null = null): Progress {
     const p = toM(pos);
-    let best: { score: number; along: number; offset: number; x: number; y: number; i: number } | null = null;
+    type Match = { score: number; along: number; offset: number; x: number; y: number; i: number };
+    let best: Match | null = null;
+    // The nearest point of the route regardless of the jump (to recover after a sudden one).
+    let nearest: Match | null = null;
     for (let i = 0; i < this.pts.length - 1; i++) {
       const [ax, ay] = this.pts[i];
       const [bx, by] = this.pts[i + 1];
@@ -70,7 +76,11 @@ export class RouteTrack {
       const along = this.cum[i] + Math.sqrt(len2) * u;
       const score = offset + (previousAlong === null ? 0 : JUMP_PENALTY * Math.abs(along - previousAlong));
       if (!best || score < best.score) best = { score, along, offset, x, y, i };
+      if (!nearest || offset < nearest.offset) nearest = { score: offset, along, offset, x, y, i };
     }
+    // Clearly off where the route was expected, yet right on another part of it: the visitor is
+    // there (a jump of the GPS on entering the car park, or one missed after a tunnel).
+    if (best && nearest && best.offset > RECOVER_OFF_M && nearest.offset <= RECOVER_ON_M) best = nearest;
     if (!best) return { along: 0, offset: 0, total: 0, remaining: 0, point: pos, routeBearing: 0 };
     const [ax, ay] = this.pts[best.i];
     const [bx, by] = this.pts[best.i + 1];

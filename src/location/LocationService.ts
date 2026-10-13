@@ -1,4 +1,4 @@
-import { MotionHeading, PositionFilter, metres } from './filter';
+import { MotionHeading, PositionFilter, metres, type Pace } from './filter';
 
 /** The mosque, for the "too far away" check. */
 const MOSQUE = { lat: 24.4672, lng: 39.6111 };
@@ -36,6 +36,11 @@ interface OrientationWithCompass extends DeviceOrientationEvent {
 export class LocationService {
   private watchId: number | null = null;
   private filter = new PositionFilter();
+
+  /** On foot (the default) or by car: how fast and sharply the visitor can move. */
+  setPace(pace: Pace): void {
+    this.filter.setPace(pace);
+  }
   private motion = new MotionHeading();
   private compass: number | null = null;
   private compassOn = false;

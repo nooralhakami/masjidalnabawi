@@ -171,3 +171,42 @@ describe('the stretch ahead of the visitor (owner, 2026-10-13)', () => {
     expect(new RouteTrack(track.slice(180, 330)).total).toBeCloseTo(20, 0);
   });
 });
+
+describe('the position filter by car (owner, 2026-10-13: tracking in the car park)', () => {
+  it('keeps up with a car at 15 m/s; tuned for walking it lags far behind', () => {
+    const run = (pace: 'walk' | 'drive') => {
+      const f = new PositionFilter();
+      f.setPace(pace);
+      let est = f.update({ lat: BASE[0], lng: BASE[1], accuracy: 8, time: 0 });
+      for (let s = 1; s <= 20; s++) {
+        const [lat, lng] = offset(BASE, 15 * s, 0);
+        est = f.update({ lat, lng, accuracy: 8, time: s * 1000 });
+      }
+      const end = offset(BASE, 300, 0);
+      return metres(est.lat, est.lng, end[0], end[1]);
+    };
+    expect(run('drive')).toBeLessThan(15);
+    expect(run('walk')).toBeGreaterThan(run('drive'));
+  });
+});
+
+describe('following the route after a sudden jump of the GPS', () => {
+  it('moves to the part of the route the visitor is on when far from the expected place', () => {
+    // A long U: up 300 m, across 50 m, down 300 m.
+    const path: LatLng[] = [BASE, offset(BASE, 300, 0), offset(BASE, 300, 50), offset(BASE, 0, 50)];
+    const track = new RouteTrack(path);
+    const start = track.locate(offset(BASE, 10, 0), null).along;
+    // Then the visitor is suddenly read on the far leg, near its end.
+    const p = track.locate(offset(BASE, 30, 52), start);
+    expect(p.offset).toBeLessThan(5);
+    expect(p.remaining).toBeLessThan(40);
+  });
+  it('still keeps to the expected pass where the route runs twice over the same road', () => {
+    // There and back on the same line: a reading on it stays on the nearer pass.
+    const path: LatLng[] = [BASE, offset(BASE, 200, 0), offset(BASE, 200, 1), offset(BASE, 0, 1)];
+    const track = new RouteTrack(path);
+    let a = track.locate(offset(BASE, 20, 0), null).along;
+    a = track.locate(offset(BASE, 40, 0), a).along;
+    expect(a).toBeLessThan(100);
+  });
+});
