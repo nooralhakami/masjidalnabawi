@@ -142,7 +142,7 @@ describe('driving to the car park under the Haram', () => {
         ),
       );
     };
-    const onRoads = p.legs[1].path.slice(1, -5); // between the ramp and the lot (then the aisle and the stairs)
+    const onRoads = p.legs[1].path.slice(1, -1); // between the ramp and the turn into the lot's entrance
     expect(onRoads.length).toBeGreaterThan(3);
     for (const pt of onRoads) expect(offRoad(pt)).toBeLessThan(1);
   });

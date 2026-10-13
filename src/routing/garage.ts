@@ -16,8 +16,8 @@ import { fromM, toM, type XY } from './walk';
  *    link into the loop). The orange openings, to switch between the way in and the way out, are on
  *    B only and can be crossed either way.
  *  - Each of the 13 lots (on both levels) is entered right after its first facility and left by its
- *    own exit (the arrows in the drawing). A lot has four rows of bays: two in the middle, back to
- *    back along a kerb, one on each side, with an aisle between the middle pair and each side row.
+ *    own exit (the arrows in the drawing). A route ends at the lot's entrance and the way out starts
+ *    at its exit (owner, 2026-10-13): the visitor parks where they like inside.
  */
 
 export type EntranceId = 'quba' | 'sultana';
@@ -74,8 +74,6 @@ export const LEVELS: readonly Level[] = ['B', 'A'];
 /** Points this close are one junction; a road ending (or starting) this close to another joins it. */
 const MERGE_M = 1.5;
 const JOIN_M = 4;
-/** Inside a lot: how far in from its edge the first turn is, and the aisles' ends. */
-const LOT_INSET_M = 6;
 
 const d2 = (a: XY, b: XY) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 function project(p: XY, a: XY, b: XY): { q: XY; u: number; d: number } {
@@ -276,36 +274,24 @@ export function lotRect(lot: Poi): { x0: number; x1: number; y0: number; y1: num
   return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
 }
 
+/** Inside a lot this far from a corner at least: an entrance is never right at a facility. */
+const GATE_INSET_M = 6;
+
 /**
- * Inside a lot, from where its road turns in (or out) to the bay nearest `towards` (the stairs to be
- * used, or the middle of the lot): in at the edge, then along the aisle on that side of the middle
- * rows. The aisles run the length of the lot, a quarter of its width in from each long side.
+ * The lot's entrance (or exit) on its edge: the point of the lot's edge nearest where its road turns
+ * in (or out), kept clear of the corners.
  */
-export function insideLot(lot: Poi, from: XY, towards: XY | null): { gate: XY; path: XY[] } | null {
+export function lotGate(lot: Poi, from: XY): XY | null {
   const r = lotRect(lot);
   if (!r) return null;
-  const w = r.x1 - r.x0;
-  const h = r.y1 - r.y0;
-  const alongX = w >= h; // aisles run east–west
-  const clamp = (v: number, a: number, b: number) => Math.max(a + LOT_INSET_M, Math.min(b - LOT_INSET_M, v));
-  const edges: { p: XY; inward: XY }[] = [
-    { p: [clamp(from[0], r.x0, r.x1), r.y0], inward: [0, 1] },
-    { p: [clamp(from[0], r.x0, r.x1), r.y1], inward: [0, -1] },
-    { p: [r.x0, clamp(from[1], r.y0, r.y1)], inward: [1, 0] },
-    { p: [r.x1, clamp(from[1], r.y0, r.y1)], inward: [-1, 0] },
+  const clamp = (v: number, a: number, b: number) => Math.max(a + GATE_INSET_M, Math.min(b - GATE_INSET_M, v));
+  const edges: XY[] = [
+    [clamp(from[0], r.x0, r.x1), r.y0],
+    [clamp(from[0], r.x0, r.x1), r.y1],
+    [r.x0, clamp(from[1], r.y0, r.y1)],
+    [r.x1, clamp(from[1], r.y0, r.y1)],
   ];
-  const e = edges.reduce((a, b) => (d2(b.p, from) < d2(a.p, from) ? b : a));
-  const gate = e.p;
-  const inside: XY = [gate[0] + e.inward[0] * LOT_INSET_M, gate[1] + e.inward[1] * LOT_INSET_M];
-  const target: XY = towards ?? [(r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2];
-  const aisles = alongX ? [r.y0 + h / 4, r.y0 + (3 * h) / 4] : [r.x0 + w / 4, r.x0 + (3 * w) / 4];
-  const across = alongX ? target[1] : target[0];
-  const aisle = Math.abs(aisles[0] - across) <= Math.abs(aisles[1] - across) ? aisles[0] : aisles[1];
-  const onAisle = (along: number): XY => (alongX ? [clamp(along, r.x0, r.x1), aisle] : [aisle, clamp(along, r.y0, r.y1)]);
-  const turn = onAisle(alongX ? inside[0] : inside[1]);
-  const bay = onAisle(alongX ? target[0] : target[1]);
-  const path: XY[] = [gate, inside, turn, bay].filter((p, i, a) => i === 0 || d2(p, a[i - 1]) > 0.5);
-  return { gate, path };
+  return edges.reduce((a, b) => (d2(b, from) < d2(a, from) ? b : a));
 }
 
 /** A ramp on the way: where it starts, and whether it goes up to A or down to B. */
@@ -315,12 +301,10 @@ export interface RampOnWay {
 }
 
 export interface GarageRoute {
-  /** Driven inside the car park (the way in: from the entrance; the way out: from the bay). */
+  /** Driven inside the car park: the way in from the entrance to the lot's entrance; the way out from the lot's exit. */
   path: LatLng[];
-  /** Where the car turns into (or out of) the lot. */
+  /** The lot's entrance (way in) or exit (way out), on its edge. */
   gate: LatLng;
-  /** The bay: where the car is left (or picked up). */
-  bay: LatLng;
   level: Level;
   ramps: RampOnWay[];
   /** The way in stretches by level (and the ramps between), to draw level A differently. */
@@ -332,11 +316,10 @@ export interface GarageRoute {
   certain: boolean;
 }
 
-function finish(roads: { pts: XY[]; lanes: string[]; levels: Level[]; tags: Stretch[] }, inLot: XY[], gate: XY, bay: XY, level: Level, lot: Lot, out: boolean): GarageRoute {
-  const driven = out ? [...inLot, ...roads.pts] : [...roads.pts, ...inLot];
-  // A tag for every segment of the drive: inside the lot it is the lot's level.
-  const lotTags: Stretch[] = inLot.slice(1).map(() => level);
-  const tags: Stretch[] = out ? [...lotTags, level, ...roads.tags] : [...roads.tags, level, ...lotTags];
+function finish(roads: { pts: XY[]; lanes: string[]; levels: Level[]; tags: Stretch[] }, gate: XY, level: Level, lot: Lot, out: boolean): GarageRoute {
+  // The turn between the road and the lot's edge is driven on the lot's level.
+  const driven = out ? [gate, ...roads.pts] : [...roads.pts, gate];
+  const tags: Stretch[] = out ? [level, ...roads.tags] : [...roads.tags, level];
   const parts: GarageRoute['parts'] = [];
   for (let i = 1; i < driven.length; i++) {
     const on = tags[i - 1] ?? level;
@@ -353,7 +336,6 @@ function finish(roads: { pts: XY[]; lanes: string[]; levels: Level[]; tags: Stre
   return {
     path: driven.map(fromM),
     gate: fromM(gate),
-    bay: fromM(bay),
     level,
     ramps,
     parts,
@@ -365,32 +347,26 @@ function finish(roads: { pts: XY[]; lanes: string[]; levels: Level[]; tags: Stre
 
 /**
  * The way in: from an entrance (level B) along the one-way roads — up the yellow ramp for level A —
- * to the lot, then to the bay nearest `towards`. Null if that lot is not in the drawing.
+ * to the lot's entrance. Null if that lot is not in the drawing.
  */
-export function garageRoute(entrance: EntranceId, lot: Poi, towards: LatLng | null = null, level: Level = 'B'): GarageRoute | null {
+export function garageRoute(entrance: EntranceId, lot: Poi, level: Level = 'B'): GarageRoute | null {
   const ent = ENTRANCES.find((e) => e.id === entrance);
   const l = lotData(lot);
   if (!ent || !l) return null;
   const roads = shortest(nodeAt(toM(ent.street), 'B'), nodeAt(toM(doors(l, level).entry), level));
-  if (!roads) return null;
-  const inLot = insideLot(lot, roads.pts[roads.pts.length - 1], towards ? toM(towards) : null);
-  if (!inLot) return null;
-  return finish(roads, inLot.path, inLot.gate, inLot.path[inLot.path.length - 1], level, l, false);
+  const gate = roads && lotGate(lot, roads.pts[roads.pts.length - 1]);
+  return roads && gate ? finish(roads, gate, level, l, false) : null;
 }
 
 /**
- * The way out: from the bay nearest `from` (the stairs the visitor comes down, or the middle of the
- * lot) to the lot's own exit, then along the one-way roads — down the green ramp from level A — to an
- * exit (level B), ending where its road leaves the car park.
+ * The way out: from the lot's exit along the one-way roads — down the green ramp from level A — to
+ * an exit (level B), ending where its road leaves the car park.
  */
-export function garageExit(lot: Poi, exit: EntranceId, level: Level = 'B', from: LatLng | null = null): GarageRoute | null {
+export function garageExit(lot: Poi, exit: EntranceId, level: Level = 'B'): GarageRoute | null {
   const x = EXITS.find((e) => e.id === exit);
   const l = lotData(lot);
   if (!x || !l) return null;
   const roads = shortest(nodeAt(toM(doors(l, level).exit), level), nodeAt(toM(x.mouth), 'B'));
-  if (!roads) return null;
-  const inLot = insideLot(lot, roads.pts[0], from ? toM(from) : null);
-  if (!inLot) return null;
-  const outOfLot = [...inLot.path].reverse();
-  return finish(roads, outOfLot, inLot.gate, outOfLot[0], level, l, true);
+  const gate = roads && lotGate(lot, roads.pts[0]);
+  return roads && gate ? finish(roads, gate, level, l, true) : null;
 }

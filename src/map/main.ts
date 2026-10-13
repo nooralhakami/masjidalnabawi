@@ -246,16 +246,11 @@ async function drawRoute(p: Poi) {
   });
 }
 
-/**
- * The way out of the car park from the lot just driven to: from the bay (by the stairs the visitor
- * walked up) to the exits, quickest first.
- */
+/** The way out of the car park from the lot just driven to: from its exit to the car park's exits, quickest first. */
 function showWayOut() {
   const inbound = plans[chosen];
   if (!inbound?.lot || inbound.exit) return;
-  const garage = inbound.legs.find((l) => l.kind === 'garage');
-  const stairs = inbound.legs.length > 2 && garage ? garage.path[garage.path.length - 1] : null;
-  const out = planExit(inbound.lot, inbound.level ?? 'B', stairs);
+  const out = planExit(inbound.lot, inbound.level ?? 'B');
   if (!out.length) return;
   // Underground there is no GPS to follow: the way out is shown, not tracked live.
   navigation.stop();

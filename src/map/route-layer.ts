@@ -47,6 +47,8 @@ function pointAlong(path: LatLng[], share: number): LatLng {
 export class RouteLayer {
   private group = L.featureGroup();
   private path: LatLng[] = [];
+  /** Each leg's own path: arrows follow the legs, never the gap between parking and the stairs. */
+  private legPaths: LatLng[][] = [];
   private others: LatLng[][] = [];
   private labels: { marker: L.Marker; path: LatLng[] }[] = [];
 
@@ -95,6 +97,7 @@ export class RouteLayer {
     this.clear();
     const plan = plans[chosen];
     this.path = fullPath(plan);
+    this.legPaths = plan.legs.map((l) => l.path).filter((p) => p.length > 1);
     const from = this.path[0];
     const to = this.path[this.path.length - 1];
     const reduce = opts.animate === false || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -275,9 +278,10 @@ export class RouteLayer {
     this.arrows.clearLayers();
     this.arrows.addTo(this.map);
     let carry = ARROW_EVERY_M / 2;
-    for (let i = 1; i < this.path.length; i++) {
-      const a = L.latLng(this.path[i - 1]);
-      const b = L.latLng(this.path[i]);
+    const segments = this.legPaths.flatMap((leg) => leg.slice(1).map((p, k) => [leg[k], p] as const));
+    for (const [from, to] of segments) {
+      const a = L.latLng(from);
+      const b = L.latLng(to);
       const seg = a.distanceTo(b);
       let s = carry;
       while (s < seg) {
@@ -307,6 +311,7 @@ export class RouteLayer {
     this.arrows.clearLayers();
     this.arrows.remove();
     this.path = [];
+    this.legPaths = [];
     this.others = [];
     this.labels = [];
   }

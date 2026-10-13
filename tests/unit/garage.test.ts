@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { POI_BY_ID } from '../../src/data';
 import type { LatLng } from '../../src/data';
 import { parkingEntrances } from '../../src/domain/parking';
-import { ENTRANCES, EXITS, GARAGE, LEVELS, garageExit, garageRoute, insideLot, lotRect, type GarageRoute } from '../../src/routing/garage';
+import { ENTRANCES, EXITS, GARAGE, LEVELS, garageExit, garageRoute, lotRect, type GarageRoute } from '../../src/routing/garage';
 import { planExit, planRoute } from '../../src/routing/plan';
 import { insideRect, network, toM } from '../../src/routing/walk';
 
@@ -29,7 +29,7 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
   const allWays = (): [string, GarageRoute][] =>
     LOTS.flatMap((lot) =>
       LEVELS.flatMap((level) => [
-        ...ENTRANCES.map((e) => [`in ${e.id} → P${lot.id - 900}${level}`, garageRoute(e.id, lot, null, level)!] as [string, GarageRoute]),
+        ...ENTRANCES.map((e) => [`in ${e.id} → P${lot.id - 900}${level}`, garageRoute(e.id, lot, level)!] as [string, GarageRoute]),
         ...EXITS.map((x) => [`out P${lot.id - 900}${level} → ${x.id}`, garageExit(lot, x.id, level)!] as [string, GarageRoute]),
       ]),
     );
@@ -94,8 +94,8 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
     expect(toM(down.path[0])[0]).toBeLessThan(Math.max(x220, x222));
     for (const lot of LOTS) {
       for (const e of ENTRANCES) {
-        expect(garageRoute(e.id, lot, null, 'B')!.ramps, `in to P${lot.id - 900}B`).toEqual([]);
-        expect(garageRoute(e.id, lot, null, 'A')!.ramps.map((r) => r.to), `in to P${lot.id - 900}A`).toEqual(['A']);
+        expect(garageRoute(e.id, lot, 'B')!.ramps, `in to P${lot.id - 900}B`).toEqual([]);
+        expect(garageRoute(e.id, lot, 'A')!.ramps.map((r) => r.to), `in to P${lot.id - 900}A`).toEqual(['A']);
       }
       for (const x of EXITS) {
         expect(garageExit(lot, x.id, 'B')!.ramps, `out of P${lot.id - 900}B`).toEqual([]);
@@ -117,13 +117,13 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
   it('on level A, the north lots are entered from the north road (after the yellow ramp, heading west); on B from the inner road', () => {
     for (const id of [908, 909, 910, 911]) {
       const r = lotRect(P(id))!;
-      const a = toM(garageRoute('sultana', P(id), null, 'A')!.gate);
-      const b = toM(garageRoute('sultana', P(id), null, 'B')!.gate);
+      const a = toM(garageRoute('sultana', P(id), 'A')!.gate);
+      const b = toM(garageRoute('sultana', P(id), 'B')!.gate);
       expect(Math.abs(a[1] - r.y1), `P${id - 900}A at the north edge`).toBeLessThan(0.01);
       expect(Math.abs(b[1] - r.y0), `P${id - 900}B at the south edge`).toBeLessThan(0.01);
     }
     // The others on A: almost a full lap, longer than on B.
-    for (const id of [901, 905, 912]) expect(garageRoute('sultana', P(id), null, 'A')!.meters).toBeGreaterThan(garageRoute('sultana', P(id), null, 'B')!.meters + 800);
+    for (const id of [901, 905, 912]) expect(garageRoute('sultana', P(id), 'A')!.meters).toBeGreaterThan(garageRoute('sultana', P(id), 'B')!.meters + 800);
   });
 
   it('the way out ends where the exit road leaves the car park (level B), then goes on to the streets', () => {
@@ -157,24 +157,22 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
     }
   });
 
-  it('parks in the bay nearest the stairs the visitor will use, along an aisle beside the middle rows', () => {
+  it('ends at the lot’s entrance, not inside the lot (the visitor parks where they like); the way out starts at its exit', () => {
     for (const lot of LOTS) {
       const r = lotRect(lot)!;
-      for (const f of parkingEntrances(lot)) {
-        const way = garageRoute('quba', lot, at(f))!;
-        const bay = toM(way.bay);
-        expect(insideRect(bay, { x0: r.x0 - 0.01, x1: r.x1 + 0.01, y0: r.y0 - 0.01, y1: r.y1 + 0.01 }), `P${lot.id - 900}`).toBe(true);
-        // Closer to these stairs than to any of the lot's other three.
-        const others = parkingEntrances(lot).filter((o) => o.id !== f.id);
-        expect(d(bay, toM(at(f)))).toBeLessThanOrEqual(Math.min(...others.map((o) => d(bay, toM(at(o))))) + 0.01);
+      for (const level of LEVELS) {
+        const way = garageRoute('sultana', lot, level)!;
+        const end = toM(way.path[way.path.length - 1]);
+        expect(end).toEqual(toM(way.gate));
+        const onEdge = Math.min(Math.abs(end[0] - r.x0), Math.abs(end[0] - r.x1), Math.abs(end[1] - r.y0), Math.abs(end[1] - r.y1));
+        expect(onEdge, `P${lot.id - 900}${level}`).toBeLessThan(0.01);
+        // Nothing of the way is inside the lot.
+        const inner = { x0: r.x0 + 1, x1: r.x1 - 1, y0: r.y0 + 1, y1: r.y1 - 1 };
+        expect(way.path.some((q) => insideRect(toM(q), inner)), `P${lot.id - 900}${level}`).toBe(false);
+        const out = garageExit(lot, 'quba', level)!;
+        expect(toM(out.path[0])).toEqual(toM(out.gate));
+        expect(out.path.some((q) => insideRect(toM(q), inner)), `out of P${lot.id - 900}${level}`).toBe(false);
       }
-      // The two aisles: a quarter of the lot's width in from each long side.
-      const w = r.x1 - r.x0;
-      const h = r.y1 - r.y0;
-      const inLot = insideLot(lot, toM(GARAGE.lots.find((l) => l.id === lot.id)!.entry), null)!;
-      const bay = inLot.path[inLot.path.length - 1];
-      const across = w >= h ? (bay[1] - r.y0) / h : (bay[0] - r.x0) / w;
-      expect([0.25, 0.75].some((q) => Math.abs(across - q) < 1e-6), `P${lot.id - 900}`).toBe(true);
     }
   });
 
@@ -186,13 +184,15 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
     expect(garageRoute('sultana', P(909))!.certain).toBe(true);
   });
 
-  it('a car trip comes in by an entrance, drives the drawn roads to the lot and walks up the nearest stairs', async () => {
+  it('a car trip comes in by an entrance, drives the drawn roads to the lot’s entrance, and walks from its nearest stairs', async () => {
     const p = await planRoute([24.476, 39.611], P(223), 'drive'); // from the north (First Ring Road)
     expect(p.legs.map((l) => l.kind)).toEqual(['drive', 'garage', 'walk']);
     expect(p.entrance).toBe('sultana');
     expect(p.gate).toBeDefined();
-    // The garage leg ends at the stairs (a facility of the lot), where the walk starts.
-    const stairs = p.legs[1].path[p.legs[1].path.length - 1];
+    // The drive ends at the lot's entrance; the walk starts at one of the lot's stairs (its facilities).
+    const garage = p.legs[1].path;
+    expect(garage[garage.length - 1]).toEqual(p.gate);
+    const stairs = p.legs[2].path[0];
     expect(parkingEntrances(p.lot!).some((f) => Math.abs(f.lat - stairs[0]) < 1e-9 && Math.abs(f.lng - stairs[1]) < 1e-9)).toBe(true);
   });
 
@@ -233,14 +233,14 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
 
 describe('the way on level A is drawn apart (owner, 2026-10-13)', () => {
   it('splits a way into stretches: level B, the ramp up, level A — joined end to end', () => {
-    const way = garageRoute('sultana', POI_BY_ID.get(905)!, null, 'A')!;
+    const way = garageRoute('sultana', POI_BY_ID.get(905)!, 'A')!;
     const kinds = way.parts.map((p) => p.on);
     expect(kinds[0]).toBe('B');
     expect(kinds).toContain('up');
     expect(kinds[kinds.length - 1]).toBe('A');
     for (let i = 1; i < way.parts.length; i++) expect(way.parts[i].path[0]).toEqual(way.parts[i - 1].path[way.parts[i - 1].path.length - 1]);
     // On level B, one stretch only.
-    expect(garageRoute('sultana', POI_BY_ID.get(905)!, null, 'B')!.parts.map((p) => p.on)).toEqual(['B']);
+    expect(garageRoute('sultana', POI_BY_ID.get(905)!, 'B')!.parts.map((p) => p.on)).toEqual(['B']);
     // The way out from A: A, the ramp down, then B.
     const out = garageExit(POI_BY_ID.get(905)!, 'quba', 'A')!.parts.map((p) => p.on);
     expect(out[0]).toBe('A');

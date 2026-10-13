@@ -10,7 +10,8 @@ import { fromM, insideRect, network, openTogether, pathLength, ringPath, segment
  * Plans a trip as legs:
  *  - walk:   on the plaza walkways inside the Haram, and on streets and footways outside it;
  *  - drive:  on the street network (one-way streets, road tunnels), into the underground car park;
- *  - garage: inside the car park, from its ramp to the lot, then up the lot's stairs to the plaza.
+ *  - garage: inside the car park, from its ramp to the lot's entrance (the visitor parks inside, then
+ *    walks up the lot's stairs nearest the destination).
  * Walking is the default; driving ends at a car park under the Haram (lots 1–13).
  */
 
@@ -345,19 +346,18 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B'): Promise<Pla
       return !m || pm < m.m ? { e, path, m: pm } : m;
     }, null);
     // In by each entrance (owner's drawing, routing/garage.ts): streets to the ramp, the car park's
-    // roads to the lot, along its aisle to the bay nearest those stairs.
+    // roads to the lot's entrance. The walk starts at those stairs.
     const ways = gates
-      .map((g) => ({ g, way: garageRoute(g.e.id, lot, up ? at(up.e) : null, level) }))
+      .map((g) => ({ g, way: garageRoute(g.e.id, lot, level) }))
       .filter((x): x is { g: (typeof gates)[number]; way: NonNullable<ReturnType<typeof garageRoute>> } => x.way !== null);
     for (const { g, way } of ways) {
       const drive = g.approach.length ? [...streetPath(S, r, g.k, from, false), ...g.approach] : [...streetPath(S, r, g.k, from, false), g.e.street];
-      const stairs: LatLng[] = up ? [way.bay, at(up.e)] : [];
       const driveM = len(drive) + way.meters;
-      const walkM = up ? len(stairs) + up.m : 0;
+      const walkM = up ? up.m : 0;
       const minutes = Math.ceil(driveM / DRIVE_M_PER_MIN + walkM / WALK_M_PER_MIN);
       const legs: Leg[] = [
         { kind: 'drive', path: drive },
-        { kind: 'garage', path: [...way.path, ...stairs.slice(1)], parts: way.parts },
+        { kind: 'garage', path: way.path, parts: way.parts },
         ...(up ? [{ kind: 'walk' as const, path: up.path }] : []),
       ];
       plans.push({ mode: 'drive', legs, walkM, driveM, minutes: Math.max(1, minutes), lot, entrance: g.e.id, gate: way.gate, garageCertain: way.certain, level, ramps: way.ramps });
@@ -417,14 +417,14 @@ export async function planRoutes(from: LatLng, to: Poi, mode: Mode = 'walk', opt
 }
 
 /**
- * The way out of the car park from a lot: from the bay (nearest `from`, the stairs the visitor
- * comes down; otherwise the middle of the lot) to each exit — Quba (the main one) and Sultana — then
- * on to the streets where the owner drew it. Quickest first; the other within 30% is offered too.
+ * The way out of the car park from a lot: from the lot's exit to each exit of the car park — Quba
+ * (the main one) and Sultana — then on to the streets where the owner drew it. Quickest first; the
+ * other within 30% is offered too.
  */
-export function planExit(lot: Poi, level: Level = 'B', from: LatLng | null = null): Plan[] {
+export function planExit(lot: Poi, level: Level = 'B'): Plan[] {
   const plans: Plan[] = [];
   for (const x of EXITS) {
-    const way = garageExit(lot, x.id, level, from);
+    const way = garageExit(lot, x.id, level);
     if (!way) continue;
     const onward = x.departure ?? [x.mouth, x.street];
     const driveM = way.meters + len(onward);
@@ -456,5 +456,13 @@ export async function planRoute(from: LatLng, to: Poi, mode: Mode = 'walk'): Pro
   return (await planRoutes(from, to, mode))[0];
 }
 
-/** All legs as one path (for live navigation and fitting the map). */
-export const fullPath = (p: Plan): LatLng[] => p.legs.flatMap((l, i) => (i ? l.path.slice(1) : l.path));
+/**
+ * All legs as one path (for live navigation and fitting the map). A leg that starts where the last
+ * one ended does not repeat that point; by car, the walk starts at the lot's stairs, apart from
+ * where the drive ended (the lot's entrance): the visitor parks inside.
+ */
+export const fullPath = (p: Plan): LatLng[] =>
+  p.legs.flatMap((l, i) => {
+    const prev = i ? p.legs[i - 1].path[p.legs[i - 1].path.length - 1] : null;
+    return prev && l.path.length && prev[0] === l.path[0][0] && prev[1] === l.path[0][1] ? l.path.slice(1) : l.path;
+  });
