@@ -100,4 +100,38 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
     const stairs = p.legs[1].path[p.legs[1].path.length - 1];
     expect(parkingEntrances(p.lot!).some((f) => Math.abs(f.lat - stairs[0]) < 1e-9 && Math.abs(f.lng - stairs[1]) < 1e-9)).toBe(true);
   });
+
+  describe('the Sultana side (owner’s drawing, 2026-10-13)', () => {
+    const sultana = ENTRANCES.find((e) => e.id === 'sultana')!;
+    const loopTop = sultana.approach![15]; // the top of the loop at the junction
+    const mouth = sultana.street;
+    const near = (path: LatLng[], p: LatLng, m: number) => path.some((q) => d(toM(q), toM(p)) < m);
+
+    it('the way in ends at the car park mouth, where the underground road begins', () => {
+      expect(sultana.approach!.length).toBeGreaterThan(20);
+      expect(sultana.approach![sultana.approach!.length - 1]).toEqual(mouth);
+      // The way out is in the data too (up the exit ramp, then north on Sultana road).
+      const out = GARAGE.exits.find((x) => x.id === 'sultana')!.departure!;
+      expect(out[out.length - 1][0]).toBeGreaterThan(out[0][0]);
+    });
+
+    for (const [name, from] of [
+      ['from the south-west', [24.456, 39.6]],
+      ['from the north (First Ring Road)', [24.476, 39.611]],
+      ['from right by the junction', [24.4718, 39.6035]],
+    ] as [string, LatLng][]) {
+      it(`${name}: round the loop and down the ramp, never in by the side street`, async () => {
+        const p = await planRoute(from, P(909), 'drive');
+        expect(p.entrance).toBe('sultana');
+        const drive = p.legs[0].path;
+        expect(near(drive, loopTop, 20)).toBe(true);
+        // The last 150 m above ground come down the ramp from the north, not along the street from the west.
+        const m = toM(mouth);
+        const before = drive.map(toM).filter((q) => d(q, m) > 100 && d(q, m) < 150);
+        expect(before.length).toBeGreaterThan(0);
+        for (const q of before) expect(q[1]).toBeGreaterThan(m[1] + 50);
+      });
+    }
+  });
 });
+

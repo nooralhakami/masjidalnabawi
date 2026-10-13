@@ -216,6 +216,31 @@ export class Streets {
     return best;
   }
 
+  /**
+   * The nearest car node within `maxM` metres from which a road leaves in about the given direction
+   * (degrees from north, within 50°): picks the right carriageway of a divided road. Falls back to
+   * the nearest car node.
+   */
+  nearestNodeHeading(p: XY, bearing: number, maxM = 40): number {
+    let best = -1;
+    let bd = Infinity;
+    for (let i = 0; i < this.xy.length; i++) {
+      if (!this.main.drive[i]) continue;
+      const d = Math.hypot(this.xy[i][0] - p[0], this.xy[i][1] - p[1]);
+      if (d > maxM || d >= bd) continue;
+      const ok = this.out.drive[i].some(([j]) => {
+        const b = (Math.atan2(this.xy[j][0] - this.xy[i][0], this.xy[j][1] - this.xy[i][1]) * 180) / Math.PI;
+        const diff = Math.abs((((b - bearing) % 360) + 540) % 360 - 180);
+        return diff <= 50;
+      });
+      if (ok) {
+        bd = d;
+        best = i;
+      }
+    }
+    return best >= 0 ? best : this.nearestNode(p, 'drive');
+  }
+
   /** The point on the nearest street, and the street's two ends. */
   private join(p: XY, t: Travel): { q: XY; d: number; e: Edge; u: number } | null {
     let best: { q: XY; d: number; e: Edge; u: number } | null = null;

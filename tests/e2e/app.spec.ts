@@ -552,12 +552,14 @@ test('a pair of restrooms shows its number between its two markers (251 and 252,
   await page.locator('.sheet [data-act="close"]').click(); // the card closes; every marker is back
   const label = page.locator('.pair-no', { hasText: '251' });
   await expect(label).toBeVisible();
-  const a = (await page.locator('.mk[title*="251"]').first().boundingBox())!;
-  const b = (await page.locator('.mk[title*="252"]').first().boundingBox())!;
-  const n = (await label.boundingBox())!;
-  const mid = (r: { y: number; height: number }) => r.y + r.height / 2;
-  expect(mid(n)).toBeGreaterThan(Math.min(mid(a), mid(b)));
-  expect(mid(n)).toBeLessThan(Math.max(mid(a), mid(b)));
+  // Measured once the map has settled after the card closed (markers and label move together).
+  const mid = (r: { y: number; height: number } | null) => (r ? r.y + r.height / 2 : NaN);
+  await expect
+    .poll(async () => {
+      const [a, b, n] = await Promise.all([page.locator('.mk[title*="251"]').first().boundingBox(), page.locator('.mk[title*="252"]').first().boundingBox(), label.boundingBox()]);
+      return mid(n) > Math.min(mid(a), mid(b)) && mid(n) < Math.max(mid(a), mid(b));
+    }, { message: 'the number sits between the two markers' })
+    .toBe(true);
   await expect(page.locator('.pair-no', { hasText: '252' })).toHaveCount(1); // the women's pair 253↔254 shows 252
 });
 

@@ -1282,5 +1282,8 @@
    "exit_lane": "exit-west"
   }
  ],
- "lots_note": "entry_lane: the road the blue arrow turns off; exit_lane: the road the dark red arrow joins (south lots leave onto the bottom road, driven westwards on the right, then the red link at x≈808 px to the west exit)."
+ "lots_note": "entry_lane: the road the blue arrow turns off; exit_lane: the road the dark red arrow joins (south lots leave onto the bottom road, driven westwards on the right, then the red link at x≈808 px to the west exit).",
+ "extra_drawings": [
+  "docs/routes/garage-sultana-2026-10-13.json"
+ ]
 }

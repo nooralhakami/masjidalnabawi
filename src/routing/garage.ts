@@ -36,8 +36,14 @@ interface Lot {
 }
 export interface GarageData {
   lanes: Lane[];
-  entrances: { id: EntranceId; lane: string; street: LatLng }[];
-  exits: { id: EntranceId; lane: string; street: LatLng }[];
+  /**
+   * `street`: where the car park road begins. `approach` (where the owner drew it): the way above
+   * ground from the streets to that point, which every car must take (the Sultana side: round the
+   * loop at the junction and down the ramp).
+   */
+  entrances: { id: EntranceId; lane: string; street: LatLng; approach?: LatLng[] }[];
+  /** `departure`: the way from the exit back to the streets, where drawn. */
+  exits: { id: EntranceId; lane: string; street: LatLng; departure?: LatLng[] }[];
   lots: Lot[];
 }
 

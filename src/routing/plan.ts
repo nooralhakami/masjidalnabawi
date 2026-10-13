@@ -86,6 +86,14 @@ export function inHaram(ll: LatLng): boolean {
 }
 
 const at = (p: Poi): LatLng => [p.lat, p.lng];
+/** The last points of a drawn approach (by the car park mouth) where a car may not join it. */
+const APPROACH_TAIL = 6;
+/** Direction from a to b in degrees from north. */
+const bearingOf = (a: LatLng, b: LatLng): number => {
+  const [ax, ay] = toM(a);
+  const [bx, by] = toM(b);
+  return ((Math.atan2(bx - ax, by - ay) * 180) / Math.PI + 360) % 360;
+};
 const ll = (pts: XY[]) => pts.map(fromM);
 const len = (path: LatLng[]) => (path.length > 1 ? pathLength(path) : 0);
 
@@ -304,8 +312,23 @@ async function planDrive(from: LatLng, to: Poi): Promise<Plan[]> {
     ];
   }
   const lots = to.category === 'parking' ? [to] : LOTS.filter((p) => parkingAccess(p) === 'public');
-  // The car park's two entrances (Quba, Sultana) as street nodes the car can reach.
-  const gates = ENTRANCES.map((e) => ({ e, k: S.nearestNode(toM(e.street), 'drive') })).filter((g) => g.k >= 0 && Number.isFinite(r.dist[g.k]));
+  // The car park's two entrances (Quba, Sultana) as street nodes the car can reach. Where the owner
+  // drew the way to an entrance (an approach), the streets lead to its start, on the carriageway that
+  // goes its way, and the car then follows it.
+  const gates = ENTRANCES.map((e) => {
+    if (!e.approach?.length) return { e, k: S.nearestNode(toM(e.street), 'drive'), approach: [] as LatLng[] };
+    // Join the approach where it is cheapest: at any of its points, on a road going its way — but not
+    // in its last stretch by the car park mouth, where a side street also passes (the owner's drawing
+    // brings every car down the ramp).
+    const a = e.approach;
+    let best = { k: -1, i: 0, cost: Infinity };
+    for (let i = 0; i < a.length - APPROACH_TAIL; i++) {
+      const k = S.nearestNodeHeading(toM(a[i]), bearingOf(a[i], a[i + 1]), 15);
+      const rest = len(a.slice(i));
+      if (k >= 0 && r.dist[k] + rest < best.cost) best = { k, i, cost: r.dist[k] + rest };
+    }
+    return { e, k: best.k, approach: a.slice(best.i) };
+  }).filter((g) => g.k >= 0 && Number.isFinite(r.dist[g.k]));
   const plans: Plan[] = [];
   for (const lot of lots) {
     // Up through the lot's nearest entrance (one of its four surrounding facilities) to the destination.
@@ -320,7 +343,7 @@ async function planDrive(from: LatLng, to: Poi): Promise<Plan[]> {
       .map((g) => ({ g, way: garageRoute(g.e.id, lot, up ? at(up.e) : null) }))
       .filter((x): x is { g: (typeof gates)[number]; way: NonNullable<ReturnType<typeof garageRoute>> } => x.way !== null);
     for (const { g, way } of ways) {
-      const drive = [...streetPath(S, r, g.k, from, false), g.e.street];
+      const drive = g.approach.length ? [...streetPath(S, r, g.k, from, false), ...g.approach] : [...streetPath(S, r, g.k, from, false), g.e.street];
       const stairs: LatLng[] = up ? [way.bay, at(up.e)] : [];
       const driveM = len(drive) + way.meters;
       const walkM = up ? len(stairs) + up.m : 0;
