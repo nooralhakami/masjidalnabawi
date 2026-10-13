@@ -1,0 +1,178 @@
+{
+ "version": 0.6,
+ "generator": "Overpass API 0.7.62.4 2390de5a",
+ "osm3s": {
+  "timestamp_osm_base": "2026-10-13T10:32:59Z",
+  "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+ },
+ "elements": [
+  {
+   "type": "relation",
+   "id": 6995221,
+   "members": [
+    {
+     "type": "way",
+     "ref": 475806097,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 4695030918,
+     "role": "via"
+    },
+    {
+     "type": "way",
+     "ref": 475806101,
+     "role": "to"
+    }
+   ],
+   "tags": {
+    "restriction": "no_right_turn",
+    "type": "restriction"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 6995222,
+   "members": [
+    {
+     "type": "way",
+     "ref": 475806094,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 4695030918,
+     "role": "via"
+    },
+    {
+     "type": "way",
+     "ref": 475806101,
+     "role": "to"
+    }
+   ],
+   "tags": {
+    "restriction": "no_left_turn",
+    "type": "restriction"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 6995223,
+   "members": [
+    {
+     "type": "way",
+     "ref": 475806094,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 4695030918,
+     "role": "via"
+    },
+    {
+     "type": "way",
+     "ref": 475806099,
+     "role": "to"
+    }
+   ],
+   "tags": {
+    "restriction": "no_right_turn",
+    "type": "restriction"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 6995962,
+   "members": [
+    {
+     "type": "way",
+     "ref": 475857534,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 824982659,
+     "role": "via"
+    },
+    {
+     "type": "way",
+     "ref": 475857547,
+     "role": "to"
+    }
+   ],
+   "tags": {
+    "restriction": "no_right_turn",
+    "type": "restriction"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 21040700,
+   "members": [
+    {
+     "type": "way",
+     "ref": 1533255254,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 4136166813,
+     "role": "via"
+    },
+    {
+     "type": "way",
+     "ref": 1533255254,
+     "role": "to"
+    }
+   ],
+   "tags": {
+    "restriction": "only_u_turn",
+    "type": "restriction"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 21588008,
+   "members": [
+    {
+     "type": "way",
+     "ref": 1566701421,
+     "role": "from"
+    },
+    {
+     "type": "node",
+     "ref": 817907118,
+     "role": "via"
+    },
+    {
+     "type": "way",
+     "ref": 67738171,
+     "role": "to"
+    }
+   ],
+   "tags": {
+    "restriction": "only_straight_on",
+    "type": "restriction"
+   }
+  }
+ ],
+ "via_nodes": {
+  "817907118": [
+   24.4237566,
+   39.5847997
+  ],
+  "824982659": [
+   24.5210277,
+   39.5986512
+  ],
+  "4136166813": [
+   24.4773697,
+   39.5774562
+  ],
+  "4695030918": [
+   24.5015173,
+   39.5896188
+  ]
+ }
+}

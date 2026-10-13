@@ -6,6 +6,7 @@ import type { LangCode } from '../data/types';
  */
 export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
   ar: {
+    g_public_parking: 'إلى موقف سيارات عام',
     g_legend_a: 'الإطار الأصفر: الطريق في الدور A',
     lvl_title: 'الدور',
     lvl_name: 'الدور {l}',
@@ -103,6 +104,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'انتقال',
   },
   en: {
+    g_public_parking: 'to a public car park',
     g_legend_a: 'Yellow edge: the way on level A',
     lvl_title: 'Level',
     lvl_name: 'Level {l}',
@@ -200,6 +202,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Go',
   },
   tr: {
+    g_public_parking: 'halka açık otoparka',
     g_legend_a: 'Sarı kenar: A katındaki yol',
     lvl_title: 'Kat',
     lvl_name: '{l} katı',
@@ -297,6 +300,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Git',
   },
   ur: {
+    g_public_parking: 'عوامی پارکنگ تک',
     g_legend_a: 'پیلا کنارہ: منزل A پر راستہ',
     lvl_title: 'منزل',
     lvl_name: 'منزل {l}',
@@ -394,6 +398,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'جائیں',
   },
   id: {
+    g_public_parking: 'ke parkir umum',
     g_legend_a: 'Tepi kuning: jalan di lantai A',
     lvl_title: 'Lantai',
     lvl_name: 'Lantai {l}',
@@ -491,6 +496,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Buka',
   },
   uz: {
+    g_public_parking: 'jamoat avtoturargohiga',
     g_legend_a: 'Sariq chegara: A qavatdagi yo‘l',
     lvl_title: 'Qavat',
     lvl_name: '{l} qavat',
@@ -588,6 +594,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'O‘tish',
   },
   bn: {
+    g_public_parking: 'সর্বজনীন পার্কিং পর্যন্ত',
     g_legend_a: 'হলুদ কিনারা: তলা A-র পথ',
     lvl_title: 'তলা',
     lvl_name: 'তলা {l}',
@@ -692,6 +699,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'যান',
   },
   fr: {
+    g_public_parking: 'jusqu’à un parking public',
     g_legend_a: 'Bord jaune : le trajet au niveau A',
     lvl_title: 'Niveau',
     lvl_name: 'Niveau {l}',
@@ -796,6 +804,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Y aller',
   },
   fa: {
+    g_public_parking: 'تا پارکینگ عمومی',
     g_legend_a: 'لبه زرد: مسیر در طبقه A',
     lvl_title: 'طبقه',
     lvl_name: 'طبقه {l}',
@@ -900,6 +909,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'برو',
   },
   ru: {
+    g_public_parking: 'до общественной парковки',
     g_legend_a: 'Жёлтая кайма: путь на уровне A',
     lvl_title: 'Уровень',
     lvl_name: 'Уровень {l}',
@@ -1004,6 +1014,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Идти',
   },
   ms: {
+    g_public_parking: 'ke tempat letak kereta awam',
     g_legend_a: 'Tepi kuning: laluan di aras A',
     lvl_title: 'Aras',
     lvl_name: 'Aras {l}',
@@ -1108,6 +1119,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Pergi',
   },
   ha: {
+    g_public_parking: 'zuwa wurin ajiye motoci na jama’a',
     g_legend_a: 'Gefe mai launin rawaya: hanya a bene A',
     lvl_title: 'Bene',
     lvl_name: 'Bene {l}',
@@ -1212,6 +1224,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Je',
   },
   ml: {
+    g_public_parking: 'പൊതു പാർക്കിങ്ങിലേക്ക്',
     g_legend_a: 'മഞ്ഞ അരിക്: നില A-യിലെ വഴി',
     lvl_title: 'നില',
     lvl_name: 'നില {l}',
@@ -1316,6 +1329,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'പോകുക',
   },
   sw: {
+    g_public_parking: 'hadi maegesho ya umma',
     g_legend_a: 'Ukingo wa njano: njia katika ghorofa A',
     lvl_title: 'Ghorofa',
     lvl_name: 'Ghorofa {l}',
@@ -1420,6 +1434,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Nenda',
   },
   ps: {
+    g_public_parking: 'عامه پارکینګ ته',
     g_legend_a: 'ژېړه څنډه: په A پوړ کې لار',
     lvl_title: 'پوړ',
     lvl_name: 'پوړ {l}',
@@ -1524,6 +1539,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'لاړ شه',
   },
   so: {
+    g_public_parking: 'ilaa baarkinka dadweynaha',
     g_legend_a: 'Geesta jaalaha ah: jidka dabaqa A',
     lvl_title: 'Dabaq',
     lvl_name: 'Dabaqa {l}',
@@ -1628,6 +1644,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Tag',
   },
   ta: {
+    g_public_parking: 'பொது வாகன நிறுத்தம் வரை',
     g_legend_a: 'மஞ்சள் விளிம்பு: தளம் A-வில் உள்ள வழி',
     lvl_title: 'தளம்',
     lvl_name: 'தளம் {l}',
@@ -1732,6 +1749,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'செல்',
   },
   hi: {
+    g_public_parking: 'सार्वजनिक पार्किंग तक',
     g_legend_a: 'पीला किनारा: मंज़िल A पर रास्ता',
     lvl_title: 'मंज़िल',
     lvl_name: 'मंज़िल {l}',
@@ -1836,6 +1854,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'जाएँ',
   },
   bs: {
+    g_public_parking: 'do javnog parkinga',
     g_legend_a: 'Žuti rub: put na nivou A',
     lvl_title: 'Nivo',
     lvl_name: 'Nivo {l}',
@@ -1940,6 +1959,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Idi',
   },
   de: {
+    g_public_parking: 'zu einem öffentlichen Parkplatz',
     g_legend_a: 'Gelber Rand: der Weg auf Ebene A',
     lvl_title: 'Ebene',
     lvl_name: 'Ebene {l}',
@@ -2044,6 +2064,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Los',
   },
   zh: {
+    g_public_parking: '前往公共停车场',
     g_legend_a: '黄色边框：A层的路线',
     lvl_title: '楼层',
     lvl_name: '{l}层',
@@ -2148,6 +2169,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: '前往',
   },
   am: {
+    g_public_parking: 'ወደ ሕዝብ መኪና ማቆሚያ',
     g_legend_a: 'ቢጫ ጠርዝ፦ በፎቅ A ያለው መንገድ',
     lvl_title: 'ፎቅ',
     lvl_name: 'ፎቅ {l}',
@@ -2252,6 +2274,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'ሂድ',
   },
   ku: {
+    g_public_parking: 'heta parka giştî',
     g_legend_a: 'Kêleka zer: rê li qata A',
     lvl_title: 'Qat',
     lvl_name: 'Qata {l}',
@@ -2356,6 +2379,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Biçe',
   },
   az: {
+    g_public_parking: 'ictimai dayanacağa',
     g_legend_a: 'Sarı kənar: A mərtəbəsindəki yol',
     lvl_title: 'Mərtəbə',
     lvl_name: '{l} mərtəbəsi',
@@ -2460,6 +2484,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'Get',
   },
   th: {
+    g_public_parking: 'ไปยังที่จอดรถสาธารณะ',
     g_legend_a: 'ขอบสีเหลือง: เส้นทางบนชั้น A',
     lvl_title: 'ชั้น',
     lvl_name: 'ชั้น {l}',
@@ -2564,6 +2589,7 @@ export const EXTRA_UI: Record<LangCode, Record<string, string>> = {
     go: 'ไป',
   },
   es: {
+    g_public_parking: 'hasta un aparcamiento público',
     g_legend_a: 'Borde amarillo: el recorrido en la planta A',
     lvl_title: 'Planta',
     lvl_name: 'Planta {l}',

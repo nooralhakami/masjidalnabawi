@@ -37,6 +37,7 @@ The owner is not a programmer: explain changes in plain Arabic, one concept at a
 - v0 once left gate descriptions in Arabic in all languages and corrupted UTF-8 characters → tests now fail on both.
 - OSM pedestrian ways often stop short at road crossings and some cut through hotel blocks → streets build links dead ends (35 m) and penalises unnamed footways.
 - The nearest street node to a place can be on the wrong street → pick the best node within 150 m.
+- Cars once cut through car-park aisles, hotel driveways and unnamed service roads, and could turn back anywhere → cars use public roads only, routed turn by turn (no U-turn, OSM turn restrictions, main roads preferred); a site's drive ends at its public car park.
 - A route's draw-in animation measured its length once and hid part of the line after zoom → `pathLength="1"`.
 - Owner rejected merging markers into count bubbles: markers stay in place and shrink when zoomed out.
 - The live domain is `masjidalnabawi.vercel.app` (not "masjidnabawi").

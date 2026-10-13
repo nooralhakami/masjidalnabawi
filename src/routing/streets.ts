@@ -9,10 +9,23 @@ import { toM, type XY } from './walk';
 
 export interface StreetsData {
   nodes: LatLng[];
-  /** [mode, oneway, ...node indices]; mode bits: 1 cars, 2 walkers, 4 underground, 8 car-park ramp, 16 walkers only, 32 named. */
+  /**
+   * [mode, oneway, ...node indices]; mode bits: 1 cars, 2 walkers, 4 underground, 8 car-park ramp,
+   * 16 walkers only, 32 named; bits 6–8 the road class for cars (0 motorway/trunk … 6 service).
+   */
   ways: number[][];
   parking_entrances: LatLng[];
+  /** OSM turn restrictions: [from, via, to, kind] node indices; kind 0 = no turn, 1 = only this turn. */
+  restrictions?: number[][];
+  /** Public car parks (OSM amenity=parking, not private). */
+  parkings?: LatLng[];
 }
+
+/**
+ * Cars prefer the main roads (owner, 2026-10-13: the official routes, not short cuts through
+ * neighbourhoods): a road counts its length times this, by class.
+ */
+export const CLASS_WEIGHT = [1, 1, 1.05, 1.15, 1.35, 1.5, 1.6];
 
 export type Travel = 'walk' | 'drive';
 
@@ -78,6 +91,9 @@ class Heap {
 export interface Reach {
   dist: Float64Array;
   prev: Int32Array;
+  /** Cars (routed turn by turn): the best arc into each node, and each arc's previous arc. */
+  nodeArc?: Int32Array;
+  arcPrev?: Int32Array;
   /** Where the start point joined the graph (the point on the nearest street). */
   joinedAt: XY;
   /** Its distance to that street. */
@@ -93,6 +109,16 @@ export class Streets {
   private main!: Record<Travel, Uint8Array>;
   /** Car-park ramps and the mapped car-park entrances, as car-graph nodes. */
   readonly garageNodes: number[];
+  /** Public car parks (for driving to a place outside the Haram). */
+  readonly parkings: XY[];
+  /** Cars: every one-way arc (a two-way road gives two), for routing turn by turn. */
+  private arcFrom: number[] = [];
+  private arcTo: number[] = [];
+  private arcCost: number[] = [];
+  private arcsOut: number[][] = [];
+  /** Turn restrictions, by "from,via,to" (no) and "from,via" → allowed "to"s (only). */
+  private noTurn = new Set<string>();
+  private onlyTurn = new Map<string, Set<number>>();
 
   constructor(data: StreetsData) {
     this.xy = data.nodes.map(toM);
@@ -108,7 +134,12 @@ export class Streets {
           let b = ids[i];
           if (t === 'drive' && oneway === -1) [a, b] = [b, a];
           const metres = Math.hypot(this.xy[a][0] - this.xy[b][0], this.xy[a][1] - this.xy[b][1]);
-          const l = t === 'walk' && mode & 16 && !(mode & 4) && !(mode & 32) ? metres * FOOTWAY_PENALTY : metres;
+          const l =
+            t === 'walk'
+              ? mode & 16 && !(mode & 4) && !(mode & 32)
+                ? metres * FOOTWAY_PENALTY
+                : metres
+              : metres * CLASS_WEIGHT[(mode >> 6) & 7];
           this.edges[t].push({ a, b, l, oneway: oneWay });
           this.out[t][a].push([b, l]);
           if (!oneWay) this.out[t][b].push([a, l]);
@@ -125,6 +156,42 @@ export class Streets {
       if (k >= 0) ramps.add(k);
     }
     this.garageNodes = [...ramps].filter((k) => this.main.drive[k]);
+    this.parkings = (data.parkings ?? []).map(toM);
+    // Cars route turn by turn over one-way arcs: that is how U-turns and turn restrictions apply.
+    this.arcsOut = Array.from({ length: n }, () => []);
+    for (const e of this.edges.drive) {
+      if (!this.main.drive[e.a] || !this.main.drive[e.b]) continue;
+      const add = (a: number, b: number) => {
+        this.arcsOut[a].push(this.arcFrom.length);
+        this.arcFrom.push(a);
+        this.arcTo.push(b);
+        this.arcCost.push(e.l);
+      };
+      add(e.a, e.b);
+      if (!e.oneway) add(e.b, e.a);
+    }
+    for (const [u, v, w, kind] of data.restrictions ?? []) {
+      if (kind === 0) this.noTurn.add(`${u},${v},${w}`);
+      else {
+        const k = `${u},${v}`;
+        if (!this.onlyTurn.has(k)) this.onlyTurn.set(k, new Set());
+        this.onlyTurn.get(k)!.add(w);
+      }
+    }
+  }
+
+  /**
+   * Whether a car may go on from arc `a` (u→v) to arc `b` (v→w): never back the way it came (no
+   * U-turn) unless the road ends there, and never against an OSM turn restriction.
+   */
+  private canTurn(a: number, b: number): boolean {
+    const u = this.arcFrom[a];
+    const v = this.arcTo[a];
+    const w = this.arcTo[b];
+    if (w === u && this.arcsOut[v].some((x) => this.arcTo[x] !== u)) return false;
+    if (this.noTurn.has(`${u},${v},${w}`)) return false;
+    const only = this.onlyTurn.get(`${u},${v}`);
+    return !only || only.has(w);
   }
 
   /** Nodes of the largest (strongly, for cars) connected part of a graph. */
@@ -266,6 +333,7 @@ export class Streets {
    * (to find another way for an alternative route; distances are then not real metres).
    */
   reach(from: LatLng, t: Travel, reverse = false, avoid?: Uint8Array): Reach | null {
+    if (t === 'drive' && !reverse) return this.reachDrive(from, avoid);
     const p = toM(from);
     const j = this.join(p, t);
     if (!j) return null;
@@ -307,8 +375,65 @@ export class Streets {
     return { dist, prev, joinedAt: j.q, offset: j.d };
   }
 
+  /**
+   * Cars, turn by turn: the cheapest way from `from` to every node over one-way arcs, with no U-turn
+   * (except at a dead end) and no restricted turn.
+   */
+  private reachDrive(from: LatLng, avoid?: Uint8Array): Reach | null {
+    const p = toM(from);
+    const j = this.join(p, 'drive');
+    if (!j) return null;
+    const n = this.xy.length;
+    const A = this.arcFrom.length;
+    const arcDist = new Float64Array(A).fill(Infinity);
+    const arcPrev = new Int32Array(A).fill(-1);
+    const dist = new Float64Array(n).fill(Infinity);
+    const prev = new Int32Array(n).fill(-1);
+    const nodeArc = new Int32Array(n).fill(-1);
+    const heap = new Heap();
+    const cost = (x: number) => (avoid && avoid[this.arcFrom[x]] && avoid[this.arcTo[x]] ? this.arcCost[x] * AVOID_FACTOR : this.arcCost[x]);
+    // The start is on its street, driving along it: towards its end (either end, on a two-way
+    // street). It arrives there by that street, so the turn rules apply from the first junction.
+    const seed = (from: number, to: number, c: number) => {
+      for (const x of this.arcsOut[from]) {
+        if (this.arcTo[x] !== to || c >= arcDist[x]) continue;
+        arcDist[x] = c;
+        heap.push([c, x]);
+      }
+    };
+    seed(j.e.a, j.e.b, (1 - j.u) * j.e.l);
+    if (!j.e.oneway) seed(j.e.b, j.e.a, j.u * j.e.l);
+    while (heap.size) {
+      const [c, x] = heap.pop();
+      if (c > arcDist[x]) continue;
+      const v = this.arcTo[x];
+      if (c < dist[v]) {
+        dist[v] = c;
+        nodeArc[v] = x;
+        prev[v] = this.arcFrom[x];
+      }
+      for (const y of this.arcsOut[v]) {
+        if (!this.canTurn(x, y)) continue;
+        const cy = c + cost(y);
+        if (cy < arcDist[y]) {
+          arcDist[y] = cy;
+          arcPrev[y] = x;
+          heap.push([cy, y]);
+        }
+      }
+    }
+    return { dist, prev, nodeArc, arcPrev, joinedAt: j.q, offset: j.d };
+  }
+
   /** Node indices from the start of `r` to node `k`. */
   nodesTo(r: Reach, k: number): number[] {
+    if (r.nodeArc && r.arcPrev) {
+      // Turn by turn: follow the arcs back (a node may be passed twice, e.g. round a block).
+      // The first arc is the start's own street: its far end is where the trip starts, not a node passed.
+      const out = [k];
+      for (let x = r.nodeArc[k]; x >= 0 && r.arcPrev[x] >= 0; x = r.arcPrev[x]) out.unshift(this.arcFrom[x]);
+      return out;
+    }
     const out: number[] = [];
     for (let i = k; i >= 0; i = r.prev[i]) out.unshift(i);
     return out;
@@ -316,6 +441,7 @@ export class Streets {
 
   /** Node chain from the start of `r` to node `k`, as metric points. */
   chain(r: Reach, k: number): XY[] {
+    if (r.nodeArc) return [r.joinedAt, ...this.nodesTo(r, k).map((i) => this.xy[i])];
     const out: XY[] = [];
     for (let i = k; i >= 0; i = r.prev[i]) out.unshift(this.xy[i]);
     return [r.joinedAt, ...out];

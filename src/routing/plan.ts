@@ -38,6 +38,8 @@ export interface Plan {
   ramps?: RampOnWay[];
   /** The way out of the car park: the exit taken (otherwise the plan is the way in). */
   exit?: EntranceId;
+  /** Driving to a place outside the Haram: whether the car is left at a public car park (else on a public road). */
+  carPark?: boolean;
   /** Driving: false when the way inside the car park uses roads the owner is not sure of yet (the east side). */
   garageCertain?: boolean;
   /** Walking to a lot: its four entrances and the nearest one. */
@@ -94,6 +96,9 @@ export function inHaram(ll: LatLng): boolean {
 }
 
 const at = (p: Poi): LatLng => [p.lat, p.lng];
+/** Driving to a place outside the Haram: public car parks this close to it are used, reached from a public road this close. */
+const CAR_PARK_M = 300;
+const CAR_PARK_ACCESS_M = 80;
 /** The last points of a drawn approach (by the car park mouth) where a car may not join it. */
 const APPROACH_TAIL = 6;
 /** Direction from a to b in degrees from north. */
@@ -300,9 +305,29 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B'): Promise<Pla
   if (!S || !S.garageNodes.length) return [];
   const r = S.reach(from, 'drive');
   if (!r) return [];
-  // A place outside the Haram (a hotel, a restaurant): drive to the street at its door, walk the rest.
+  // A place outside the Haram (a historic site, a hotel, a restaurant): drive on public roads to the
+  // nearest public car park by it (within 300 m), or else to the public road at its door, and walk.
   if (to.category !== 'parking' && !inHaram(at(to))) {
-    const k = bestNear(S, r, at(to), 'drive');
+    const T = toM(at(to));
+    let k = -1;
+    let carPark = false;
+    let bestCost = Infinity;
+    // Historic sites and landmarks: the public car park by it (a hotel or a shop: its door).
+    const site = to.category === 'landmarks';
+    for (const pk of site ? S.parkings : []) {
+      const walk = Math.hypot(pk[0] - T[0], pk[1] - T[1]);
+      if (walk > CAR_PARK_M) continue;
+      const kk = S.nearestNode(pk, 'drive');
+      const access = Math.hypot(S.xy[kk][0] - pk[0], S.xy[kk][1] - pk[1]);
+      if (access > CAR_PARK_ACCESS_M || !Number.isFinite(r.dist[kk])) continue;
+      const c = r.dist[kk] + 1.5 * (walk + access);
+      if (c < bestCost) {
+        bestCost = c;
+        k = kk;
+        carPark = true;
+      }
+    }
+    if (k < 0) k = bestNear(S, r, at(to), 'drive');
     if (!Number.isFinite(r.dist[k])) return [];
     const drive = streetPath(S, r, k, from, false);
     const kerb = fromM(S.xy[k]);
@@ -316,6 +341,7 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B'): Promise<Pla
         walkM,
         driveM,
         minutes: Math.max(1, Math.ceil(driveM / DRIVE_M_PER_MIN + walkM / WALK_M_PER_MIN)),
+        carPark,
       },
     ];
   }

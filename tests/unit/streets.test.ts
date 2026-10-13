@@ -4,8 +4,8 @@ import type { LatLng } from '../../src/data';
 import streetsJson from '../../data/streets.json';
 import { fullPath, inHaram, planRoute, planRoutes } from '../../src/routing/plan';
 import { initialBearing, shared, turnPenalty } from '../../src/routing/alternatives';
-import { GARAGE } from '../../src/routing/garage';
-import { loadStreets } from '../../src/routing/streets';
+import { ENTRANCES, GARAGE } from '../../src/routing/garage';
+import { Streets, loadStreets } from '../../src/routing/streets';
 import { insideRect, network, pathLength, toM } from '../../src/routing/walk';
 
 const P = (id: number) => POI_BY_ID.get(id)!;
@@ -315,4 +315,86 @@ describe('routes pass beside restroom buildings, never over them (owner, 2026-10
     expect(routes).toBeGreaterThan(500);
     expect([...new Set(bad)].slice(0, 8)).toEqual([]);
   }, 180_000);
+});
+
+describe('driving on public roads only, by the rules (owner, 2026-10-13)', () => {
+  // A small made-up network, 100 m blocks, to check each rule on its own.
+  const ll = (x: number, y: number): LatLng => [24.4673 + y / 111_320, 39.6111 + x / (111_320 * Math.cos((24.4673 * Math.PI) / 180))];
+  const net = (ways: number[][], nodes: [number, number][], restrictions: number[][] = []) =>
+    new Streets({ nodes: nodes.map(([x, y]) => ll(x, y)), ways, parking_entrances: [], restrictions });
+  const RES = 1 | (5 << 6); // a car way, residential
+  const PRI = 1 | (1 << 6); // a car way, primary
+  const nodeAt = (S: Streets, x: number, y: number) => S.nearestNode(toM(ll(x, y)), 'drive');
+  const pathOf = (S: Streets, from: [number, number], to: [number, number]) => {
+    const r = S.reach(ll(...from), 'drive')!;
+    return S.nodesTo(r, nodeAt(S, ...to));
+  };
+
+  it('never turns back on itself (no U-turn) except where the road ends', () => {
+    // A two-way street 0—1—2 with a side street 1—3; starting just east of 1 heading… either way is fine,
+    // but a route from the middle of 0–1 to 0 must not go to 1 and come back.
+    const S = net([[RES, 0, 0, 1, 2], [RES, 0, 1, 3]], [[0, 0], [100, 0], [200, 0], [100, 100]]);
+    const r = S.reach(ll(60, 0), 'drive')!;
+    const p = S.nodesTo(r, nodeAt(S, 0, 0));
+    expect(p).toEqual([0]); // straight on to 0 — not via 1 and back
+  });
+
+  it('obeys "no turn" and "only this turn" restrictions from OpenStreetMap', () => {
+    // A cross at node 1: west arm 0, east arm 2, north arm 3, south arm 4, and a road 3—5—2 round the
+    // north-east block; the car starts on the west arm heading east.
+    const nodes: [number, number][] = [[0, 0], [100, 0], [200, 0], [100, 100], [100, -100], [200, 100]];
+    const ways = [[RES, 0, 0, 1], [RES, 0, 1, 2], [RES, 0, 1, 3], [RES, 0, 1, 4], [RES, 0, 3, 5], [RES, 0, 5, 2]];
+    // Without a restriction, west → north turns left at 1.
+    expect(pathOf(net(ways, nodes), [20, 0], [100, 100])).toEqual([1, 3]);
+    // "No left turn" 0→1→3: it must go another way round (on to 2, then up and back west).
+    const noLeft = pathOf(net(ways, nodes, [[0, 1, 3, 0]]), [20, 0], [100, 100]);
+    expect(noLeft.slice(0, 2)).not.toEqual([1, 3]);
+    expect(noLeft).toContain(2);
+    // "Only straight on" 0→1→2: neither north nor south at 1.
+    const only = pathOf(net(ways, nodes, [[0, 1, 2, 1]]), [20, 0], [100, -100]);
+    expect(only[1]).toBe(2);
+  });
+
+  it('prefers a main road to a slightly shorter way through a neighbourhood', () => {
+    // From 0 to 3: through the neighbourhood 0—1—3 (≈ 283 m) or on the main road 0—2—3 (300 m).
+    const nodes: [number, number][] = [[0, 0], [100, 100], [150, -10], [200, 0]];
+    const S = net([[RES, 0, 0, 1, 3], [PRI, 0, 0, 2, 3]], nodes);
+    expect(pathOf(S, [1, 0], [200, 0])).toContain(2);
+  });
+
+  it('uses no unnamed surface service road (a car-park aisle, a hotel driveway) except the way into the Haram car park', () => {
+    const data = streetsJson as unknown as { nodes: LatLng[]; ways: number[][]; parking_entrances: LatLng[] };
+    const m = (p: LatLng) => toM(p);
+    for (const [mode, , ...ids] of data.ways) {
+      if (!(mode & 1) || ((mode >> 6) & 7) !== 6 || mode & 4 || mode & 32) continue;
+      const near = ids.some((i) => data.parking_entrances.some((e) => Math.hypot(m(data.nodes[i])[0] - m(e)[0], m(data.nodes[i])[1] - m(e)[1]) < 300));
+      expect(near).toBe(true);
+    }
+  });
+
+  it('reaches the Quba car-park entrance from every side, on public roads', async () => {
+    const S = (await loadStreets())!;
+    const quba = ENTRANCES.find((e) => e.id === 'quba')!;
+    const k = S.nearestNode(toM(quba.street), 'drive');
+    expect(Math.hypot(S.xy[k][0] - toM(quba.street)[0], S.xy[k][1] - toM(quba.street)[1])).toBeLessThan(1);
+    for (const from of [[24.4393, 39.6173], [24.456, 39.6], [24.476, 39.611], [24.4686, 39.6165], [24.4846, 39.5791]] as LatLng[]) {
+      expect(Number.isFinite(S.reach(from, 'drive')!.dist[k]), String(from)).toBe(true);
+    }
+  });
+
+  it('no car route to a historic site turns back on itself', async () => {
+    for (const id of [542, 543, 544, 547, 548]) {
+      const p = await planRoute([24.4668, 39.6111], P(id), 'drive');
+      const d = p.legs[0].path.map((q) => q.join(','));
+      for (let i = 2; i < d.length; i++) expect(d[i] === d[i - 2] && d[i - 1] !== d[i], `${id} at ${d[i - 1]}`).toBe(false);
+    }
+  });
+
+  it('drives to the public car park by a historic site when there is one within 300 m', async () => {
+    for (const id of [542, 543, 548]) {
+      const p = await planRoute([24.4668, 39.6111], P(id), 'drive');
+      expect(p.carPark, `${id}`).toBe(true);
+      expect(p.walkM).toBeLessThan(400);
+    }
+  });
 });
