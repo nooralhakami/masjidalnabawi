@@ -248,3 +248,22 @@ describe('the way on level A is drawn apart (owner, 2026-10-13)', () => {
     expect(out[out.length - 1]).toBe('B');
   });
 });
+
+describe('the car park roads run beside the facilities, not the mosque (owner, 2026-10-13)', () => {
+  const lane = (id: string) => GARAGE.lanes.find((l) => l.id === id)!.path.map(toM);
+  const mosque = network().obstacles[0];
+  it('the east road: nearer the east facilities than the mosque wall', () => {
+    const eastFacilities = toM([POI_BY_ID.get(233)!.lat, POI_BY_ID.get(233)!.lng])[0];
+    for (const [x, y] of lane('east-lane')) {
+      if (y < mosque.y0 || y > mosque.y1) continue; // only alongside the mosque
+      expect(eastFacilities - x, `at y=${y.toFixed(0)}`).toBeLessThan(x - mosque.x1);
+    }
+  });
+  it('the south road: nearer the south facilities than the mosque wall', () => {
+    const southFacilities = toM([POI_BY_ID.get(201)!.lat, POI_BY_ID.get(201)!.lng])[1];
+    for (const [x, y] of lane('south-lane')) {
+      if (x < mosque.x0 || x > mosque.x1) continue;
+      expect(y - southFacilities, `at x=${x.toFixed(0)}`).toBeLessThan(mosque.y0 - y);
+    }
+  });
+});
