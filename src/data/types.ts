@@ -142,6 +142,8 @@ export interface Rules {
     WORKS_PAIR: Record<string, number>;
     MAINT_demo: number[];
     initial_works_demo: number[];
+    /** By car to these places (id → lot id), park in this lot (owner's choice); otherwise the nearest public lot. */
+    drive_lot?: Record<string, number | string>;
     rawdah: {
       gate: number;
       isha_hour_default: number;

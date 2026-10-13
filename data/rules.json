@@ -1,104 +1,111 @@
 {
- "rules": {
-  "WOMEN": [
-   215,
-   216,
-   217,
-   218,
-   219,
-   223,
-   224,
-   229,
-   230,
-   231,
-   232,
-   233,
-   253,
-   254
-  ],
-  "MIXED": [
-   202,
-   210,
-   221
-  ],
-  "ELDERLY": [
-   204
-  ],
-  "ELEV_SOON": [
-   205,
-   207,
-   209,
-   213,
-   215,
-   217,
-   221,
-   223,
-   225,
-   227,
-   229
-  ],
-  "ELEV_WOMEN": [
-   215,
-   217,
-   221,
-   223,
-   229
-  ],
-  "WORKS_PAIR": {
-   "215": 216,
-   "216": 215,
-   "217": 218,
-   "218": 217,
-   "221": 222,
-   "222": 221,
-   "223": 224,
-   "224": 223,
-   "229": 230,
-   "230": 229
+  "rules": {
+    "WOMEN": [
+      215,
+      216,
+      217,
+      218,
+      219,
+      223,
+      224,
+      229,
+      230,
+      231,
+      232,
+      233,
+      253,
+      254
+    ],
+    "MIXED": [
+      202,
+      210,
+      221
+    ],
+    "ELDERLY": [
+      204
+    ],
+    "ELEV_SOON": [
+      205,
+      207,
+      209,
+      213,
+      215,
+      217,
+      221,
+      223,
+      225,
+      227,
+      229
+    ],
+    "ELEV_WOMEN": [
+      215,
+      217,
+      221,
+      223,
+      229
+    ],
+    "WORKS_PAIR": {
+      "215": 216,
+      "216": 215,
+      "217": 218,
+      "218": 217,
+      "221": 222,
+      "222": 221,
+      "223": 224,
+      "224": 223,
+      "229": 230,
+      "230": 229
+    },
+    "MAINT_demo": [
+      212,
+      233,
+      236
+    ],
+    "initial_works_demo": [
+      215
+    ],
+    "rawdah": {
+      "gate": 37,
+      "isha_hour_default": 20,
+      "fajr_hour_default": 5,
+      "schedule_ar": "النساء: بعد صلاة العشاء حتى 12 ليلاً · الرجال: من 12 ليلاً حتى الفجر · النساء: من بعد الفجر حتى 10 صباحاً · الرجال: من 10 صباحاً حتى العشاء"
+    },
+    "drive_lot": {
+      "_note": "Owner, 2026-10-13: by car to these places, park in this lot (otherwise the nearest public lot on foot). Place id → lot id.",
+      "37": 901,
+      "603": 901,
+      "21": 909,
+      "604": 909
+    }
   },
-  "MAINT_demo": [
-   212,
-   233,
-   236
-  ],
-  "initial_works_demo": [
-   215
-  ],
-  "rawdah": {
-   "gate": 37,
-   "isha_hour_default": 20,
-   "fajr_hour_default": 5,
-   "schedule_ar": "النساء: بعد صلاة العشاء حتى 12 ليلاً · الرجال: من 12 ليلاً حتى الفجر · النساء: من بعد الفجر حتى 10 صباحاً · الرجال: من 10 صباحاً حتى العشاء"
-  }
- },
- "colors": {
-  "directions": {
-   "south": "#2E7D32",
-   "west": "#EF6C00",
-   "north": "#C2185B",
-   "east": "#0288D1"
+  "colors": {
+    "directions": {
+      "south": "#2E7D32",
+      "west": "#EF6C00",
+      "north": "#C2185B",
+      "east": "#0288D1"
+    },
+    "categories": {
+      "men": "#1565C0",
+      "women": "#8E24AA",
+      "acc": "#00897B",
+      "gray": "#9E9E9E",
+      "hotel": "#5D4037",
+      "food": "#F57F17",
+      "land": "#4A148C",
+      "emg": "#C62828"
+    }
   },
-  "categories": {
-   "men": "#1565C0",
-   "women": "#8E24AA",
-   "acc": "#00897B",
-   "gray": "#9E9E9E",
-   "hotel": "#5D4037",
-   "food": "#F57F17",
-   "land": "#4A148C",
-   "emg": "#C62828"
+  "map": {
+    "center": [
+      24.4672,
+      39.6111
+    ],
+    "default_zoom": 17,
+    "max_zoom": 19,
+    "tiles": {
+      "satellite": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      "light": "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+    }
   }
- },
- "map": {
-  "center": [
-   24.4672,
-   39.6111
-  ],
-  "default_zoom": 17,
-  "max_zoom": 19,
-  "tiles": {
-   "satellite": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-   "light": "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-  }
- }
 }

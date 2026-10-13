@@ -1,4 +1,4 @@
-import { POIS } from '../data';
+import { POIS, RULES } from '../data';
 import type { LatLng, Poi } from '../data/types';
 import { parkingAccess, parkingEntrances } from '../domain/parking';
 import { loadStreets, type Reach, type Streets } from './streets';
@@ -264,6 +264,19 @@ async function walkLegs(a: LatLng, b: LatLng): Promise<LatLng[]> {
   return pickRoutes((await walkOptions(a, b)).map((path) => ({ path, item: path })))[0] ?? walkPath(a, b);
 }
 
+/** The public lot (not subscribers-only) whose stairs are nearest a place on foot. */
+function nearestLot(to: Poi): Poi | null {
+  let best: { lot: Poi; m: number } | null = null;
+  for (const lot of LOTS) {
+    if (parkingAccess(lot) !== 'public') continue;
+    for (const e of parkingEntrances(lot)) {
+      const m = len(walkPath(at(e), at(to)));
+      if (!best || m < best.m) best = { lot, m };
+    }
+  }
+  return best?.lot ?? null;
+}
+
 /** Of a lot's four entrances (the facilities round it), the one nearest on foot. */
 export function nearestEntrance(from: LatLng, p: Poi): { entrance: Poi; path: LatLng[] } {
   const candidates = parkingEntrances(p).map((entrance) => {
@@ -345,7 +358,12 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B'): Promise<Pla
       },
     ];
   }
-  const lots = to.category === 'parking' ? [to] : LOTS.filter((p) => parkingAccess(p) === 'public');
+  // The lot: the destination itself; or the owner's choice for this place (rules.json drive_lot: the
+  // Rawdah at gate 37 → lot 1, gate 21 → lot 9); or else the public lot nearest the place on foot
+  // (owner, 2026-10-13: the nearest lot, never a subscribers-only one).
+  const choice = LOTS.find((p) => p.id === Number(RULES.rules.drive_lot?.[String(to.id)]) && parkingAccess(p) === 'public');
+  const lot = to.category === 'parking' ? to : (choice ?? nearestLot(to));
+  const lots = lot ? [lot] : [];
   // The car park's two entrances (Quba, Sultana) as street nodes the car can reach. Where the owner
   // drew the way to an entrance (an approach), the streets lead to its start, on the carriageway that
   // goes its way, and the car then follows it.

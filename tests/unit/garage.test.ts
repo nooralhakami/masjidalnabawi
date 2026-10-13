@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { POI_BY_ID } from '../../src/data';
 import type { LatLng } from '../../src/data';
-import { parkingEntrances } from '../../src/domain/parking';
+import { parkingAccess, parkingEntrances } from '../../src/domain/parking';
 import { ENTRANCES, EXITS, GARAGE, LEVELS, garageExit, garageRoute, lotRect, type GarageRoute } from '../../src/routing/garage';
-import { planExit, planRoute } from '../../src/routing/plan';
-import { insideRect, network, toM } from '../../src/routing/walk';
+import { planExit, planRoute, planRoutes } from '../../src/routing/plan';
+import { insideRect, network, pathLength, toM, walkPath } from '../../src/routing/walk';
 
 const P = (id: number) => POI_BY_ID.get(id)!;
 const LOTS = Array.from({ length: 13 }, (_, i) => P(901 + i));
@@ -264,6 +264,26 @@ describe('the car park roads run beside the facilities, not the mosque (owner, 2
     for (const [x, y] of lane('south-lane')) {
       if (x < mosque.x0 || x > mosque.x1) continue;
       expect(y - southFacilities, `at x=${x.toFixed(0)}`).toBeLessThan(mosque.y0 - y);
+    }
+  });
+});
+
+describe('which lot a car is taken to (owner, 2026-10-13)', () => {
+  const FROM: LatLng = [24.4718, 39.6035];
+  it('the Rawdah at gate 37 → lot 1; gate 21 and the women’s entrance behind the Rawdah → lot 9 (the owner’s choice)', async () => {
+    for (const [place, lot] of [[37, 901], [603, 901], [21, 909], [604, 909]] as const) {
+      for (const p of await planRoutes(FROM, P(place), 'drive')) expect(p.lot?.id, `${place}`).toBe(lot);
+    }
+  });
+  it('any other place: the public lot nearest it on foot, never a subscribers-only lot', async () => {
+    const publicLots = LOTS.filter((l) => parkingAccess(l) === 'public');
+    for (const place of [1, 13, 25, 29, 33, 41, 223, 213]) {
+      const plans = await planRoutes(FROM, P(place), 'drive');
+      const lot = plans[0].lot!;
+      expect(parkingAccess(lot), `${place}`).toBe('public');
+      const walk = (l: (typeof LOTS)[number]) => Math.min(...parkingEntrances(l).map((e) => pathLength(walkPath(at(e), at(P(place))))));
+      expect(walk(lot), `${place}`).toBeLessThanOrEqual(Math.min(...publicLots.map(walk)) + 0.01);
+      for (const p of plans) expect(p.lot?.id, `${place}: one lot, by either entrance`).toBe(lot.id);
     }
   });
 });
