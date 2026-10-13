@@ -1118,6 +1118,30 @@
     ]
    ],
    "_note": "Level A only (owner, 2026-10-13): after the yellow ramp a car heads west on the north road; for the west, south and east lots it goes almost a full lap — down the west side (this corner), the west link into the loop, then clockwise. On B this corner is the orange opening and the Sultana entry road."
+  },
+  {
+   "id": "nw-straight",
+   "kind": "link",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "B"
+   ],
+   "px": [
+    [
+     716,
+     318
+    ],
+    [
+     720,
+     331
+    ],
+    [
+     724,
+     345
+    ]
+   ],
+   "_note": "Owner's correction 2026-10-13 (docs/routes/garage-nw-correction-2026-10-13.jpg): coming down from the Sultana entrance the road carries straight on south along the west side — no jog east and back through the orange opening."
   }
  ],
  "entrances": [
@@ -1409,6 +1433,11 @@
    "date": "2026-10-13",
    "image": "garage-east-correction-2026-10-13.jpg",
    "what_ar": "الطرق قريبة من المرافق لا من المسجد: الطريق الشرقي بجانب المرافق الشرقية، والطريق الجنوبي أُزيح 8 م جنوباً بجانب المرافق الجنوبية."
+  },
+  {
+   "date": "2026-10-13",
+   "image": "garage-nw-correction-2026-10-13.jpg",
+   "what_ar": "في الركن الشمالي الغربي الطريق متصل: النازل من مدخل سلطانة يكمل جنوباً مباشرة دون انعطاف شرقاً ثم غرباً."
   }
  ]
 }

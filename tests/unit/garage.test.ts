@@ -287,3 +287,13 @@ describe('which lot a car is taken to (owner, 2026-10-13)', () => {
     }
   });
 });
+
+describe('the north-west corner on level B (owner, 2026-10-13)', () => {
+  it('coming down from the Sultana entrance, the way carries straight on south — no jog east and back west', () => {
+    for (const id of [905, 906, 907]) {
+      const kinds = garageRoute('sultana', P(id), 'B')!.steps.map((s) => s.kind);
+      expect(kinds.slice(0, 2), `P${id - 900}`).toEqual(['e', 's']);
+      expect(garageRoute('sultana', P(id), 'B')!.roads.some((r) => r.lane === 'nw-shared-2'), `P${id - 900}`).toBe(false);
+    }
+  });
+});
