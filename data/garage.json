@@ -874,7 +874,10 @@
    "id": "se-shared",
    "kind": "shared",
    "certain": false,
-   "oneway": true,
+   "oneway": false,
+   "levels": [
+    "B"
+   ],
    "path": [
     [
      24.4677603,
@@ -1162,7 +1165,10 @@
    "id": "nw-shared",
    "kind": "shared",
    "certain": true,
-   "oneway": true,
+   "oneway": false,
+   "levels": [
+    "B"
+   ],
    "path": [
     [
      24.4710163,
@@ -1208,7 +1214,10 @@
    "id": "nw-shared-2",
    "kind": "shared",
    "certain": true,
-   "oneway": true,
+   "oneway": false,
+   "levels": [
+    "B"
+   ],
    "path": [
     [
      24.4701475,
@@ -1239,6 +1248,30 @@
     [
      24.4709575,
      39.6130542
+    ]
+   ]
+  },
+  {
+   "id": "a-nw-corner",
+   "kind": "link",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "A"
+   ],
+   "inferred": true,
+   "path": [
+    [
+     24.4710163,
+     39.6079129
+    ],
+    [
+     24.4705063,
+     39.6079077
+    ],
+    [
+     24.4700043,
+     39.6079606
     ]
    ]
   }
@@ -1495,6 +1528,20 @@
   {
    "id": 908,
    "side": "north",
+   "levels": {
+    "A": {
+     "entry": [
+      24.4710093,
+      39.6088443
+     ],
+     "entry_lane": "exit-north",
+     "exit": [
+      24.4701363,
+      39.6089737
+     ],
+     "exit_lane": "north-lane"
+    }
+   },
    "entry": [
     24.4701363,
     39.6089737
@@ -1510,6 +1557,20 @@
   {
    "id": 909,
    "side": "north",
+   "levels": {
+    "A": {
+     "entry": [
+      24.4710049,
+      39.6100088
+     ],
+     "entry_lane": "exit-north",
+     "exit": [
+      24.4701368,
+      39.6099019
+     ],
+     "exit_lane": "north-lane"
+    }
+   },
    "entry": [
     24.4701368,
     39.6099019
@@ -1525,6 +1586,20 @@
   {
    "id": 910,
    "side": "north",
+   "levels": {
+    "A": {
+     "entry": [
+      24.4709997,
+      39.6109038
+     ],
+     "entry_lane": "exit-north",
+     "exit": [
+      24.4701466,
+      39.6108546
+     ],
+     "exit_lane": "north-lane"
+    }
+   },
    "entry": [
     24.4701466,
     39.6108546
@@ -1540,6 +1615,20 @@
   {
    "id": 911,
    "side": "north",
+   "levels": {
+    "A": {
+     "entry": [
+      24.4709969,
+      39.6118507
+     ],
+     "entry_lane": "exit-north",
+     "exit": [
+      24.4701581,
+      39.6117621
+     ],
+     "exit_lane": "north-lane"
+    }
+   },
    "entry": [
     24.4701581,
     39.6117621

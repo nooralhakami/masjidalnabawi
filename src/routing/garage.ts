@@ -11,7 +11,10 @@ import { fromM, toM, type XY } from './walk';
  *    Quba (south-west) or Sultana (north-west), out at Quba (the main exit) or Sultana.
  *  - Every road is one-way, in the order of its points; traffic circulates to the right (clockwise).
  *  - Level A is reached by the yellow ramp after lot 11 and left by the green ramp between
- *    facilities 220 and 222.
+ *    facilities 220 and 222. Up there a car heads west on the north road, which leads into the north
+ *    lots (the reverse of B); for the others it goes almost a full lap (down the west side, the west
+ *    link into the loop). The orange openings, to switch between the way in and the way out, are on
+ *    B only and can be crossed either way.
  *  - Each of the 13 lots (on both levels) is entered right after its first facility and left by its
  *    own exit (the arrows in the drawing). A lot has four rows of bays: two in the middle, back to
  *    back along a kerb, one on each side, with an aisle between the middle pair and each side row.
@@ -25,20 +28,31 @@ interface Lane {
   kind: LaneKind;
   /** False where the owner is not sure of the drawing yet (the east side). */
   certain: boolean;
+  /** False for the orange openings, crossed either way. */
+  oneway?: boolean;
+  /** The levels the road is on (both when absent): the orange openings are on level B only. */
+  levels?: Level[];
   /** Ramps only: the level the ramp leaves and the one it reaches. */
   from_level?: Level;
   to_level?: Level;
   path: LatLng[];
 }
-interface Lot {
-  id: number;
-  side: 'north' | 'east' | 'south' | 'west';
+interface LotDoors {
   entry: LatLng;
   entry_lane: string;
   exit: LatLng;
   exit_lane: string;
+}
+interface Lot extends LotDoors {
+  id: number;
+  side: 'north' | 'east' | 'south' | 'west';
+  /** Where a level differs (the north lots on A are entered from the north road, westbound). */
+  levels?: Partial<Record<Level, LotDoors>>;
   certain: boolean;
 }
+
+/** A lot's entry and exit on a level. */
+const doors = (lot: Lot, level: Level): LotDoors => lot.levels?.[level] ?? lot;
 export interface GarageData {
   lanes: Lane[];
   /**
@@ -118,15 +132,17 @@ function buildGraph(data: GarageData): Graph {
   };
   const lines = new Map<Level, Map<string, XY[]>>();
   for (const level of LEVELS) {
-    const ls = new Map(roads.map((l) => [l.id, l.path.map(toM)]));
+    const onLevel = roads.filter((l) => !l.levels || l.levels.includes(level));
+    const ls = new Map(onLevel.map((l) => [l.id, l.path.map(toM)]));
     const add = (id: string, p: XY) => ls.has(id) && ls.set(id, insertInto(ls.get(id)!, p));
     if (level === 'B') {
       for (const e of data.entrances) add(e.lane, toM(e.street));
       for (const x of data.exits) add(x.lane, toM(x.mouth));
     }
     for (const lot of data.lots) {
-      add(lot.entry_lane, toM(lot.entry));
-      add(lot.exit_lane, toM(lot.exit));
+      const d = doors(lot, level);
+      add(d.entry_lane, toM(d.entry));
+      add(d.exit_lane, toM(d.exit));
     }
     for (const r of ramps) {
       const end = r.from_level === level ? r.path[0] : r.to_level === level ? r.path[r.path.length - 1] : null;
@@ -153,8 +169,13 @@ function buildGraph(data: GarageData): Graph {
     lines.set(level, ls);
     for (const [id, pts] of ls) {
       const ids = pts.map((p) => node(p, level));
+      const twoWay = onLevel.find((l) => l.id === id)?.oneway === false;
       for (let i = 1; i < ids.length; i++) {
-        if (ids[i] !== ids[i - 1]) edge(ids[i - 1], { to: ids[i], via: [nodes[ids[i]].p], m: d2(nodes[ids[i - 1]].p, nodes[ids[i]].p), lane: id });
+        if (ids[i] === ids[i - 1]) continue;
+        const m = d2(nodes[ids[i - 1]].p, nodes[ids[i]].p);
+        edge(ids[i - 1], { to: ids[i], via: [nodes[ids[i]].p], m, lane: id });
+        // The orange openings: from the entry road to the exit road, or back.
+        if (twoWay) edge(ids[i], { to: ids[i - 1], via: [nodes[ids[i - 1]].p], m, lane: id });
       }
     }
   }
@@ -292,6 +313,8 @@ export interface GarageRoute {
   bay: LatLng;
   level: Level;
   ramps: RampOnWay[];
+  /** The roads taken, in order, each with the level it was driven on. */
+  roads: { lane: string; level: Level }[];
   meters: number;
   /** Whether every road on the way is one the owner is sure of. */
   certain: boolean;
@@ -311,6 +334,7 @@ function finish(roads: { pts: XY[]; lanes: string[]; levels: Level[] }, inLot: X
     bay: fromM(bay),
     level,
     ramps,
+    roads: roads.lanes.map((lane, i) => ({ lane, level: roads.levels[i + 1] })).filter((r, i, a) => i === 0 || r.lane !== a[i - 1].lane || r.level !== a[i - 1].level),
     meters: lengthOf(driven),
     certain: lot.certain && !roads.lanes.some((l) => unsure.has(l)),
   };
@@ -324,7 +348,7 @@ export function garageRoute(entrance: EntranceId, lot: Poi, towards: LatLng | nu
   const ent = ENTRANCES.find((e) => e.id === entrance);
   const l = lotData(lot);
   if (!ent || !l) return null;
-  const roads = shortest(nodeAt(toM(ent.street), 'B'), nodeAt(toM(l.entry), level));
+  const roads = shortest(nodeAt(toM(ent.street), 'B'), nodeAt(toM(doors(l, level).entry), level));
   if (!roads) return null;
   const inLot = insideLot(lot, roads.pts[roads.pts.length - 1], towards ? toM(towards) : null);
   if (!inLot) return null;
@@ -340,7 +364,7 @@ export function garageExit(lot: Poi, exit: EntranceId, level: Level = 'B', from:
   const x = EXITS.find((e) => e.id === exit);
   const l = lotData(lot);
   if (!x || !l) return null;
-  const roads = shortest(nodeAt(toM(l.exit), level), nodeAt(toM(x.mouth), 'B'));
+  const roads = shortest(nodeAt(toM(doors(l, level).exit), level), nodeAt(toM(x.mouth), 'B'));
   if (!roads) return null;
   const inLot = insideLot(lot, roads.pts[0], from ? toM(from) : null);
   if (!inLot) return null;

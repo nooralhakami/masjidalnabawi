@@ -91,7 +91,13 @@ lots = []
 for lot in d['lots']:
     e = nearest_on({lot['entry_lane']}, m(lot['entry_px']))
     x = nearest_on({lot['exit_lane']}, m(lot['exit_px']))
-    lots.append({'id': lot['id'], 'side': lot['side'], 'entry': ll(e[1]), 'entry_lane': e[2], 'exit': ll(x[1]), 'exit_lane': x[2], 'certain': lot.get('certain', True)})
+    per_level = {}
+    for level, alt in ((k, v) for k, v in lot.items() if k in ('A', 'B')):
+        ae = nearest_on({alt['entry_lane']}, m(alt['entry_px']))
+        ax = nearest_on({alt['exit_lane']}, m(alt['exit_px']))
+        per_level[level] = {'entry': ll(ae[1]), 'entry_lane': ae[2], 'exit': ll(ax[1]), 'exit_lane': ax[2]}
+        print(f"lot {lot['id'] - 900:2} level {level}: entry on {ae[2]} ({ae[0]:.1f} m), exit on {ax[2]} ({ax[0]:.1f} m)")
+    lots.append({'id': lot['id'], 'side': lot['side'], **({'levels': per_level} if per_level else {}), 'entry': ll(e[1]), 'entry_lane': e[2], 'exit': ll(x[1]), 'exit_lane': x[2], 'certain': lot.get('certain', True)})
     print(f"lot {lot['id'] - 900:2}: entry on {e[2]} ({e[0]:.1f} m from the arrow), exit on {x[2]} ({x[0]:.1f} m)")
 
 # Extra drawings (a closer look at one side): each calibrated on its own facility markers. They give
@@ -135,6 +141,8 @@ out = {
     'rule': 'oneway',
     'lanes': [
         {'id': l['id'], 'kind': l['kind'], 'certain': l['certain'], 'oneway': l.get('oneway', True),
+         **({'levels': l['levels']} if 'levels' in l else {}),
+         **({'inferred': True} if l.get('inferred') else {}),
          **({'from_level': l['from_level'], 'to_level': l['to_level']} if 'from_level' in l else {}),
          'path': [ll(p) for p in lanes[l['id']]]}
         for l in d['lanes']

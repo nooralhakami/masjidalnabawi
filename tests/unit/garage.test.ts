@@ -49,7 +49,8 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
   });
 
   it('every road is one-way: no way in or out ever drives a road against its direction', () => {
-    const roads = GARAGE.lanes.map((l) => l.path.map(toM));
+    // The orange openings are crossed either way; every other road one way only.
+    const roads = GARAGE.lanes.filter((l) => l.oneway !== false).map((l) => l.path.map(toM));
     for (const [name, way] of allWays()) {
       expect(way, name).toBeTruthy();
       const pts = way.path.map(toM);
@@ -101,6 +102,28 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
         expect(garageExit(lot, x.id, 'A')!.ramps.map((r) => r.to), `out of P${lot.id - 900}A`).toEqual(['B']);
       }
     }
+  });
+
+  it('the orange openings (to switch between the way in and the way out) are on level B only', () => {
+    const shared = new Set(GARAGE.lanes.filter((l) => l.kind === 'shared').map((l) => l.id));
+    expect(shared.size).toBeGreaterThan(0);
+    for (const l of GARAGE.lanes.filter((x) => shared.has(x.id))) {
+      expect(l.levels).toEqual(['B']);
+      expect(l.oneway).toBe(false);
+    }
+    for (const [name, way] of allWays()) for (const r of way.roads) if (shared.has(r.lane)) expect(r.level, name).toBe('B');
+  });
+
+  it('on level A, the north lots are entered from the north road (after the yellow ramp, heading west); on B from the inner road', () => {
+    for (const id of [908, 909, 910, 911]) {
+      const r = lotRect(P(id))!;
+      const a = toM(garageRoute('sultana', P(id), null, 'A')!.gate);
+      const b = toM(garageRoute('sultana', P(id), null, 'B')!.gate);
+      expect(Math.abs(a[1] - r.y1), `P${id - 900}A at the north edge`).toBeLessThan(0.01);
+      expect(Math.abs(b[1] - r.y0), `P${id - 900}B at the south edge`).toBeLessThan(0.01);
+    }
+    // The others on A: almost a full lap, longer than on B.
+    for (const id of [901, 905, 912]) expect(garageRoute('sultana', P(id), null, 'A')!.meters).toBeGreaterThan(garageRoute('sultana', P(id), null, 'B')!.meters + 800);
   });
 
   it('the way out ends where the exit road leaves the car park (level B), then goes on to the streets', () => {

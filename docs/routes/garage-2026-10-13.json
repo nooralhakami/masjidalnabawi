@@ -741,7 +741,10 @@
      771
     ]
    ],
-   "oneway": true
+   "oneway": false,
+   "levels": [
+    "B"
+   ]
   },
   {
    "id": "west-link",
@@ -1009,7 +1012,10 @@
      199.5
     ]
    ],
-   "oneway": true
+   "oneway": false,
+   "levels": [
+    "B"
+   ]
   },
   {
    "id": "ramp-down-B",
@@ -1055,7 +1061,10 @@
      344.5
     ]
    ],
-   "oneway": true
+   "oneway": false,
+   "levels": [
+    "B"
+   ]
   },
   {
    "id": "ramp-up-A",
@@ -1078,6 +1087,31 @@
    "from_level": "B",
    "to_level": "A",
    "oneway": true
+  },
+  {
+   "id": "a-nw-corner",
+   "kind": "link",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "A"
+   ],
+   "inferred": true,
+   "px": [
+    [
+     716,
+     153.5
+    ],
+    [
+     715,
+     250
+    ],
+    [
+     724,
+     345
+    ]
+   ],
+   "_note": "Level A only (owner, 2026-10-13): after the yellow ramp a car heads west on the north road; for the west, south and east lots it goes almost a full lap — down the west side (this corner), the west link into the loop, then clockwise. On B this corner is the orange opening and the Sultana entry road."
   }
  ],
  "entrances": [
@@ -1131,7 +1165,19 @@
    ],
    "side": "north",
    "entry_lane": "north-lane",
-   "exit_lane": "exit-north"
+   "exit_lane": "exit-north",
+   "A": {
+    "entry_lane": "exit-north",
+    "entry_px": [
+     877,
+     197
+    ],
+    "exit_lane": "north-lane",
+    "exit_px": [
+     898,
+     345
+    ]
+   }
   },
   {
    "id": 909,
@@ -1145,7 +1191,19 @@
    ],
    "side": "north",
    "entry_lane": "north-lane",
-   "exit_lane": "exit-north"
+   "exit_lane": "exit-north",
+   "A": {
+    "entry_lane": "exit-north",
+    "entry_px": [
+     1076,
+     196
+    ],
+    "exit_lane": "north-lane",
+    "exit_px": [
+     1058,
+     348
+    ]
+   }
   },
   {
    "id": 910,
@@ -1159,7 +1217,19 @@
    ],
    "side": "north",
    "entry_lane": "north-lane",
-   "exit_lane": "exit-north"
+   "exit_lane": "exit-north",
+   "A": {
+    "entry_lane": "exit-north",
+    "entry_px": [
+     1230,
+     195
+    ],
+    "exit_lane": "north-lane",
+    "exit_px": [
+     1222,
+     347
+    ]
+   }
   },
   {
    "id": 911,
@@ -1173,7 +1243,19 @@
    ],
    "side": "north",
    "entry_lane": "north-lane",
-   "exit_lane": "exit-north"
+   "exit_lane": "exit-north",
+   "A": {
+    "entry_lane": "exit-north",
+    "entry_px": [
+     1393,
+     193
+    ],
+    "exit_lane": "north-lane",
+    "exit_px": [
+     1378,
+     342
+    ]
+   }
   },
   {
    "id": 912,
@@ -1312,6 +1394,8 @@
   "oneway": "كل طريق باتجاه واحد، بترتيب نقاطه (بطلب المالك 2026-10-13). «جميع الطرق يمين»: الحركة تدور يميناً، أي مع عقارب الساعة.",
   "levels": "الطرق نفسها في الدورين: B السفلي وA العلوي. الدخول والخروج الرئيسيان من B فقط. الصعود إلى A بالأصفر بعد موقف 11، والنزول إلى B بالأخضر بين المرفقين 220 و222.",
   "south_exit": "المواقف الجنوبية تخرج إلى الطريق السفلي وتكمل شرقاً، ثم شمالاً إلى الخروج الأحمر في الجهة الشرقية.",
-  "west_link": "الوصلة الزرقاء عند y≈894 من طريق الخروج الغربي إلى أول الطريق الغربي: عودة إلى حلقة الدخول (شرقاً)."
+  "west_link": "الوصلة الزرقاء عند y≈894: من طريق الخروج الغربي إلى الحلقة، بدل الذهاب إلى المواقف الجنوبية وأخذ لفة كاملة (بقول المالك).",
+  "shared": "البرتقالي في الدور B فقط: فتحة بين مسار الدخول ومسار الخروج لمن غيّر رأيه، تُعبر في الاتجاهين (بتصحيح المالك 2026-10-13).",
+  "level_A": "الدور A (بقول المالك): بعد الطلعة الصفراء تتجه السيارة غرباً على الطريق الشمالي، ومنه تدخل المواقف الشمالية (عكس B)، وتخرج منها إلى الطريق الشمالي الداخلي. المواقف الغربية والجنوبية والشرقية كما في B، فيلزم ما يقارب دورة كاملة: نزولاً من الركن الشمالي الغربي إلى الطريق الغربي، ثم الوصلة إلى الحلقة."
  }
 }
