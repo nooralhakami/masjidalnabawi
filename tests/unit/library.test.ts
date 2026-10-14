@@ -97,7 +97,7 @@ describe('companion cards (drafts written from the cited pages)', () => {
 
   describe('mosque places (drafts written from the cited pages)', () => {
     type Fact = { ar: string; src: [string, string][]; needs?: string };
-    type Place = { id: string; review: string; where: Fact; story?: Fact[]; related_companions?: string[] };
+    type Place = { id: string; review: string; where: Fact; story?: Fact[]; related_companions?: string[]; map_poi?: number };
     const m = mosque as unknown as { sources: Record<string, { t: string }>; places: Place[] };
     const facts = (p: Place): Fact[] => [p.where, ...(p.story ?? [])];
 
@@ -119,6 +119,7 @@ describe('companion cards (drafts written from the cited pages)', () => {
       for (const p of m.places) {
         if (p.review === 'approved') expect(approvalProblems(p as unknown as LibraryItem), p.id).toEqual([]);
         for (const c of p.related_companions ?? []) expect(ids.has(c), `${p.id}: ${c}`).toBe(true);
+        if (p.map_poi) expect(poisJson.some((x: { id: number }) => x.id === p.map_poi), `${p.id}: poi ${p.map_poi}`).toBe(true);
       }
       expect(published(m.places as unknown as LibraryItem[]).every((p) => p.reviewer)).toBe(true);
     });

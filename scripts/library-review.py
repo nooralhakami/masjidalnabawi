@@ -69,7 +69,10 @@ for pl in m['places']:
         if f.get('needs'):
             lines.append(f'> ⚠️ **ينقصه:** {f["needs"]}')
         return '\n\n'.join(l for l in lines if l)
-    out += ['## موضعه', mfact(pl['where']), '', '## قصته']
+    out += ['## موضعه', mfact(pl['where']), '']
+    if pl.get('map_poi'):
+        out += [f'> على الخريطة (اسماً لا موضعاً دقيقاً): {pois.get(pl["map_poi"], pl["map_poi"])}', '']
+    out += ['## قصته']
     for i, f in enumerate(pl.get('story', []), 1):
         out += [mfact(f, f.get('title') or f'{i}.'), '']
     if pl.get('related_companions'):
