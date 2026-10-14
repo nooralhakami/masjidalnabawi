@@ -365,6 +365,9 @@ function deselect() {
   state.selected = null;
   layer.select(null);
   sheet.hide();
+  // Closing the card ends the search too (owner, 2026-10-14): every place comes back on the map,
+  // not only those matching the words still in the box.
+  if (header.query.trim()) header.clear();
 }
 
 map.on('click', () => {

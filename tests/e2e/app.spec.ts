@@ -117,6 +117,27 @@ test.describe('search and sheet', () => {
     await expect(sheet).toHaveAttribute('data-state', 'closed');
   });
 
+  test('closing the card after a search brings every place back; tapping a filled box shows the results again (owner, 2026-10-14)', async ({ page, errors: _ }) => {
+    await openMap(page, 'ar');
+    const all = await count(page);
+    await search(page, '38');
+    expect(await count(page)).toBeLessThan(all);
+    await page.getByRole('combobox').press('Enter');
+    const sheet = page.locator('.sheet');
+    await expect(sheet).toHaveAttribute('data-state', 'half');
+    await expect(page.locator('#results')).toBeHidden();
+    // The words are still there: tapping the box shows their results without typing again.
+    await page.getByRole('combobox').click();
+    await expect(page.locator('#results')).toBeVisible();
+    await page.getByRole('combobox').press('Escape');
+    await page.getByRole('combobox').fill('38');
+    await page.getByRole('combobox').press('Enter');
+    await sheet.locator('[data-act="close"]').click();
+    await expect(sheet).toHaveAttribute('data-state', 'closed');
+    await expect(page.getByRole('combobox')).toHaveValue('');
+    await expect.poll(() => count(page)).toBe(all);
+  });
+
   test('parking by level code and English names from any language', async ({ page, errors: _ }) => {
     await openMap(page, 'tr');
     await search(page, '1A');
