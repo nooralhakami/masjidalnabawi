@@ -10,11 +10,15 @@ import { fromM, toM, type XY } from './walk';
  *  - Two levels with the same roads: B below, A above. Cars come in and go out by B only: in at
  *    Quba (south-west) or Sultana (north-west), out at Quba (the main exit) or Sultana.
  *  - Every road is one-way, in the order of its points; traffic circulates to the right (clockwise).
- *  - Level A is reached by the yellow ramp after lot 11 and left by the green ramp between
- *    facilities 220 and 222. Up there a car heads west on the north road, which leads into the north
- *    lots (the reverse of B); for the others it goes almost a full lap (down the west side, the west
- *    link into the loop). The orange openings, to switch between the way in and the way out, are on
- *    B only and can be crossed either way.
+ *  - Level A is reached by the yellow ramp after lot 11 and left by the green ramps: one between
+ *    facilities 220 and 222, one beside the yellow ramp (north, onto the exit road). Up there a car
+ *    heads west on the north road, which leads into the north lots (the reverse of B); for the others
+ *    it goes almost a full lap (down the west side, the west link into the loop). The orange openings,
+ *    to switch between the way in and the way out, can be crossed either way (the north-west ones on
+ *    B only).
+ *  - The east side is cut between lots 12 and 13 (owner, 2026-10-14): lot 12 is reached from the
+ *    north road, lot 13 from the south (the Quba way in); from Sultana to the south lots a car goes
+ *    down the west side and turns left at the Quba exit.
  *  - Each of the 13 lots (on both levels) is entered right after its first facility and left by its
  *    own exit (the arrows in the drawing). A route ends at the lot's entrance and the way out starts
  *    at its exit (owner, 2026-10-13): the visitor parks where they like inside.
