@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import hadith from '../../data/library/hadith.json';
+import companions from '../../data/library/companions.json';
+import poisJson from '../../data/pois.json';
 import { approvalProblems, published, textFor, type LibraryItem } from '../../src/domain/library';
 
 const LANGS = ['ar', 'en', 'tr', 'ur', 'id', 'uz', 'bn', 'fr', 'fa', 'ru', 'ms', 'ha', 'ml', 'sw', 'ps', 'so', 'ta', 'hi', 'bs', 'de', 'zh', 'am', 'ku', 'az', 'th', 'es'];
@@ -44,5 +46,51 @@ describe('the library (owner, 2026-10-14)', () => {
   it('records the source, its terms and the version (fetch date) the encyclopedia requires', () => {
     expect(hadith.source.url).toContain('hadeethenc.com');
     expect(hadith.source.fetched).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+describe('companion cards (drafts written from the cited pages)', () => {
+  type Fact = { ar: string; src: [string, string, string?][]; needs?: string; place?: number };
+  type Card = Record<string, unknown> & { id: string; review: string; places?: number[]; hadith_links?: string[] };
+  const data = companions as unknown as { sources: Record<string, { t: string; u?: string }>; companions: Card[] };
+  /** Every fact of a card: objects with an Arabic text and sources, at any depth. */
+  const facts = (v: unknown): Fact[] =>
+    Array.isArray(v) ? v.flatMap(facts) : v && typeof v === 'object' ? ('ar' in (v as object) && 'src' in (v as object) ? [v as Fact] : Object.values(v as object).flatMap(facts)) : [];
+
+  it('every fact names its sources (book and volume/page or hadith number), from the declared list', () => {
+    for (const c of data.companions) {
+      const fs = facts(c);
+      expect(fs.length, c.id).toBeGreaterThan(5);
+      for (const f of fs) {
+        expect(f.src.length, `${c.id}: ${f.ar.slice(0, 30)}`).toBeGreaterThan(0);
+        for (const [key, where] of f.src) {
+          expect(Object.keys(data.sources), c.id).toContain(key);
+          expect(where, `${c.id}: ${key}`).toBeTruthy();
+        }
+      }
+    }
+  });
+
+  it('a fact with fewer than two sources says what it still needs — and such a card cannot be approved', () => {
+    for (const c of data.companions) {
+      const weak = facts(c).filter((f) => new Set(f.src.map((s) => s[0])).size < 2);
+      for (const f of weak) expect(f.needs, `${c.id}: «${f.ar.slice(0, 40)}» has one source and no note`).toBeTruthy();
+      if (weak.length || facts(c).some((f) => f.needs)) expect(c.review, c.id).toBe('draft');
+    }
+  });
+
+  it('linked map places and hadiths exist', () => {
+    const ids = new Set(poisJson.map((p: { id: number }) => p.id));
+    const hadithIds = new Set(hadith.hadiths.map((h) => h.id));
+    for (const c of data.companions) {
+      for (const p of [...(c.places ?? []), ...facts(c).flatMap((f) => (f.place ? [f.place] : []))]) expect(ids.has(p), `${c.id}: place ${p}`).toBe(true);
+      for (const h of c.hadith_links ?? []) expect(hadithIds.has(h), `${c.id}: hadith ${h}`).toBe(true);
+    }
+  });
+
+  it('keeps ﷺ and the honorific text intact', () => {
+    const all = JSON.stringify(data);
+    expect(all).toContain('ﷺ');
+    expect(all).not.toMatch(/�/);
   });
 });
