@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import hadith from '../../data/library/hadith.json';
 import companions from '../../data/library/companions.json';
+import mosque from '../../data/library/mosque.json';
 import poisJson from '../../data/pois.json';
 import { approvalProblems, published, textFor, type LibraryItem } from '../../src/domain/library';
 
@@ -92,5 +93,34 @@ describe('companion cards (drafts written from the cited pages)', () => {
     const all = JSON.stringify(data);
     expect(all).toContain('ﷺ');
     expect(all).not.toMatch(/�/);
+  });
+
+  describe('mosque places (drafts written from the cited pages)', () => {
+    type Fact = { ar: string; src: [string, string][]; needs?: string };
+    type Place = { id: string; review: string; where: Fact; story?: Fact[]; related_companions?: string[] };
+    const m = mosque as unknown as { sources: Record<string, { t: string }>; places: Place[] };
+    const facts = (p: Place): Fact[] => [p.where, ...(p.story ?? [])];
+
+    it('every fact names declared sources, and two of them unless it says what it needs', () => {
+      for (const p of m.places) {
+        for (const f of facts(p)) {
+          for (const [key, where] of f.src) {
+            expect(Object.keys(m.sources), p.id).toContain(key);
+            expect(where, `${p.id}: ${key}`).toBeTruthy();
+          }
+          if (new Set(f.src.map((s) => s[0])).size < 2) expect(f.needs, `${p.id}: «${f.ar.slice(0, 40)}»`).toBeTruthy();
+        }
+        if (facts(p).some((f) => f.needs)) expect(p.review, p.id).toBe('draft');
+      }
+    });
+
+    it('nothing is approved without a reviewer, and linked companions exist', () => {
+      const ids = new Set(data.companions.map((c) => c.id));
+      for (const p of m.places) {
+        if (p.review === 'approved') expect(approvalProblems(p as unknown as LibraryItem), p.id).toEqual([]);
+        for (const c of p.related_companions ?? []) expect(ids.has(c), `${p.id}: ${c}`).toBe(true);
+      }
+      expect(published(m.places as unknown as LibraryItem[]).every((p) => p.reviewer)).toBe(true);
+    });
   });
 });

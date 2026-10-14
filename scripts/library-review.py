@@ -1,5 +1,5 @@
-"""Write docs/library/review/<id>.md from data/library/companions.json: one page per companion for
-the reviewer, every fact with its sources (links to the page) and what it still needs.
+"""Write docs/library/review/<id>.md from data/library/companions.json and mosque.json: one page per
+companion or mosque place for the reviewer, every fact with its sources (links to the page) and what it still needs.
 
     python3 scripts/library-review.py
 """
@@ -14,7 +14,7 @@ pois = {p['id']: p['name_ar'] for p in json.load(open('data/pois.json', encoding
 os.makedirs('docs/library/review', exist_ok=True)
 
 
-def src_line(src):
+def src_line(src, S=S):
     out = []
     for s in src:
         key, where = s[0], s[1]
@@ -58,3 +58,23 @@ for c in d['companions']:
     out += ['---', '**اعتماد المراجع:** الاسم: ________  التاريخ: ________  الملاحظات: ________', '']
     open(f'docs/library/review/{c["id"]}.md', 'w', encoding='utf-8').write('\n'.join(out))
     print('docs/library/review/' + c['id'] + '.md')
+
+
+# Mosque places (data/library/mosque.json)
+m = json.load(open('data/library/mosque.json', encoding='utf-8'))
+for pl in m['places']:
+    out = [f'# {pl["name"]} — للمراجعة', '', f'- **الحالة:** {"مسودة (لم تُعتمد)" if pl["review"] == "draft" else "معتمدة"}.', '']
+    def mfact(f, title=None):
+        lines = [f'**{title}**' if title else '', f['ar'], f'> المصادر: {src_line(f["src"], m["sources"])}']
+        if f.get('needs'):
+            lines.append(f'> ⚠️ **ينقصه:** {f["needs"]}')
+        return '\n\n'.join(l for l in lines if l)
+    out += ['## موضعه', mfact(pl['where']), '', '## قصته']
+    for i, f in enumerate(pl.get('story', []), 1):
+        out += [mfact(f, f.get('title') or f'{i}.'), '']
+    if pl.get('related_companions'):
+        names = {c['id']: c['name'] for c in d['companions']}
+        out += ['## صحابة مرتبطون به', '، '.join(names.get(i, i) for i in pl['related_companions']), '']
+    out += ['---', '**اعتماد المراجع:** الاسم: ________  التاريخ: ________  الملاحظات: ________', '']
+    open(f'docs/library/review/mosque-{pl["id"]}.md', 'w', encoding='utf-8').write('\n'.join(out))
+    print('docs/library/review/mosque-' + pl['id'] + '.md')
