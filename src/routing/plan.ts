@@ -1,4 +1,4 @@
-import { POIS, RULES } from '../data';
+import { POIS, POI_BY_ID, RULES } from '../data';
 import type { LatLng, Poi } from '../data/types';
 import { parkingAccess, parkingEntrances } from '../domain/parking';
 import { loadStreets, type Reach, type Streets } from './streets';
@@ -294,6 +294,17 @@ export function nearestEntrance(from: LatLng, p: Poi): { entrance: Poi; path: La
  * route ends at the nearest of its four entrances. With the visitor's heading (on a re-route), a
  * route that starts by turning them round ranks lower.
  */
+/**
+ * Where a walk to a place really ends: a restroom at its door, not round the back of the building
+ * (owner, 2026-10-14); gates 37 and 38 through the Rawdah entrance in front of gate 37, then in to the
+ * gate, not across the mosque (owner, 2026-10-14, rules.json gate_via). `tail`: the way on from `end`.
+ */
+function approach(to: Poi): { end: LatLng; tail: LatLng[] } {
+  const via = POI_BY_ID.get(Number(RULES.rules.gate_via?.[String(to.id)]));
+  if (via) return { end: at(via), tail: [at(to)] };
+  return { end: restroomDoor(to) ?? at(to), tail: [] };
+}
+
 async function planWalks(from: LatLng, to: Poi, heading?: number | null): Promise<Plan[]> {
   let target = to;
   let extra: Partial<Plan> = {};
@@ -302,10 +313,9 @@ async function planWalks(from: LatLng, to: Poi, heading?: number | null): Promis
     target = n.entrance;
     extra = { entrances: parkingEntrances(to), nearest: n.entrance };
   }
-  // A restroom: to its door, not round the back of the building (owner, 2026-10-14).
-  const end = restroomDoor(target) ?? at(target);
-  const options = await walkOptions(from, end);
-  const paths = pickRoutes((options.length ? options : [walkPath(from, end)]).map((path) => ({ path, item: path, penalty: turnPenalty(path, heading) })));
+  const { end, tail } = approach(target);
+  const options = (await walkOptions(from, end)).map((path) => [...path, ...tail]);
+  const paths = pickRoutes((options.length ? options : [[...walkPath(from, end), ...tail]]).map((path) => ({ path, item: path, penalty: turnPenalty(path, heading) })));
   return paths.map((path) => {
     const walkM = len(path);
     return { mode: 'walk', legs: [{ kind: 'walk', path }], walkM, driveM: 0, minutes: Math.max(1, Math.ceil(walkM / WALK_M_PER_MIN)), ...extra };
@@ -338,7 +348,8 @@ function lotFor(to: Poi): Poi | null {
 function walkUp(lot: Poi, to: Poi): { e: Poi; path: LatLng[]; m: number } | null {
   if (to.category === 'parking') return null;
   return parkingEntrances(lot).reduce<{ e: Poi; path: LatLng[]; m: number } | null>((m, e) => {
-    const path = walkPath(at(e), restroomDoor(to) ?? at(to));
+    const { end, tail } = approach(to);
+    const path = [...walkPath(at(e), end), ...tail];
     const pm = len(path);
     return !m || pm < m.m ? { e, path, m: pm } : m;
   }, null);

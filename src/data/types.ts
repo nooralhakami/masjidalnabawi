@@ -144,6 +144,8 @@ export interface Rules {
     initial_works_demo: number[];
     /** By car to these places (id → lot id), park in this lot (owner's choice); otherwise the nearest public lot. */
     drive_lot?: Record<string, number | string>;
+    /** Gates reached through another place first (the Rawdah entrance for gates 37 and 38). Gate id → place id. */
+    gate_via?: Record<string, number | string>;
     rawdah: {
       gate: number;
       isha_hour_default: number;

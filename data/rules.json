@@ -76,6 +76,11 @@
       "603": 901,
       "21": 909,
       "604": 909
+    },
+    "gate_via": {
+      "_note": "Owner, 2026-10-14: these gates are reached through this entrance (the Rawdah entrance on the south plaza, in front of gate 37), not across the mosque. Gate id → place id.",
+      "37": 603,
+      "38": 603
     }
   },
   "colors": {

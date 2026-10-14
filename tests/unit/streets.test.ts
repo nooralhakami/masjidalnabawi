@@ -399,3 +399,22 @@ describe('driving on public roads only, by the rules (owner, 2026-10-13)', () =>
     }
   });
 });
+
+describe('gates 37 and 38 are reached through the Rawdah entrance in front of gate 37 (owner, 2026-10-14)', () => {
+  it('from the north, the east and the south: to the Rawdah entrance on the south plaza, then in to the gate', async () => {
+    const via = toM([P(603).lat, P(603).lng]);
+    const mosque = network().obstacles[0];
+    for (const id of [37, 38]) {
+      for (const from of [[24.471, 39.6106], [24.4686, 39.6141], [24.466, 39.6111]] as LatLng[]) {
+        for (const plan of await planRoutes(from, P(id), 'walk')) {
+          const path = plan.legs.flatMap((l) => l.path).map(toM);
+          const k = path.findIndex((q) => Math.hypot(q[0] - via[0], q[1] - via[1]) < 1);
+          expect(k, `${from} → ${id}`).toBeGreaterThan(0);
+          // Nothing before the entrance runs inside the mosque; after it, straight in to the gate.
+          for (const q of path.slice(0, k)) expect(insideRect(q, mosque), `${from} → ${id}`).toBe(false);
+          expect(path.length - 1 - k, `${from} → ${id}`).toBe(1);
+        }
+      }
+    }
+  });
+});
