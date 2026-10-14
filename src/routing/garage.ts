@@ -476,15 +476,67 @@ export function inGarage(from: LatLng, level: Level = 'B'): boolean {
   return startsNear(toM(from), level).length > 0;
 }
 
+/** This close to a road of the car park, or in a lot, a car may be in the car park: ask where it is. */
+const NEAR_GARAGE_M = 30;
+
+/** Whether a position is in the car park or by it (on a road, or in or beside a lot). */
+export function nearGarage(from: LatLng, lots: Poi[]): boolean {
+  const p = toM(from);
+  const { nodes, out } = G();
+  for (let a = 0; a < nodes.length; a++) for (const e of out[a]) if (project(p, nodes[a].p, nodes[e.to].p).d <= NEAR_GARAGE_M) return true;
+  return lotsByDistance(from, lots).some((x) => x.m <= NEAR_GARAGE_M);
+}
+
+/** The lots by how far a position is from each (0 inside it), nearest first. */
+export function lotsByDistance(from: LatLng, lots: Poi[]): { lot: Poi; m: number }[] {
+  const [x, y] = toM(from);
+  return lots
+    .map((lot) => {
+      const r = lotRect(lot);
+      const m = r ? Math.hypot(Math.max(r.x0 - x, 0, x - r.x1), Math.max(r.y0 - y, 0, y - r.y1)) : Infinity;
+      return { lot, m };
+    })
+    .filter((x) => Number.isFinite(x.m))
+    .sort((a, b) => a.m - b.m);
+}
+
+/**
+ * The way from one lot to another, for a car parked (or about to leave) in a lot (owner,
+ * 2026-10-14: «are you in lot n?»): out by the lot's own exit on its level, then along the one-way
+ * roads to the other lot's entrance.
+ */
+export function garageRouteFromLot(fromLot: Poi, fromLevel: Level, lot: Poi, level: Level = 'B'): GarageRoute | null {
+  const a = lotData(fromLot);
+  const l = lotData(lot);
+  if (!a || !l) return null;
+  const roads = shortest(nodeAt(toM(doors(a, fromLevel).exit), fromLevel), nodeAt(toM(doors(l, level).entry), level));
+  const gate = roads && lotGate(lot, roads.pts[roads.pts.length - 1]);
+  const out = roads && lotGate(fromLot, roads.pts[0]);
+  if (!roads || !gate || !out) return null;
+  const way = finish(roads, gate, level, l, false);
+  const first = way.path[0];
+  const m = d2(out, toM(first));
+  const start = fromM(out);
+  const p0 = way.parts[0];
+  return {
+    ...way,
+    path: [start, ...way.path],
+    parts: p0 && p0.on === fromLevel ? [{ on: p0.on, path: [start, ...p0.path] }, ...way.parts.slice(1)] : [{ on: fromLevel, path: [start, first] }, ...way.parts],
+    steps: [{ kind: 'lot_out', path: [start, first], meters: m }, ...way.steps],
+    meters: way.meters + m,
+    certain: way.certain && a.certain,
+  };
+}
+
 /**
  * The way in for a car already in the car park (owner, 2026-10-14: near the yellow ramp, the way to
  * lot 12A went out to the streets and back in): from where it is, along the one-way roads — up the
  * yellow ramp for level A — to the lot's entrance. Null if the car is not by a road of the car park.
  */
-export function garageRouteFrom(from: LatLng, lot: Poi, level: Level = 'B', heading?: number | null): GarageRoute | null {
+export function garageRouteFrom(from: LatLng, lot: Poi, level: Level = 'B', heading?: number | null, fromLevel: Level = 'B'): GarageRoute | null {
   const l = lotData(lot);
   if (!l) return null;
-  const starts = startsNear(toM(from), 'B', heading);
+  const starts = startsNear(toM(from), fromLevel, heading);
   if (!starts.length) return null;
   const roads = shortest(starts, nodeAt(toM(doors(l, level).entry), level));
   const gate = roads && lotGate(lot, roads.pts[roads.pts.length - 1]);

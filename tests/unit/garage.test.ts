@@ -3,7 +3,7 @@ import { POI_BY_ID } from '../../src/data';
 import type { LatLng } from '../../src/data';
 import { parkingAccess, parkingEntrances } from '../../src/domain/parking';
 import { ENTRANCES, EXITS, GARAGE, LEVELS, garageExit, garageRoute, garageRouteFrom, inGarage, lotRect, type GarageRoute } from '../../src/routing/garage';
-import { planExit, planRoute, planRoutes } from '../../src/routing/plan';
+import { lotsToAsk, planExit, planRoute, planRoutes } from '../../src/routing/plan';
 import { fromM, insideRect, network, pathLength, toM, walkPath } from '../../src/routing/walk';
 
 const P = (id: number) => POI_BY_ID.get(id)!;
@@ -386,6 +386,43 @@ describe('a car already in the car park carries on from where it is (owner, 2026
   it('from the streets, nothing changes: in by an entrance', async () => {
     expect(inGarage([24.476, 39.611])).toBe(false);
     const [plan] = await planRoutes([24.476, 39.611], P(912), 'drive');
+    expect(plan.legs[0].kind).toBe('drive');
+  });
+});
+
+describe('in or by the car park, the visitor says where the car is: which lot, which level (owner, 2026-10-14)', () => {
+  const byRamp = fromM([170, 319.5]);
+
+  it('asks only in or by the car park, offering the nearest lots first', () => {
+    const lots = lotsToAsk(byRamp).map((l) => l.id);
+    expect(lots).toHaveLength(2);
+    expect(lots).toContain(911);
+    expect(lotsToAsk([24.476, 39.611])).toEqual([]); // the First Ring Road: outside
+  });
+
+  it('in a lot: out by its own exit on that level, then on to the other lot', async () => {
+    const [plan] = await planRoutes(byRamp, P(912), 'drive', { level: 'A', start: { lot: P(911), level: 'B' } });
+    const garage = plan.legs[0];
+    expect(garage.kind).toBe('garage');
+    expect(garage.steps![0].kind).toBe('lot_out');
+    expect(plan.ramps!.map((r) => r.to)).toEqual(['A']);
+  });
+
+  it('in the very lot asked for, on its level: only the walk up is left', async () => {
+    // Gate 21 → lot 9 (the owner's choice).
+    const [plan] = await planRoutes(byRamp, P(21), 'drive', { start: { lot: P(909), level: 'B' } });
+    expect(plan.lot?.id).toBe(909);
+    expect(plan.legs.map((l) => l.kind)).toEqual(['walk']);
+  });
+
+  it('on the road on level A: no ramp up to reach a lot on A', async () => {
+    const [plan] = await planRoutes(byRamp, P(909), 'drive', { level: 'A', start: { lot: null, level: 'A' } });
+    expect(plan.legs[0].kind).toBe('garage');
+    expect(plan.ramps ?? []).toEqual([]);
+  });
+
+  it('outside the car park: in from the streets by an entrance, as before', async () => {
+    const [plan] = await planRoutes(byRamp, P(912), 'drive', { start: 'outside' });
     expect(plan.legs[0].kind).toBe('drive');
   });
 });

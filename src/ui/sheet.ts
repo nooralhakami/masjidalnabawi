@@ -346,14 +346,14 @@ export class Sheet {
           ${
             r.drive
               ? `<div class="route-legs">
-              <span class="leg leg-drive">${icon('car', 16)}${esc(t('r_drive'))} · ${esc(t('km', { k: (r.drive.meters / 1000).toFixed(1) }))}</span>
+              ${r.drive.meters > 5 ? `<span class="leg leg-drive">${icon('car', 16)}${esc(t('r_drive'))} · ${esc(t('km', { k: (r.drive.meters / 1000).toFixed(1) }))}</span>` : ''}
               ${r.drive.entrance ? `<span class="leg leg-ent">${esc(t(r.drive.entrance === 'quba' ? 'g_in_quba' : 'g_in_sultana'))}</span>` : ''}
               ${r.drive.exit ? `<span class="leg leg-ent">${esc(t(r.drive.exit === 'quba' ? 'g_out_quba' : 'g_out_sultana'))}</span>` : ''}
               ${r.drive.carPark ? `<span class="leg leg-ent">${esc(t('g_public_parking'))}</span>` : ''}
               ${r.drive.lot ? `<span class="leg leg-lot">${esc(r.drive.level ? t('r_lot_level', { n: r.drive.lot, l: r.drive.level }) : t('r_lot', { n: r.drive.lot }))}</span>` : ''}
               ${r.drive.walkMeters > 5 ? `<span class="leg leg-walk">${icon('walk', 16)}${esc(t('r_walk'))} · ${esc(t('meters', { m: num(Math.round(r.drive.walkMeters / 5) * 5) }))}</span>` : ''}
             </div>
-            ${r.drive.level === 'A' ? `<div class="route-legend"><span class="route-legend-swatch" aria-hidden="true"></span>${esc(t('g_legend_a'))}</div>` : ''}
+            ${r.drive.level === 'A' && r.drive.meters > 5 ? `<div class="route-legend"><span class="route-legend-swatch" aria-hidden="true"></span>${esc(t('g_legend_a'))}</div>` : ''}
             ${r.drive.unsure ? `<div class="route-unsure">${esc(t('g_unsure'))}</div>` : ''}`
               : ''
           }

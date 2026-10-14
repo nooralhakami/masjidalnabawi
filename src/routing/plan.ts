@@ -3,7 +3,7 @@ import type { LatLng, Poi } from '../data/types';
 import { parkingAccess, parkingEntrances } from '../domain/parking';
 import { loadStreets, type Reach, type Streets } from './streets';
 import { pickRoutes, turnPenalty } from './alternatives';
-import { ENTRANCES, EXITS, garageExit, garageRoute, garageRouteFrom, type EntranceId, type Level, type GarageStep, type RampOnWay, type Stretch } from './garage';
+import { ENTRANCES, EXITS, garageExit, garageRoute, garageRouteFrom, garageRouteFromLot, lotsByDistance, nearGarage, type EntranceId, type Level, type GarageStep, type RampOnWay, type Stretch } from './garage';
 import { fromM, insideRect, network, openTogether, pathLength, ringPath, segmentHits, toM, walkPath, walkPaths, type XY } from './walk';
 
 /**
@@ -311,6 +311,18 @@ async function planWalks(from: LatLng, to: Poi, heading?: number | null): Promis
 }
 
 /**
+ * Where a car near the car park is, as the visitor said (owner, 2026-10-14): in a lot (`lot`) or on
+ * the road (`lot: null`), on level B or A; or outside the car park altogether.
+ */
+export type GarageStart = { lot: Poi | null; level: Level } | 'outside';
+
+/** The lots a car by the car park might be in, nearest first (to ask the visitor), or none when it is not by the car park. */
+export function lotsToAsk(from: LatLng, n = 2): Poi[] {
+  if (!nearGarage(from, LOTS)) return [];
+  return lotsByDistance(from, LOTS).slice(0, n).map((x) => x.lot);
+}
+
+/**
  * The lot for a place: the place itself; or the owner's choice for it (rules.json drive_lot: the
  * Rawdah at gate 37 → lot 1, gate 21 → lot 9); or else the public lot nearest it on foot (owner,
  * 2026-10-13: the nearest lot, never a subscribers-only one).
@@ -335,14 +347,20 @@ function walkUp(lot: Poi, to: Poi): { e: Poi; path: LatLng[]; m: number } | null
  * makes the whole trip quickest (public lots, unless the destination is itself a lot), then walk up
  * through the lot's nearest entrance to the destination.
  */
-async function planDrive(from: LatLng, to: Poi, level: Level = 'B', heading?: number | null): Promise<Plan[]> {
-  // Already in the car park (owner, 2026-10-14): on from where the car is, not out to the streets
-  // and back in by an entrance.
-  if (to.category === 'parking' || inHaram(at(to))) {
+async function planDrive(from: LatLng, to: Poi, level: Level = 'B', heading?: number | null, start?: GarageStart): Promise<Plan[]> {
+  // Already in the car park (owner, 2026-10-14): on from where the car is — the lot it is in, or the
+  // road, on the level the visitor said — not out to the streets and back in by an entrance.
+  if (start !== 'outside' && (to.category === 'parking' || inHaram(at(to)))) {
     const lot = lotFor(to);
-    const way = lot && garageRouteFrom(from, lot, level, heading);
+    const up = lot && walkUp(lot, to);
+    // Already in the very lot: only the walk up is left.
+    if (lot && start?.lot?.id === lot.id && start.level === level) {
+      const walkM = up ? up.m : 0;
+      const legs: Leg[] = up ? [{ kind: 'walk', path: up.path }] : [{ kind: 'walk', path: [from, at(lot)] }];
+      return [{ mode: 'drive', legs, walkM, driveM: 0, minutes: Math.max(1, Math.ceil(walkM / WALK_M_PER_MIN)), lot, level }];
+    }
+    const way = lot && (start?.lot ? garageRouteFromLot(start.lot, start.level, lot, level) : garageRouteFrom(from, lot, level, heading, start?.level ?? 'B'));
     if (lot && way) {
-      const up = walkUp(lot, to);
       const walkM = up ? up.m : 0;
       const legs: Leg[] = [{ kind: 'garage', path: way.path, parts: way.parts, steps: way.steps }, ...(up ? [{ kind: 'walk' as const, path: up.path }] : [])];
       const minutes = Math.ceil(way.meters / DRIVE_M_PER_MIN + walkM / WALK_M_PER_MIN);
@@ -479,9 +497,9 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B', heading?: nu
  * Driving falls back to walking when no car route is found. `heading` (degrees, on a re-route)
  * favours routes that carry on ahead of the visitor.
  */
-export async function planRoutes(from: LatLng, to: Poi, mode: Mode = 'walk', opts: { heading?: number | null; level?: Level } = {}): Promise<Plan[]> {
+export async function planRoutes(from: LatLng, to: Poi, mode: Mode = 'walk', opts: { heading?: number | null; level?: Level; start?: GarageStart } = {}): Promise<Plan[]> {
   if (mode === 'drive') {
-    const p = await planDrive(from, to, opts.level ?? 'B', opts.heading);
+    const p = await planDrive(from, to, opts.level ?? 'B', opts.heading, opts.start);
     if (p.length) return p;
   }
   return planWalks(from, to, opts.heading);

@@ -677,6 +677,33 @@ test.describe('by car to the car park under the Haram (owner’s drawing, 2026-1
   });
 });
 
+test.describe('in the car park, the visitor says where the car is (owner, 2026-10-14)', () => {
+  // On the inner north road on level B, by the yellow ramp.
+  test.use({ geolocation: { latitude: 24.47017, longitude: 39.612778, accuracy: 10 }, permissions: ['geolocation'] });
+  test('asks which lot (nearest first), then which level; the way starts there, not at an entrance', async ({ page, errors: _ }) => {
+    await page.addInitScript(() => localStorage.setItem('travel', 'drive'));
+    await page.goto('map.html?poi=912');
+    await page.locator('[data-act="route"]').click();
+    const ask = page.locator('.garage-ask');
+    await expect(ask).toBeVisible({ timeout: 30_000 });
+    await expect(ask.locator('.garage-ask-opt')).toHaveCount(4); // two lots, on the road, outside
+    await expect(ask.locator('.garage-ask-opt').first()).toBeFocused();
+    await ask.locator('.garage-ask-opt', { hasText: 'على الطريق' }).click();
+    await ask.locator('.garage-ask-opt', { hasText: 'B' }).click();
+    await expect(ask).toHaveCount(0);
+    await expect(page.locator('.route-lot-gate')).toHaveText(/P\s*12/, { timeout: 30_000 });
+    await expect(page.locator('.route-legs .leg-ent')).toHaveCount(0);
+    await expect(page.locator('.route-ramp')).toHaveCount(0);
+  });
+  test('«outside the car park»: in from the streets by an entrance, as before', async ({ page, errors: _ }) => {
+    await page.addInitScript(() => localStorage.setItem('travel', 'drive'));
+    await page.goto('map.html?poi=912');
+    await page.locator('[data-act="route"]').click();
+    await page.locator('.garage-ask').locator('.garage-ask-opt').last().click();
+    await expect(page.locator('.route-legs .leg-ent')).toBeVisible({ timeout: 30_000 });
+  });
+});
+
 test.describe('alternative routes', () => {
   // South plaza → Gate 21 (north): round the mosque by the west or by the east side.
   const START = { latitude: 24.4668, longitude: 39.6111, accuracy: 8 };
