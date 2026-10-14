@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { POI_BY_ID } from '../../src/data';
 import type { LatLng } from '../../src/data';
 import { parkingAccess, parkingEntrances } from '../../src/domain/parking';
-import { ENTRANCES, EXITS, GARAGE, LEVELS, garageExit, garageRoute, lotRect, type GarageRoute } from '../../src/routing/garage';
+import { ENTRANCES, EXITS, GARAGE, LEVELS, garageExit, garageRoute, garageRouteFrom, inGarage, lotRect, type GarageRoute } from '../../src/routing/garage';
 import { planExit, planRoute, planRoutes } from '../../src/routing/plan';
-import { insideRect, network, pathLength, toM, walkPath } from '../../src/routing/walk';
+import { fromM, insideRect, network, pathLength, toM, walkPath } from '../../src/routing/walk';
 
 const P = (id: number) => POI_BY_ID.get(id)!;
 const LOTS = Array.from({ length: 13 }, (_, i) => P(901 + i));
@@ -349,5 +349,43 @@ describe('the owner’s corrections on the east and south-west sides (2026-10-14
     const back = lane('sw-back-in');
     expect(nearLane(back.path[0], 'exit-south-west')).toBeLessThan(1);
     expect(nearLane(back.path[back.path.length - 1], 'quba-in')).toBeLessThan(1);
+  });
+});
+
+describe('a car already in the car park carries on from where it is (owner, 2026-10-14)', () => {
+  // On the inner north road on level B, just before the yellow ramp (where the owner was).
+  const byRamp = fromM([170, 319.5]);
+
+  it('to lot 12A: straight up the yellow ramp, not out to the streets and back in', async () => {
+    expect(inGarage(byRamp)).toBe(true);
+    const way = garageRouteFrom(byRamp, P(912), 'A')!;
+    const lanes = way.roads.map((r) => r.lane);
+    expect(lanes[0]).toBe('north-lane');
+    expect(lanes).toContain('ramp-up-A');
+    expect(lanes).not.toContain('sultana-in');
+    expect(d(toM(way.path[0]), toM(byRamp))).toBeLessThan(20);
+    const [plan] = await planRoutes(byRamp, P(912), 'drive', { level: 'A' });
+    expect(plan.legs.map((l) => l.kind)).toEqual(['garage']);
+    expect(plan.lot?.id).toBe(912);
+    expect(plan.driveM).toBeLessThan(garageRoute('sultana', P(912), 'A')!.meters);
+  });
+
+  it('to a place in the Haram: on to its lot, then the walk up', async () => {
+    const [plan] = await planRoutes(byRamp, P(223), 'drive');
+    expect(plan.legs.map((l) => l.kind)).toEqual(['garage', 'walk']);
+  });
+
+  it('where the way in and the way out run side by side, the car’s heading picks the road', () => {
+    const between = fromM([224.2, 40]);
+    for (const id of [901, 913]) {
+      expect(garageRouteFrom(between, P(id), 'B', 0)!.roads[0].lane, `P${id - 900}`).toBe('quba-in'); // heading north
+      expect(garageRouteFrom(between, P(id), 'B', 180)!.roads[0].lane, `P${id - 900}`).toBe('east-lane'); // heading south
+    }
+  });
+
+  it('from the streets, nothing changes: in by an entrance', async () => {
+    expect(inGarage([24.476, 39.611])).toBe(false);
+    const [plan] = await planRoutes([24.476, 39.611], P(912), 'drive');
+    expect(plan.legs[0].kind).toBe('drive');
   });
 });

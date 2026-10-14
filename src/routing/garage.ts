@@ -224,12 +224,26 @@ export interface GarageStep {
   meters: number;
 }
 
-function shortest(from: number, to: number): { pts: XY[]; lanes: string[]; levels: Level[]; tags: Stretch[] } | null {
+/** A way can also start part-way along a road (a car already in the car park): its first point and road. */
+interface Start {
+  node: number;
+  cost: number;
+  lead?: { p: XY; lane: string };
+}
+
+function shortest(from: number | Start[], to: number): { pts: XY[]; lanes: string[]; levels: Level[]; tags: Stretch[] } | null {
   const { nodes, out } = G();
   const dist = new Array(nodes.length).fill(Infinity);
   const prev: (Edge & { from: number })[] = new Array(nodes.length);
   const done = new Array(nodes.length).fill(false);
-  dist[from] = 0;
+  const starts: Start[] = typeof from === 'number' ? [{ node: from, cost: 0 }] : from;
+  const startOf = new Map<number, Start>();
+  for (const st of starts) {
+    if (st.cost < dist[st.node]) {
+      dist[st.node] = st.cost;
+      startOf.set(st.node, st);
+    }
+  }
   for (;;) {
     let k = -1;
     for (let i = 0; i < nodes.length; i++) if (!done[i] && dist[i] < Infinity && (k < 0 || dist[i] < dist[k])) k = i;
@@ -244,12 +258,16 @@ function shortest(from: number, to: number): { pts: XY[]; lanes: string[]; level
   }
   if (!Number.isFinite(dist[to])) return null;
   const steps: (Edge & { from: number })[] = [];
-  for (let k = to; k !== from; k = prev[k].from) steps.unshift(prev[k]);
+  let k = to;
+  for (; prev[k] && !(startOf.has(k) && startOf.get(k)!.cost === dist[k]); k = prev[k].from) steps.unshift(prev[k]);
+  const first = k;
+  const lead = startOf.get(first)?.lead;
+  if (lead) steps.unshift({ from: -1, to: first, via: [nodes[first].p], m: 0, lane: lead.lane });
   const rampTo = (lane: string) => GARAGE.lanes.find((l) => l.id === lane)?.to_level;
   return {
-    pts: [nodes[from].p, ...steps.flatMap((s) => s.via)],
+    pts: [lead ? lead.p : nodes[first].p, ...steps.flatMap((s) => s.via)],
     lanes: steps.map((s) => s.lane),
-    levels: [nodes[from].level, ...steps.map((s) => nodes[s.to].level)],
+    levels: [nodes[first].level, ...steps.map((s) => nodes[s.to].level)],
     // One tag per segment between consecutive points: the level, or the ramp being climbed or descended.
     tags: steps.flatMap((s) => {
       const r = rampTo(s.lane);
@@ -421,4 +439,54 @@ export function garageExit(lot: Poi, exit: EntranceId, level: Level = 'B'): Gara
   const roads = shortest(nodeAt(toM(doors(l, level).exit), level), nodeAt(toM(x.mouth), 'B'));
   const gate = roads && lotGate(lot, roads.pts[0]);
   return roads && gate ? finish(roads, gate, level, l, true) : null;
+}
+
+/** A car this close to a road of the car park is taken to be on it (GPS underground wanders a little). */
+export const ON_GARAGE_ROAD_M = 20;
+/** What starting on a road going against the car’s heading costs (in metres): more than any lap of the car park. */
+const AGAINST_M = 5000;
+
+/**
+ * Where a car already inside the car park can carry on from: points along the roads (on level B,
+ * where every car comes in) within reach of its position, each continuing the way its road goes.
+ * Empty when it is not by any road of the car park.
+ */
+function startsNear(p: XY, level: Level, heading?: number | null): Start[] {
+  const { nodes, out } = G();
+  const starts: Start[] = [];
+  for (let a = 0; a < nodes.length; a++) {
+    if (nodes[a].level !== level) continue;
+    for (const e of out[a]) {
+      if (GARAGE.lanes.find((l) => l.id === e.lane)?.from_level) continue; // not from the middle of a ramp
+      const pr = project(p, nodes[a].p, nodes[e.to].p);
+      if (pr.d > ON_GARAGE_ROAD_M) continue;
+      // The rest of this stretch, plus a little for how far off the road the position is; when the
+      // car's heading is known, a road going the other way (the two ways side by side) costs more.
+      const [a0, b0] = [nodes[a].p, nodes[e.to].p];
+      const road = (Math.atan2(b0[0] - a0[0], b0[1] - a0[1]) * 180) / Math.PI;
+      const against = heading != null && Math.abs(((road - heading + 540) % 360) - 180) > 90;
+      starts.push({ node: e.to, cost: d2(pr.q, nodes[e.to].p) + 2 * pr.d + (against ? AGAINST_M : 0), lead: { p: pr.q, lane: e.lane } });
+    }
+  }
+  return starts;
+}
+
+/** Whether a position is on (or right by) a road of the car park. */
+export function inGarage(from: LatLng, level: Level = 'B'): boolean {
+  return startsNear(toM(from), level).length > 0;
+}
+
+/**
+ * The way in for a car already in the car park (owner, 2026-10-14: near the yellow ramp, the way to
+ * lot 12A went out to the streets and back in): from where it is, along the one-way roads — up the
+ * yellow ramp for level A — to the lot's entrance. Null if the car is not by a road of the car park.
+ */
+export function garageRouteFrom(from: LatLng, lot: Poi, level: Level = 'B', heading?: number | null): GarageRoute | null {
+  const l = lotData(lot);
+  if (!l) return null;
+  const starts = startsNear(toM(from), 'B', heading);
+  if (!starts.length) return null;
+  const roads = shortest(starts, nodeAt(toM(doors(l, level).entry), level));
+  const gate = roads && lotGate(lot, roads.pts[roads.pts.length - 1]);
+  return roads && gate ? finish(roads, gate, level, l, false) : null;
 }
