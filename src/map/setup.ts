@@ -78,6 +78,7 @@ export function createMap(el: HTMLElement): MapHandle {
   let layerBtn!: HTMLButtonElement;
   let locBtn!: HTMLButtonElement;
   let storiesBtn!: HTMLButtonElement;
+  let libraryBtn!: HTMLButtonElement;
   let zin!: HTMLButtonElement;
   let zout!: HTMLButtonElement;
   let rotLeft: HTMLButtonElement | undefined;
@@ -88,9 +89,11 @@ export function createMap(el: HTMLElement): MapHandle {
   tools.onAdd = () => {
     const box = L.DomUtil.create('div', 'mc');
     storiesBtn = button(box, 'landmark', 'is-stories');
+    libraryBtn = button(box, 'book', 'is-library');
     layerBtn = button(box, 'layers');
     locBtn = button(box, 'locate', 'is-locate');
     storiesBtn.addEventListener('click', () => el.dispatchEvent(new CustomEvent('stories-request', { bubbles: true })));
+    libraryBtn.addEventListener('click', () => el.dispatchEvent(new CustomEvent('library-request', { bubbles: true })));
     layerBtn.addEventListener('click', () => setBase(current === 'satellite' ? 'light' : 'satellite'));
     locBtn.addEventListener('click', () => el.dispatchEvent(new CustomEvent('locate-request', { bubbles: true })));
     L.DomEvent.disableClickPropagation(box);
@@ -135,6 +138,8 @@ export function createMap(el: HTMLElement): MapHandle {
     layerBtn.title = layerBtn.getAttribute('aria-label')!;
     storiesBtn.setAttribute('aria-label', t('st_open'));
     storiesBtn.title = t('st_open');
+    libraryBtn.setAttribute('aria-label', t('lib_open'));
+    libraryBtn.title = t('lib_open');
     locBtn.setAttribute('aria-label', t('gps'));
     locBtn.title = t('gps');
     zin.setAttribute('aria-label', t('zoom_in'));

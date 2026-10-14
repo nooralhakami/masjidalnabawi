@@ -40,3 +40,56 @@ export function approvalProblems(i: LibraryItem, minSources = 2): string[] {
   if (i.review === 'approved' && !i.reviewer?.name) out.push('approved without a reviewer');
   return out;
 }
+
+/** A fact of a library card: Arabic text, its sources (key, volume/page) and what it still needs. */
+export interface LibFact {
+  title?: string;
+  ar: string;
+  src: (string[] | [string, string])[];
+  needs?: string;
+}
+
+export interface MosquePlace {
+  id: string;
+  review: Review;
+  name: string;
+  kind?: string;
+  where: LibFact;
+  story?: LibFact[];
+  related_companions?: string[];
+  map_poi?: number;
+}
+
+export interface MosqueData {
+  /** Owner decision 2026-10-14: show the drafts with a notice that no religious reviewer checked them yet. */
+  display?: 'approved-only' | 'with-unreviewed-notice';
+  sources: Record<string, { t: string; u?: string }>;
+  places: MosquePlace[];
+}
+
+export interface ShownPlace {
+  id: string;
+  name: string;
+  /** False while no qualified reviewer approved it: the visitor sees the notice. */
+  reviewed: boolean;
+  where: LibFact | null;
+  story: LibFact[];
+}
+
+/**
+ * The places the visitor may see and, in each, only the facts with two sources: a fact that still
+ * says what it needs is never shown. Drafts appear only when the owner chose to show them with the
+ * "not reviewed yet" notice.
+ */
+export function shownMosquePlaces(d: MosqueData): ShownPlace[] {
+  const ok = (f: LibFact | undefined): f is LibFact => !!f && !f.needs && new Set(f.src.map((s) => s[0])).size >= 2;
+  return d.places
+    .filter((p) => p.review === 'approved' || d.display === 'with-unreviewed-notice')
+    .map((p) => ({ id: p.id, name: p.name, reviewed: p.review === 'approved', where: ok(p.where) ? p.where : null, story: (p.story ?? []).filter(ok) }))
+    .filter((p) => p.where || p.story.length);
+}
+
+/** "Book — vol/page" for each source of a fact, from the source list. */
+export function sourceLines(f: LibFact, sources: MosqueData['sources']): { text: string; url?: string }[] {
+  return f.src.map((s) => ({ text: `${sources[s[0]]?.t ?? s[0]} — ${s[1]}`, url: s[2] ?? sources[s[0]]?.u }));
+}

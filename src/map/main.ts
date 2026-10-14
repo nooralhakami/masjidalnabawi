@@ -6,6 +6,7 @@ import '../styles/map.css';
 import '../styles/ui.css';
 import '../styles/refresh.css';
 import '../styles/stories.css';
+import '../styles/library.css';
 import { POI_BY_ID, RULES } from '../data';
 import type { Poi } from '../data/types';
 import { Facilities } from '../domain/facilities';
@@ -17,6 +18,7 @@ import { AdminPanel } from '../ui/admin';
 import { Header } from '../ui/header';
 import { Pills } from '../ui/pills';
 import { Stories } from '../ui/stories';
+import { Library } from '../ui/library';
 import { VISIT_LIST } from '../domain/visits';
 import { RawdahCard } from '../ui/rawdah-card';
 import { Sheet } from '../ui/sheet';
@@ -175,6 +177,13 @@ document.getElementById('map')!.addEventListener('stories-request', () => storie
 const visitParam = Number(new URLSearchParams(location.search).get('visit'));
 const visitAt = VISIT_LIST.findIndex((v) => v.poi.id === visitParam);
 if (visitAt >= 0) stories.open(visitAt);
+
+// Library: landmarks of the Prophet's Mosque (map button or ?lib=ID).
+const library = new Library();
+document.body.append(library.root);
+document.getElementById('map')!.addEventListener('library-request', () => void library.open());
+const libParam = new URLSearchParams(location.search).get('lib');
+if (libParam !== null) void library.open(libParam);
 
 const BEHIND_RAWDAH_ID = 604;
 const rawdah = new RawdahCard(

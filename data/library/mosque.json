@@ -1,5 +1,7 @@
 {
  "_note": "Library: places inside and around the Prophet's Mosque. Drafts written from the cited pages (docs/PLAN-ISLAMIC-LIBRARY.md §3-3). Same rules as companions.json: every fact names two sources or says what it still needs; nothing is shown until a named reviewer approves it. Locations are described in words; map markers come later from the owner's drawing.",
+ "display": "with-unreviewed-notice",
+ "_display_note": "Owner decision 2026-10-14: publish the mosque places with a notice that no qualified religious reviewer has checked them yet. Facts that still need a second source are never shown (src/domain/library.ts shownMosquePlaces).",
  "sources": {
   "wafa": {
    "t": "السمهودي، وفاء الوفا بأخبار دار المصطفى ﷺ، ط دار الكتب العلمية (نسخة المالك المصوّرة)"
