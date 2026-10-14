@@ -205,6 +205,17 @@ describe('search', () => {
     expect(visiblePois('all', 'all', '', fac).some((p) => p.category === 'parking')).toBe(false);
     expect(visiblePois('all', 'all', '1A', fac)[0].id).toBe(901);
   });
+
+  it('a search looks at every place, whatever filter is on; the number itself first (owner, 2026-10-14)', () => {
+    // The car park filter still on from before, and the visitor types a restroom's number.
+    expect(visiblePois('parking', 'all', '227', fac)[0].id).toBe(227);
+    expect(visiblePois('toilets', 'all', '38', fac)[0].id).toBe(38);
+    // Equally good matches: the chosen filter's places first.
+    const lots = visiblePois('parking', 'all', 'مواقف', fac);
+    expect(lots[0].category).toBe('parking');
+    // No search: the filter alone, as before.
+    expect(visiblePois('parking', 'all', '', fac).every((p) => p.category === 'parking')).toBe(true);
+  });
 });
 
 describe('parking', () => {
