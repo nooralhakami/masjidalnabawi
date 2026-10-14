@@ -341,3 +341,10 @@ describe('chains, Al Baik branches and shopping (2026-10-09)', () => {
     for (const p of shop) expect(p.osm, p.name_ar).toMatch(/^[nwr]\d+$/);
   });
 });
+
+describe('the car park lots (owner)', () => {
+  it('lots 2, 6, 8, 10 and 13 are for subscribers (lot 13: 2026-10-14); the rest open to all', () => {
+    const sub = POIS.filter((p) => p.category === 'parking' && p.access === 'subscribers').map((p) => p.id - 900);
+    expect(sub.sort((a, b) => a - b)).toEqual([2, 6, 8, 10, 13]);
+  });
+});
