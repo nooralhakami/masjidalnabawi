@@ -1,5 +1,5 @@
 import { POIS, ROUTING } from '../data';
-import type { LatLng } from '../data/types';
+import type { LatLng, Poi } from '../data/types';
 import { haversine } from '../domain/geo';
 
 /**
@@ -159,6 +159,36 @@ function toiletBuildings(obstacles: Rect[]): Rect[] {
     .map((p) => toM([p.lat, p.lng]))
     .filter((c) => !obstacles.some((r) => insideRect(c, r)))
     .map((c) => ({ x0: c[0] - h, x1: c[0] + h, y0: c[1] - h, y1: c[1] + h }));
+}
+
+/** Restrooms farther than this from both the mosque and an outer gate keep no door side (the far west ones). */
+const DOOR_RULE_M = 150;
+/** The end of a route this far out from a restroom's wall, in front of its door. */
+const DOOR_OUT_M = 1.5;
+/** A way to a door passes this close to the building's other walls on its way round. */
+const DOOR_CLEAR_M = 1;
+
+/**
+ * The door of a restroom building (owner, 2026-10-14): one nearer the mosque than an outer gate opens
+ * towards the mosque; one nearer an outer gate opens away from it, towards the outer gates. Taken on
+ * the building's side that faces that way (north, east, south or west). Null for anything else, or a
+ * restroom far from both.
+ */
+export function restroomDoor(p: Poi): LatLng | null {
+  if (p.category !== 'toilets') return null;
+  const N = network();
+  const c = toM([p.lat, p.lng]);
+  if (!N.buildings.some((r) => insideRect(c, r))) return null;
+  const m = N.obstacles[0];
+  const q: XY = [Math.max(m.x0, Math.min(m.x1, c[0])), Math.max(m.y0, Math.min(m.y1, c[1]))];
+  const toMosque = dist(q, c);
+  const toGate = Math.min(...POIS.filter((g) => g.subCategory === 'gate_outer').map((g) => dist(toM([g.lat, g.lng]), c)));
+  if (Math.min(toMosque, toGate) > DOOR_RULE_M) return null;
+  const sign = toMosque < toGate ? 1 : -1; // towards the mosque, or away from it
+  const v: XY = [(q[0] - c[0]) * sign, (q[1] - c[1]) * sign];
+  const out = ROUTING.rules.toilet_building_m / 2 + DOOR_OUT_M;
+  const d: XY = Math.abs(v[0]) > Math.abs(v[1]) ? [Math.sign(v[0]) * out, 0] : [0, Math.sign(v[1]) * out];
+  return fromM([c[0] + d[0], c[1] + d[1]]);
 }
 
 /** Where the segment a→b is inside the rectangle: parameters [t0, t1] along it, or null (Liang–Barsky). */
@@ -510,6 +540,9 @@ export function walkPath(a: LatLng, b: LatLng): LatLng[] {
     }
   }
   pts ??= graph?.pts ?? [A, B];
+  // The stretch from the walkways to a restroom's door may meet the building first (the door on its
+  // far side): round it, close to the wall (the door itself is 1.5 m out, outside this margin).
+  pts = aroundBuildings(pts, N.buildings.filter((r) => !insideRect(A, r) && !insideRect(B, r)), DOOR_CLEAR_M);
 
   // Drop near-duplicate points before rounding.
   const clean: XY[] = [pts[0]];

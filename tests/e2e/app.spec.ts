@@ -446,7 +446,10 @@ test.describe('live location while walking', () => {
     await page.goto('map.html?poi=204');
     await page.locator('[data-act="route"]').click();
     await expect(page.locator('.navigation-status .nav-big')).toHaveCount(2);
-    const end = placeAt(204); // the route ends at the restroom itself
+    // The route ends at the restroom's door (owner, 2026-10-14): 204 is in the outer row, its door
+    // on the south side facing the outer gates, 7.5 m from its middle (half the 12 m building + 1.5 m).
+    const mid = placeAt(204);
+    const end = [mid[0] - 7.5 / 111_320, mid[1]];
     // A jump this far is taken as real only from the third reading (src/location/filter.ts), then twice at the end.
     for (let i = 0; i < 6; i++) {
       await context.setGeolocation({ latitude: end[0], longitude: end[1] + i * 1e-7, accuracy: 5 });
@@ -463,7 +466,10 @@ test.describe('live location while walking', () => {
     await page.goto('map.html?poi=204');
     await page.locator('[data-act="route"]').click();
     await expect(page.locator('.navigation-status .nav-big')).toHaveCount(2);
-    const end = placeAt(204); // the route ends at the restroom itself
+    // The route ends at the restroom's door (owner, 2026-10-14): 204 is in the outer row, its door
+    // on the south side facing the outer gates, 7.5 m from its middle (half the 12 m building + 1.5 m).
+    const mid = placeAt(204);
+    const end = [mid[0] - 7.5 / 111_320, mid[1]];
     // A jump this far is taken as real only from the third reading (src/location/filter.ts), then twice at the end.
     for (let i = 0; i < 6; i++) {
       await context.setGeolocation({ latitude: end[0], longitude: end[1] + i * 1e-7, accuracy: 5 });

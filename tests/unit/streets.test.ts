@@ -6,7 +6,7 @@ import { fullPath, inHaram, planRoute, planRoutes } from '../../src/routing/plan
 import { initialBearing, shared, turnPenalty } from '../../src/routing/alternatives';
 import { ENTRANCES, GARAGE } from '../../src/routing/garage';
 import { Streets, loadStreets } from '../../src/routing/streets';
-import { insideRect, network, pathLength, toM } from '../../src/routing/walk';
+import { insideRect, network, pathLength, restroomDoor, toM } from '../../src/routing/walk';
 
 const P = (id: number) => POI_BY_ID.get(id)!;
 const at = (id: number): LatLng => [P(id).lat, P(id).lng];
@@ -121,7 +121,8 @@ describe('driving to the car park under the Haram', () => {
     expect(p.legs[0].path[0]).toEqual(SOUTH_WEST);
     expect(p.lot?.access).toBe('public');
     const last = p.legs[2].path;
-    expect(last[last.length - 1][0]).toBeCloseTo(P(223).lat, 6);
+    // It ends at the restroom's door, not at the middle of the building (owner, 2026-10-14).
+    expect(last[last.length - 1]).toEqual(restroomDoor(P(223)));
     expect(p.driveM).toBeGreaterThan(1000);
     expect(p.walkM).toBeLessThan(400);
     // The car-park stretch starts at one of the two entrances and follows the roads the owner

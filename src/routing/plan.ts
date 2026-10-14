@@ -4,7 +4,7 @@ import { parkingAccess, parkingEntrances } from '../domain/parking';
 import { loadStreets, type Reach, type Streets } from './streets';
 import { pickRoutes, turnPenalty } from './alternatives';
 import { ENTRANCES, EXITS, garageExit, garageRoute, garageRouteFrom, garageRouteFromLot, lotsByDistance, nearGarage, type EntranceId, type Level, type GarageStep, type RampOnWay, type Stretch } from './garage';
-import { fromM, insideRect, network, openTogether, pathLength, ringPath, segmentHits, toM, walkPath, walkPaths, type XY } from './walk';
+import { fromM, insideRect, network, openTogether, pathLength, restroomDoor, ringPath, segmentHits, toM, walkPath, walkPaths, type XY } from './walk';
 
 /**
  * Plans a trip as legs:
@@ -302,8 +302,10 @@ async function planWalks(from: LatLng, to: Poi, heading?: number | null): Promis
     target = n.entrance;
     extra = { entrances: parkingEntrances(to), nearest: n.entrance };
   }
-  const options = await walkOptions(from, at(target));
-  const paths = pickRoutes((options.length ? options : [walkPath(from, at(target))]).map((path) => ({ path, item: path, penalty: turnPenalty(path, heading) })));
+  // A restroom: to its door, not round the back of the building (owner, 2026-10-14).
+  const end = restroomDoor(target) ?? at(target);
+  const options = await walkOptions(from, end);
+  const paths = pickRoutes((options.length ? options : [walkPath(from, end)]).map((path) => ({ path, item: path, penalty: turnPenalty(path, heading) })));
   return paths.map((path) => {
     const walkM = len(path);
     return { mode: 'walk', legs: [{ kind: 'walk', path }], walkM, driveM: 0, minutes: Math.max(1, Math.ceil(walkM / WALK_M_PER_MIN)), ...extra };
@@ -336,7 +338,7 @@ function lotFor(to: Poi): Poi | null {
 function walkUp(lot: Poi, to: Poi): { e: Poi; path: LatLng[]; m: number } | null {
   if (to.category === 'parking') return null;
   return parkingEntrances(lot).reduce<{ e: Poi; path: LatLng[]; m: number } | null>((m, e) => {
-    const path = walkPath(at(e), at(to));
+    const path = walkPath(at(e), restroomDoor(to) ?? at(to));
     const pm = len(path);
     return !m || pm < m.m ? { e, path, m: pm } : m;
   }, null);
