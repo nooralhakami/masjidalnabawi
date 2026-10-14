@@ -6,7 +6,7 @@ the reviewer, every fact with its sources (links to the page) and what it still 
 import json, os
 
 LABELS = [('full_name', 'الاسم والنسب'), ('titles', 'الألقاب'), ('born', 'المولد'), ('islam', 'متى أسلم'), ('islam_story', 'قصة إسلامه'),
-          ('virtues', 'مناقبه (من صحيح البخاري مع الشرح)'), ('known_for', 'ما اشتهر به'), ('stories', 'قصص ومواقف'), ('death', 'وفاته'), ('burial', 'مدفنه')]
+          ('virtues', 'مناقبه (من صحيح البخاري وكتب التراجم)'), ('known_for', 'ما اشتهر به'), ('stories', 'قصص ومواقف'), ('death', 'وفاته'), ('burial', 'مدفنه')]
 
 d = json.load(open('data/library/companions.json', encoding='utf-8'))
 S = d['sources']
