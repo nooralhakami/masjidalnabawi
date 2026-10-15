@@ -393,7 +393,7 @@ describe('the owner’s corrections on the east and south-west sides (2026-10-14
 
 describe('a car already in the car park carries on from where it is (owner, 2026-10-14)', () => {
   // On the inner north road on level B, just before the yellow ramp (where the owner was).
-  const byRamp = fromM([170, 319.5]);
+  const byRamp = fromM([170, 317.5]);
 
   it('to lot 12A: up a yellow ramp inside the car park, not out to the streets and back in', async () => {
     expect(inGarage(byRamp)).toBe(true);
@@ -429,7 +429,7 @@ describe('a car already in the car park carries on from where it is (owner, 2026
 });
 
 describe('in or by the car park, the visitor says where the car is: which lot, which level (owner, 2026-10-14)', () => {
-  const byRamp = fromM([170, 319.5]);
+  const byRamp = fromM([170, 317.5]);
 
   it('asks only in or by the car park, offering the nearest lots first', () => {
     const lots = lotsToAsk(byRamp).map((l) => l.id);
