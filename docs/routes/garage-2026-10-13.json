@@ -699,12 +699,8 @@
    "certain": true,
    "px": [
     [
-     1730.66,
-     157.11
-    ],
-    [
-     1705.04,
-     157.07
+     1626.0,
+     157.08
     ],
     [
      1605.09,
@@ -743,7 +739,8 @@
      155.22
     ]
    ],
-   "oneway": true
+   "oneway": true,
+   "_note": "owner 2026-10-15: starts at the P12 exit beside road 22, nothing east of it"
   },
   {
    "id": "exit-link-810",
@@ -1431,7 +1428,7 @@
     319.9
    ],
    "exit_px": [
-    1708.6,
+    1630.0,
     169.8
    ],
    "side": "east",
