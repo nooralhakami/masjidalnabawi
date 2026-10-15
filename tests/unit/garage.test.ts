@@ -360,7 +360,7 @@ describe('the owner’s corrections on the east and south-west sides (2026-10-14
   it('lot 13: in from the south on its east side, out on its west side heading south', () => {
     const r = lotRect(P(913))!;
     const way = garageRoute('omar', P(913))!;
-    expect(way.roads.map((x) => x.lane)).toEqual(['omar-in', 'outer-south', 'p13-in']);
+    expect(way.roads.map((x) => x.lane)).toEqual(['omar-in', 'outer-south', 'east-link', 'p13-in']);
     expect(Math.abs(toM(way.gate)[0] - r.x1)).toBeLessThan(0.01);
     const out = garageExit(P(913), 'omar')!;
     expect(out.roads.map((x) => x.lane).slice(0, 2)).toEqual(['p13-exit', 'east-lane']);
