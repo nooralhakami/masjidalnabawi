@@ -426,7 +426,7 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B', heading?: nu
   }
   const lot = lotFor(to);
   const lots = lot ? [lot] : [];
-  // The car park's two entrances (Quba, Sultana) as street nodes the car can reach. Where the owner
+  // The car park's two entrances (Omar ibn al-Khattab street, Sultana) as street nodes the car can reach. Where the owner
   // drew the way to an entrance (an approach), the streets lead to its start, on the carriageway that
   // goes its way, and the car then follows it.
   const gates = ENTRANCES.map((e) => {
@@ -519,7 +519,7 @@ export async function planRoutes(from: LatLng, to: Poi, mode: Mode = 'walk', opt
 }
 
 /**
- * The way out of the car park from a lot: from the lot's exit to each exit of the car park — Quba
+ * The way out of the car park from a lot: from the lot's exit to each exit of the car park — Omar ibn al-Khattab street
  * (the main one) and Sultana — then on to the streets where the owner drew it. Quickest first; the
  * other within 30% is offered too.
  */

@@ -11,7 +11,7 @@ export interface RouteInfo {
   bounds: L.LatLngBounds;
   nearestEntrance?: number;
   /** By car: the drive, the lot, and the walk from it. */
-  drive?: { meters: number; lot?: number; walkMeters: number; entrance?: 'quba' | 'sultana'; unsure?: boolean; level?: 'A' | 'B'; exit?: 'quba' | 'sultana'; carPark?: boolean };
+  drive?: { meters: number; lot?: number; walkMeters: number; entrance?: 'omar' | 'sultana'; unsure?: boolean; level?: 'A' | 'B'; exit?: 'omar' | 'sultana'; carPark?: boolean };
   /** Every route offered (the chosen one included), and which one is chosen. */
   options: { minutes: number; meters: number }[];
   chosen: number;

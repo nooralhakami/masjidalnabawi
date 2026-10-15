@@ -127,7 +127,7 @@ describe('driving to the car park under the Haram', () => {
     expect(p.walkM).toBeLessThan(400);
     // The car-park stretch starts at one of the two entrances and follows the roads the owner
     // drew (data/garage.json), on their centre line (every road is one-way), until it turns into the lot.
-    expect(['quba', 'sultana']).toContain(p.entrance);
+    expect(['omar', 'sultana']).toContain(p.entrance);
     const roads = GARAGE.lanes.filter((l) => l.kind === 'entry' || l.kind === 'shared').map((l) => l.path.map(toM));
     const offRoad = (ll: LatLng) => {
       const q = toM(ll);
@@ -375,7 +375,7 @@ describe('driving on public roads only, by the rules (owner, 2026-10-13)', () =>
 
   it('reaches the Quba car-park entrance from every side, on public roads', async () => {
     const S = (await loadStreets())!;
-    const quba = ENTRANCES.find((e) => e.id === 'quba')!;
+    const quba = ENTRANCES.find((e) => e.id === 'omar')!;
     const k = S.nearestNode(toM(quba.street), 'drive');
     expect(Math.hypot(S.xy[k][0] - toM(quba.street)[0], S.xy[k][1] - toM(quba.street)[1])).toBeLessThan(1);
     for (const from of [[24.4393, 39.6173], [24.456, 39.6], [24.476, 39.611], [24.4686, 39.6165], [24.4846, 39.5791]] as LatLng[]) {

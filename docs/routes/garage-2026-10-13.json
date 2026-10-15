@@ -658,22 +658,10 @@
    "oneway": true
   },
   {
-   "id": "quba-in",
+   "id": "outer-south",
    "kind": "entry",
    "certain": true,
    "px": [
-    [
-     734.0,
-     1165.0
-    ],
-    [
-     733.5,
-     1124.9
-    ],
-    [
-     734.1,
-     1105.0
-    ],
     [
      737.0,
      1088.0
@@ -923,12 +911,8 @@
      1045
     ],
     [
-     715,
-     1145
-    ],
-    [
-     715,
-     1182
+     713.93,
+     1050.45
     ]
    ],
    "oneway": true
@@ -943,35 +927,16 @@
      923.1
     ],
     [
-     821.1,
-     924.8
+     818.59,
+     924.83
     ],
     [
-     820.1,
-     1060.8
-    ],
-    [
-     804.9,
-     1060.8
-    ],
-    [
-     805.0,
-     919.7
-    ],
-    [
-     745.6,
-     918.8
-    ],
-    [
-     745.5,
-     1035.2
-    ],
-    [
-     713.9,
-     1035.1
+     818.43,
+     1086.13
     ]
    ],
-   "oneway": true
+   "oneway": true,
+   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap): from the end of the south road, south beside 209/210 to the outer south road"
   },
   {
    "id": "nw-shared",
@@ -1180,40 +1145,6 @@
    "_note": "owner 2026-10-14"
   },
   {
-   "id": "sw-turn",
-   "kind": "link",
-   "certain": true,
-   "oneway": true,
-   "px": [
-    [
-     714.3,
-     1079.3
-    ],
-    [
-     737.0,
-     1088.0
-    ]
-   ],
-   "_note": "owner 2026-10-14"
-  },
-  {
-   "id": "sw-back-in",
-   "kind": "link",
-   "certain": true,
-   "oneway": true,
-   "px": [
-    [
-     812.5,
-     1060.8
-    ],
-    [
-     812.5,
-     1086.3
-    ]
-   ],
-   "_note": "owner 2026-10-14"
-  },
-  {
    "id": "a-nw-opening",
    "kind": "link",
    "certain": true,
@@ -1232,17 +1163,239 @@
      344.5
     ]
    ]
+  },
+  {
+   "id": "omar-in",
+   "kind": "entry",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "B"
+   ],
+   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap)",
+   "px": [
+    [
+     484.06,
+     1155.28
+    ],
+    [
+     503.02,
+     1113.11
+    ],
+    [
+     511.28,
+     1103.48
+    ],
+    [
+     535.19,
+     1091.03
+    ],
+    [
+     577.33,
+     1077.85
+    ],
+    [
+     612.76,
+     1073.55
+    ],
+    [
+     722.46,
+     1073.15
+    ],
+    [
+     736.97,
+     1088.04
+    ]
+   ]
+  },
+  {
+   "id": "exit-omar",
+   "kind": "exit",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "B"
+   ],
+   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap)",
+   "px": [
+    [
+     713.93,
+     1050.45
+    ],
+    [
+     705.96,
+     1060.83
+    ],
+    [
+     604.69,
+     1061.62
+    ],
+    [
+     567.89,
+     1068.18
+    ],
+    [
+     509.4,
+     1088.9
+    ],
+    [
+     497.88,
+     1097.59
+    ],
+    [
+     488.75,
+     1109.5
+    ],
+    [
+     470.14,
+     1148.82
+    ]
+   ]
+  },
+  {
+   "id": "sw-mid",
+   "kind": "exit",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "B"
+   ],
+   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap)",
+   "px": [
+    [
+     818.46,
+     1057.41
+    ],
+    [
+     713.93,
+     1050.45
+    ]
+   ]
+  },
+  {
+   "id": "sw-uturn",
+   "kind": "link",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "B"
+   ],
+   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap)",
+   "px": [
+    [
+     705.96,
+     1060.83
+    ],
+    [
+     705.49,
+     1073.12
+    ]
+   ]
+  },
+  {
+   "id": "ramp-up-A-sw",
+   "kind": "ramp_up",
+   "certain": true,
+   "oneway": true,
+   "from_level": "B",
+   "to_level": "A",
+   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap)",
+   "px": [
+    [
+     730.22,
+     1051.49
+    ],
+    [
+     730.3,
+     975.68
+    ],
+    [
+     730.36,
+     911.09
+    ]
+   ]
+  },
+  {
+   "id": "ramp-down-B-sw",
+   "kind": "ramp_down",
+   "certain": true,
+   "oneway": true,
+   "from_level": "A",
+   "to_level": "B",
+   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap)",
+   "px": [
+    [
+     745.62,
+     924.71
+    ],
+    [
+     745.55,
+     992.7
+    ],
+    [
+     745.49,
+     1052.53
+    ]
+   ]
+  },
+  {
+   "id": "a-sw-to-green",
+   "kind": "link",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "A"
+   ],
+   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap)",
+   "px": [
+    [
+     818.59,
+     924.83
+    ],
+    [
+     745.62,
+     924.71
+    ]
+   ]
+  },
+  {
+   "id": "a-sw-loop",
+   "kind": "link",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "A"
+   ],
+   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap)",
+   "px": [
+    [
+     730.36,
+     911.09
+    ],
+    [
+     799.94,
+     911.2
+    ],
+    [
+     799.78,
+     1069.27
+    ],
+    [
+     811.64,
+     1086.12
+    ]
+   ]
   }
  ],
  "entrances": [
   {
-   "id": "quba",
-   "lane": "quba-in",
+   "id": "omar",
+   "lane": "omar-in",
    "street": [
-    24.466023,
-    39.607957
+    24.46572,
+    39.60657
    ],
-   "_note": "OSM amenity=parking_entrance on the Quba side (in); the exit ramp is the one 10 m west of it"
+   "_note": "OSM amenity=parking_entrance by Omar ibn al-Khattab street (in), owner 2026-10-14; the exit ramp portal is 9 m north-west of it"
   },
   {
    "id": "sultana",
@@ -1256,11 +1409,29 @@
  ],
  "exits": [
   {
-   "id": "quba",
-   "lane": "exit-west",
+   "id": "omar",
+   "lane": "exit-omar",
    "street": [
-    24.466023,
-    39.607856
+    24.465754,
+    39.606489
+   ],
+   "departure": [
+    [
+     24.465754,
+     39.606489
+    ],
+    [
+     24.465582,
+     39.606381
+    ],
+    [
+     24.465508,
+     39.60627
+    ],
+    [
+     24.464695,
+     39.604735
+    ]
    ]
   },
   {
@@ -1402,7 +1573,7 @@
     577.7
    ],
    "side": "east",
-   "entry_lane": "quba-in",
+   "entry_lane": "outer-south",
    "exit_lane": "east-lane"
   },
   {
@@ -1417,7 +1588,7 @@
    ],
    "side": "south",
    "entry_lane": "south-lane",
-   "exit_lane": "quba-in"
+   "exit_lane": "outer-south"
   },
   {
    "id": 902,
@@ -1431,7 +1602,7 @@
    ],
    "side": "south",
    "entry_lane": "south-lane",
-   "exit_lane": "quba-in"
+   "exit_lane": "outer-south"
   },
   {
    "id": 903,
@@ -1445,7 +1616,7 @@
    ],
    "side": "south",
    "entry_lane": "south-lane",
-   "exit_lane": "quba-in"
+   "exit_lane": "outer-south"
   },
   {
    "id": 904,
@@ -1459,7 +1630,7 @@
    ],
    "side": "south",
    "entry_lane": "south-lane",
-   "exit_lane": "quba-in"
+   "exit_lane": "outer-south"
   },
   {
    "id": 905,

@@ -8,23 +8,24 @@ import { fromM, toM, type XY } from './walk';
  * docs/routes/garage-*.json → data/garage.json). Pure.
  *
  *  - Two levels with the same roads: B below, A above. Cars come in and go out by B only: in at
- *    Quba (south-west) or Sultana (north-west), out at Quba (the main exit) or Sultana.
+ *    Omar ibn al-Khattab street (south-west, owner 2026-10-14) or Sultana (north-west), out at either.
  *  - Every road is one-way, in the order of its points; traffic circulates to the right (clockwise).
  *  - Level A is reached by the yellow ramp after lot 11 and left by the green ramps: one between
  *    facilities 220 and 222, one beside the yellow ramp (north, onto the exit road). Up there a car
  *    heads west on the north road, which leads into the north lots (the reverse of B); for the others
  *    it goes almost a full lap (down the west side, the west link into the loop). The orange openings,
  *    to switch between the way in and the way out, can be crossed either way (the north-west ones on
- *    B only).
+ *    B only). Two more pairs of ramps (owner, 2026-10-14): a yellow one beside the north-west green
+ *    one, and a yellow and a green one at the south-west corner.
  *  - The east side is cut between lots 12 and 13 (owner, 2026-10-14): lot 12 is reached from the
- *    north road, lot 13 from the south (the Quba way in); from Sultana to the south lots a car goes
- *    down the west side and turns left at the Quba exit.
+ *    north road, lot 13 from the south (the way in from Omar ibn al-Khattab street); from Sultana to the
+ *    south lots a car goes down the west side and turns back at the exit onto the way in.
  *  - Each of the 13 lots (on both levels) is entered right after its first facility and left by its
  *    own exit (the arrows in the drawing). A route ends at the lot's entrance and the way out starts
  *    at its exit (owner, 2026-10-13): the visitor parks where they like inside.
  */
 
-export type EntranceId = 'quba' | 'sultana';
+export type EntranceId = 'omar' | 'sultana';
 export type Level = 'A' | 'B';
 type LaneKind = 'entry' | 'exit' | 'link' | 'shared' | 'ramp_up' | 'ramp_down';
 interface Lane {
