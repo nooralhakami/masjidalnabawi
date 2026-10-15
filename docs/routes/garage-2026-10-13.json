@@ -477,40 +477,28 @@
    "certain": true,
    "px": [
     [
-     1656.4,
-     560.7
+     1640.16,
+     698.33
     ],
     [
-     1656.9,
-     635.5
+     1640.14,
+     722.13
     ],
     [
-     1656.3,
-     671.2
+     1640.08,
+     774.82
     ],
     [
-     1644.4,
-     696.6
+     1640.05,
+     809.49
     ],
     [
-     1640.1,
-     722.1
+     1640.01,
+     844.17
     ],
     [
-     1640.1,
-     774.8
-    ],
-    [
-     1640.0,
-     809.5
-    ],
-    [
-     1640.0,
-     844.2
-    ],
-    [
-     1640.0,
-     878.8
+     1639.97,
+     878.84
     ],
     [
      1639.93,
@@ -518,7 +506,7 @@
     ]
    ],
    "oneway": true,
-   "_note": "Owner's correction 2026-10-13 (docs/routes/garage-east-correction-2026-10-13.jpg): beside the east facilities, not the mosque; below the junction it runs beside the Quba road (4 m apart, opposite ways)."
+   "_note": "owner 2026-10-15 (edited numbered map)"
   },
   {
    "id": "south-lane",
@@ -591,12 +579,16 @@
    "certain": true,
    "px": [
     [
-     736.97,
-     1084.48
+     722.39,
+     1073.23
     ],
     [
-     825.05,
-     1084.61
+     818.44,
+     1073.38
+    ],
+    [
+     828.61,
+     1084.62
     ],
     [
      1184.97,
@@ -611,47 +603,123 @@
      1085.88
     ],
     [
-     1647.6,
-     919.3
+     1647.57,
+     919.31
     ],
     [
-     1647.7,
-     820.7
+     1647.67,
+     820.72
     ],
     [
-     1647.7,
-     749.3
+     1647.74,
+     749.34
     ],
     [
-     1651.2,
-     715.3
+     1650.33,
+     711.95
     ],
     [
-     1663.9,
-     689.9
+     1670.72,
+     689.88
     ],
     [
-     1684.3,
-     676.3
+     1721.64,
+     678.06
     ],
     [
-     1720.0,
-     663.4
+     1762.37,
+     671.33
     ],
     [
-     1798.0,
-     650.0
+     1772.56,
+     664.54
     ],
     [
-     1807.1,
-     590.0
+     1765.78,
+     656.03
     ],
     [
-     1807.4,
-     572.8
+     1721.66,
+     655.97
+    ],
+    [
+     1663.96,
+     655.88
     ]
    ],
-   "oneway": true
+   "oneway": true,
+   "_note": "owner 2026-10-15 (edited numbered map)"
+  },
+  {
+   "id": "p13-exit",
+   "certain": true,
+   "oneway": true,
+   "kind": "exit",
+   "px": [
+    [
+     1638.56,
+     603.15
+    ],
+    [
+     1638.53,
+     632.04
+    ],
+    [
+     1640.16,
+     698.33
+    ]
+   ],
+   "_note": "owner 2026-10-15 (edited numbered map)"
+  },
+  {
+   "id": "p13-in",
+   "certain": true,
+   "oneway": true,
+   "kind": "entry",
+   "px": [
+    [
+     1663.96,
+     655.88
+    ],
+    [
+     1721.67,
+     644.07
+    ],
+    [
+     1779.38,
+     632.26
+    ],
+    [
+     1779.41,
+     603.36
+    ]
+   ],
+   "_note": "owner 2026-10-15 (edited numbered map)"
+  },
+  {
+   "id": "east-link",
+   "certain": true,
+   "oneway": true,
+   "kind": "entry",
+   "px": [
+    [
+     1663.96,
+     655.88
+    ],
+    [
+     1663.94,
+     681.37
+    ],
+    [
+     1643.56,
+     696.64
+    ],
+    [
+     1640.16,
+     698.33
+    ]
+   ],
+   "_note": "owner 2026-10-15 (edited numbered map)"
   },
   {
    "id": "se-shared",
@@ -659,15 +727,16 @@
    "certain": true,
    "px": [
     [
-     1656.9,
-     635.5
+     1638.53,
+     632.04
     ],
     [
-     1800.2,
-     635.7
+     1779.38,
+     632.26
     ]
    ],
-   "oneway": false
+   "oneway": false,
+   "_note": "owner 2026-10-15 (edited numbered map)"
   },
   {
    "id": "west-link",
@@ -836,12 +905,61 @@
      921.43
     ],
     [
-     818.43,
-     1084.6
+     818.44,
+     1073.38
     ]
    ],
    "oneway": true,
-   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap): from the end of the south road, south beside 209/210 to the outer south road"
+   "_note": "owner 2026-10-15 (edited numbered map)"
+  },
+  {
+   "id": "sw-north",
+   "certain": true,
+   "oneway": true,
+   "kind": "entry",
+   "px": [
+    [
+     799.77,
+     1073.35
+    ],
+    [
+     799.78,
+     1060.95
+    ],
+    [
+     799.93,
+     921.4
+    ],
+    [
+     811.82,
+     907.82
+    ],
+    [
+     836.95,
+     892.56
+    ]
+   ],
+   "_note": "owner 2026-10-15 (edited numbered map)"
+  },
+  {
+   "id": "a-sw-west",
+   "certain": true,
+   "oneway": true,
+   "kind": "link",
+   "levels": [
+    "A"
+   ],
+   "px": [
+    [
+     818.45,
+     1060.97
+    ],
+    [
+     799.78,
+     1060.95
+    ]
+   ],
+   "_note": "owner 2026-10-15 (edited numbered map)"
   },
   {
    "id": "nw-shared",
@@ -868,29 +986,22 @@
    "certain": true,
    "px": [
     [
-     776.12,
-     155.64
+     775.27,
+     155.63
     ],
     [
-     771,
-     210
+     775.14,
+     285.66
     ],
     [
-     769,
-     260
-    ],
-    [
-     794,
-     285
-    ],
-    [
-     785.45,
-     317.12
+     809.92,
+     285.72
     ]
    ],
    "from_level": "A",
    "to_level": "B",
-   "oneway": true
+   "oneway": true,
+   "_note": "owner 2026-10-15 (edited numbered map)"
   },
   {
    "id": "ramp-down-B-east",
@@ -1069,7 +1180,7 @@
    "levels": [
     "B"
    ],
-   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap)",
+   "_note": "owner 2026-10-15 (edited numbered map)",
    "px": [
     [
      484.06,
@@ -1098,10 +1209,6 @@
     [
      722.46,
      1073.15
-    ],
-    [
-     736.97,
-     1084.48
     ]
    ]
   },
@@ -1176,19 +1283,23 @@
    "oneway": true,
    "from_level": "B",
    "to_level": "A",
-   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap)",
+   "_note": "owner 2026-10-15 (edited numbered map)",
    "px": [
     [
-     730.21,
-     1060.84
+     799.93,
+     921.4
     ],
     [
-     730.3,
-     975.68
+     730.35,
+     921.29
     ],
     [
-     730.36,
-     911.09
+     730.2,
+     1073.25
+    ],
+    [
+     745.47,
+     1073.27
     ]
    ]
   },
@@ -1223,39 +1334,15 @@
    "levels": [
     "A"
    ],
-   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap)",
+   "_note": "owner 2026-10-15 (edited numbered map)",
    "px": [
     [
-     818.6,
-     921.43
+     799.93,
+     921.4
     ],
     [
      745.63,
      921.31
-    ]
-   ]
-  },
-  {
-   "id": "a-sw-loop",
-   "kind": "link",
-   "certain": true,
-   "oneway": true,
-   "levels": [
-    "A"
-   ],
-   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap)",
-   "px": [
-    [
-     730.36,
-     911.09
-    ],
-    [
-     799.94,
-     911.2
-    ],
-    [
-     799.76,
-     1084.57
     ]
    ]
   }
@@ -1438,16 +1525,16 @@
   {
    "id": 913,
    "entry_px": [
-    1807.3,
-    586.4
+    1779.42,
+    599.96
    ],
    "exit_px": [
-    1656.6,
-    577.7
+    1638.57,
+    599.75
    ],
    "side": "east",
-   "entry_lane": "outer-south",
-   "exit_lane": "east-lane"
+   "entry_lane": "p13-in",
+   "exit_lane": "p13-exit"
   },
   {
    "id": 901,

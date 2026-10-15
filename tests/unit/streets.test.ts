@@ -232,7 +232,9 @@ describe('the best route and its alternatives (owner, 2026-10-11)', () => {
   ];
   it.each(trips)('%s: the best first, up to two others within 30% and really another way', async (_, from, to, mode) => {
     const plans = await planRoutes(from, P(to), mode);
-    expect(plans.length).toBeGreaterThan(1);
+    // By car there may be no other way within 30%: since the road north beside road 13 (owner,
+    // 2026-10-15) the far south-west reaches the north lots by Omar ibn al-Khattab street 1.4 km sooner.
+    expect(plans.length).toBeGreaterThanOrEqual(mode === 'drive' ? 1 : 2);
     expect(plans.length).toBeLessThanOrEqual(3);
     expect(plans[0]).toEqual(await planRoute(from, P(to), mode));
     const cost = (p: (typeof plans)[number]) => (mode === 'drive' ? p.driveM / 300 + p.walkM / 80 : pathLength(fullPath(p)));
