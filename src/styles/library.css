@@ -72,7 +72,8 @@
   padding: 10px 12px;
   border-radius: var(--radius);
   background: var(--tint-gold);
-  color: var(--gold-ink);
+  border-inline-start: 3px solid var(--gold);
+  color: var(--ink);
   font-size: 14px;
   line-height: 1.55;
 }
@@ -118,7 +119,7 @@
 .lib-body h3 {
   margin: 18px 0 8px;
   font-size: 15px;
-  color: var(--primary-ink);
+  color: var(--heading);
 }
 .lib-fact {
   margin: 0 0 12px;
@@ -159,9 +160,4 @@
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 3px;
-}
-
-/* The map button for the library sits with the stories button. */
-.mc-btn.is-library {
-  color: var(--primary-ink);
 }
