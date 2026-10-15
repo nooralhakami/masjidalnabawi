@@ -492,3 +492,14 @@ describe('in or by the car park, the visitor says where the car is: which lot, w
     expect(plan.legs[0].kind).toBe('drive');
   });
 });
+
+describe('the walk up from the lot (owner, 2026-10-15)', () => {
+  it('to a facility the lot opens into: up its own stairs and out of its door, not up another and back', async () => {
+    const [plan] = await planRoutes([24.456, 39.6], P(205), 'drive', { level: 'A' });
+    expect(plan.lot?.id).toBe(903);
+    const walk = plan.legs[plan.legs.length - 1];
+    expect(walk.kind).toBe('walk');
+    expect(d(toM(walk.path[0]), toM([P(205).lat, P(205).lng]))).toBeLessThan(1);
+    expect(pathLength(walk.path)).toBeLessThan(20);
+  });
+});

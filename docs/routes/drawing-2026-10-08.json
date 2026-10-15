@@ -32,7 +32,8 @@
     { "id": "west-cross-3", "colour": "red", "kind": "link", "px": [[531, 915], [631, 915]] },
     { "id": "south-west-diagonal", "colour": "purple", "kind": "walk", "px": [[631, 915], [767, 962]] },
     { "id": "south-west-link", "colour": "red", "kind": "link", "px": [[531, 962], [531, 1046]] },
-    { "id": "south-west-walk", "colour": "cyan", "kind": "walk", "px": [[531, 1046], [905, 1046]] }
+    { "id": "south-west-walk", "colour": "cyan", "kind": "walk", "px": [[531, 1046], [905, 1046]] },
+    { "id": "south-inner-walk", "colour": "cyan", "kind": "walk", "px": [[767, 962], [1363, 963]], "_note": "added 2026-10-15 (owner asked): the south plaza between the mosque and the facilities 201-209, whose doors face the Haram" }
   ],
   "women_prayer_areas": [
     { "id": "north-west", "px": [[640, 400], [865, 400], [865, 602], [640, 602]] },

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { POIS, POI_BY_ID, ROUTING } from '../../src/data';
 import { inHaram } from '../../src/routing/plan';
 import type { LatLng } from '../../src/data';
-import { aroundBuildings, insideRect, network, pathLength, projectOnRing, segmentHits, toM, walkMinutes, walkPath, walkPaths } from '../../src/routing/walk';
+import { aroundBuildings, insideRect, network, restroomDoor, pathLength, projectOnRing, segmentHits, toM, walkMinutes, walkPath, walkPaths } from '../../src/routing/walk';
 import { MAX_ROUTES, pickRoutes, shared, turnPenalty } from '../../src/routing/alternatives';
 
 const at = (id: number): LatLng => {
@@ -137,10 +137,21 @@ describe('walkway network', () => {
   it('every branch is joined to the network (ring, spurs, cross links, women’s paths)', () => {
     const N = network();
     const near = (p: [number, number]) => N.nodes.some((n) => Math.hypot(n[0] - p[0], n[1] - p[1]) < 5);
-    expect(ROUTING.walkways.length).toBe(15);
+    expect(ROUTING.walkways.length).toBe(16);
     for (const w of ROUTING.walkways) {
       const ends = [w.path[0], w.path[w.path.length - 1]].map(toM);
       expect(ends.some(near), w.id).toBe(true);
+    }
+  });
+
+  it('the south plaza has a walkway along the facilities 201–209, whose doors face the Haram (owner, 2026-10-15)', () => {
+    // Before, the walk to such a door left the walkways 90 m away in one straight line.
+    for (const id of [201, 203, 205, 207]) {
+      const door = restroomDoor(POI_BY_ID.get(id)!)!;
+      const path = walkPath([24.4655, 39.6085], door).map(toM);
+      const last = Math.hypot(path[path.length - 1][0] - path[path.length - 2][0], path[path.length - 1][1] - path[path.length - 2][1]);
+      expect(last, `${id}`).toBeLessThan(30);
+      expect(path.some(([, y]) => Math.abs(y + 25) < 1), `${id} along the south plaza`).toBe(true);
     }
   });
 
