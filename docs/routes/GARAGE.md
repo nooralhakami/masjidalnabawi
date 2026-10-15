@@ -1,5 +1,7 @@
 # طرق المواقف تحت الساحات (رسم المالك 2026-10-13)
 
+> **الخريطة الحالية كاملة بالأرقام:** [`garage-map.png`](garage-map.png)، وأرقامها في [`garage-map-legend.md`](garage-map-legend.md). ارسم عليها أي تصحيح. تُعاد بعد كل تعديل بالأمر `python3 scripts/garage-map.py`.
+
 ![رسم المالك](garage-drawing-2026-10-13.webp)
 
 ## 1) ما في الرسم
