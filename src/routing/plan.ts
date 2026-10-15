@@ -347,6 +347,14 @@ function lotFor(to: Poi): Poi | null {
 /** Up through the lot's nearest entrance (one of its four surrounding facilities) to the destination. */
 function walkUp(lot: Poi, to: Poi): { e: Poi; path: LatLng[]; m: number } | null {
   if (to.category === 'parking') return null;
+  // The place is itself one of the lot's facilities: up its own stairs, then out of its door (owner,
+  // 2026-10-15: to restroom 205 from lot 3 the walk went up through 207 and 100 m back).
+  const own = parkingEntrances(lot).find((e) => e.id === to.id);
+  if (own) {
+    const { end, tail } = approach(to);
+    const path = [at(own), end, ...tail];
+    return { e: own, path, m: len(path) };
+  }
   return parkingEntrances(lot).reduce<{ e: Poi; path: LatLng[]; m: number } | null>((m, e) => {
     const { end, tail } = approach(to);
     const path = [...walkPath(at(e), end), ...tail];
