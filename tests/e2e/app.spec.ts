@@ -904,9 +904,10 @@ test('library: the companions follow the mosque landmarks, in their groups, with
   await expect(lib.locator('.lib-body h3').first()).toBeVisible();
   await expect(lib).not.toContainText('ينقصه');
   await lib.locator('[data-act="back"]').click();
-  await expect(lib.locator('.lib-group')).toHaveCount(6);
+  await expect(lib.locator('.lib-group')).toHaveCount(7);
   await expect(lib.locator('.lib-item', { hasText: 'سعد بن معاذ' })).toBeVisible();
   await expect(lib.locator('.lib-item', { hasText: 'أبو هريرة' })).toBeVisible();
+  await expect(lib.locator('.lib-item', { hasText: 'خالد بن الوليد' })).toBeVisible();
   await expect(lib.locator('.lib-item', { hasText: 'خديجة' })).toBeVisible();
   await expect(lib.locator('.lib-item', { hasText: 'مصعب بن عمير' })).toBeVisible();
 });

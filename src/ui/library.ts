@@ -23,7 +23,7 @@ async function load(): Promise<void> {
 }
 
 /** Groups of companions, in the order of the plan's list (docs/PLAN-ISLAMIC-LIBRARY.md, appendix A). */
-const GROUPS = ['ten', 'mothers', 'family', 'early', 'ansar', 'scholars'] as const;
+const GROUPS = ['ten', 'mothers', 'family', 'early', 'ansar', 'scholars', 'leaders'] as const;
 
 /** Keep the ﷺ sign from wrapping alone onto a line. */
 const sal = (s: string): string => esc(s).replace(/\s*ﷺ/g, '&nbsp;ﷺ');
