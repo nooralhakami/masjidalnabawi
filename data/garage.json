@@ -679,6 +679,28 @@
    ]
   },
   {
+   "id": "ramp-up-A-nw",
+   "kind": "ramp_up",
+   "certain": true,
+   "oneway": true,
+   "from_level": "B",
+   "to_level": "A",
+   "path": [
+    [
+     24.4710075,
+     39.6084055
+    ],
+    [
+     24.4705789,
+     39.6084054
+    ],
+    [
+     24.4701349,
+     39.6084059
+    ]
+   ]
+  },
+  {
    "id": "a-nw-corner",
    "kind": "link",
    "certain": true,
@@ -774,6 +796,25 @@
     [
      24.4660872,
      39.6084798
+    ]
+   ]
+  },
+  {
+   "id": "a-nw-opening",
+   "kind": "link",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "A"
+   ],
+   "path": [
+    [
+     24.4701324,
+     39.60846
+    ],
+    [
+     24.4700077,
+     39.6084602
     ]
    ]
   }

@@ -1087,6 +1087,29 @@
    "oneway": true
   },
   {
+   "id": "ramp-up-A-nw",
+   "kind": "ramp_up",
+   "certain": true,
+   "oneway": true,
+   "from_level": "B",
+   "to_level": "A",
+   "_note": "owner 2026-10-14: from the exit road towards Sultana (between the red link and the green ramp), south beside the green ramp, up to the inner north road on A heading east",
+   "px": [
+    [
+     800.7,
+     155.3
+    ],
+    [
+     800.6,
+     236.4
+    ],
+    [
+     800.6,
+     320.4
+    ]
+   ]
+  },
+  {
    "id": "a-nw-corner",
    "kind": "link",
    "certain": true,
@@ -1189,6 +1212,26 @@
     ]
    ],
    "_note": "owner 2026-10-14"
+  },
+  {
+   "id": "a-nw-opening",
+   "kind": "link",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "A"
+   ],
+   "_note": "owner 2026-10-14: on A, 6 m east of the NW yellow ramp, an opening south (like the orange one on B) to the west exit road, for the west and south lots",
+   "px": [
+    [
+     809.9,
+     320.9
+    ],
+    [
+     809.9,
+     344.5
+    ]
+   ]
   }
  ],
  "entrances": [
