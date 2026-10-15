@@ -6,7 +6,7 @@ import { fullPath, inHaram, planRoute, planRoutes } from '../../src/routing/plan
 import { initialBearing, shared, turnPenalty } from '../../src/routing/alternatives';
 import { ENTRANCES, GARAGE } from '../../src/routing/garage';
 import { Streets, loadStreets } from '../../src/routing/streets';
-import { insideRect, network, pathLength, toM } from '../../src/routing/walk';
+import { insideRect, network, pathLength, restroomDoor, toM } from '../../src/routing/walk';
 
 const P = (id: number) => POI_BY_ID.get(id)!;
 const at = (id: number): LatLng => [P(id).lat, P(id).lng];
@@ -121,12 +121,13 @@ describe('driving to the car park under the Haram', () => {
     expect(p.legs[0].path[0]).toEqual(SOUTH_WEST);
     expect(p.lot?.access).toBe('public');
     const last = p.legs[2].path;
-    expect(last[last.length - 1][0]).toBeCloseTo(P(223).lat, 6);
+    // It ends at the restroom's door, not at the middle of the building (owner, 2026-10-14).
+    expect(last[last.length - 1]).toEqual(restroomDoor(P(223)));
     expect(p.driveM).toBeGreaterThan(1000);
     expect(p.walkM).toBeLessThan(400);
     // The car-park stretch starts at one of the two entrances and follows the roads the owner
     // drew (data/garage.json), on their centre line (every road is one-way), until it turns into the lot.
-    expect(['quba', 'sultana']).toContain(p.entrance);
+    expect(['omar', 'sultana']).toContain(p.entrance);
     const roads = GARAGE.lanes.filter((l) => l.kind === 'entry' || l.kind === 'shared').map((l) => l.path.map(toM));
     const offRoad = (ll: LatLng) => {
       const q = toM(ll);
@@ -231,7 +232,9 @@ describe('the best route and its alternatives (owner, 2026-10-11)', () => {
   ];
   it.each(trips)('%s: the best first, up to two others within 30% and really another way', async (_, from, to, mode) => {
     const plans = await planRoutes(from, P(to), mode);
-    expect(plans.length).toBeGreaterThan(1);
+    // By car there may be no other way within 30%: since the road north beside road 13 (owner,
+    // 2026-10-15) the far south-west reaches the north lots by Omar ibn al-Khattab street 1.4 km sooner.
+    expect(plans.length).toBeGreaterThanOrEqual(mode === 'drive' ? 1 : 2);
     expect(plans.length).toBeLessThanOrEqual(3);
     expect(plans[0]).toEqual(await planRoute(from, P(to), mode));
     const cost = (p: (typeof plans)[number]) => (mode === 'drive' ? p.driveM / 300 + p.walkM / 80 : pathLength(fullPath(p)));
@@ -374,7 +377,7 @@ describe('driving on public roads only, by the rules (owner, 2026-10-13)', () =>
 
   it('reaches the Quba car-park entrance from every side, on public roads', async () => {
     const S = (await loadStreets())!;
-    const quba = ENTRANCES.find((e) => e.id === 'quba')!;
+    const quba = ENTRANCES.find((e) => e.id === 'omar')!;
     const k = S.nearestNode(toM(quba.street), 'drive');
     expect(Math.hypot(S.xy[k][0] - toM(quba.street)[0], S.xy[k][1] - toM(quba.street)[1])).toBeLessThan(1);
     for (const from of [[24.4393, 39.6173], [24.456, 39.6], [24.476, 39.611], [24.4686, 39.6165], [24.4846, 39.5791]] as LatLng[]) {
@@ -395,6 +398,25 @@ describe('driving on public roads only, by the rules (owner, 2026-10-13)', () =>
       const p = await planRoute([24.4668, 39.6111], P(id), 'drive');
       expect(p.carPark, `${id}`).toBe(true);
       expect(p.walkM).toBeLessThan(400);
+    }
+  });
+});
+
+describe('gates 37 and 38 are reached through the Rawdah entrance in front of gate 37 (owner, 2026-10-14)', () => {
+  it('from the north, the east and the south: to the Rawdah entrance on the south plaza, then in to the gate', async () => {
+    const via = toM([P(603).lat, P(603).lng]);
+    const mosque = network().obstacles[0];
+    for (const id of [37, 38]) {
+      for (const from of [[24.471, 39.6106], [24.4686, 39.6141], [24.466, 39.6111]] as LatLng[]) {
+        for (const plan of await planRoutes(from, P(id), 'walk')) {
+          const path = plan.legs.flatMap((l) => l.path).map(toM);
+          const k = path.findIndex((q) => Math.hypot(q[0] - via[0], q[1] - via[1]) < 1);
+          expect(k, `${from} → ${id}`).toBeGreaterThan(0);
+          // Nothing before the entrance runs inside the mosque; after it, straight in to the gate.
+          for (const q of path.slice(0, k)) expect(insideRect(q, mosque), `${from} → ${id}`).toBe(false);
+          expect(path.length - 1 - k, `${from} → ${id}`).toBe(1);
+        }
+      }
     }
   });
 });

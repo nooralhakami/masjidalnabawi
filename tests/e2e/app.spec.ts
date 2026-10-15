@@ -117,6 +117,27 @@ test.describe('search and sheet', () => {
     await expect(sheet).toHaveAttribute('data-state', 'closed');
   });
 
+  test('closing the card after a search brings every place back; tapping a filled box shows the results again (owner, 2026-10-14)', async ({ page, errors: _ }) => {
+    await openMap(page, 'ar');
+    const all = await count(page);
+    await search(page, '38');
+    expect(await count(page)).toBeLessThan(all);
+    await page.getByRole('combobox').press('Enter');
+    const sheet = page.locator('.sheet');
+    await expect(sheet).toHaveAttribute('data-state', 'half');
+    await expect(page.locator('#results')).toBeHidden();
+    // The words are still there: tapping the box shows their results without typing again.
+    await page.getByRole('combobox').click();
+    await expect(page.locator('#results')).toBeVisible();
+    await page.getByRole('combobox').press('Escape');
+    await page.getByRole('combobox').fill('38');
+    await page.getByRole('combobox').press('Enter');
+    await sheet.locator('[data-act="close"]').click();
+    await expect(sheet).toHaveAttribute('data-state', 'closed');
+    await expect(page.getByRole('combobox')).toHaveValue('');
+    await expect.poll(() => count(page)).toBe(all);
+  });
+
   test('parking by level code and English names from any language', async ({ page, errors: _ }) => {
     await openMap(page, 'tr');
     await search(page, '1A');
@@ -446,7 +467,10 @@ test.describe('live location while walking', () => {
     await page.goto('map.html?poi=204');
     await page.locator('[data-act="route"]').click();
     await expect(page.locator('.navigation-status .nav-big')).toHaveCount(2);
-    const end = placeAt(204); // the route ends at the restroom itself
+    // The route ends at the restroom's door (owner, 2026-10-14): 204 is in the outer row, its door
+    // on the south side facing the outer gates, 7.5 m from its middle (half the 12 m building + 1.5 m).
+    const mid = placeAt(204);
+    const end = [mid[0] - 7.5 / 111_320, mid[1]];
     // A jump this far is taken as real only from the third reading (src/location/filter.ts), then twice at the end.
     for (let i = 0; i < 6; i++) {
       await context.setGeolocation({ latitude: end[0], longitude: end[1] + i * 1e-7, accuracy: 5 });
@@ -463,7 +487,10 @@ test.describe('live location while walking', () => {
     await page.goto('map.html?poi=204');
     await page.locator('[data-act="route"]').click();
     await expect(page.locator('.navigation-status .nav-big')).toHaveCount(2);
-    const end = placeAt(204); // the route ends at the restroom itself
+    // The route ends at the restroom's door (owner, 2026-10-14): 204 is in the outer row, its door
+    // on the south side facing the outer gates, 7.5 m from its middle (half the 12 m building + 1.5 m).
+    const mid = placeAt(204);
+    const end = [mid[0] - 7.5 / 111_320, mid[1]];
     // A jump this far is taken as real only from the third reading (src/location/filter.ts), then twice at the end.
     for (let i = 0; i < 6; i++) {
       await context.setGeolocation({ latitude: end[0], longitude: end[1] + i * 1e-7, accuracy: 5 });
@@ -674,6 +701,33 @@ test.describe('by car to the car park under the Haram (owner’s drawing, 2026-1
     // And back to the way in.
     await page.locator('[data-act="wayin"]').click();
     await expect(page.locator('.route-lot-gate')).toHaveText(/P\s*9A/, { timeout: 30_000 });
+  });
+});
+
+test.describe('in the car park, the visitor says where the car is (owner, 2026-10-14)', () => {
+  // On the inner north road on level B, by the yellow ramp.
+  test.use({ geolocation: { latitude: 24.47017, longitude: 39.612778, accuracy: 10 }, permissions: ['geolocation'] });
+  test('asks which lot (nearest first), then which level; the way starts there, not at an entrance', async ({ page, errors: _ }) => {
+    await page.addInitScript(() => localStorage.setItem('travel', 'drive'));
+    await page.goto('map.html?poi=912');
+    await page.locator('[data-act="route"]').click();
+    const ask = page.locator('.garage-ask');
+    await expect(ask).toBeVisible({ timeout: 30_000 });
+    await expect(ask.locator('.garage-ask-opt')).toHaveCount(4); // two lots, on the road, outside
+    await expect(ask.locator('.garage-ask-opt').first()).toBeFocused();
+    await ask.locator('.garage-ask-opt', { hasText: 'على الطريق' }).click();
+    await ask.locator('.garage-ask-opt', { hasText: 'B' }).click();
+    await expect(ask).toHaveCount(0);
+    await expect(page.locator('.route-lot-gate')).toHaveText(/P\s*12/, { timeout: 30_000 });
+    await expect(page.locator('.route-legs .leg-ent')).toHaveCount(0);
+    await expect(page.locator('.route-ramp')).toHaveCount(0);
+  });
+  test('«outside the car park»: in from the streets by an entrance, as before', async ({ page, errors: _ }) => {
+    await page.addInitScript(() => localStorage.setItem('travel', 'drive'));
+    await page.goto('map.html?poi=912');
+    await page.locator('[data-act="route"]').click();
+    await page.locator('.garage-ask').locator('.garage-ask-opt').last().click();
+    await expect(page.locator('.route-legs .leg-ent')).toBeVisible({ timeout: 30_000 });
   });
 });
 

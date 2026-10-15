@@ -2209,7 +2209,7 @@
   "direction": "east",
   "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 233/234 ومرفقي 235/236.",
   "alias": "13A 13B P13 parking",
-  "access": "public"
+  "access": "subscribers"
  },
  {
   "id": 251,

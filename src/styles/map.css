@@ -86,6 +86,48 @@
   font: 600 13px var(--font-ui);
   cursor: pointer;
 }
+/* Asked when a car route starts in or by the car park: which lot, then which level (owner, 2026-10-14). */
+.garage-ask {
+  position: fixed;
+  z-index: 1300;
+  inset-inline: 16px;
+  bottom: calc(var(--sheet-h, 0px) + 12px + env(safe-area-inset-bottom));
+  max-width: 420px;
+  margin-inline: auto;
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  font: 14px var(--font-ui);
+}
+.garage-ask-q {
+  font: 700 17px/1.35 var(--font-ui);
+  color: var(--heading);
+}
+.garage-ask-opt {
+  min-height: 44px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 0 14px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font: 600 15px var(--font-ui);
+  text-align: start;
+  cursor: pointer;
+}
+.garage-ask-opt.is-primary {
+  border-color: transparent;
+  background: var(--primary);
+  color: var(--primary-ink);
+}
+.garage-ask-opt:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
 /* Tailwind's preflight (img max-width/height:auto) breaks Leaflet tiles. */
 .leaflet-container img,
 .leaflet-container svg {

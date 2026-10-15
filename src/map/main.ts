@@ -27,7 +27,8 @@ import { LocationService } from '../location/LocationService';
 import { MeMarker } from '../location/MeMarker';
 import { RouteLayer } from './route-layer';
 import { createMap } from './setup';
-import { planExit, planRoutes, type Plan } from '../routing/plan';
+import { lotsToAsk, planExit, planRoutes, type GarageStart, type Plan } from '../routing/plan';
+import { askGarageStart } from '../ui/garage-ask';
 import { RouteTrack } from '../location/progress';
 import { addWeatherChip } from '../ui/weather-chip';
 import { trackMotion } from './motion';
@@ -105,7 +106,10 @@ const navigation = new NavigationTracker(
     if (plans[chosen]?.exit) return;
     const garage = plans[chosen]?.legs.find((l) => l.kind === 'garage');
     if (garage && garage.path.length > 1 && new RouteTrack(garage.path).locate([from.lat, from.lng]).offset < IN_CAR_PARK_M) return;
-    void planRoutes([from.lat, from.lng], dest, sheet.travel, { heading, level: sheet.level }).then((next) => {
+    // The car has moved since the visitor said which lot it was in: on from the road, same level.
+    const said = recentAnswer(from.lat, from.lng, true);
+    const start: GarageStart | undefined = said === 'outside' ? 'outside' : said ? { lot: null, level: said.level } : undefined;
+    void planRoutes([from.lat, from.lng], dest, sheet.travel, { heading, level: sheet.level, start }).then((next) => {
       if (state.selected !== dest.id || !route.active || !next.length) return;
       showPlans(next, 0, false);
       toast(t('rerouted'));
@@ -258,12 +262,39 @@ function focus(p: Poi, zoom: number, fly: boolean) {
   else map.panTo(center, { animate: true });
 }
 
+/**
+ * Where the car is, as the visitor said when the route was asked for in or by the car park (owner,
+ * 2026-10-14). Kept for a while, so changing the level or a re-route does not ask again.
+ */
+let garageAnswer: { start: GarageStart; at: number; pos: [number, number] } | null = null;
+const ANSWER_MS = 10 * 60_000;
+const ANSWER_M = 40;
+/** The answer still holds: given lately, and (unless `moved` is allowed) from about the same place. */
+function recentAnswer(lat: number, lng: number, moved = false): GarageStart | undefined {
+  if (!garageAnswer || Date.now() - garageAnswer.at > ANSWER_MS) return undefined;
+  const m = Math.hypot((lat - garageAnswer.pos[0]) * 111_320, (lng - garageAnswer.pos[1]) * 101_300);
+  return moved || m < ANSWER_M ? garageAnswer.start : undefined;
+}
+
+/** In or by the car park, ask where the car is (which lot, which level); elsewhere nothing. Null: dismissed. */
+async function garageStartFor(lat: number, lng: number): Promise<GarageStart | undefined | null> {
+  const known = recentAnswer(lat, lng);
+  if (known) return known;
+  const lots = lotsToAsk([lat, lng]);
+  if (!lots.length) return undefined;
+  const start = await askGarageStart(lots);
+  if (start) garageAnswer = { start, at: Date.now(), pos: [lat, lng] };
+  return start;
+}
+
 /** Location is requested only now, on demand. */
 async function drawRoute(p: Poi) {
   const fix = geo.fresh() ?? (await geo.start());
   if (!fix || state.selected !== p.id) return;
   const travel = sheet.travel;
-  const next = await planRoutes([fix.lat, fix.lng], p, travel, { level: sheet.level });
+  const start = travel === 'drive' ? await garageStartFor(fix.lat, fix.lng) : undefined;
+  if (start === null || state.selected !== p.id) return;
+  const next = await planRoutes([fix.lat, fix.lng], p, travel, { level: sheet.level, start });
   if (state.selected !== p.id || !next.length) return;
   const plan = next[0];
   if (travel === 'drive' && plan.mode === 'walk') toast(t('drive_fallback'), 5000);
@@ -343,6 +374,9 @@ function deselect() {
   state.selected = null;
   layer.select(null);
   sheet.hide();
+  // Closing the card ends the search too (owner, 2026-10-14): every place comes back on the map,
+  // not only those matching the words still in the box.
+  if (header.query.trim()) header.clear();
 }
 
 map.on('click', () => {

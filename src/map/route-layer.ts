@@ -11,7 +11,7 @@ export interface RouteInfo {
   bounds: L.LatLngBounds;
   nearestEntrance?: number;
   /** By car: the drive, the lot, and the walk from it. */
-  drive?: { meters: number; lot?: number; walkMeters: number; entrance?: 'quba' | 'sultana'; unsure?: boolean; level?: 'A' | 'B'; exit?: 'quba' | 'sultana'; carPark?: boolean };
+  drive?: { meters: number; lot?: number; walkMeters: number; entrance?: 'omar' | 'sultana'; unsure?: boolean; level?: 'A' | 'B'; exit?: 'omar' | 'sultana'; carPark?: boolean };
   /** Every route offered (the chosen one included), and which one is chosen. */
   options: { minutes: number; meters: number }[];
   chosen: number;
@@ -161,8 +161,9 @@ export class RouteLayer {
         this.group
           .addLayer(L.polyline(leg.path, { className: 'route-garage route-base', weight: 6, interactive: false }))
           .addLayer(L.polyline(leg.path, { className: 'route-garage-dash route-base', weight: 2, interactive: false }));
-        // The entrance ramp (the way in only: the way out starts at the parked car).
-        if (!plan.exit) {
+        // The entrance ramp (the way in from the streets only: the way out starts at the parked car,
+        // and a car already in the car park carries on from where it is).
+        if (!plan.exit && plan.legs[0]?.kind === 'drive') {
           this.group.addLayer(
             L.marker(leg.path[0], {
               icon: L.divIcon({ className: 'route-ramp', html: '<span>P</span>', iconSize: [24, 24] }),

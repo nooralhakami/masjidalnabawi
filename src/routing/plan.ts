@@ -1,10 +1,10 @@
-import { POIS, RULES } from '../data';
+import { POIS, POI_BY_ID, RULES } from '../data';
 import type { LatLng, Poi } from '../data/types';
 import { parkingAccess, parkingEntrances } from '../domain/parking';
 import { loadStreets, type Reach, type Streets } from './streets';
 import { pickRoutes, turnPenalty } from './alternatives';
-import { ENTRANCES, EXITS, garageExit, garageRoute, type EntranceId, type Level, type GarageStep, type RampOnWay, type Stretch } from './garage';
-import { fromM, insideRect, network, openTogether, pathLength, ringPath, segmentHits, toM, walkPath, walkPaths, type XY } from './walk';
+import { ENTRANCES, EXITS, garageExit, garageRoute, garageRouteFrom, garageRouteFromLot, lotsByDistance, nearGarage, type EntranceId, type Level, type GarageStep, type RampOnWay, type Stretch } from './garage';
+import { fromM, insideRect, network, openTogether, pathLength, restroomDoor, ringPath, segmentHits, toM, walkPath, walkPaths, type XY } from './walk';
 
 /**
  * Plans a trip as legs:
@@ -294,6 +294,17 @@ export function nearestEntrance(from: LatLng, p: Poi): { entrance: Poi; path: La
  * route ends at the nearest of its four entrances. With the visitor's heading (on a re-route), a
  * route that starts by turning them round ranks lower.
  */
+/**
+ * Where a walk to a place really ends: a restroom at its door, not round the back of the building
+ * (owner, 2026-10-14); gates 37 and 38 through the Rawdah entrance in front of gate 37, then in to the
+ * gate, not across the mosque (owner, 2026-10-14, rules.json gate_via). `tail`: the way on from `end`.
+ */
+function approach(to: Poi): { end: LatLng; tail: LatLng[] } {
+  const via = POI_BY_ID.get(Number(RULES.rules.gate_via?.[String(to.id)]));
+  if (via) return { end: at(via), tail: [at(to)] };
+  return { end: restroomDoor(to) ?? at(to), tail: [] };
+}
+
 async function planWalks(from: LatLng, to: Poi, heading?: number | null): Promise<Plan[]> {
   let target = to;
   let extra: Partial<Plan> = {};
@@ -302,8 +313,9 @@ async function planWalks(from: LatLng, to: Poi, heading?: number | null): Promis
     target = n.entrance;
     extra = { entrances: parkingEntrances(to), nearest: n.entrance };
   }
-  const options = await walkOptions(from, at(target));
-  const paths = pickRoutes((options.length ? options : [walkPath(from, at(target))]).map((path) => ({ path, item: path, penalty: turnPenalty(path, heading) })));
+  const { end, tail } = approach(target);
+  const options = (await walkOptions(from, end)).map((path) => [...path, ...tail]);
+  const paths = pickRoutes((options.length ? options : [[...walkPath(from, end), ...tail]]).map((path) => ({ path, item: path, penalty: turnPenalty(path, heading) })));
   return paths.map((path) => {
     const walkM = len(path);
     return { mode: 'walk', legs: [{ kind: 'walk', path }], walkM, driveM: 0, minutes: Math.max(1, Math.ceil(walkM / WALK_M_PER_MIN)), ...extra };
@@ -311,11 +323,63 @@ async function planWalks(from: LatLng, to: Poi, heading?: number | null): Promis
 }
 
 /**
+ * Where a car near the car park is, as the visitor said (owner, 2026-10-14): in a lot (`lot`) or on
+ * the road (`lot: null`), on level B or A; or outside the car park altogether.
+ */
+export type GarageStart = { lot: Poi | null; level: Level } | 'outside';
+
+/** The lots a car by the car park might be in, nearest first (to ask the visitor), or none when it is not by the car park. */
+export function lotsToAsk(from: LatLng, n = 2): Poi[] {
+  if (!nearGarage(from, LOTS)) return [];
+  return lotsByDistance(from, LOTS).slice(0, n).map((x) => x.lot);
+}
+
+/**
+ * The lot for a place: the place itself; or the owner's choice for it (rules.json drive_lot: the
+ * Rawdah at gate 37 → lot 1, gate 21 → lot 9); or else the public lot nearest it on foot (owner,
+ * 2026-10-13: the nearest lot, never a subscribers-only one).
+ */
+function lotFor(to: Poi): Poi | null {
+  const choice = LOTS.find((p) => p.id === Number(RULES.rules.drive_lot?.[String(to.id)]) && parkingAccess(p) === 'public');
+  return to.category === 'parking' ? to : (choice ?? nearestLot(to) ?? null);
+}
+
+/** Up through the lot's nearest entrance (one of its four surrounding facilities) to the destination. */
+function walkUp(lot: Poi, to: Poi): { e: Poi; path: LatLng[]; m: number } | null {
+  if (to.category === 'parking') return null;
+  return parkingEntrances(lot).reduce<{ e: Poi; path: LatLng[]; m: number } | null>((m, e) => {
+    const { end, tail } = approach(to);
+    const path = [...walkPath(at(e), end), ...tail];
+    const pm = len(path);
+    return !m || pm < m.m ? { e, path, m: pm } : m;
+  }, null);
+}
+
+/**
  * Driving: to the underground car park through the nearest suitable ramp, park in the lot that
  * makes the whole trip quickest (public lots, unless the destination is itself a lot), then walk up
  * through the lot's nearest entrance to the destination.
  */
-async function planDrive(from: LatLng, to: Poi, level: Level = 'B'): Promise<Plan[]> {
+async function planDrive(from: LatLng, to: Poi, level: Level = 'B', heading?: number | null, start?: GarageStart): Promise<Plan[]> {
+  // Already in the car park (owner, 2026-10-14): on from where the car is — the lot it is in, or the
+  // road, on the level the visitor said — not out to the streets and back in by an entrance.
+  if (start !== 'outside' && (to.category === 'parking' || inHaram(at(to)))) {
+    const lot = lotFor(to);
+    const up = lot && walkUp(lot, to);
+    // Already in the very lot: only the walk up is left.
+    if (lot && start?.lot?.id === lot.id && start.level === level) {
+      const walkM = up ? up.m : 0;
+      const legs: Leg[] = up ? [{ kind: 'walk', path: up.path }] : [{ kind: 'walk', path: [from, at(lot)] }];
+      return [{ mode: 'drive', legs, walkM, driveM: 0, minutes: Math.max(1, Math.ceil(walkM / WALK_M_PER_MIN)), lot, level }];
+    }
+    const way = lot && (start?.lot ? garageRouteFromLot(start.lot, start.level, lot, level) : garageRouteFrom(from, lot, level, heading, start?.level ?? 'B'));
+    if (lot && way) {
+      const walkM = up ? up.m : 0;
+      const legs: Leg[] = [{ kind: 'garage', path: way.path, parts: way.parts, steps: way.steps }, ...(up ? [{ kind: 'walk' as const, path: up.path }] : [])];
+      const minutes = Math.ceil(way.meters / DRIVE_M_PER_MIN + walkM / WALK_M_PER_MIN);
+      return [{ mode: 'drive', legs, walkM, driveM: way.meters, minutes: Math.max(1, minutes), lot, gate: way.gate, garageCertain: way.certain, level, ramps: way.ramps }];
+    }
+  }
   const S = await loadStreets();
   if (!S || !S.garageNodes.length) return [];
   const r = S.reach(from, 'drive');
@@ -360,13 +424,9 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B'): Promise<Pla
       },
     ];
   }
-  // The lot: the destination itself; or the owner's choice for this place (rules.json drive_lot: the
-  // Rawdah at gate 37 → lot 1, gate 21 → lot 9); or else the public lot nearest the place on foot
-  // (owner, 2026-10-13: the nearest lot, never a subscribers-only one).
-  const choice = LOTS.find((p) => p.id === Number(RULES.rules.drive_lot?.[String(to.id)]) && parkingAccess(p) === 'public');
-  const lot = to.category === 'parking' ? to : (choice ?? nearestLot(to));
+  const lot = lotFor(to);
   const lots = lot ? [lot] : [];
-  // The car park's two entrances (Quba, Sultana) as street nodes the car can reach. Where the owner
+  // The car park's two entrances (Omar ibn al-Khattab street, Sultana) as street nodes the car can reach. Where the owner
   // drew the way to an entrance (an approach), the streets lead to its start, on the carriageway that
   // goes its way, and the car then follows it.
   const gates = ENTRANCES.map((e) => {
@@ -386,11 +446,7 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B'): Promise<Pla
   const plans: Plan[] = [];
   for (const lot of lots) {
     // Up through the lot's nearest entrance (one of its four surrounding facilities) to the destination.
-    const up = to.category === 'parking' ? null : parkingEntrances(lot).reduce<{ e: Poi; path: LatLng[]; m: number } | null>((m, e) => {
-      const path = walkPath(at(e), at(to));
-      const pm = len(path);
-      return !m || pm < m.m ? { e, path, m: pm } : m;
-    }, null);
+    const up = walkUp(lot, to);
     // In by each entrance (owner's drawing, routing/garage.ts): streets to the ramp, the car park's
     // roads to the lot's entrance. The walk starts at those stairs.
     const ways = gates
@@ -454,16 +510,16 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B'): Promise<Pla
  * Driving falls back to walking when no car route is found. `heading` (degrees, on a re-route)
  * favours routes that carry on ahead of the visitor.
  */
-export async function planRoutes(from: LatLng, to: Poi, mode: Mode = 'walk', opts: { heading?: number | null; level?: Level } = {}): Promise<Plan[]> {
+export async function planRoutes(from: LatLng, to: Poi, mode: Mode = 'walk', opts: { heading?: number | null; level?: Level; start?: GarageStart } = {}): Promise<Plan[]> {
   if (mode === 'drive') {
-    const p = await planDrive(from, to, opts.level ?? 'B');
+    const p = await planDrive(from, to, opts.level ?? 'B', opts.heading, opts.start);
     if (p.length) return p;
   }
   return planWalks(from, to, opts.heading);
 }
 
 /**
- * The way out of the car park from a lot: from the lot's exit to each exit of the car park — Quba
+ * The way out of the car park from a lot: from the lot's exit to each exit of the car park — Omar ibn al-Khattab street
  * (the main one) and Sultana — then on to the streets where the owner drew it. Quickest first; the
  * other within 30% is offered too.
  */

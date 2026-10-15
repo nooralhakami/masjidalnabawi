@@ -1197,25 +1197,57 @@ body.is-navigating .leaflet-bottom.leaflet-right {
   color: var(--heading);
   box-shadow: var(--shadow);
 }
-/* By car: the car park level, on its own row above the buttons. */
-.sheet-foot:has(.levels-row) {
+/* Walking or by car, then (by car) the level: each on its own full-width row above the route button,
+   the choice made filled in a strong colour so it is seen before the route is asked for (owner,
+   2026-10-14). Walking green, the car blue (the drive on the map); level A yellow and level B green,
+   the colours of the ramps up to A and down to B. */
+.sheet-foot:has(> .travel) {
   flex-wrap: wrap;
+}
+.sheet-foot > .travel {
+  order: -2;
+  flex-basis: 100%;
+}
+.sheet-foot > .travel .travel-btn,
+.levels .level-btn {
+  flex: 1;
+  width: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--ink);
+  font: 700 15px/1 var(--font-ui);
+}
+.travel-btn[data-mode='walk'][aria-pressed='true'] {
+  background: var(--primary);
+  color: var(--primary-ink);
+}
+.travel-btn[data-mode='drive'][aria-pressed='true'] {
+  background: var(--cat-men);
+  color: var(--primary-ink);
+}
+.level-btn[data-level='A'][aria-pressed='true'] {
+  background: var(--ramp-up);
+  color: var(--gold-ink);
+}
+.level-btn[data-level='B'][aria-pressed='true'] {
+  background: var(--ramp-down);
+  color: var(--primary-ink);
 }
 .levels-row {
   order: -1;
   flex-basis: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
+}
+.levels-row .levels {
+  flex: 1;
 }
 .levels-k {
   color: var(--muted);
   font: 600 13px var(--font-ui);
-}
-.level-btn {
-  width: 40px;
-  font: 700 15px/1 var(--font-ui);
 }
 .route-legs {
   display: flex;

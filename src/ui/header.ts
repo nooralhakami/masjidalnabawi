@@ -91,6 +91,12 @@ export class Header {
         else this.input.blur();
       }
     });
+    // Back in the box with words already in it: the results again, without having to type.
+    const reopen = () => {
+      if (this.input.value.trim() && this.list.hidden) this.opts.onQuery(this.input.value);
+    };
+    this.input.addEventListener('focus', reopen);
+    this.input.addEventListener('click', reopen);
     clear.addEventListener('click', () => {
       this.clear();
       this.input.focus();

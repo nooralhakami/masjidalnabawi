@@ -8,19 +8,24 @@ import { fromM, toM, type XY } from './walk';
  * docs/routes/garage-*.json → data/garage.json). Pure.
  *
  *  - Two levels with the same roads: B below, A above. Cars come in and go out by B only: in at
- *    Quba (south-west) or Sultana (north-west), out at Quba (the main exit) or Sultana.
+ *    Omar ibn al-Khattab street (south-west, owner 2026-10-14) or Sultana (north-west), out at either.
  *  - Every road is one-way, in the order of its points; traffic circulates to the right (clockwise).
- *  - Level A is reached by the yellow ramp after lot 11 and left by the green ramp between
- *    facilities 220 and 222. Up there a car heads west on the north road, which leads into the north
- *    lots (the reverse of B); for the others it goes almost a full lap (down the west side, the west
- *    link into the loop). The orange openings, to switch between the way in and the way out, are on
- *    B only and can be crossed either way.
+ *  - Level A is reached by the yellow ramp after lot 11 and left by the green ramps: one between
+ *    facilities 220 and 222, one beside the yellow ramp (north, onto the exit road). Up there a car
+ *    heads west on the north road, which leads into the north lots (the reverse of B); for the others
+ *    it goes almost a full lap (down the west side, the west link into the loop). The orange openings,
+ *    to switch between the way in and the way out, can be crossed either way (the north-west ones on
+ *    B only). Two more pairs of ramps (owner, 2026-10-14): a yellow one beside the north-west green
+ *    one, and a yellow and a green one at the south-west corner.
+ *  - The east side is cut between lots 12 and 13 (owner, 2026-10-14): lot 12 is reached from the
+ *    north road, lot 13 from the south (the way in from Omar ibn al-Khattab street). There is no way
+ *    back at that exit (owner: «exit only»), so the south lots and lot 13 are reached only from there.
  *  - Each of the 13 lots (on both levels) is entered right after its first facility and left by its
  *    own exit (the arrows in the drawing). A route ends at the lot's entrance and the way out starts
  *    at its exit (owner, 2026-10-13): the visitor parks where they like inside.
  */
 
-export type EntranceId = 'quba' | 'sultana';
+export type EntranceId = 'omar' | 'sultana';
 export type Level = 'A' | 'B';
 type LaneKind = 'entry' | 'exit' | 'link' | 'shared' | 'ramp_up' | 'ramp_down';
 interface Lane {
@@ -220,12 +225,26 @@ export interface GarageStep {
   meters: number;
 }
 
-function shortest(from: number, to: number): { pts: XY[]; lanes: string[]; levels: Level[]; tags: Stretch[] } | null {
+/** A way can also start part-way along a road (a car already in the car park): its first point and road. */
+interface Start {
+  node: number;
+  cost: number;
+  lead?: { p: XY; lane: string };
+}
+
+function shortest(from: number | Start[], to: number): { pts: XY[]; lanes: string[]; levels: Level[]; tags: Stretch[] } | null {
   const { nodes, out } = G();
   const dist = new Array(nodes.length).fill(Infinity);
   const prev: (Edge & { from: number })[] = new Array(nodes.length);
   const done = new Array(nodes.length).fill(false);
-  dist[from] = 0;
+  const starts: Start[] = typeof from === 'number' ? [{ node: from, cost: 0 }] : from;
+  const startOf = new Map<number, Start>();
+  for (const st of starts) {
+    if (st.cost < dist[st.node]) {
+      dist[st.node] = st.cost;
+      startOf.set(st.node, st);
+    }
+  }
   for (;;) {
     let k = -1;
     for (let i = 0; i < nodes.length; i++) if (!done[i] && dist[i] < Infinity && (k < 0 || dist[i] < dist[k])) k = i;
@@ -240,12 +259,16 @@ function shortest(from: number, to: number): { pts: XY[]; lanes: string[]; level
   }
   if (!Number.isFinite(dist[to])) return null;
   const steps: (Edge & { from: number })[] = [];
-  for (let k = to; k !== from; k = prev[k].from) steps.unshift(prev[k]);
+  let k = to;
+  for (; prev[k] && !(startOf.has(k) && startOf.get(k)!.cost === dist[k]); k = prev[k].from) steps.unshift(prev[k]);
+  const first = k;
+  const lead = startOf.get(first)?.lead;
+  if (lead) steps.unshift({ from: -1, to: first, via: [nodes[first].p], m: 0, lane: lead.lane });
   const rampTo = (lane: string) => GARAGE.lanes.find((l) => l.id === lane)?.to_level;
   return {
-    pts: [nodes[from].p, ...steps.flatMap((s) => s.via)],
+    pts: [lead ? lead.p : nodes[first].p, ...steps.flatMap((s) => s.via)],
     lanes: steps.map((s) => s.lane),
-    levels: [nodes[from].level, ...steps.map((s) => nodes[s.to].level)],
+    levels: [nodes[first].level, ...steps.map((s) => nodes[s.to].level)],
     // One tag per segment between consecutive points: the level, or the ramp being climbed or descended.
     tags: steps.flatMap((s) => {
       const r = rampTo(s.lane);
@@ -417,4 +440,106 @@ export function garageExit(lot: Poi, exit: EntranceId, level: Level = 'B'): Gara
   const roads = shortest(nodeAt(toM(doors(l, level).exit), level), nodeAt(toM(x.mouth), 'B'));
   const gate = roads && lotGate(lot, roads.pts[0]);
   return roads && gate ? finish(roads, gate, level, l, true) : null;
+}
+
+/** A car this close to a road of the car park is taken to be on it (GPS underground wanders a little). */
+export const ON_GARAGE_ROAD_M = 20;
+/** What starting on a road going against the car’s heading costs (in metres): more than any lap of the car park. */
+const AGAINST_M = 5000;
+
+/**
+ * Where a car already inside the car park can carry on from: points along the roads (on level B,
+ * where every car comes in) within reach of its position, each continuing the way its road goes.
+ * Empty when it is not by any road of the car park.
+ */
+function startsNear(p: XY, level: Level, heading?: number | null): Start[] {
+  const { nodes, out } = G();
+  const starts: Start[] = [];
+  for (let a = 0; a < nodes.length; a++) {
+    if (nodes[a].level !== level) continue;
+    for (const e of out[a]) {
+      if (GARAGE.lanes.find((l) => l.id === e.lane)?.from_level) continue; // not from the middle of a ramp
+      const pr = project(p, nodes[a].p, nodes[e.to].p);
+      if (pr.d > ON_GARAGE_ROAD_M) continue;
+      // The rest of this stretch, plus a little for how far off the road the position is; when the
+      // car's heading is known, a road going the other way (the two ways side by side) costs more.
+      const [a0, b0] = [nodes[a].p, nodes[e.to].p];
+      const road = (Math.atan2(b0[0] - a0[0], b0[1] - a0[1]) * 180) / Math.PI;
+      const against = heading != null && Math.abs(((road - heading + 540) % 360) - 180) > 90;
+      starts.push({ node: e.to, cost: d2(pr.q, nodes[e.to].p) + 2 * pr.d + (against ? AGAINST_M : 0), lead: { p: pr.q, lane: e.lane } });
+    }
+  }
+  return starts;
+}
+
+/** Whether a position is on (or right by) a road of the car park. */
+export function inGarage(from: LatLng, level: Level = 'B'): boolean {
+  return startsNear(toM(from), level).length > 0;
+}
+
+/** This close to a road of the car park, or in a lot, a car may be in the car park: ask where it is. */
+const NEAR_GARAGE_M = 30;
+
+/** Whether a position is in the car park or by it (on a road, or in or beside a lot). */
+export function nearGarage(from: LatLng, lots: Poi[]): boolean {
+  const p = toM(from);
+  const { nodes, out } = G();
+  for (let a = 0; a < nodes.length; a++) for (const e of out[a]) if (project(p, nodes[a].p, nodes[e.to].p).d <= NEAR_GARAGE_M) return true;
+  return lotsByDistance(from, lots).some((x) => x.m <= NEAR_GARAGE_M);
+}
+
+/** The lots by how far a position is from each (0 inside it), nearest first. */
+export function lotsByDistance(from: LatLng, lots: Poi[]): { lot: Poi; m: number }[] {
+  const [x, y] = toM(from);
+  return lots
+    .map((lot) => {
+      const r = lotRect(lot);
+      const m = r ? Math.hypot(Math.max(r.x0 - x, 0, x - r.x1), Math.max(r.y0 - y, 0, y - r.y1)) : Infinity;
+      return { lot, m };
+    })
+    .filter((x) => Number.isFinite(x.m))
+    .sort((a, b) => a.m - b.m);
+}
+
+/**
+ * The way from one lot to another, for a car parked (or about to leave) in a lot (owner,
+ * 2026-10-14: «are you in lot n?»): out by the lot's own exit on its level, then along the one-way
+ * roads to the other lot's entrance.
+ */
+export function garageRouteFromLot(fromLot: Poi, fromLevel: Level, lot: Poi, level: Level = 'B'): GarageRoute | null {
+  const a = lotData(fromLot);
+  const l = lotData(lot);
+  if (!a || !l) return null;
+  const roads = shortest(nodeAt(toM(doors(a, fromLevel).exit), fromLevel), nodeAt(toM(doors(l, level).entry), level));
+  const gate = roads && lotGate(lot, roads.pts[roads.pts.length - 1]);
+  const out = roads && lotGate(fromLot, roads.pts[0]);
+  if (!roads || !gate || !out) return null;
+  const way = finish(roads, gate, level, l, false);
+  const first = way.path[0];
+  const m = d2(out, toM(first));
+  const start = fromM(out);
+  const p0 = way.parts[0];
+  return {
+    ...way,
+    path: [start, ...way.path],
+    parts: p0 && p0.on === fromLevel ? [{ on: p0.on, path: [start, ...p0.path] }, ...way.parts.slice(1)] : [{ on: fromLevel, path: [start, first] }, ...way.parts],
+    steps: [{ kind: 'lot_out', path: [start, first], meters: m }, ...way.steps],
+    meters: way.meters + m,
+    certain: way.certain && a.certain,
+  };
+}
+
+/**
+ * The way in for a car already in the car park (owner, 2026-10-14: near the yellow ramp, the way to
+ * lot 12A went out to the streets and back in): from where it is, along the one-way roads — up the
+ * yellow ramp for level A — to the lot's entrance. Null if the car is not by a road of the car park.
+ */
+export function garageRouteFrom(from: LatLng, lot: Poi, level: Level = 'B', heading?: number | null, fromLevel: Level = 'B'): GarageRoute | null {
+  const l = lotData(lot);
+  if (!l) return null;
+  const starts = startsNear(toM(from), fromLevel, heading);
+  if (!starts.length) return null;
+  const roads = shortest(starts, nodeAt(toM(doors(l, level).entry), level));
+  const gate = roads && lotGate(lot, roads.pts[roads.pts.length - 1]);
+  return roads && gate ? finish(roads, gate, level, l, false) : null;
 }

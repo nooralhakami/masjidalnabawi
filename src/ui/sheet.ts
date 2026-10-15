@@ -30,7 +30,7 @@ export interface RouteSummary {
   meters: number;
   minutes: number;
   nearestEntrance?: number;
-  drive?: { meters: number; lot?: number; walkMeters: number; entrance?: 'quba' | 'sultana'; unsure?: boolean; level?: 'A' | 'B'; exit?: 'quba' | 'sultana'; carPark?: boolean };
+  drive?: { meters: number; lot?: number; walkMeters: number; entrance?: 'omar' | 'sultana'; unsure?: boolean; level?: 'A' | 'B'; exit?: 'omar' | 'sultana'; carPark?: boolean };
 }
 
 const WALK_M_PER_MIN = 80;
@@ -145,7 +145,11 @@ export class Sheet {
       const content = (last ? last.getBoundingClientRect().bottom - top : 0) + pad + this.foot.offsetHeight;
       return Math.min(this.root.offsetHeight, Math.ceil(content), Math.round(window.innerHeight * 0.45));
     }
-    return Math.min(this.root.offsetHeight, Math.round(window.innerHeight * 0.55));
+    // The walking/car and level rows above the route button: the sheet grows by them, so the card
+    // shows as much as before they were their own rows.
+    const rows = [...this.foot.querySelectorAll<HTMLElement>(':scope > .travel, :scope > .levels-row')];
+    const extra = rows.reduce((m, r) => m + r.offsetHeight + 10, 0);
+    return Math.min(this.root.offsetHeight, Math.round(window.innerHeight * 0.55) + extra);
   }
 
   private offsetFor(s: SheetState): number {
@@ -259,6 +263,8 @@ export class Sheet {
         /* private mode */
       }
       this.render();
+      // By car the level row appears (on foot it goes): the half-open sheet takes its new height.
+      if (this.state === 'half') this.setState('half');
     }
     else if (act === 'go') {
       const p = POI_BY_ID.get(Number(b.dataset.id));
@@ -346,14 +352,14 @@ export class Sheet {
           ${
             r.drive
               ? `<div class="route-legs">
-              <span class="leg leg-drive">${icon('car', 16)}${esc(t('r_drive'))} · ${esc(t('km', { k: (r.drive.meters / 1000).toFixed(1) }))}</span>
-              ${r.drive.entrance ? `<span class="leg leg-ent">${esc(t(r.drive.entrance === 'quba' ? 'g_in_quba' : 'g_in_sultana'))}</span>` : ''}
-              ${r.drive.exit ? `<span class="leg leg-ent">${esc(t(r.drive.exit === 'quba' ? 'g_out_quba' : 'g_out_sultana'))}</span>` : ''}
+              ${r.drive.meters > 5 ? `<span class="leg leg-drive">${icon('car', 16)}${esc(t('r_drive'))} · ${esc(t('km', { k: (r.drive.meters / 1000).toFixed(1) }))}</span>` : ''}
+              ${r.drive.entrance ? `<span class="leg leg-ent">${esc(t(r.drive.entrance === 'omar' ? 'g_in_omar' : 'g_in_sultana'))}</span>` : ''}
+              ${r.drive.exit ? `<span class="leg leg-ent">${esc(t(r.drive.exit === 'omar' ? 'g_out_omar' : 'g_out_sultana'))}</span>` : ''}
               ${r.drive.carPark ? `<span class="leg leg-ent">${esc(t('g_public_parking'))}</span>` : ''}
               ${r.drive.lot ? `<span class="leg leg-lot">${esc(r.drive.level ? t('r_lot_level', { n: r.drive.lot, l: r.drive.level }) : t('r_lot', { n: r.drive.lot }))}</span>` : ''}
               ${r.drive.walkMeters > 5 ? `<span class="leg leg-walk">${icon('walk', 16)}${esc(t('r_walk'))} · ${esc(t('meters', { m: num(Math.round(r.drive.walkMeters / 5) * 5) }))}</span>` : ''}
             </div>
-            ${r.drive.level === 'A' ? `<div class="route-legend"><span class="route-legend-swatch" aria-hidden="true"></span>${esc(t('g_legend_a'))}</div>` : ''}
+            ${r.drive.level === 'A' && r.drive.meters > 5 ? `<div class="route-legend"><span class="route-legend-swatch" aria-hidden="true"></span>${esc(t('g_legend_a'))}</div>` : ''}
             ${r.drive.unsure ? `<div class="route-unsure">${esc(t('g_unsure'))}</div>` : ''}`
               : ''
           }
@@ -401,10 +407,10 @@ export class Sheet {
       ${rawdah}
       ${facts}`;
     const travel = (m: 'walk' | 'drive', ic: 'walk' | 'car') =>
-      `<button type="button" class="travel-btn" data-act="travel" data-mode="${m}" aria-pressed="${this.mode === m}" aria-label="${esc(t(m === 'walk' ? 'travel_walk' : 'travel_drive'))}" title="${esc(t(m === 'walk' ? 'travel_walk' : 'travel_drive'))}">${icon(ic, 20)}</button>`;
+      `<button type="button" class="travel-btn" data-act="travel" data-mode="${m}" aria-pressed="${this.mode === m}">${icon(ic, 20)}<span>${esc(t(m === 'walk' ? 'travel_walk' : 'travel_drive'))}</span></button>`;
     // By car: the car park level to park on (B below, the way in and out; A above, by the ramps).
     const level = (l: 'A' | 'B') =>
-      `<button type="button" class="travel-btn level-btn" data-act="level" data-level="${l}" aria-pressed="${this.lvl === l}" aria-label="${esc(t('lvl_name', { l }))}" title="${esc(t('lvl_name', { l }))}">${l}</button>`;
+      `<button type="button" class="travel-btn level-btn" data-act="level" data-level="${l}" aria-pressed="${this.lvl === l}">${esc(t('lvl_name', { l }))}</button>`;
     const levels =
       this.mode === 'drive'
         ? `<div class="levels-row"><span class="levels-k">${esc(t('lvl_title'))}</span><div class="travel levels" role="group" aria-label="${esc(t('lvl_title'))}">${level('B')}${level('A')}</div></div>`
