@@ -895,3 +895,15 @@ test.describe("library: landmarks of the Prophet's Mosque", () => {
     await expect(lib).toBeHidden();
   });
 });
+
+test('library: the companions follow the mosque landmarks, in their groups, with the notice', async ({ page, errors: _ }) => {
+  await page.goto('./map.html?lib=umar');
+  const lib = page.locator('.library');
+  await expect(lib.locator('.lib-head h2')).toContainText('عمر بن الخطاب');
+  await expect(lib.locator('.lib-notice')).toBeVisible();
+  await expect(lib.locator('.lib-body h3').first()).toBeVisible();
+  await expect(lib).not.toContainText('ينقصه');
+  await lib.locator('[data-act="back"]').click();
+  await expect(lib.locator('.lib-group')).toHaveCount(3);
+  await expect(lib.locator('.lib-item', { hasText: 'خديجة' })).toBeVisible();
+});

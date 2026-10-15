@@ -1,7 +1,10 @@
+import companionsJson from '../../data/library/companions.json';
 import mosqueJson from '../../data/library/mosque.json';
-import { shownMosquePlaces, type MosqueData, type ShownPlace } from './library';
+import { shownCompanions, shownMosquePlaces, type CompanionData, type MosqueData, type ShownCompanion, type ShownPlace } from './library';
 
-/** The library's mosque places (data/library/mosque.json), loaded only when the section opens. */
+/** The library's data (data/library/*.json), loaded only when the section opens. */
 export const MOSQUE_DATA = mosqueJson as unknown as MosqueData;
-/** What the visitor may see: shownMosquePlaces() rules. */
+export const COMPANION_DATA = companionsJson as unknown as CompanionData;
+/** What the visitor may see (rules in domain/library.ts). */
 export const MOSQUE_PLACES: ShownPlace[] = shownMosquePlaces(MOSQUE_DATA);
+export const COMPANIONS: ShownCompanion[] = shownCompanions(COMPANION_DATA);

@@ -93,3 +93,49 @@ export function shownMosquePlaces(d: MosqueData): ShownPlace[] {
 export function sourceLines(f: LibFact, sources: MosqueData['sources']): { text: string; url?: string }[] {
   return f.src.map((s) => ({ text: `${sources[s[0]]?.t ?? s[0]} — ${s[1]}`, url: s[2] ?? sources[s[0]]?.u }));
 }
+
+/** The fields of a companion card, in reading order (labels come from i18n `lib_f_<field>`). */
+export const COMPANION_FIELDS = ['full_name', 'titles', 'born', 'islam', 'islam_story', 'virtues', 'known_for', 'stories', 'death', 'burial'] as const;
+export type CompanionField = (typeof COMPANION_FIELDS)[number];
+
+export interface CompanionCard {
+  id: string;
+  review: Review;
+  name: string;
+  group?: string;
+  [field: string]: unknown;
+}
+
+export interface CompanionData {
+  display?: 'approved-only' | 'with-unreviewed-notice';
+  sources: Record<string, { t: string; u?: string }>;
+  companions: CompanionCard[];
+}
+
+export interface ShownCompanion {
+  id: string;
+  name: string;
+  group: string;
+  reviewed: boolean;
+  /** Each field with the facts that have two sources (a field left empty is not shown). */
+  fields: { field: CompanionField; facts: LibFact[] }[];
+}
+
+const twoSources = (f: LibFact | undefined): f is LibFact => !!f && !f.needs && new Set(f.src.map((s) => s[0])).size >= 2;
+
+/** Companion cards the visitor may see, with the same rules as the mosque places. */
+export function shownCompanions(d: CompanionData): ShownCompanion[] {
+  return d.companions
+    .filter((c) => c.review === 'approved' || d.display === 'with-unreviewed-notice')
+    .map((c) => ({
+      id: c.id,
+      name: c.name,
+      group: c.group ?? 'ten',
+      reviewed: c.review === 'approved',
+      fields: COMPANION_FIELDS.map((field) => {
+        const v = c[field] as LibFact | LibFact[] | undefined;
+        return { field, facts: (Array.isArray(v) ? v : v ? [v] : []).filter(twoSources) };
+      }).filter((x) => x.facts.length),
+    }))
+    .filter((c) => c.fields.length);
+}

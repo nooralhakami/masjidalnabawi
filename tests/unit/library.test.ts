@@ -3,7 +3,7 @@ import hadith from '../../data/library/hadith.json';
 import companions from '../../data/library/companions.json';
 import mosque from '../../data/library/mosque.json';
 import poisJson from '../../data/pois.json';
-import { approvalProblems, published, textFor, type LibraryItem } from '../../src/domain/library';
+import { approvalProblems, published, shownCompanions, shownMosquePlaces, textFor, type CompanionData, type LibraryItem, type MosqueData } from '../../src/domain/library';
 
 const LANGS = ['ar', 'en', 'tr', 'ur', 'id', 'uz', 'bn', 'fr', 'fa', 'ru', 'ms', 'ha', 'ml', 'sw', 'ps', 'so', 'ta', 'hi', 'bs', 'de', 'zh', 'am', 'ku', 'az', 'th', 'es'];
 
@@ -123,5 +123,20 @@ describe('companion cards (drafts written from the cited pages)', () => {
       }
       expect(published(m.places as unknown as LibraryItem[]).every((p) => p.reviewer)).toBe(true);
     });
+  });
+});
+
+describe('what the visitor sees (owner decision 2026-10-15: drafts shown with a notice)', () => {
+  it('a fact still waiting for a second source is never shown, in places or companions', () => {
+    const shown = JSON.stringify([shownMosquePlaces(mosque as unknown as MosqueData), shownCompanions(companions as unknown as CompanionData)]);
+    expect(shown).not.toContain('"needs"');
+    const cs = shownCompanions(companions as unknown as CompanionData);
+    expect(cs.length).toBe((companions as unknown as CompanionData).companions.length);
+    for (const c of cs) for (const x of c.fields) for (const f of x.facts) expect(new Set(f.src.map((s) => s[0])).size, c.id).toBeGreaterThanOrEqual(2);
+  });
+
+  it('without the owner decision, drafts stay hidden', () => {
+    const d = { ...(companions as unknown as CompanionData), display: 'approved-only' as const };
+    expect(shownCompanions(d)).toEqual([]);
   });
 });

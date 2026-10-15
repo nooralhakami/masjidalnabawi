@@ -1,5 +1,7 @@
 {
  "_note": "Library: companions. Drafts written from the cited pages (docs/PLAN-ISLAMIC-LIBRARY.md). Every fact lists its sources (keys of `sources`); a fact with fewer than two independent sources says what it still needs. Nothing here is shown until review = approved by a named reviewer. Hadith numbers are Sahih al-Bukhari's as printed in Fath al-Bari (Salafiyya), checked on the pages cited.",
+ "display": "with-unreviewed-notice",
+ "_display_note": "Owner decision 2026-10-15: show the companion cards with a notice that no qualified religious reviewer has checked them yet. Facts that still need a second source are never shown (src/domain/library.ts shownCompanions).",
  "sources": {
   "isabah": {
    "t": "ابن حجر، الإصابة في تمييز الصحابة",

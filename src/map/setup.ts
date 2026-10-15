@@ -138,8 +138,8 @@ export function createMap(el: HTMLElement): MapHandle {
     layerBtn.title = layerBtn.getAttribute('aria-label')!;
     storiesBtn.setAttribute('aria-label', t('st_open'));
     storiesBtn.title = t('st_open');
-    libraryBtn.setAttribute('aria-label', t('lib_open'));
-    libraryBtn.title = t('lib_open');
+    libraryBtn.setAttribute('aria-label', t('lib_title'));
+    libraryBtn.title = t('lib_title');
     locBtn.setAttribute('aria-label', t('gps'));
     locBtn.title = t('gps');
     zin.setAttribute('aria-label', t('zoom_in'));
