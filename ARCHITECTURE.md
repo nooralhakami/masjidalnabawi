@@ -43,7 +43,7 @@ src/styles      tokens.css (all colours, light/dark), component CSS
 - **Stretch ahead:** on every reading `NavigationTracker.ahead(150)` (`RouteTrack.slice`) → `RouteLayer.focus()` draws it in full; the rest of the route (`.route-base`) is faded by `.is-route-focus`.
 - **Live location:** `LocationService` (watchPosition, Kalman `filter.ts`, compass) → `MeMarker` (glide) and `NavigationTracker` (progress via `progress.ts`, away/off-route). Off the route on one of the alternatives (2 readings) → switch to it, no re-planning; off every route (3 readings, 8 s apart at most once) → re-plan from the visitor's position with their heading, redrawn in place without the draw-in.
 
-- **Library (mosque landmarks):** map button (`library-request`) or `?lib=ID` → `ui/library.Library.open()` → lazy chunk `domain/mosque-places` (data/library/mosque.json) → `domain/library.shownMosquePlaces()` (pure: drafts only when `display` is `with-unreviewed-notice`, owner decision 2026-10-15; facts that still `need` a second source never shown). Arabic texts, labels in `i18n/library-strings.ts`.
+- **Library (mosque landmarks, companions):** map button (`library-request`) or `?lib=ID` → `ui/library.Library.open()` → lazy chunk `domain/mosque-places` (data/library/mosque.json, companions.json) → `domain/library.shownMosquePlaces()` / `shownCompanions()` (pure: drafts only when `display` is `with-unreviewed-notice`, owner decision 2026-10-15; facts that still `need` a second source never shown). Arabic texts, labels in `i18n/library-strings.ts`.
 - **Landmark stories:** map button (`stories-request`) or `?visit=ID` → `ui/stories.Stories.open()` → slides from `domain/visits` (`nextPos`/`prevPos`/`segmentFill`, pure) → «show on map» / «route» hand the place back to `map/main` (`select`, `drawRoute`). Photos live in `public/visits/` and are excluded from the PWA precache; the prayer count is in `localStorage` (`salawat-count`) only.
 
 ## 4. Data and how it is built
@@ -56,7 +56,7 @@ src/styles      tokens.css (all colours, light/dark), component CSS
 | `data/rules.json` | facility rules, Rawdah gate, map config | hand edits (owner decisions) |
 | `data/overrides.json` | metre nudges of positions | hand edits |
 | `data/garage.json` | the underground car park roads from the owner's drawing: entrances, exits, entry/exit roads, ramps, each lot's entry and exit (`certain: false` where the owner is not sure; none since 2026-10-14) | `scripts/garage-from-drawing.py docs/routes/garage-*.json` (never by hand) |
-| `data/library/*.json` | the library: `mosque.json` (mosque landmarks, shown), `companions.json` and `hadith.json` (drafts, hidden until a named reviewer approves) | hand-written from cited pages (`docs/library/`); `scripts/library-review.py` writes the reviewer pages |
+| `data/library/*.json` | the library: `mosque.json` and `companions.json` (shown with the not-reviewed notice), `hadith.json` (drafts, hidden until a named reviewer approves) | hand-written from cited pages (`docs/library/`); `scripts/library-review.py` writes the reviewer pages |
 | `data/visits.json` | must-visit sites in order of importance: place id, text slides (ar, en; other languages after approval), two or more sources, photos with credit and licence. Their markers glow at every zoom and `ui/stories.ts` plays them (`domain/visits.ts` holds the pure flow) | hand edits (owner decides the order; texts need two sources) |
 Sources and decisions: `docs/places/PLACES.md`, `docs/routes/NETWORK.md`. Raw extracts are kept under `docs/` so every build is reproducible.
 
