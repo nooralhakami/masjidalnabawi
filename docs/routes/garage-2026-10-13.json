@@ -1213,26 +1213,6 @@
    ]
   },
   {
-   "id": "sw-uturn",
-   "kind": "link",
-   "certain": true,
-   "oneway": true,
-   "levels": [
-    "B"
-   ],
-   "_note": "owner 2026-10-14 (paper drawing of the south-west corner; tunnels as in OpenStreetMap)",
-   "px": [
-    [
-     705.96,
-     1060.83
-    ],
-    [
-     705.49,
-     1073.12
-    ]
-   ]
-  },
-  {
    "id": "ramp-up-A-sw",
    "kind": "ramp_up",
    "certain": true,

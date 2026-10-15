@@ -796,25 +796,6 @@
    ]
   },
   {
-   "id": "sw-uturn",
-   "kind": "link",
-   "certain": true,
-   "oneway": true,
-   "levels": [
-    "B"
-   ],
-   "path": [
-    [
-     24.466221,
-     39.60786
-    ],
-    [
-     24.466156,
-     39.6078573
-    ]
-   ]
-  },
-  {
    "id": "ramp-up-A-sw",
    "kind": "ramp_up",
    "certain": true,

@@ -18,8 +18,8 @@ import { fromM, toM, type XY } from './walk';
  *    B only). Two more pairs of ramps (owner, 2026-10-14): a yellow one beside the north-west green
  *    one, and a yellow and a green one at the south-west corner.
  *  - The east side is cut between lots 12 and 13 (owner, 2026-10-14): lot 12 is reached from the
- *    north road, lot 13 from the south (the way in from Omar ibn al-Khattab street); from Sultana to the
- *    south lots a car goes down the west side and turns back at the exit onto the way in.
+ *    north road, lot 13 from the south (the way in from Omar ibn al-Khattab street). There is no way
+ *    back at that exit (owner: «exit only»), so the south lots and lot 13 are reached only from there.
  *  - Each of the 13 lots (on both levels) is entered right after its first facility and left by its
  *    own exit (the arrows in the drawing). A route ends at the lot's entrance and the way out starts
  *    at its exit (owner, 2026-10-13): the visitor parks where they like inside.
