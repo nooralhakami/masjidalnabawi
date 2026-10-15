@@ -872,3 +872,26 @@ test.describe('landmark stories', () => {
     await expect(page.locator('.st-text')).toHaveText(text!);
   });
 });
+
+test.describe("library: landmarks of the Prophet's Mosque", () => {
+  test('opens from the map button with the not-reviewed notice, a place, its sources, and closes', async ({ page, errors: _ }) => {
+    await page.goto('./map.html');
+    await page.locator('.mc-btn.is-library').click();
+    const lib = page.locator('.library');
+    await expect(lib).toBeVisible();
+    await expect(lib.locator('.lib-notice')).toContainText('لم يُراجَع');
+    const items = lib.locator('.lib-item');
+    expect(await items.count()).toBeGreaterThanOrEqual(10);
+    await items.first().click();
+    await expect(lib.locator('.lib-head h2')).toContainText('خوخة آل عمر');
+    await expect(lib.locator('.lib-notice')).toBeVisible();
+    // A fact still waiting for a second source is never shown.
+    await expect(lib).not.toContainText('ينقصه');
+    await lib.locator('.lib-src summary').first().click();
+    await expect(lib.locator('.lib-src li').first()).toContainText('—');
+    await lib.locator('[data-act="back"]').click();
+    await expect(lib.locator('.lib-item').first()).toBeVisible();
+    await lib.locator('[data-act="close"]').click();
+    await expect(lib).toBeHidden();
+  });
+});
