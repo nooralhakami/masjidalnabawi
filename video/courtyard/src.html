@@ -161,7 +161,7 @@ svg.ic { display: block; }
       <div class="foot"><span class="tog" id="tog1"><span class="kn" style="left:52px"></span><span class="o" style="left:4px" id="t1c"></span><span class="o" style="left:52px;color:#fff" id="t1w"></span></span><span class="btn" style="flex:1" id="rbtn"><span id="rbtn-i"></span>رسم المسار من موقعي</span></div></div>
     <div id="sh-route" class="sheet" style="height:300px"><span class="grab"></span>
       <div class="k" id="sr-k">مسار المشي</div><div class="h">مجمع دورات الرجال 227</div>
-      <div style="display:flex;align-items:baseline;gap:18px;margin-top:8px"><span class="big"><span id="sr-m" style="direction:ltr;display:inline-block">415</span> م</span><span class="big" style="color:var(--g700)"><span id="sr-min" style="direction:ltr;display:inline-block">6</span> د</span><span class="chip"><span class="dotc" style="--c:#b03f66"></span>الشمالية</span></div>
+      <div style="display:flex;align-items:baseline;gap:18px;margin-top:8px"><span class="big"><span id="sr-m" style="direction:ltr;display:inline-block">415</span> م</span><span class="big" id="sr-minw" style="color:var(--g700)"><span id="sr-min" style="direction:ltr;display:inline-block">6</span> د</span><span class="chip"><span class="dotc" style="--c:#b03f66"></span>الشمالية</span></div>
       <div class="foot"><span class="tog" id="tog2"><span class="kn" id="kn2" style="left:52px"></span><span class="o" style="left:4px" id="t2c"></span><span class="o" style="left:52px" id="t2w"></span></span><span class="btn" style="flex:1;background:#f1eee6;color:var(--ink)" id="exitb"><span id="exit-i"></span><span id="exit-t">إنهاء المسار</span></span></div></div>
     <div id="sh-car" class="sheet" style="height:330px"><span class="grab"></span>
       <div class="k">مسار بالسيارة</div><div class="h">مجمع دورات الرجال 226</div>
@@ -187,7 +187,7 @@ svg.ic { display: block; }
       <div class="row" id="p3c"><span class="ti" id="p3c-i"></span>رمز الموقف <span class="lt">1A</span></div></div>
     <div class="hl" id="p4" style="top:170px"><h2>امشِ إليه</h2>
       <div class="big2"><b id="b-m">415</b><span>متر</span></div>
-      <div class="big2" style="margin-top:-6px"><b id="b-min" style="font-size:110px">6</b><span>دقائق تقريباً</span></div>
+      <div class="big2" id="b-minrow" style="margin-top:-6px"><b id="b-min" style="font-size:110px">6</b><span id="b-minu">دقائق تقريباً</span></div>
       <div class="note">لا يُطلب موقعك حتى تضغط</div></div>
     <div class="hl" id="p5" style="top:170px"><h2>بالسيارة</h2>
       <div class="row" id="p5a"><span class="ti" style="background:var(--ramp-up);color:var(--ink)" id="p5a-i"></span>موقف رقم 9 · الدور A</div>
@@ -410,6 +410,9 @@ function phoneLang(l) {
 }
 const LSEQ = [[0, 'ar'], [39.6, 'en'], [40.4, 'ur'], [41.2, 'id'], [42.0, 'tr'], [42.8, 'zh'], [43.6, 'ar']];
 
+// the moment the walk counter first reads 0 m (the minutes line turns into «وصلتَ» there)
+let T_ARR = 24.6;
+for (let t = 19.4; t <= 24.6; t += 1 / 600) if (Math.round((GEO.walk.m * (1 - eio(pr(t, 19.4, 24.6)))) / 5) * 5 === 0) { T_ARR = t; break; }
 window.seek = function (t) {
   t = clamp(t, 0, T - 1e-6);
   const [cx, cy, z] = camAt(t);
@@ -449,7 +452,15 @@ window.seek = function (t) {
   const P = eio(pr(t, 19.4, 24.6));
   const m = Math.round((GEO.walk.m * (1 - P)) / 5) * 5;
   $('sr-m').textContent = m; $('b-m').textContent = m;
-  const mins = Math.ceil(m / 80); $('sr-min').textContent = mins; $('b-min').textContent = mins;
+  const mins = Math.ceil(m / 80); $('sr-min').textContent = mins; set('sr-minw', { opacity: mins ? 1 : 0 });
+  // Arabic counts: 3–10 take the plural; arrival reads «وصلتَ»
+  const arrived = t >= T_ARR;
+  $('b-min').textContent = arrived ? '\u00a0' : mins;
+  $('b-minu').textContent = arrived ? 'وصلتَ' : mins >= 3 && mins <= 10 ? 'دقائق تقريباً' : mins === 2 ? 'دقيقتان تقريباً' : 'دقيقة تقريباً';
+  if (mins === 2 && !arrived) $('b-min').textContent = '\u00a0';
+  set('b-minrow', { gap: arrived ? '0px' : '' });
+  set('b-min', { width: $('b-min').textContent === '\u00a0' ? '0px' : 'auto', display: 'inline-block', overflow: 'hidden' });
+  set('b-minrow', { opacity: 1 - 0.9 * Math.sin(Math.PI * pr(t, T_ARR - 0.2, T_ARR + 0.2)) });
   const rin = spring(t - 18.6, 1.8, 0.85), rout = eio(pr(t, 32.6, 33.1));
   set('sh-route', { transform: `translateY(${(1 - rin) * 320 + rout * 320}px)`, opacity: t < 18.6 || t > 33.2 ? 0 : 1 });
   // car: switch flips at 26.6, the sheet becomes the car sheet
@@ -476,7 +487,7 @@ window.seek = function (t) {
 
   // headline column: one block per scene, entering from its right edge
   const blk = (id, a, b) => { const v = vis(t, a, b, 0.6, 0.45); set(id, { opacity: v, transform: `translateX(${(1 - eo(pr(t, a, a + 0.6))) * 40}px)` }); return v; };
-  blk('p2', 5.8, 10.7); blk('p3', 11.2, 17.9); blk('p4', 18.4, 25.8); blk('p5', 26.3, 32.8); blk('p6', 33.6, 38.6); blk('p7', 39.2, 44.6); blk('p8', 44.9, 49.6); blk('p9', 50.0, 54.6);
+  blk('p2', 5.8, 10.7); blk('p3', 11.2, 17.9); blk('p4', 18.4, 25.8); blk('p5', 26.3, 32.8); blk('p6', 33.6, 38.6); blk('p7', 39.2, 44.6); blk('p8', 45.15, 49.6); blk('p9', 50.15, 54.6);
   const count = (id, to, a) => { $(id).textContent = String(Math.round(to * eo(pr(t, a, a + 1.2)))); };
   count('n316', 316, 6.2); count('n112', 112, 6.8); count('n13', 13, 7.4);
   [['p3a', 12.0], ['p3b', 15.6], ['p3c', 16.4]].forEach(([id, a]) => set(id, { opacity: eo(pr(t, a, a + 0.5)) }));

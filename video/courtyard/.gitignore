@@ -4,3 +4,7 @@ haramain-logo-dark.png
 tiles/
 map-z18.jpg
 map-z18.json
+out/part*
+out/p1-*
+out/*.log
+out/*.txt
