@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<title>دليل زوار المسجد النبوي — teaser 9:16</title>
+<style>
+@font-face{font-family:'IBM Plex Sans Arabic';src:url(fonts/ibm-plex-sans-arabic-arabic-400-normal.woff2) format('woff2');font-weight:400;font-display:block;}@font-face{font-family:'IBM Plex Sans Arabic';src:url(fonts/ibm-plex-sans-arabic-latin-400-normal.woff2) format('woff2');font-weight:400;font-display:block;}@font-face{font-family:'IBM Plex Sans Arabic';src:url(fonts/ibm-plex-sans-arabic-arabic-600-normal.woff2) format('woff2');font-weight:600;font-display:block;}@font-face{font-family:'IBM Plex Sans Arabic';src:url(fonts/ibm-plex-sans-arabic-latin-600-normal.woff2) format('woff2');font-weight:600;font-display:block;}@font-face{font-family:'IBM Plex Sans Arabic';src:url(fonts/ibm-plex-sans-arabic-arabic-700-normal.woff2) format('woff2');font-weight:700;font-display:block;}@font-face{font-family:'IBM Plex Sans Arabic';src:url(fonts/ibm-plex-sans-arabic-latin-700-normal.woff2) format('woff2');font-weight:700;font-display:block;}@font-face{font-family:'Noto Naskh Arabic';src:url(fonts/noto-naskh-arabic-arabic-400-normal.woff2) format('woff2');font-weight:400;font-display:block;}@font-face{font-family:'Noto Naskh Arabic';src:url(fonts/noto-naskh-arabic-latin-400-normal.woff2) format('woff2');font-weight:400;font-display:block;}@font-face{font-family:'Noto Naskh Arabic';src:url(fonts/noto-naskh-arabic-arabic-700-normal.woff2) format('woff2');font-weight:700;font-display:block;}@font-face{font-family:'Noto Naskh Arabic';src:url(fonts/noto-naskh-arabic-latin-700-normal.woff2) format('woff2');font-weight:700;font-display:block;}@font-face{font-family:'Noto Kufi Arabic';src:url(fonts/noto-kufi-arabic-arabic-700-normal.woff2) format('woff2');font-weight:700;font-display:block;}@font-face{font-family:'Noto Kufi Arabic';src:url(fonts/noto-kufi-arabic-latin-700-normal.woff2) format('woff2');font-weight:700;font-display:block;}
+:root {
+  --bg: #0b0c0e; --ctl: #1b1e23; --ctl2: #22262c; --line: #2e333a; --ink: #f5f6f7; --muted: #8f969f;
+  --blue: #0288d1; --blue-faint: rgb(2 136 209 / .26); --ramp: #f5d90a;
+  --f: 'IBM Plex Sans Arabic', sans-serif; --kufi: 'Noto Kufi Arabic', 'IBM Plex Sans Arabic', sans-serif; --naskh: 'Noto Naskh Arabic', serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); }
+#frame { position: absolute; inset: 0; overflow: hidden; background: var(--bg); font-family: var(--f); color: var(--ink); font-variant-numeric: tabular-nums; }
+#world { position: absolute; left: 0; top: 0; width: 2160px; height: 3500px; transform-origin: 0 0; }
+#grid { position: absolute; inset: -400px; background-image: radial-gradient(circle, rgb(255 255 255 / .07) 2px, transparent 2.6px); background-size: 40px 40px; }
+.abs { position: absolute; }
+.rtl { direction: rtl; }
+.ltr { direction: ltr; unicode-bidi: isolate; }
+svg.ic { display: block; }
+.card { background: var(--ctl); border: 1px solid var(--line); border-radius: 40px; }
+
+#brand { left: 60px; top: 70px; width: 960px; text-align: right; }
+#brand .t { font: 700 44px/1.5 var(--kufi); }
+#brand .s { font: 400 28px/1.4 var(--f); color: var(--muted); }
+
+#field { left: 60px; top: 200px; width: 960px; height: 120px; border-radius: 60px; background: var(--ctl); border: 2px solid var(--line); }
+#field .ico { position: absolute; right: 38px; top: 36px; color: var(--muted); }
+#field .ph { position: absolute; right: 110px; top: 0; height: 116px; line-height: 116px; font-size: 34px; color: var(--muted); white-space: nowrap; }
+#field .q { position: absolute; right: 110px; top: 0; height: 116px; line-height: 116px; font: 600 52px/116px var(--f); direction: ltr; white-space: pre; }
+#field .caret { position: absolute; top: 34px; width: 4px; height: 50px; border-radius: 2px; background: var(--blue); }
+#field .ring { position: absolute; inset: -2px; border-radius: 60px; border: 3px solid var(--blue); opacity: 0; }
+
+#pills { left: 60px; top: 350px; width: 960px; height: 84px; overflow: hidden; }
+#pillrow { position: absolute; right: 0; top: 0; display: flex; gap: 16px; direction: rtl; }
+.pill { flex: none; display: flex; align-items: center; gap: 14px; height: 76px; padding: 0 26px; border-radius: 38px; background: var(--ctl); border: 1px solid var(--line); font-size: 30px; font-weight: 600; white-space: nowrap; }
+.pill b { font: 600 24px/1 var(--f); color: var(--muted); direction: ltr; }
+.pill.on { background: var(--blue); border-color: var(--blue); }
+.pill.on b { color: #dff1fb; }
+
+#results { left: 60px; top: 470px; width: 960px; height: 330px; padding: 14px 0; }
+.res { display: flex; align-items: center; gap: 26px; height: 100px; padding: 0 30px; direction: rtl; }
+.res .tile { width: 70px; height: 70px; border-radius: 20px; background: var(--ctl2); display: grid; place-items: center; flex: none; }
+.res .nm { font-size: 36px; font-weight: 600; }
+.res .sd { font-size: 26px; color: var(--muted); }
+.res.hit { box-shadow: inset 0 0 0 3px var(--blue); border-radius: 26px; margin: 0 10px; }
+
+#card { left: 60px; top: 840px; width: 960px; height: 420px; overflow: hidden; }
+#card .body, #card .done { position: absolute; inset: 0; padding: 36px 44px; direction: rtl; }
+#card .cat { font-size: 28px; color: var(--muted); }
+#card .ttl { font: 700 52px/1.4 var(--f); margin: 4px 0 18px; }
+#card .chips { display: flex; gap: 14px; margin-bottom: 22px; }
+#card .chip { display: inline-flex; align-items: center; gap: 10px; height: 54px; padding: 0 22px; border-radius: 27px; background: var(--ctl2); font-size: 27px; font-weight: 600; }
+#card .boxes { display: flex; gap: 18px; }
+#card .box { flex: 1; height: 112px; border-radius: 24px; background: var(--ctl2); padding: 16px 24px; }
+#card .box .k { font-size: 24px; color: var(--muted); }
+#card .box .v { font-size: 34px; font-weight: 700; margin-top: 4px; }
+#card .done { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; opacity: 0; }
+#card .done .big { font: 700 170px/1.25 var(--kufi); }
+#card .done .url { font: 600 36px/1 var(--f); color: var(--muted); direction: ltr; }
+#routebtn { left: 340px; top: 1272px; width: 680px; height: 92px; border-radius: 46px; background: var(--blue); display: flex; align-items: center; justify-content: center; gap: 16px; font-size: 36px; font-weight: 700; direction: rtl; }
+
+#map { left: 60px; top: 1500px; width: 960px; height: 1100px; border-radius: 40px; background: #111317; border: 1px solid var(--line); overflow: hidden; }
+#map svg.plan { position: absolute; inset: 0; }
+#starbtn { left: 28px; top: 28px; width: 84px; height: 84px; border-radius: 26px; background: var(--ctl); border: 1px solid var(--line); display: grid; place-items: center; }
+#counter { right: 28px; top: 28px; height: 84px; padding: 0 28px; border-radius: 42px; background: var(--ctl); border: 1px solid var(--line); display: flex; align-items: center; gap: 14px; direction: rtl; font-size: 40px; font-weight: 700; }
+#counter .n { direction: ltr; min-width: 84px; text-align: center; }
+#mbar { left: 0; right: 0; bottom: 0; height: 110px; background: var(--ctl); border-top: 1px solid var(--line); direction: rtl; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; font-size: 30px; font-weight: 600; }
+#toggle { position: relative; width: 200px; height: 74px; border-radius: 37px; background: var(--ctl2); direction: ltr; }
+#toggle .knob { position: absolute; left: 4px; top: 4px; width: 96px; height: 66px; border-radius: 33px; background: var(--blue); }
+#toggle .o { position: absolute; top: 19px; width: 96px; display: grid; place-items: center; }
+
+#park { left: 60px; top: 2720px; width: 960px; height: 560px; border-radius: 40px; background: #111317; border: 1px solid var(--line); overflow: hidden; }
+#park .lbl { position: absolute; right: 34px; top: 26px; font-size: 28px; color: var(--muted); direction: rtl; }
+
+.fcard { left: 1160px; width: 920px; height: 160px; border-radius: 34px; direction: rtl; display: flex; align-items: center; gap: 26px; padding: 0 30px; }
+.fcard .tile { width: 96px; height: 96px; border-radius: 26px; background: var(--ctl2); display: grid; place-items: center; flex: none; color: var(--ink); }
+.fcard .tx { flex: 1; min-width: 0; }
+.fcard .h { font-size: 40px; font-weight: 700; line-height: 1.35; }
+.fcard .sub { font-size: 28px; color: var(--muted); line-height: 1.4; }
+.fcard .side { width: 240px; height: 110px; position: relative; flex: none; }
+#ltick { position: absolute; inset: 0; overflow: hidden; }
+#ltick span { position: absolute; top: 30px; width: 240px; text-align: center; font-size: 34px; font-weight: 600; white-space: nowrap; color: var(--ink); }
+
+#story { left: 1160px; top: 1500px; width: 920px; height: 1100px; border-radius: 44px; background: #101215; border: 1px solid var(--line); overflow: hidden; direction: rtl; }
+#story .bars { position: absolute; left: 40px; right: 40px; top: 34px; height: 8px; display: flex; gap: 10px; }
+#story .bar { flex: 1; height: 8px; border-radius: 4px; background: rgb(255 255 255 / .22); overflow: hidden; position: relative; }
+#story .bar i { position: absolute; top: 0; bottom: 0; right: 0; width: 0; background: #fff; }
+#story .hd { position: absolute; right: 44px; left: 44px; top: 76px; display: flex; justify-content: space-between; align-items: center; }
+#story .hd .t { font: 700 48px/1.4 var(--kufi); }
+#story .art { position: absolute; left: 0; right: 0; top: 230px; display: grid; place-items: center; color: rgb(255 255 255 / .85); }
+#story .s1, #story .s2 { position: absolute; left: 56px; right: 56px; top: 560px; }
+#story .s1 p { font: 500 42px/1.75 var(--f); }
+#story .s2 { text-align: center; opacity: 0; }
+#story .s2 .pr { font: 400 44px/1.8 var(--naskh); }
+#story .s2 .btn { display: inline-flex; align-items: center; height: 96px; padding: 0 44px; margin-top: 30px; border-radius: 48px; border: 3px solid var(--blue); font: 700 44px/1 var(--naskh); }
+.sal { font-family: var(--naskh); font-weight: 400; }
+
+#finger { left: 0; top: 0; width: 220px; height: 520px; transform-origin: 0 0; }
+#dot { left: 0; top: 0; width: 48px; height: 48px; margin: -24px 0 0 -24px; }
+#dot .c { position: absolute; inset: 0; border-radius: 50%; background: var(--blue); box-shadow: 0 0 0 6px #fff; }
+.pulse { position: absolute; width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%; border: 4px solid var(--blue); opacity: 0; }
+</style>
+</head>
+<body>
+<div id="frame">
+<div id="world">
+  <div id="grid"></div>
+
+  <div id="brand" class="abs"><div class="t">دليل زوار المسجد النبوي</div><div class="s">المدينة المنورة</div></div>
+
+  <div id="field" class="abs"><span class="ico" id="f-ico"></span><span class="ph" id="ph">ابحث: اسم، رقم بوابة، رقم مرفق…</span><span class="q" id="q"></span><span class="caret" id="caret"></span><span class="ring" id="fring"></span></div>
+
+  <div id="pills" class="abs"><div id="pillrow"></div></div>
+
+  <div id="results" class="abs card">
+    <div class="res" id="r1"><span class="tile" id="r1i"></span><div><div class="nm">مجمع دورات النساء 215</div><div class="sd">الجهة الغربية</div></div></div>
+    <div class="res" id="r2"><span class="tile" id="r2i"></span><div><div class="nm">مواقف سيارات رقم 6</div><div class="sd">الجهة الغربية</div></div></div>
+    <div class="res" id="r3"><span class="tile" id="r3i"></span><div><div class="nm">مواقف سيارات رقم 7</div><div class="sd">الجهة الغربية</div></div></div>
+  </div>
+
+  <div id="card" class="abs card">
+    <div class="body" id="cbody">
+      <div class="cat">دورات مياه</div>
+      <div class="ttl">مجمع دورات النساء 215</div>
+      <div class="chips"><span class="chip">الجهة الغربية</span><span class="chip">رقم 215</span></div>
+      <div class="boxes"><div class="box"><div class="k">أقرب بوابة</div><div class="v">بوابة 321 · 86 م</div></div><div class="box"><div class="k">أقرب شارع</div><div class="v">طريق السلام</div></div></div>
+    </div>
+    <div class="done" id="cdone"><div class="big">وصلتَ</div><div class="url">masjidalnabawi.vercel.app</div></div>
+  </div>
+  <div id="routebtn" class="abs"><span id="rb-i"></span>رسم المسار من موقعي</div>
+
+  <div id="map" class="abs">
+    <svg class="plan" width="960" height="1100" viewBox="0 0 960 1100">
+      <g fill="none" stroke="#1e2228" stroke-width="14" stroke-linecap="round">
+        <path d="M140 220V860M300 160V940M660 160V940M820 220V860M100 220H860M100 380H860M100 720H860M100 860H860" />
+      </g>
+      <rect x="100" y="160" width="760" height="780" rx="18" fill="none" stroke="#2a2f36" stroke-width="3" />
+      <rect x="300" y="380" width="360" height="340" rx="10" fill="#1a1d22" stroke="#2c3138" stroke-width="3" />
+      <rect x="380" y="460" width="200" height="180" rx="6" fill="none" stroke="#2c3138" stroke-width="2" />
+      <g id="ticks" fill="#3a4048"></g>
+      <path id="route-faint" d="M480 905V875Q480 860 465 860H155Q140 860 140 845V318" pathLength="1" fill="none" stroke="var(--blue-faint)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 2" stroke-dashoffset="1" />
+      <path id="route-lit" d="M480 905V875Q480 860 465 860H155Q140 860 140 845V318" pathLength="1" fill="none" stroke="var(--blue)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0 2" />
+      <g id="pin" transform="translate(140 300)"><circle r="40" fill="#22262c" stroke="#3a4048" stroke-width="3" /><g id="pin-i" transform="translate(-20 -20)" color="#fff"></g></g>
+      <g transform="translate(196 278)"><rect width="92" height="46" rx="23" fill="#22262c" /><text x="46" y="33" text-anchor="middle" font-family="IBM Plex Sans Arabic" font-weight="700" font-size="28" fill="#f5f6f7">215</text></g>
+      <circle cx="480" cy="905" r="10" fill="none" stroke="#3a4048" stroke-width="3" />
+    </svg>
+    <div id="starbtn" class="abs"><span id="star-i"></span></div>
+    <div id="counter" class="abs"><span id="cnt-i"></span><span class="n" id="cnt">420</span><span>م</span></div>
+    <div id="mbar" class="abs"><span>مسار إلى مجمع دورات النساء 215</span><div id="toggle"><div class="knob" id="knob"></div><span class="o" id="tw" style="left:4px"></span><span class="o" id="tc" style="left:100px"></span></div></div>
+  </div>
+
+  <div id="park" class="abs">
+    <div class="lbl">المواقف تحت الحرم</div>
+    <svg width="960" height="560" viewBox="0 0 960 560" style="position:absolute;inset:0">
+      <path d="M120 340V240Q120 120 240 120H720Q840 120 840 240V340Q840 460 720 460H240Q120 460 120 340Z" fill="none" stroke="#22262c" stroke-width="58" />
+      <path d="M120 340V240Q120 120 240 120H720Q840 120 840 240V340Q840 460 720 460H240Q120 460 120 340Z" fill="none" stroke="#3a4048" stroke-width="2" stroke-dasharray="14 18" />
+      <g id="bays" fill="#1a1d22" stroke="#2c3138" stroke-width="2"></g>
+      <g id="arrows" fill="none" stroke="#8f969f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></g>
+      <rect id="ramp" x="760" y="26" width="64" height="122" rx="10" fill="var(--ramp)" />
+      <path d="M792 120V58M776 76L792 58L808 76" fill="none" stroke="#2a2300" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+      <path id="ring" d="M480 540V460H240Q120 460 120 340V240Q120 120 240 120H792" fill="none" stroke="none" />
+      <rect x="440" y="500" width="80" height="60" fill="#22262c" />
+    </svg>
+  </div>
+
+  <div id="fc1" class="abs fcard card" style="top:2720px"><span class="tile" id="fc1i"></span><div class="tx"><div class="h">26 لغة</div><div class="sub">بالاتجاه الصحيح لكل لغة</div></div><div class="side"><div id="ltick"></div></div></div>
+  <div id="fc2" class="abs fcard card" style="top:2920px"><span class="tile" id="fc2i"></span><div class="tx"><div class="h">يفتح دون إنترنت</div><div class="sub">بعد أول زيارة</div></div>
+    <div class="side"><svg width="240" height="110" viewBox="0 0 240 110"><rect x="10" y="10" width="140" height="90" rx="14" fill="#111317" stroke="#2e333a" stroke-width="2"/><path d="M40 80H90V36H120" fill="none" stroke="var(--blue)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <g id="sig" fill="none" stroke="#f5f6f7" stroke-width="7" stroke-linecap="round"><path d="M190 88a8 8 0 0 1 0 0"/><path d="M178 74a17 17 0 0 1 24 0"/><path d="M168 62a31 31 0 0 1 44 0"/><path d="M158 50a45 45 0 0 1 64 0"/></g></svg></div></div>
+  <div id="fc3" class="abs fcard card" style="top:3120px"><span class="tile" id="fc3i"></span><div class="tx"><div class="h">وقت الروضة · مباشر</div><div class="sub">الآن: وقت الرجال · يتبدّل بعد 8 س 42 د</div></div>
+    <div class="side"><svg width="240" height="110" viewBox="0 0 240 110"><circle cx="190" cy="55" r="40" fill="none" stroke="#2e333a" stroke-width="10"/><circle id="cring" cx="190" cy="55" r="40" fill="none" stroke="var(--blue)" stroke-width="10" stroke-linecap="round" pathLength="1" stroke-dasharray="0.7 2" transform="rotate(-90 190 55)"/><line id="chand" x1="190" y1="55" x2="190" y2="27" stroke="#f5f6f7" stroke-width="5" stroke-linecap="round"/></svg></div></div>
+
+  <div id="story" class="abs">
+    <div class="bars"><div class="bar"><i id="sb1"></i></div><div class="bar"><i id="sb2"></i></div></div>
+    <div class="hd"><span class="t">مسجد قباء</span><span id="st-x"></span></div>
+    <div class="art" id="st-art"></div>
+    <div class="s1" id="s1"><p>أول مسجد أُسِّس في الإسلام. بناه النبي <span class="sal">ﷺ</span> عند وصوله إلى المدينة مهاجراً، وشارك أصحابه في بنائه.</p></div>
+    <div class="s2" id="s2"><div class="pr">اللهم صل وسلم على نبينا محمد</div><div class="btn">صلِّ على النبي ﷺ</div></div>
+  </div>
+
+  <div class="pulse" id="pz1"></div><div class="pulse" id="pz2"></div>
+  <div id="dot" class="abs"><div class="c"></div></div>
+  <svg id="finger" class="abs" viewBox="0 0 220 520"><defs><linearGradient id="fg" x1="0" x2="1"><stop offset="0" stop-color="#cfd4db"/><stop offset=".55" stop-color="#e3e6eb"/><stop offset="1" stop-color="#b9bfc8"/></linearGradient></defs>
+    <rect x="40" y="0" width="140" height="560" rx="70" fill="url(#fg)"/><rect x="66" y="18" width="88" height="110" rx="44" fill="#eef0f3" opacity=".85"/></svg>
+</div>
+</div>
+
+<script>
+const ICONS={"search":"<circle cx=\"11\" cy=\"11\" r=\"6.5\"/><path d=\"M20 20l-4.2-4.2\"/>","gate":"<path d=\"M5 21V11a7 7 0 0 1 14 0v10\"/><path d=\"M9 21v-7a3 3 0 0 1 6 0v7\"/><path d=\"M3 21h18\"/>","toilets":"<circle cx=\"7\" cy=\"5\" r=\"1.8\"/><circle cx=\"17\" cy=\"5\" r=\"1.8\"/><path d=\"M5 21v-6H4v-4.5A1.5 1.5 0 0 1 5.5 9h3a1.5 1.5 0 0 1 1.5 1.5V15H9v6\"/><path d=\"M15.5 21v-4h-2l2-8h3l2 8h-2v4\"/><path d=\"M12 3v18\"/>","walk":"<circle cx=\"13\" cy=\"4\" r=\"1.8\"/><path d=\"M9 21l2.5-6.5L14 17v4\"/><path d=\"M7 11l3-3.5h3.5l2 4 2.5 1\"/><path d=\"M11.5 14.5L13 7.5\"/>","car":"<path d=\"M5 17h14v-4.5l-1.8-4.7A2 2 0 0 0 15.3 6.5H8.7a2 2 0 0 0-1.9 1.3L5 12.5z\"/><path d=\"M5 12.5h14\"/><circle cx=\"8\" cy=\"17\" r=\"1.8\"/><circle cx=\"16\" cy=\"17\" r=\"1.8\"/>","languages":"<path d=\"M4 5h9M8.5 3v2M6 5c.5 3 2.5 6 6 7.5\"/><path d=\"M11 5c-.5 3-3 6.5-7 8\"/><path d=\"M13 21l4-9 4 9M14.5 17.5h5\"/>","globe":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18\"/><path d=\"M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z\"/>","dome":"<path d=\"M4 20h16\"/><path d=\"M5.5 20v-6.5a6.5 6.5 0 0 1 13 0V20\"/><path d=\"M12 7V3.5\"/><path d=\"M10.5 4.5h3\"/>","clock":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>","close":"<path d=\"M6 6l12 12M18 6L6 18\"/>","road":"<path d=\"M8 3L5 21M16 3l3 18M12 4v3M12 11v3M12 18v2\"/>","parking":"<rect x=\"4\" y=\"3\" width=\"16\" height=\"18\" rx=\"3\"/><path d=\"M9.5 17V7h3.5a3 3 0 0 1 0 6H9.5\"/>","landmark":"<path d=\"M12 3l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.3 6.8 19l1-5.8L3.6 9.1l5.8-.8z\"/>","grid":"<rect x=\"4\" y=\"4\" width=\"6.5\" height=\"6.5\" rx=\"1.5\"/><rect x=\"13.5\" y=\"4\" width=\"6.5\" height=\"6.5\" rx=\"1.5\"/><rect x=\"4\" y=\"13.5\" width=\"6.5\" height=\"6.5\" rx=\"1.5\"/><rect x=\"13.5\" y=\"13.5\" width=\"6.5\" height=\"6.5\" rx=\"1.5\"/>","women":"<circle cx=\"12\" cy=\"4.5\" r=\"2\"/><path d=\"M10 21v-4.5H7.5L10 8.5h4l2.5 8H14V21\"/>","hotel":"<path d=\"M3 19V6\"/><path d=\"M3 15h18v4\"/><path d=\"M21 15v-3a3 3 0 0 0-3-3h-7v6\"/><circle cx=\"7\" cy=\"11.5\" r=\"1.8\"/>","food":"<path d=\"M7 3v18\"/><path d=\"M4.5 3v5a2.5 2.5 0 0 0 5 0V3\"/><path d=\"M17 21V3c-2.2 1.2-3.5 4-3.5 8H17\"/>","bag":"<path d=\"M5.5 8h13l-1 12.5h-11z\"/><path d=\"M9 10V6.5a3 3 0 0 1 6 0V10\"/>","historic":"<path d=\"M4 21h16\"/><path d=\"M6 21V11h12v10\"/><path d=\"M9 11a3 3 0 0 1 6 0\"/><path d=\"M12 4.5c1.2 1 1.8 2 1.8 3.2H10.2c0-1.2.6-2.2 1.8-3.2z\"/><path d=\"M19.5 21V6\"/><path d=\"M18.5 6h2\"/><path d=\"M10.5 21v-4h3v4\"/>","emergency":"<path d=\"M9.5 4h5v5.5H20v5h-5.5V20h-5v-5.5H4v-5h5.5z\"/>","route":"<circle cx=\"6\" cy=\"18\" r=\"2.5\"/><circle cx=\"18\" cy=\"6\" r=\"2.5\"/><path d=\"M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5\"/>","locate":"<circle cx=\"12\" cy=\"12\" r=\"3\"/><circle cx=\"12\" cy=\"12\" r=\"7.5\"/><path d=\"M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22\"/>"};
+const ic = (n, s = 40, w = 1.9) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]}</svg>`;
+const $ = (s) => document.getElementById(s);
+
+// ---- static content ----
+$('f-ico').innerHTML = ic('search', 44);
+const PILLS = [['grid', 'الكل', 303], ['gate', 'بوابات الحرم', 112], ['women', 'الخدمات النسائية', 35], ['toilets', 'دورات مياه', 40], ['hotel', 'فنادق', 43], ['food', 'مطاعم ومقاهي', 44], ['bag', 'تسوق', 15], ['landmark', 'معالم', 38], ['historic', 'معالم تاريخية', 17], ['parking', 'مواقف السيارات', 13], ['emergency', 'خدمات مهمة', 9]];
+$('pillrow').innerHTML = PILLS.map(([i, l, n], k) => `<span class="pill${k ? '' : ' on'}">${ic(i, 30)}${l}<b>${n}</b></span>`).join('');
+$('r1i').innerHTML = ic('toilets', 38); $('r2i').innerHTML = ic('parking', 38); $('r3i').innerHTML = ic('parking', 38);
+$('rb-i').innerHTML = ic('route', 40, 2.2);
+$('star-i').innerHTML = ic('landmark', 44);
+$('cnt-i').innerHTML = ic('walk', 40);
+$('tw').innerHTML = ic('walk', 36); $('tc').innerHTML = ic('car', 36);
+$('pin-i').innerHTML = ic('toilets', 40);
+$('fc1i').innerHTML = ic('languages', 54); $('fc2i').innerHTML = ic('globe', 54); $('fc3i').innerHTML = ic('dome', 54);
+$('st-x').innerHTML = ic('close', 44); $('st-art').innerHTML = ic('landmark', 200, 1.4);
+// gate ticks along the plaza edge, parking bays and one-way arrows (stylised, not mapped)
+let tk = '';
+for (let x = 140; x <= 820; x += 68) tk += `<rect x="${x - 7}" y="153" width="14" height="14" rx="3"/><rect x="${x - 7}" y="933" width="14" height="14" rx="3"/>`;
+for (let y = 228; y <= 870; y += 64) tk += `<rect x="93" y="${y - 7}" width="14" height="14" rx="3"/><rect x="853" y="${y - 7}" width="14" height="14" rx="3"/>`;
+$('ticks').innerHTML = tk;
+let bays = '';
+for (let x = 250; x <= 650; x += 80) { bays += `<rect x="${x}" y="190" width="60" height="70" rx="6"/><rect x="${x}" y="320" width="60" height="70" rx="6"/>`; }
+$('bays').innerHTML = bays;
+const chev = (x, y, a) => `<path transform="translate(${x} ${y}) rotate(${a})" d="M-10 -12L6 0L-10 12"/>`;
+$('arrows').innerHTML = chev(360, 460, 180) + chev(200, 460, 180) + chev(120, 290, -90) + chev(300, 120, 0) + chev(520, 120, 0) + chev(700, 120, 0) + chev(840, 290, 90) + chev(620, 460, 180);
+const LANGS = [['العربية', 1], ['English', 0], ['اردو', 1], ['Français', 0], ['فارسی', 1], ['中文', 0], ['پښتو', 1], ['Türkçe', 0], ['Español', 0], ['Bahasa Melayu', 0], ['Русский', 0], ['ไทย', 0]];
+$('ltick').innerHTML = LANGS.map(([n, r]) => `<span dir="${r ? 'rtl' : 'ltr'}">${n}</span>`).join('');
+
+// ---- time & motion helpers (everything below is a pure function of t) ----
+const BEATS = 36, T = 1178 / 60, B = T / BEATS, BPM = 60 / B; // 110.02 BPM: 36 beats land on a whole frame at 60 fps
+window.DURATION = T; window.BPM = BPM;
+const bt = (b) => b * B;
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, u) => a + (b - a) * u;
+const prog = (t, a, b) => clamp((t - bt(a)) / (bt(b) - bt(a)));
+const eo = (u) => 1 - Math.pow(1 - u, 3);                         // decelerate
+const eio = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+function spring(t, f = 2.4, z = 0.78) { if (t <= 0) return 0; const w = 2 * Math.PI * f, wd = w * Math.sqrt(1 - z * z); return 1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + (z * w / wd) * Math.sin(wd * t)); }
+const set = (el, css) => Object.assign((typeof el === 'string' ? $(el) : el).style, css);
+
+// world positions
+const MAP = [60, 1500], PARK = [60, 2720];
+const routeEl = $('route-lit'), ringEl = $('ring');
+const RL = routeEl.getTotalLength(), GL = ringEl.getTotalLength();
+const onRoute = (u) => { const p = routeEl.getPointAtLength(u * RL); return [MAP[0] + p.x, MAP[1] + p.y]; };
+const onRing = (u) => { const p = ringEl.getPointAtLength(u * GL); return [PARK[0] + p.x, PARK[1] + p.y]; };
+const HOME = [140, 260];
+let W = null; // typed-text widths, measured once fonts are ready
+const caretX = (n) => 1020 - 110 - (n ? W[n] : 0);
+function measure() { if (W) return; const q = $('q'); W = {}; for (const s of ['2', '21', '215']) { q.textContent = s; W[s.length] = q.getBoundingClientRect().width / curZ; } q.textContent = ''; }
+let curZ = 1;
+
+// The dot's whole journey: [startBeat, endBeat, target or path, arc height, ease].
+const MOVES = [
+  [1.0, 2.0, [540, 140], 0, 'spring'],          // springs out of the field
+  [3.3, 4.0, 'caret1', 90, 'io'],               // lands on «2»
+  [4.55, 5.0, 'caret2', 50, 'io'],
+  [5.55, 6.0, 'caret3', 50, 'io'],
+  [6.45, 7.0, [960, 540], 110, 'io'],           // first result
+  [8.45, 9.0, [960, 890], 90, 'io'],            // the place card
+  [9.45, 10.0, [680, 1318], 90, 'io'],          // «رسم المسار من موقعي»
+  [10.3, 11.0, [MAP[0] + 480, MAP[1] + 905], 140, 'io'], // drops onto the map
+  [11.0, 16.0, 'route', 0, 'io'],               // walks the route; counter 420 → 0
+  [16.35, 17.0, [MAP[0] + 818, MAP[1] + 1045], 120, 'io'], // car/walk switch
+  [17.35, 18.0, [PARK[0] + 480, PARK[1] + 540], 120, 'io'], // into the car park
+  [18.0, 19.6, 'ring', 0, 'io'],                // follows the one-way arrows
+  [19.6, 20.3, [PARK[0] + 792, PARK[1] + 30], 0, 'io'],     // up the yellow ramp
+  [20.35, 21.0, [2002, 2800], 120, 'io'],  // card 1
+  [22.45, 23.0, [2002, 3000], 70, 'io'],        // card 2
+  [24.45, 25.0, [2002, 3200], 70, 'io'],        // card 3
+  [26.5, 28.0, [540, 874], 260, 'io'],         // back to the destination card: arrival
+  [29.35, 30.0, [MAP[0] + 70, MAP[1] + 70], 160, 'io'], // the stories star
+  [30.2, 30.9, [1620, 1640], 160, 'io'],        // into the story
+  [31.1, 31.6, [1620, 2440], 60, 'io'],         // under «صلِّ على النبي ﷺ»
+  [33.6, 35.5, HOME, 300, 'io'],                // home to the search field (loop)
+];
+function target(spec) {
+  if (spec === 'caret1') return [caretX(1) - 34, 260];
+  if (spec === 'caret2') return [caretX(2) - 34, 260];
+  if (spec === 'caret3') return [caretX(3) - 34, 260];
+  return spec;
+}
+function dotAt(t) {
+  let cur = HOME, land = -99, vel = [0, 0];
+  for (const [a, b, spec, h, ease] of MOVES) {
+    const ta = bt(a), tb = bt(b);
+    if (t < ta) break;
+    if (spec === 'route' || spec === 'ring') {
+      const u = eio(clamp((t - ta) / (tb - ta)));
+      const p = spec === 'route' ? onRoute(u) : onRing(u);
+      if (t <= tb) return { p, sq: 0 };
+      cur = p; continue;
+    }
+    const to = target(spec);
+    if (t <= tb) {
+      const r = (t - ta) / (tb - ta);
+      const u = ease === 'spring' ? spring(t - ta, 1.6, 0.62) : eio(r);
+      return { p: [lerp(cur[0], to[0], u), lerp(cur[1], to[1], u) - h * Math.sin(Math.PI * clamp(r))], sq: 0 };
+    }
+    cur = to; land = tb;
+  }
+  const d = t - land;
+  const sq = d >= 0 && d < 0.6 ? 0.2 * Math.exp(-d * 9) * Math.cos(d * 26) : 0;
+  return { p: cur, sq };
+}
+// single camera: [beat, cx, cy, zoom]; zoom interpolated in log space
+const CAM = [
+  [0, 540, 600, 1.02], [0.6, 540, 560, 1.06], [1.2, 540, 560, 1.06], [2.2, 540, 470, 1.04], [3.4, 540, 470, 1.04],
+  [4.2, 540, 650, 1.0], [9.6, 540, 650, 1.0], [10.9, 540, 2050, 1.1], [16.2, 540, 2050, 1.1],
+  [17.0, 540, 2560, 1.0], [17.6, 540, 2560, 1.0], [18.3, 540, 2860, 1.08], [20.0, 540, 2860, 1.08],
+  [20.9, 1620, 3000, 1.12], [26.3, 1620, 3000, 1.12], [27.9, 540, 1000, 1.08], [29.0, 540, 1000, 1.08],
+  [29.8, 760, 1420, 0.92], [30.2, 760, 1420, 0.92], [31.0, 1620, 2050, 1.0], [32.9, 1620, 2050, 1.0],
+  [33.9, 1080, 1730, 0.5], [34.7, 1080, 1730, 0.5], [35.9, 540, 600, 1.02], [36, 540, 600, 1.02],
+];
+function camAt(t) {
+  const b = t / B;
+  for (let i = 1; i < CAM.length; i++) {
+    const [b1, x1, y1, z1] = CAM[i], [b0, x0, y0, z0] = CAM[i - 1];
+    if (b <= b1) { const u = eio(clamp((b - b0) / (b1 - b0))); return [lerp(x0, x1, u), lerp(y0, y1, u), Math.exp(lerp(Math.log(z0), Math.log(z1), u))]; }
+  }
+  return CAM[CAM.length - 1].slice(1);
+}
+const vis = (t, a, b, inDur = 0.5, outDur = 0.5) => Math.min(prog(t, a, a + inDur), 1 - prog(t, b, b + outDur));
+
+window.seek = function (t) {
+  t = clamp(t, 0, T);
+  const [cx, cy, z] = camAt(t); curZ = z;
+  set('world', { transform: `translate(${540 - cx * z}px, ${960 - cy * z}px) scale(${z})` });
+  measure();
+
+  // search field: typing on the beats 4, 5, 6; cleared on the way home (33.9–34.3)
+  const typed = t < bt(4) ? '' : t < bt(5) ? '2' : t < bt(6) ? '21' : t < bt(33.9) ? '215' : t < bt(34.1) ? '21' : t < bt(34.3) ? '2' : '';
+  $('q').textContent = typed;
+  set('ph', { opacity: typed ? 0 : 1 });
+  const focus = clamp(prog(t, 1, 1.25)) * (1 - prog(t, 34.6, 35.2));
+  set('fring', { opacity: focus });
+  set('caret', { left: caretX(typed.length) - 60 - 2 + 'px', opacity: focus * (Math.floor(t / (B / 2)) % 2 ? 0.35 : 1) });
+  set('field', { transform: `scale(${1 - 0.02 * Math.max(0, Math.sin(Math.PI * prog(t, 0.92, 1.25)))})` });
+
+  // pills glide across as the dot passes (and come back for the loop)
+  set('pillrow', { transform: `translateX(${720 * eio(prog(t, 4, 9)) * (1 - eio(prog(t, 34.6, 35.6)))}px)` });
+
+  // results and the place card
+  const rv = vis(t, 6.05, 33.9, 0.6, 0.6);
+  set('results', { opacity: rv, transform: `translateY(${(1 - eo(prog(t, 6.05, 6.75))) * -24}px)` });
+  $('r1').classList.toggle('hit', t >= bt(7) && t < bt(33.9));
+  const cin = spring(t - bt(8), 2.1, 0.8);
+  const cout = eio(prog(t, 34.4, 35.2));
+  const pulse = t > bt(28) ? 0.025 * Math.exp(-(t - bt(28)) * 6) * Math.sin((t - bt(28)) * 30) : 0;
+  set('card', { opacity: clamp(cin * 1.4) * (1 - cout), transform: `translateY(${(1 - cin) * 360 + cout * 140}px) scale(${1 + pulse})` });
+  set('routebtn', { opacity: clamp(cin * 1.4) * (1 - cout), transform: `translateY(${(1 - cin) * 360 + cout * 140}px) scale(${1 - 0.04 * Math.sin(Math.PI * prog(t, 9.95, 10.3))})` });
+  const done = eo(prog(t, 28, 28.6)) * (1 - prog(t, 35.2, 35.3));
+  set('cbody', { opacity: 1 - done, transform: `translateY(${-30 * done}px)` });
+  set('cdone', { opacity: done, transform: `translateY(${30 * (1 - done)}px)` });
+
+  // route: drawn in with pathLength, lit ahead of the dot, counter from the same progress
+  const draw = eo(prog(t, 10.6, 11.6));
+  const P = t < bt(11) ? 0 : eio(prog(t, 11, 16));
+  const rfade = 1 - prog(t, 34.8, 35.4);
+  set('route-faint', { strokeDashoffset: 1 - draw, opacity: rfade });
+  set('route-lit', { strokeDasharray: `${Math.max(0, draw - P)} 2`, strokeDashoffset: -P, opacity: rfade });
+  $('cnt').textContent = String(Math.round((420 * (1 - P)) / 5) * 5);
+
+  // car/walk switch flips on beat 17
+  const k = spring(t - bt(17), 2.6, 0.72) * (1 - eio(prog(t, 35, 35.6)));
+  set('knob', { transform: `translateX(${96 * k}px)` });
+
+  // feature cards, one per beat 21 / 23 / 25
+  [[1, 20.75], [2, 22.75], [3, 24.75]].forEach(([i, b]) => {
+    const s = spring(t - bt(b), 2.2, 0.8);
+    set('fc' + i, { opacity: clamp(s * 1.3) * (1 - prog(t, 34.6, 35.2)), transform: `translateX(${(1 - s) * 120}px)` });
+  });
+  // languages scroll through scripts: RTL names enter from the right, LTR from the left
+  const spans = $('ltick').children, step = B / 2, li = Math.floor(Math.max(0, t - bt(21)) / step);
+  [...spans].forEach((sp, i) => {
+    const cur = li % spans.length === i, prev = (li - 1 + spans.length) % spans.length === i && li > 0;
+    const u = eo(clamp((Math.max(0, t - bt(21)) - li * step - step * 0.2) / (step * 0.5)));
+    const dir = sp.dir === 'rtl' ? 1 : -1;
+    if (cur) set(sp, { opacity: u, transform: `translateX(${dir * 60 * (1 - u)}px)` });
+    else if (prev) { const v = eo(clamp((Math.max(0, t - bt(21)) - li * step) / (step * 0.25))); set(sp, { opacity: 1 - v, transform: `translateX(${-dir * 60 * v}px)` }); }
+    else set(sp, { opacity: 0 });
+  });
+  set('sig', { opacity: 1 - 0.85 * eo(prog(t, 23.5, 24.4)) });
+  const tick = Math.floor(Math.max(0, t - bt(25)) / B);
+  set('cring', { strokeDasharray: `${0.7 - tick * 0.02} 2` });
+  $('chand').setAttribute('transform', `rotate(${tick * 30} 190 55)`);
+
+  // stories star → one landmark story
+  set('starbtn', { transform: `scale(${1 - 0.08 * Math.sin(Math.PI * prog(t, 29.95, 30.3))})` });
+  const so = spring(t - bt(30), 2.0, 0.85) * (1 - prog(t, 34.6, 35.2));
+  set('story', { opacity: clamp(so * 1.3), transform: `scale(${0.94 + 0.06 * so})` });
+  set('sb1', { width: 100 * prog(t, 30, 31.5) + '%' }); set('sb2', { width: 100 * prog(t, 31.5, 33) + '%' });
+  const s2 = eo(prog(t, 31.5, 32.0));
+  set('s1', { opacity: 1 - s2 }); set('s2', { opacity: s2, transform: `translateY(${20 * (1 - s2)}px)` });
+  set('st-art', { opacity: 1 - 0.6 * s2 });
+
+  // the dot (+ a brief squash on every landing) and contact pulses
+  const { p, sq } = dotAt(t);
+  set('dot', { transform: `translate(${p[0]}px, ${p[1]}px) scale(${1 + sq}, ${1 - sq})` });
+  const ring = (el, tb, at) => { const d = t - bt(tb); set(el, { opacity: d > 0 && d < 0.7 ? (1 - d / 0.7) * 0.9 : 0, transform: `translate(${at[0]}px, ${at[1]}px) scale(${1 + d * 4})` }); };
+  ring('pz1', t < bt(20) ? 1 : 28, t < bt(20) ? [560, 262] : [540, 874]);
+  ring('pz2', 28.25, [540, 874]);
+
+  // the fingertip: hovers, taps the field on beat 1, leaves; comes back for the loop
+  const fin = eio(prog(t, 0.55, 1.0)) - eio(prog(t, 1.25, 2.4)) + eio(prog(t, 34.4, 35.9));
+  const hover = [610, 360], touch = [560, 262], away = [980, 1560];
+  const fp = t < bt(1.25) ? [lerp(hover[0], touch[0], fin), lerp(hover[1], touch[1], fin)] : t < bt(30) ? [lerp(away[0], touch[0], fin), lerp(away[1], touch[1], fin)] : [lerp(away[0], hover[0], eio(prog(t, 34.4, 35.9))), lerp(away[1], hover[1], eio(prog(t, 34.4, 35.9)))];
+  const press = 1 - 0.05 * Math.sin(Math.PI * prog(t, 0.9, 1.25));
+  set('finger', { opacity: t < bt(2.4) || t > bt(34.4) ? 1 : 0, transform: `translate(${fp[0] - 88 * press}px, ${fp[1]}px) rotate(-14deg) scale(${0.8 * press})` });
+};
+window.seek(0);
+</script>
+</body>
+</html>
