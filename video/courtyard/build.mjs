@@ -1,6 +1,7 @@
 // Builds courtyard/index.html from courtyard/src.html. Everything shown comes from the app checkout in APP_SRC:
 // icons (src/ui/icons.ts), UI strings and language names (data/i18n.json), story texts (data/visits.json),
 // the authority's dark-theme logo (public/haramain-logo-dark.png). The QR is generated from the real URL.
+// The phone map: geo.json (tools/geo.test.ts, the app's data and router) over map-z18.jpg (fetch-tiles.py, the app's Esri base).
 // Usage: APP_SRC=<app checkout> node video/courtyard/build.mjs
 import fs from 'node:fs';
 import path from 'node:path';
@@ -60,6 +61,6 @@ for (const pkg of ['noto-sans', 'noto-sans-sc', 'noto-sans-bengali', 'noto-sans-
 fs.copyFileSync(path.join(APP, 'public/haramain-logo-dark.png'), path.join(HERE, 'haramain-logo-dark.png'));
 const html = fs.readFileSync(path.join(HERE, 'src.html'), 'utf8')
   .replace('/*@@FONTS@@*/', css)
-  .replace('/*@@DATA@@*/', `const ICONS=${JSON.stringify(ICONS)};const DATA=${JSON.stringify(DATA)};const QR_SVG=${JSON.stringify(QR)};const QR_N=${n};`);
+  .replace('/*@@DATA@@*/', `const ICONS=${JSON.stringify(ICONS)};const DATA=${JSON.stringify(DATA)};const QR_SVG=${JSON.stringify(QR)};const QR_N=${n};const GEO=${fs.readFileSync(path.join(HERE, 'geo.json'), 'utf8')};const TILES=${fs.readFileSync(path.join(HERE, 'map-z18.json'), 'utf8')};`);
 fs.writeFileSync(path.join(HERE, 'index.html'), html);
 console.log('built courtyard/index.html');
