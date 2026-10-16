@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<title>دليل زوار المسجد النبوي — شاشات الساحات 16:9</title>
+<style>
+/*@@FONTS@@*/
+:root {
+  --g900: #0e4d3a; --g700: #17785a; --mint: #8fd3b4; --gold: #c9a15b; --ivory: #f4f1ea; --white: #ffffff; --night: #0f1714; --ink: #1e2a26;
+  --muted: #55635d;
+  --men: #1f64a8; --women: #83409b; --acc: #0e8478; --hotel: #6a4e39; --food: #c0601c; --land: #5a3e9c; --emg: #c3362c;
+  --ramp-up: #f5d90a; --ramp-down: #3f7d20; --women-area: #ec4f9a;
+  --f: 'IBM Plex Sans Arabic', 'Scripts', sans-serif; --kufi: 'Noto Kufi Arabic', 'IBM Plex Sans Arabic', sans-serif; --naskh: 'Noto Naskh Arabic', serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--g900); }
+#frame { position: absolute; inset: 0; overflow: hidden; font-family: var(--f); color: var(--ink); font-variant-numeric: tabular-nums; }
+#world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.abs { position: absolute; }
+svg.ic { display: block; }
+#bg { left: -3400px; top: -1400px; width: 9400px; height: 4000px;
+  background: linear-gradient(90deg, var(--g900) 0, var(--g900) 5450px, var(--ivory) 6050px, var(--ivory) 100%); }
+#pat { left: -3400px; top: -1400px; width: 9400px; height: 4000px; opacity: .06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Cg fill='none' stroke='%23C9A15B' stroke-width='1.4'%3E%3Crect x='21' y='21' width='30' height='30'/%3E%3Crect x='21' y='21' width='30' height='30' transform='rotate(45 36 36)'/%3E%3Ccircle cx='36' cy='36' r='7'/%3E%3Cpath d='M0 0L15 15M72 0L57 15M0 72L15 57M72 72L57 57M36 0V8M36 72V64M0 36H8M72 36H64'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 140px 140px; }
+
+/* welcome */
+#w { left: 0; top: 0; width: 1920px; height: 1080px; text-align: center; }
+#w-title { position: absolute; left: 0; right: 0; top: 300px; font: 700 124px/1.3 var(--kufi); color: var(--mint); direction: rtl; }
+#w-line { position: absolute; left: 560px; top: 500px; width: 800px; height: 4px; background: var(--gold); border-radius: 2px; }
+#w-rot { position: absolute; left: 0; right: 0; top: 560px; height: 120px; }
+#w-rot span { position: absolute; left: 0; right: 0; top: 0; font: 600 64px/1.6 var(--f); color: var(--ivory); white-space: nowrap; }
+
+/* phone */
+#phone { left: 3160px; top: 40px; width: 470px; height: 1000px; border-radius: 64px; background: #101614; box-shadow: 0 0 0 2px #2b3833, 0 40px 80px rgb(14 77 58 / .22), 0 8px 20px rgb(30 42 38 / .18); }
+#scr { position: absolute; left: 14px; top: 14px; width: 442px; height: 972px; border-radius: 50px; overflow: hidden; background: #c8b494; }
+#scr .layer { position: absolute; inset: 0; }
+.card-w { background: rgb(255 255 255 / .97); border-radius: 26px; box-shadow: 0 6px 18px rgb(14 77 58 / .14), 0 1px 3px rgb(30 42 38 / .1); }
+#hdr { position: absolute; left: 12px; top: 12px; width: 418px; height: 134px; padding: 14px 16px; }
+#hdr .row { display: flex; align-items: center; gap: 10px; }
+#hdr .tile { width: 44px; height: 44px; border-radius: 14px; background: var(--g900); color: var(--gold); display: grid; place-items: center; flex: none; }
+#hdr .tt { flex: 1; min-width: 0; }
+#hdr .t { font: 700 20px/1.25 var(--f); color: var(--g900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#hdr .c { font-size: 14px; color: var(--muted); }
+#hdr .lang { display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 12px; border-radius: 19px; border: 1px solid #e3ddcf; font: 700 15px/1 var(--f); color: var(--ink); flex: none; }
+#hdr .sb { margin-top: 12px; height: 50px; border-radius: 18px; background: #f1eee6; display: flex; align-items: center; gap: 10px; padding: 0 14px; color: var(--muted); font-size: 15px; white-space: nowrap; overflow: hidden; position: relative; }
+#hdr .q { font: 700 22px/1 var(--f); color: var(--ink); direction: ltr; }
+#hdr .caret { width: 3px; height: 26px; background: var(--g700); border-radius: 2px; }
+#pills { position: absolute; left: 0; top: 158px; width: 442px; height: 52px; overflow: hidden; }
+#pillrow { position: absolute; top: 0; display: flex; gap: 8px; }
+.pill { flex: none; display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 16px; border-radius: 23px; background: #fff; border: 1px solid #e3ddcf; font: 600 16px/1 var(--f); color: var(--ink); white-space: nowrap; box-shadow: 0 2px 6px rgb(14 77 58 / .08); }
+.pill b { font: 600 13px/1 var(--f); color: var(--muted); }
+.pill.on { background: var(--g900); color: #fff; border-color: var(--g900); }
+.pill.on b { color: var(--mint); }
+#res { position: absolute; left: 12px; top: 150px; width: 418px; height: 84px; padding: 0 14px; display: flex; align-items: center; gap: 12px; direction: rtl; }
+#res .rt { width: 52px; height: 52px; border-radius: 16px; background: var(--men); color: #fff; display: grid; place-items: center; }
+#res .rn { font: 700 19px/1.3 var(--f); }
+#res .rs { font-size: 14px; color: var(--muted); }
+.sheet { position: absolute; left: 0; bottom: 0; width: 442px; background: #fff; border-radius: 30px 30px 0 0; box-shadow: 0 -8px 24px rgb(14 77 58 / .14); padding: 26px 22px 20px; direction: rtl; }
+.sheet .grab { position: absolute; left: 191px; top: 9px; width: 60px; height: 6px; border-radius: 3px; background: #dcd3c0; }
+.sheet .k { font: 600 15px/1.4 var(--f); color: var(--g700); }
+.sheet .h { font: 700 25px/1.35 var(--f); color: var(--ink); }
+.chips { display: flex; gap: 8px; margin: 10px 0 12px; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 18px; background: #f1eee6; font: 600 15px/1 var(--f); color: var(--ink); }
+.dotc { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.boxes { display: flex; gap: 10px; }
+.box { flex: 1; border-radius: 18px; background: #f1eee6; padding: 10px 14px; }
+.box .bk { font-size: 13px; color: var(--muted); }
+.box .bv { font: 700 18px/1.4 var(--f); }
+.foot { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.btn { height: 56px; border-radius: 28px; background: var(--g900); color: #fff; display: flex; align-items: center; justify-content: center; gap: 10px; font: 700 18px/1 var(--f); padding: 0 18px; }
+.tog { position: relative; width: 104px; height: 56px; border-radius: 28px; background: #f1eee6; flex: none; direction: ltr; }
+.tog .kn { position: absolute; top: 4px; width: 48px; height: 48px; border-radius: 24px; background: var(--g900); }
+.tog .o { position: absolute; top: 14px; width: 48px; display: grid; place-items: center; color: var(--ink); }
+.big { font: 700 34px/1.2 var(--f); color: var(--ink); direction: rtl; }
+#rbar { position: absolute; left: 12px; top: 836px; width: 418px; height: 124px; padding: 16px; display: flex; align-items: center; gap: 12px; direction: rtl; }
+#rbar .tile2 { width: 56px; height: 56px; border-radius: 18px; background: var(--g900); color: var(--gold); display: grid; place-items: center; flex: none; }
+#rbar .t { font: 700 19px/1.4 var(--f); }
+#rbar .now { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 15px; background: #e3edf7; color: var(--men); font: 700 14px/1 var(--f); }
+#rbar .rem { font-size: 14px; color: var(--muted); margin-inline-start: 8px; }
+#starbtn { position: absolute; left: 14px; top: 470px; width: 48px; height: 48px; border-radius: 16px; background: #fff; display: grid; place-items: center; color: var(--gold); box-shadow: 0 3px 10px rgb(14 77 58 / .16); }
+#story { position: absolute; inset: 0; background: #0b1210; color: #fff; direction: rtl; }
+#story .bars { position: absolute; left: 20px; right: 20px; top: 22px; display: flex; gap: 6px; }
+#story .bar { flex: 1; height: 5px; border-radius: 3px; background: rgb(255 255 255 / .3); position: relative; overflow: hidden; }
+#story .bar i { position: absolute; top: 0; bottom: 0; right: 0; width: 0; background: #fff; }
+#story .sh { position: absolute; right: 24px; left: 24px; top: 46px; display: flex; justify-content: space-between; align-items: center; }
+#story .st { font: 700 26px/1.4 var(--kufi); }
+#story .art { position: absolute; left: 0; right: 0; top: 150px; height: 380px; display: grid; place-items: center; color: rgb(255 255 255 / .9); background: radial-gradient(closest-side, #17322a, #0b1210); }
+#story .tx { position: absolute; left: 26px; right: 26px; top: 560px; font: 500 22px/1.75 var(--f); }
+#story .bt { position: absolute; left: 26px; right: 26px; top: 800px; display: flex; gap: 10px; }
+#story .bt > span { flex: 1; height: 52px; border-radius: 26px; background: #fff; color: var(--ink); display: flex; align-items: center; justify-content: center; gap: 8px; font: 700 16px/1 var(--f); }
+#story .pray { position: absolute; left: 26px; right: 26px; top: 600px; text-align: center; opacity: 0; }
+#story .pray .p1 { font: 400 26px/1.8 var(--naskh); }
+#story .pray .p2 { display: inline-flex; align-items: center; height: 58px; padding: 0 26px; margin-top: 16px; border-radius: 29px; border: 2px solid var(--gold); font: 700 26px/1 var(--naskh); }
+
+/* headline column (RTL, right-aligned, x 3704–4704) */
+.col { left: 3704px; top: 0; width: 1000px; height: 1080px; direction: rtl; }
+.col .kick { font: 700 40px/1.4 var(--f); color: var(--gold); margin-bottom: 8px; display: flex; align-items: center; gap: 14px; }
+.col h2 { font: 700 76px/1.35 var(--kufi); color: var(--g900); margin-bottom: 34px; }
+.col .stat { display: flex; align-items: baseline; gap: 26px; margin-bottom: 18px; }
+.col .stat b { font: 700 120px/1.05 var(--f); color: var(--g900); min-width: 270px; text-align: left; direction: ltr; }
+.col .stat span { font: 600 54px/1.3 var(--f); color: var(--ink); }
+.col .row { display: flex; align-items: center; gap: 24px; margin-bottom: 26px; font: 600 52px/1.35 var(--f); color: var(--ink); }
+.col .row .ti { width: 96px; height: 96px; border-radius: 28px; background: var(--g900); color: var(--gold); display: grid; place-items: center; flex: none; }
+.col .row .lt { direction: ltr; unicode-bidi: isolate; font-weight: 700; color: var(--g700); }
+.col .note { font: 500 48px/1.5 var(--f); color: var(--muted); }
+.col .big2 { display: flex; align-items: baseline; gap: 30px; margin: 10px 0 30px; }
+.col .big2 b { font: 700 160px/1 var(--f); color: var(--g900); direction: ltr; }
+.col .big2 span { font: 700 64px/1 var(--f); color: var(--g700); }
+.hl { position: absolute; left: 0; right: 0; top: 0; }
+#rcard { position: absolute; left: 20px; right: 0; top: 190px; height: 680px; border-radius: 28px; background: var(--g900); color: #fff; padding: 56px 60px; box-shadow: 0 24px 60px rgb(14 77 58 / .25); }
+#rcard .rh { font: 700 64px/1.35 var(--kufi); }
+#rcard .nowc { display: inline-flex; align-items: center; gap: 16px; height: 86px; padding: 0 34px; border-radius: 43px; background: rgb(255 255 255 / .14); font: 700 52px/1 var(--f); margin: 30px 0 26px; }
+#rcard .rr { display: flex; align-items: center; gap: 30px; font: 600 52px/1.4 var(--f); color: var(--ivory); }
+#rcard .wl { position: absolute; left: 60px; right: 60px; top: 440px; padding-top: 22px; border-top: 2px solid rgb(201 161 91 / .55); font: 600 50px/1.55 var(--f); color: var(--ivory); opacity: 0; }
+#rcard .wl .gl { color: var(--gold); }
+#ribbon { position: absolute; left: 0; right: 0; top: 820px; height: 110px; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); border-top: 2px solid rgb(201 161 91 / .5); border-bottom: 2px solid rgb(201 161 91 / .5); }
+#ribbon .track { position: absolute; top: 20px; right: 0; display: flex; gap: 46px; white-space: nowrap; font: 600 50px/1.4 var(--f); color: var(--g900); }
+.steps { display: flex; gap: 26px; margin-top: 20px; }
+.step { flex: 1; border-radius: 28px; background: #fff; padding: 26px 22px; text-align: center; box-shadow: 0 8px 24px rgb(14 77 58 / .1); }
+.step .n { width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 32px; background: var(--g900); color: #fff; display: grid; place-items: center; font: 700 34px/1 var(--f); }
+.step .s { font: 600 48px/1.35 var(--f); color: var(--ink); }
+
+/* QR end card (deep green, x -2560..-640) */
+#qrcard { left: -2440px; top: 100px; width: 700px; height: 820px; border-radius: 34px; background: #fff; box-shadow: inset 0 0 0 6px var(--gold), 0 30px 70px rgb(0 0 0 / .35); }
+#qrbox { position: absolute; left: 60px; top: 60px; width: 580px; height: 580px; }
+#qrcard .lab { position: absolute; left: 0; right: 0; top: 690px; text-align: center; font: 700 56px/1.3 var(--f); color: var(--g900); direction: rtl; }
+#qrurl { left: -2440px; top: 960px; width: 700px; text-align: center; font: 600 46px/1 var(--f); color: var(--gold); direction: ltr; }
+#qlogo { left: -1300px; top: 150px; width: 540px; height: auto; }
+#qline { left: -1720px; top: 520px; width: 960px; text-align: right; direction: rtl; font: 700 100px/1.35 var(--kufi); color: var(--white); }
+#qline .m { color: var(--mint); }
+
+#dot { left: 0; top: 0; width: 40px; height: 40px; margin: -20px 0 0 -20px; z-index: 50; }
+#dot i { position: absolute; inset: 0; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 6px #fff, 0 4px 12px rgb(14 77 58 / .3); }
+.ring { position: absolute; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; border: 4px solid var(--gold); opacity: 0; z-index: 49; }
+</style>
+</head>
+<body>
+<div id="frame"><div id="world">
+  <div id="bg" class="abs"></div><div id="pat" class="abs"></div>
+
+  <!-- 1 · welcome -->
+  <div id="w" class="abs"><div id="w-title">دليل زوار المسجد النبوي</div><div id="w-line"></div><div id="w-rot"></div></div>
+
+  <!-- the phone -->
+  <div id="phone" class="abs"><div id="scr">
+    <svg class="layer" id="map" width="442" height="972" viewBox="0 0 442 972"></svg>
+    <div id="starbtn"></div>
+    <div id="hdr" class="card-w"><div class="row" id="hrow"><span class="tile" id="h-tile"></span><div class="tt"><div class="t" id="h-t"></div><div class="c" id="h-c"></div></div><span class="lang" id="h-lang"></span></div>
+      <div class="sb" id="h-sb"><span id="h-si"></span><span id="h-ph"></span><span class="q" id="h-q"></span><span class="caret" id="h-caret"></span></div></div>
+    <div id="pills"><div id="pillrow"></div></div>
+    <div id="res" class="card-w"><span class="rt" id="res-i"></span><div><div class="rn">مجمع دورات الرجال 227</div><div class="rs">الجهة الشمالية</div></div></div>
+    <div id="rbar" class="card-w"><span class="tile2" id="rb-i"></span><div><div class="t">الروضة الشريفة · بوابة 37</div><div><span class="now" id="rb-now"><span class="dotc" id="rb-dot" style="--c:var(--men)"></span><span id="rb-nowt">الآن: وقت الرجال</span></span><span class="rem" id="rb-rem">يتبدّل بعد 2 س 11 د</span></div></div></div>
+    <div id="sh-card" class="sheet" style="height:420px"><span class="grab"></span>
+      <div class="k">دورات مياه</div><div class="h">مجمع دورات الرجال 227</div>
+      <div class="chips"><span class="chip"><span class="dotc" style="--c:#b03f66"></span>الجهة الشمالية</span><span class="chip">رقم 227</span></div>
+      <div class="boxes"><div class="box"><div class="bk">أقرب بوابة</div><div class="bv">بوابة 336 · 61 م</div></div><div class="box"><div class="bk">أقرب شارع</div><div class="bv">طريق الملك فهد</div></div></div>
+      <div class="foot"><span class="tog" id="tog1"><span class="kn" style="left:52px"></span><span class="o" style="left:4px" id="t1c"></span><span class="o" style="left:52px;color:#fff" id="t1w"></span></span><span class="btn" style="flex:1" id="rbtn"><span id="rbtn-i"></span>رسم المسار من موقعي</span></div></div>
+    <div id="sh-route" class="sheet" style="height:300px"><span class="grab"></span>
+      <div class="k" id="sr-k">مسار المشي</div><div class="h">مجمع دورات الرجال 227</div>
+      <div style="display:flex;align-items:baseline;gap:18px;margin-top:8px"><span class="big"><span id="sr-m" style="direction:ltr;display:inline-block">420</span> م</span><span class="big" style="color:var(--g700)"><span id="sr-min" style="direction:ltr;display:inline-block">6</span> د</span><span class="chip"><span class="dotc" style="--c:#b03f66"></span>الشمالية</span></div>
+      <div class="foot"><span class="tog" id="tog2"><span class="kn" id="kn2" style="left:52px"></span><span class="o" style="left:4px" id="t2c"></span><span class="o" style="left:52px" id="t2w"></span></span><span class="btn" style="flex:1;background:#f1eee6;color:var(--ink)" id="exitb"><span id="exit-i"></span><span id="exit-t">إنهاء المسار</span></span></div></div>
+    <div id="sh-car" class="sheet" style="height:330px"><span class="grab"></span>
+      <div class="k">مسار بالسيارة</div><div class="h">مجمع دورات الرجال 227</div>
+      <div class="chips"><span class="chip" style="background:var(--g900);color:#fff">موقف رقم 9 · الدور A</span><span class="chip">الإطار الأصفر: الطريق في الدور A</span></div>
+      <div class="foot"><span class="btn" style="flex:1" id="cexit"><span id="cexit-i"></span>طريق الخروج</span></div></div>
+    <div id="story"><div class="bars"><div class="bar"><i id="sb1"></i></div><div class="bar"><i id="sb2"></i></div><div class="bar"><i id="sb3"></i></div></div>
+      <div class="sh"><span class="st" id="st-t">مسجد قباء</span><span id="st-x"></span></div>
+      <div class="art" id="st-art"></div>
+      <div class="tx" id="st-tx"></div>
+      <div class="bt" id="st-bt"><span><span id="st-b1"></span>اعرضه على الخريطة</span><span><span id="st-b2"></span>المسار إليه</span></div>
+      <div class="pray" id="st-pray"><div class="p1">اللهم صل وسلم على نبينا محمد</div><div class="p2">صلِّ على النبي ﷺ</div></div></div>
+  </div></div>
+
+  <!-- headline column, one block per scene -->
+  <div class="abs col">
+    <div class="hl" id="p2" style="top:150px"><div class="kick"><span id="p2-i"></span>خريطة واحدة لكل شيء</div>
+      <div class="stat"><b id="n316">316</b><span>معلماً على الخريطة</span></div>
+      <div class="stat"><b id="n112">112</b><span>بوابة</span></div>
+      <div class="stat"><b id="n13">13</b><span>موقفاً بدورين</span></div></div>
+    <div class="hl" id="p3" style="top:170px"><h2>ابحث برقم أو باسم</h2>
+      <div class="row" id="p3a"><span class="ti" id="p3a-i"></span>رقم المرفق <span class="lt">227</span></div>
+      <div class="row" id="p3b"><span class="ti" id="p3b-i"></span>الاسم بأي لغة <span class="lt">Al Baik</span></div>
+      <div class="row" id="p3c"><span class="ti" id="p3c-i"></span>رمز الموقف <span class="lt">1A</span></div></div>
+    <div class="hl" id="p4" style="top:170px"><h2>امشِ إليه</h2>
+      <div class="big2"><b id="b-m">420</b><span>متر</span></div>
+      <div class="big2" style="margin-top:-6px"><b id="b-min" style="font-size:110px">6</b><span>دقائق تقريباً</span></div>
+      <div class="note">لا يُطلب موقعك حتى تضغط</div></div>
+    <div class="hl" id="p5" style="top:170px"><h2>بالسيارة</h2>
+      <div class="row" id="p5a"><span class="ti" style="background:var(--ramp-up);color:var(--ink)" id="p5a-i"></span>موقف رقم 9 · الدور A</div>
+      <div class="row" id="p5b"><span class="ti" style="background:var(--ramp-down);color:#fff" id="p5b-i"></span>طريق الخروج</div>
+      <div class="note" id="p5c" style="color:var(--g700);font-weight:700;font-size:56px">من الموقف إلى وجهتك مشياً</div></div>
+    <div class="hl" id="p6"><div id="rcard"><div class="rh">الروضة الشريفة · باب 37</div>
+      <div class="nowc" id="r-now"><span class="dotc" id="r-dot" style="--c:#7fb2e6;width:20px;height:20px"></span><span id="r-nowt">الآن: وقت الرجال</span></div>
+      <div class="rr" id="r-rem"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="48" fill="none" stroke="rgb(255 255 255 / .2)" stroke-width="12"/><circle id="r-ring" cx="60" cy="60" r="48" fill="none" stroke="var(--gold)" stroke-width="12" stroke-linecap="round" pathLength="1" stroke-dasharray=".6 2" transform="rotate(-90 60 60)"/></svg><span>يتبدّل بعد <b id="r-time">2 س 11 د</b></span></div>
+      <div class="wl" id="r-wl"><div>باب 37 · <span class="gl">يحتاج تصريح نسك</span></div><div>خلف الروضة للنساء · باب 21 · <span class="gl">بدون تصريح</span></div></div></div></div>
+    <div class="hl" id="p7" style="top:170px"><div class="big2"><b>26</b><span style="font-family:var(--kufi);font-size:84px;color:var(--g900)">لغة</span></div>
+      <div class="note" style="color:var(--ink);font-weight:600">كلٌّ باتجاه كتابته الصحيح</div>
+      <div id="ribbon"><div class="track" id="rtrack"></div></div></div>
+    <div class="hl" id="p8" style="top:170px"><h2>معالم المدينة</h2>
+      <div class="note" style="color:var(--ink);font-weight:600;margin-bottom:30px">قصص مصوّرة لتسعة معالم</div>
+      <div class="row" id="p8a"><span class="ti" id="p8a-i"></span>مسجد قباء</div>
+      <div class="row" id="p8b"><span class="ti" id="p8b-i"></span>مسجد القبلتين</div></div>
+    <div class="hl" id="p9" style="top:150px">
+      <div class="row" id="p9a"><span class="ti" style="width:120px;height:120px"><svg width="72" height="72" viewBox="0 0 72 72"><g id="sig" fill="var(--gold)"><rect x="8" y="48" width="10" height="16" rx="3"/><rect x="24" y="36" width="10" height="28" rx="3"/><rect x="40" y="24" width="10" height="40" rx="3"/><rect x="56" y="10" width="10" height="54" rx="3"/></g></svg></span><span style="font-size:56px">تبقى متاحة حتى مع ضعف الاتصال</span></div>
+      <div id="p9b" style="margin-top:40px"><h2 style="font-size:64px;margin-bottom:10px">ثبّتها على جوالك كتطبيق</h2><div class="note" style="direction:ltr;text-align:right;font-weight:700;color:var(--g700)">Android · iPhone</div>
+        <div class="steps"><div class="step" id="s1"><div class="n">1</div><div class="s">افتح الرابط</div></div><div class="step" id="s2"><div class="n">2</div><div class="s">زر المشاركة أو القائمة</div></div><div class="step" id="s3"><div class="n">3</div><div class="s">إضافة إلى الشاشة الرئيسية</div></div></div></div></div>
+  </div>
+
+  <!-- 10 · QR end card -->
+  <div id="qrcard" class="abs"><div id="qrbox"></div><div class="lab">امسح لفتح الخريطة</div></div>
+  <div id="qrurl" class="abs">masjidalnabawi.vercel.app</div>
+  <img id="qlogo" class="abs" src="haramain-logo-dark.png" alt="">
+  <div id="qline" class="abs">افتح الخريطة،<br><span class="m">وسهّل زيارتك</span></div>
+
+  <div class="ring" id="rg1"></div><div class="ring" id="rg2"></div>
+  <div id="dot" class="abs"><i></i></div>
+</div></div>
+
+<script>
+/*@@DATA@@*/
+const ic = (n, s = 24, w = 1.9) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${ICONS[n] || ''}</svg>`;
+const star = (s) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="5.5" y="5.5" width="13" height="13" rx="1"/><rect x="5.5" y="5.5" width="13" height="13" rx="1" transform="rotate(45 12 12)"/><circle cx="12" cy="12" r="2.4"/></svg>`;
+const $ = (s) => document.getElementById(s);
+const set = (el, css) => Object.assign((typeof el === 'string' ? $(el) : el).style, css);
+
+// ---- static content ----
+$('h-tile').innerHTML = star(28); $('h-si').innerHTML = ic('search', 22);
+$('res-i').innerHTML = ic('toilets', 28); $('rb-i').innerHTML = ic('dome', 30); $('starbtn').innerHTML = ic('landmark', 26);
+$('t1c').innerHTML = ic('car', 26); $('t1w').innerHTML = ic('walk', 26); $('t2c').innerHTML = ic('car', 26); $('t2w').innerHTML = ic('walk', 26);
+$('rbtn-i').innerHTML = ic('route', 22, 2.2); $('exit-i').innerHTML = ic('close', 20); $('cexit-i').innerHTML = ic('car', 22);
+$('st-x').innerHTML = ic('close', 28); $('st-art').innerHTML = ic('landmark', 150, 1.4); $('st-b1').innerHTML = ic('dome', 20); $('st-b2').innerHTML = ic('route', 20);
+$('p2-i').innerHTML = ic('grid', 42); $('p3a-i').innerHTML = ic('toilets', 52); $('p3b-i').innerHTML = ic('food', 52); $('p3c-i').innerHTML = ic('parking', 52);
+$('p5a-i').innerHTML = ic('parking', 52); $('p5b-i').innerHTML = ic('car', 52); $('p8a-i').innerHTML = ic('landmark', 52); $('p8b-i').innerHTML = ic('landmark', 52);
+$('qrbox').innerHTML = QR_SVG;
+// welcome: the title in six more languages (the app's own translations)
+const ROT = ['en', 'tr', 'ur', 'id', 'fr', 'ru'];
+$('w-rot').innerHTML = ROT.map((l) => `<span dir="${DATA.UI[l].dir}" lang="${l}">${DATA.UI[l].title}</span>`).join('');
+// the 26 language names, twice so the ribbon never runs out
+$('rtrack').innerHTML = [...DATA.NAMES, ...DATA.NAMES].map((x) => `<span dir="${x.dir}">${x.n}</span>`).join('<span style="color:var(--gold)">·</span>');
+// filter pills (real labels and counts from the app)
+const PILLS = [['grid', 'الكل', 303], ['gate', 'بوابات الحرم', 112], ['women', 'الخدمات النسائية', 35], ['toilets', 'دورات مياه', 40], ['hotel', 'فنادق', 43], ['food', 'مطاعم ومقاهي', 44], ['landmark', 'معالم', 38], ['parking', 'مواقف السيارات', 13]];
+
+// ---- the stylised aerial plan (no tiles): ochre city, ivory courtyard grid, pale-stone mosque, red roofs south ----
+(function drawMap() {
+  let s = '';
+  let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  for (let y = 0; y < 972; y += 46) for (let x = 0; x < 442; x += 52) { const w = 30 + rnd() * 16, h = 26 + rnd() * 14; s += `<rect x="${x + 4}" y="${y + 6}" width="${w}" height="${h}" rx="3" fill="${rnd() > .5 ? '#b9a37f' : '#bfaa88'}"/>`; }
+  s += '<path d="M0 238H442M0 760H442M28 0V972M418 0V972" stroke="#dccdb1" stroke-width="22"/>';
+  s += '<rect x="44" y="256" width="356" height="484" rx="8" fill="#f4f1ea"/>';
+  let g = '';
+  for (let x = 44; x <= 400; x += 17.8) g += `M${x} 256V740`;
+  for (let y = 256; y <= 740; y += 17.6) g += `M44 ${y}H400`;
+  s += `<path d="${g}" stroke="#e4ddcd" stroke-width="1.4"/>`;
+  s += '<rect x="132" y="356" width="178" height="244" rx="6" fill="#ebe3d3" stroke="#d6cbb5" stroke-width="2"/>';
+  s += '<rect x="176" y="436" width="90" height="124" rx="4" fill="#f8f5ee" stroke="#ddd3bf" stroke-width="1.5"/>';
+  for (const [cx, cy] of [[160, 380], [282, 380], [160, 580], [282, 580], [221, 380]]) s += `<circle cx="${cx}" cy="${cy}" r="9" fill="#e3d9c5" stroke="#d2c6ae"/>`;
+  s += '<rect x="136" y="362" width="52" height="46" fill="rgb(236 79 154 / .2)" stroke="#ec4f9a" stroke-width="2" stroke-dasharray="6 4"/>';
+  s += '<rect x="254" y="362" width="52" height="46" fill="rgb(236 79 154 / .2)" stroke="#ec4f9a" stroke-width="2" stroke-dasharray="6 4"/>';
+  for (let x = 64; x < 380; x += 54) s += `<rect x="${x}" y="702" width="44" height="26" rx="2" fill="#b5574a"/>`;
+  const DOTS = [['men', 92, 300], ['women', 120, 300], ['men', 360, 300], ['women', 330, 330], ['acc', 92, 520], ['men', 360, 520], ['women', 96, 640], ['men', 352, 650], ['hotel', 20, 200], ['food', 425, 210], ['hotel', 410, 800], ['food', 30, 820], ['land', 221, 640], ['emg', 330, 690], ['acc', 221, 300], ['hotel', 120, 210], ['food', 300, 790]];
+  for (const [c, x, y] of DOTS) s += `<circle cx="${x}" cy="${y}" r="8" fill="var(--${c})" stroke="#fff" stroke-width="2.5"/>`;
+  // walking route (around the mosque, never through it)
+  s += '<path id="walk" d="M48 708V300Q48 285 63 285H300" fill="none" stroke="#17785a" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="0 2" opacity=".25"/>';
+  s += '<path id="walk-lit" d="M48 708V300Q48 285 63 285H300" fill="none" stroke="#17785a" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="0 2"/>';
+  s += '<path id="walk-chev" d="M48 708V300Q48 285 63 285H300" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="7 16" stroke-linecap="round" opacity="0"/>';
+  // car: street → underground ring (clockwise, one-way) → yellow ramp up to level A → P 9A; green exit ramp
+  s += '<g id="ug" opacity="0"><rect x="0" y="0" width="442" height="972" fill="rgb(14 77 58 / .32)"/>';
+  s += '<path d="M120 300H322Q340 300 340 318V350Q340 368 322 368H120Q102 368 102 350V318Q102 300 120 300Z" fill="none" stroke="#2c4a3f" stroke-width="30"/>';
+  let ch = '';
+  for (const [x, y, a] of [[170, 300, 0], [250, 300, 0], [340, 334, 90], [270, 368, 180], [180, 368, 180], [102, 334, 270]]) ch += `<path transform="translate(${x} ${y}) rotate(${a})" d="M-6 -7L4 0L-6 7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+  s += ch;
+  s += '<path d="M340 330H404V238" fill="none" stroke="#3f7d20" stroke-width="10" stroke-dasharray="10 8" stroke-linecap="round"/>';
+  s += '<path id="ramp" d="M110 300V262H228" fill="none" stroke="#f5d90a" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>';
+  s += '<g transform="translate(110 318)"><rect x="-24" y="-16" width="48" height="32" rx="10" fill="#f5d90a"/><text x="0" y="8" text-anchor="middle" font-family="IBM Plex Sans Arabic" font-weight="700" font-size="20" fill="#1e2a26">A↑</text></g>';
+  s += '<g transform="translate(228 262)"><rect x="-34" y="-18" width="68" height="36" rx="10" fill="#fff" stroke="#1f64a8" stroke-width="3"/><text x="0" y="8" text-anchor="middle" font-family="IBM Plex Sans Arabic" font-weight="700" font-size="20" fill="#1f64a8" direction="ltr">P 9A</text></g></g>';
+  s += '<path id="car" d="M0 238H150Q166 238 166 254V300H322Q340 300 340 318V350Q340 368 322 368H120Q102 368 102 350V318Q102 300 110 300" fill="none" stroke="#0e4d3a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="0 2"/>';
+  // destination marker 227 (men's restrooms)
+  s += '<g transform="translate(300 285)"><circle r="20" fill="#1f64a8" stroke="#fff" stroke-width="4"/><g transform="translate(-12 -12)" color="#fff">' + ic('toilets', 24, 2) + '</g></g>';
+  s += '<g transform="translate(300 252)"><rect x="-30" y="-16" width="60" height="30" rx="10" fill="#fff"/><text x="0" y="7" text-anchor="middle" font-family="IBM Plex Sans Arabic" font-weight="700" font-size="18" fill="#1e2a26">227</text></g>';
+  s += '<circle cx="48" cy="708" r="9" fill="#fff" stroke="#17785a" stroke-width="3"/>';
+  $('map').innerHTML = s;
+})();
+const WALK = $('walk'), CAR = $('car'), RAMP = $('ramp');
+const WL = WALK.getTotalLength(), CL = CAR.getTotalLength(), RL = RAMP.getTotalLength();
+
+// ---- time ----
+const T = 60, FPS = 60;
+window.DURATION = T;
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, u) => a + (b - a) * u;
+const pr = (t, a, b) => clamp((t - a) / (b - a));
+const eo = (u) => 1 - Math.pow(1 - u, 3);
+const eio = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+function spring(t, f = 2.2, z = 0.82) { if (t <= 0) return 0; const w = 2 * Math.PI * f, wd = w * Math.sqrt(1 - z * z); return 1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + (z * w / wd) * Math.sin(wd * t)); }
+const vis = (t, a, b, i = 0.5, o = 0.5) => Math.min(pr(t, a, a + i), 1 - pr(t, b, b + o));
+
+// phone screen origin in world coordinates
+const SX = 3174, SY = 54, PH = (x, y) => [SX + x, SY + y];
+const onPath = (el, L, u) => { const p = el.getPointAtLength(u * L); return PH(p.x, p.y); };
+const QRC = [-2440 + 60 + 290, 100 + 60 + 290];
+
+// one camera: [t, cx, cy, zoom], zoom in log space
+const CAM = [[0, 960, 540, 1], [4.2, 960, 540, 1], [5.6, 3840, 540, 1], [10.6, 3840, 540, 1.02], [11.2, 3840, 540, 1], [53.8, 3840, 540, 1],
+  [55.0, 1120, 560, 0.26], [55.3, 1120, 560, 0.26], [56.3, -1600, 540, 1], [59.0, -1600, 540, 1], [60, 960, 540, 1]];
+function camAt(t) {
+  for (let i = 1; i < CAM.length; i++) {
+    const [t1, x1, y1, z1] = CAM[i], [t0, x0, y0, z0] = CAM[i - 1];
+    if (t <= t1) { const u = eio(clamp((t - t0) / (t1 - t0))); return [lerp(x0, x1, u), lerp(y0, y1, u), Math.exp(lerp(Math.log(z0), Math.log(z1), u))]; }
+  }
+  return CAM[CAM.length - 1].slice(1);
+}
+
+// the gold dot's whole journey: [start, end, target | path, arc]
+const MOVES = [
+  [3.6, 5.4, PH(380, 182), 180],
+  [5.75, 6.0, PH(290, 182), 30], [6.35, 6.6, PH(200, 182), 30], [6.95, 7.2, PH(110, 182), 30], [7.55, 7.8, PH(200, 182), 30],
+  [8.15, 8.4, PH(290, 182), 30], [8.75, 9.0, PH(380, 182), 30],
+  [10.6, 11.4, PH(221, 104), 60],
+  [11.75, 12.0, PH(330, 104), 26], [12.35, 12.6, PH(318, 104), 20], [12.95, 13.2, PH(306, 104), 20],
+  [13.5, 13.9, PH(221, 192), 40],
+  [14.6, 15.2, [4606, 355], 120], [15.6, 16.0, [4606, 477], 40], [16.4, 16.8, [4606, 599], 40],
+  [17.2, 18.0, PH(190, 932), 160],
+  [18.2, 18.8, PH(48, 708), 120],
+  [19.4, 24.6, 'walk'],
+  [26.0, 26.6, PH(375, 932), 120],
+  [27.0, 27.6, PH(0, 238), 120],
+  [27.6, 30.6, 'car'],
+  [30.6, 31.4, 'ramp'],
+  [31.6, 32.4, PH(300, 285), 40],
+  [33.0, 33.8, PH(221, 898), 120],
+  [34.2, 35.0, [4584, 534], 160],
+  [38.6, 39.3, PH(58, 40), 140],
+  [44.4, 45.0, PH(38, 494), 120],
+  [45.4, 46.0, PH(221, 900), 60],
+  [49.6, 50.4, [4560, 230], 160],
+  [52.0, 52.4, [4500, 760], 60], [52.55, 52.9, [4170, 760], 30], [53.05, 53.4, [3840, 760], 30],
+  [54.1, 55.9, QRC, 900],
+];
+function dotAt(t) {
+  let cur = [960, 760], land = -9;
+  for (const [a, b, spec, h = 0] of MOVES) {
+    if (t < a) break;
+    if (spec === 'walk' || spec === 'car' || spec === 'ramp') {
+      const u = eio(pr(t, a, b));
+      const p = spec === 'walk' ? onPath(WALK, WL, u) : spec === 'car' ? onPath(CAR, CL, u) : onPath(RAMP, RL, u);
+      if (t <= b) return { p, sq: 0 };
+      cur = p; land = b; continue;
+    }
+    const r = pr(t, a, b);
+    if (t <= b) { const u = eio(r); return { p: [lerp(cur[0], spec[0], u), lerp(cur[1], spec[1], u) - h * Math.sin(Math.PI * r)], sq: 0 }; }
+    cur = spec; land = b;
+  }
+  const d = t - land;
+  return { p: cur, sq: d >= 0 && d < 0.5 ? 0.16 * Math.exp(-d * 10) * Math.cos(d * 26) : 0 };
+}
+
+let lastLang = '';
+function phoneLang(l) {
+  if (l === lastLang) return; lastLang = l;
+  const u = DATA.UI[l], rtl = u.dir === 'rtl';
+  for (const id of ['hrow', 'h-sb', 'pills']) $(id).style.direction = u.dir;
+  $('h-t').textContent = u.title; $('h-c').textContent = l === 'ar' ? 'المدينة المنورة' : u.city;
+  $('h-lang').innerHTML = ic('globe', 18) + u.short + ic('chevdown', 14);
+  $('h-ph').textContent = u.ph;
+  const labels = l === 'ar' ? PILLS.map((p) => p[1]) : u.pills.concat(PILLS.slice(4).map((p) => p[1]));
+  $('pillrow').innerHTML = PILLS.map(([i, , n], k) => `<span class="pill${k ? '' : ' on'}">${ic(i, 18)}${labels[k]}<b>${n}</b></span>`).join('');
+  $('pillrow').style.left = rtl ? 'auto' : '10px'; $('pillrow').style.right = rtl ? '10px' : 'auto';
+  $('pillrow').style.flexDirection = 'row';
+  $('pills').style.direction = u.dir;
+}
+const LSEQ = [[0, 'ar'], [39.6, 'en'], [40.4, 'ur'], [41.2, 'id'], [42.0, 'tr'], [42.8, 'zh'], [43.6, 'ar']];
+
+window.seek = function (t) {
+  t = clamp(t, 0, T - 1e-6);
+  const [cx, cy, z] = camAt(t);
+  set('world', { transform: `translate(${960 - cx * z}px, ${540 - cy * z}px) scale(${z})` });
+
+  // 1 · welcome: the title is already there on frame 0 (loop); its line cycles six languages
+  const rot = $('w-rot').children, step = 0.8, ri = t < 4.8 ? Math.floor(t / step) : 0;
+  [...rot].forEach((sp, i) => {
+    // English is already in on frame 0 (loop) and comes back in after Russian
+    if (t >= 4.8) { const u = eo(clamp((t - 4.8) / 0.35)); set(sp, { opacity: i === 0 ? u : 0, transform: `translateY(${(1 - u) * 24}px)` }); return; }
+    const local = t - ri * step, u = ri === 0 ? 1 : eo(clamp(local / 0.35)), out = eo(clamp((local - 0.62) / 0.18));
+    set(sp, { opacity: i === ri ? u * (1 - out) : 0, transform: `translateY(${(1 - u) * 24 - out * 12}px)` });
+  });
+
+  // the phone rises from below at 4 s and leaves after the pull-back (reset for the loop)
+  const rise = spring(t - 4.0, 1.4, 0.9), leave = pr(t, 56.4, 56.5);
+  set('phone', { transform: `translateY(${(1 - rise) * 1100 + leave * 1100}px)` });
+
+  // phone language (scene 7)
+  let l = 'ar'; for (const [ts, code] of LSEQ) if (t >= ts) l = code; phoneLang(l);
+  // pills glide (scene 2), right-to-left reading
+  const glide = eio(pr(t, 5.6, 10.4));
+  $('pillrow').style.transform = `translateX(${(DATA.UI[l].dir === 'rtl' ? 1 : -1) * 520 * glide * (1 - pr(t, 10.4, 11.0))}px)`;
+
+  // search: «227» typed key by key
+  const q = t < 12.0 ? '' : t < 12.6 ? '2' : t < 13.2 ? '22' : t < 17.4 ? '227' : '';
+  $('h-q').textContent = q; set('h-ph', { display: q ? 'none' : 'inline' });
+  set('h-caret', { opacity: t > 11.4 && t < 17.4 ? (Math.floor(t * 2.2) % 2 ? 0.25 : 1) : 0 });
+  set('h-sb', { boxShadow: t > 11.4 && t < 17.4 ? 'inset 0 0 0 2px var(--g700)' : 'none' });
+  set('res', { opacity: vis(t, 13.3, 14.1, 0.4, 0.4), transform: `translateY(${(1 - eo(pr(t, 13.3, 13.7))) * -16}px)` });
+  const cin = spring(t - 14.0, 1.8, 0.85), cout = eio(pr(t, 17.9, 18.4));
+  set('sh-card', { transform: `translateY(${(1 - cin) * 440 + cout * 440}px)`, opacity: t < 14 ? 0 : 1 });
+  set('rbtn', { transform: `scale(${1 - 0.05 * Math.sin(Math.PI * pr(t, 17.95, 18.25))})` });
+
+  // walk: route draws itself, then the dot walks it; the counter and the lit part come from the same progress
+  const draw = eo(pr(t, 18.6, 19.5)), P = eio(pr(t, 19.4, 24.6));
+  const walkOn = 1 - pr(t, 32.6, 33.2);
+  set(WALK, { strokeDasharray: `${draw} 2`, opacity: 0.25 * walkOn * (1 - pr(t, 26.8, 27.2)) });
+  set($('walk-lit'), { strokeDasharray: `${Math.max(0, draw - P)} 2`, strokeDashoffset: -P, opacity: walkOn * (1 - pr(t, 26.8, 27.2)) });
+  set($('walk-chev'), { opacity: draw * 0.9 * (1 - pr(t, 26.8, 27.2)) });
+  const m = Math.round((420 * (1 - P)) / 5) * 5;
+  $('sr-m').textContent = m; $('b-m').textContent = m;
+  const mins = Math.ceil(m / 80); $('sr-min').textContent = mins; $('b-min').textContent = mins;
+  const rin = spring(t - 18.6, 1.8, 0.85), rout = eio(pr(t, 32.6, 33.1));
+  set('sh-route', { transform: `translateY(${(1 - rin) * 320 + rout * 320}px)`, opacity: t < 18.6 || t > 33.2 ? 0 : 1 });
+  // car: switch flips at 26.6, the sheet becomes the car sheet
+  const flip = spring(t - 26.6, 2.4, 0.78);
+  set('kn2', { left: `${52 - 48 * flip}px` });
+  set('t2w', { color: flip < 0.5 ? '#fff' : 'var(--ink)' }); set('t2c', { color: flip >= 0.5 ? '#fff' : 'var(--ink)' });
+  const car = spring(t - 27.0, 1.8, 0.85), carOut = eio(pr(t, 32.6, 33.1));
+  set('sh-car', { transform: `translateY(${(1 - car) * 360 + carOut * 360}px)`, opacity: t < 27 || t > 33.2 ? 0 : 1 });
+  set('ug', { opacity: vis(t, 27.0, 32.4, 0.6, 0.6) });
+  const cd = eo(pr(t, 27.1, 27.9)), CP = eio(pr(t, 27.6, 30.6));
+  set(CAR, { strokeDasharray: `${Math.max(0, cd - CP)} 2`, strokeDashoffset: -CP, opacity: 1 - pr(t, 32.4, 33.0) });
+
+  // Rawdah bar returns; tapped at 34
+  set('rbar', { opacity: t < 14 || t > 33 ? 1 : 0, transform: `scale(${1 - 0.04 * Math.sin(Math.PI * pr(t, 33.8, 34.1))})` });
+
+  // story (scene 8)
+  const so = spring(t - 45.2, 2.0, 0.9) * (1 - eio(pr(t, 49.8, 50.3)));
+  set('story', { opacity: clamp(so * 1.4), transform: `scale(${0.92 + 0.08 * so})` });
+  set('sb1', { width: 100 * pr(t, 45.2, 47.2) + '%' }); set('sb2', { width: 100 * pr(t, 47.2, 48.8) + '%' }); set('sb3', { width: 100 * pr(t, 48.8, 50.0) + '%' });
+  const s2 = t >= 47.2, s3 = t >= 48.8;
+  $('st-t').textContent = s2 ? 'مسجد القبلتين' : 'مسجد قباء';
+  $('st-tx').innerHTML = (s2 ? DATA.QIBLA : DATA.QUBA).replace(/ﷺ/g, '<span style="font-family:var(--naskh)">ﷺ</span>');
+  const sw = eo(clamp((t - (s3 ? 48.8 : s2 ? 47.2 : 45.2)) / 0.4));
+  set('st-tx', { opacity: s3 ? 0 : sw }); set('st-bt', { opacity: s3 ? 0 : 1 });
+  set('st-art', { opacity: s3 ? 0.25 : 1 }); set('st-pray', { opacity: s3 ? sw : 0 });
+  set('starbtn', { transform: `scale(${1 - 0.1 * Math.sin(Math.PI * pr(t, 44.95, 45.25))})` });
+
+  // headline column: one block per scene, entering from its right edge
+  const blk = (id, a, b) => { const v = vis(t, a, b, 0.6, 0.45); set(id, { opacity: v, transform: `translateX(${(1 - eo(pr(t, a, a + 0.6))) * 40}px)` }); return v; };
+  blk('p2', 5.8, 10.7); blk('p3', 11.2, 17.9); blk('p4', 18.4, 25.8); blk('p5', 26.3, 32.8); blk('p6', 33.6, 38.6); blk('p7', 39.2, 44.6); blk('p8', 44.9, 49.6); blk('p9', 50.0, 54.6);
+  const count = (id, to, a) => { $(id).textContent = String(Math.round(to * eo(pr(t, a, a + 1.2)))); };
+  count('n316', 316, 6.2); count('n112', 112, 6.8); count('n13', 13, 7.4);
+  [['p3a', 12.0], ['p3b', 15.6], ['p3c', 16.4]].forEach(([id, a]) => set(id, { opacity: eo(pr(t, a, a + 0.5)) }));
+  [['p5a', 30.6], ['p5b', 31.0], ['p5c', 31.8]].forEach(([id, a]) => set(id, { opacity: eo(pr(t, a, a + 0.5)) }));
+  [['p8a', 45.4], ['p8b', 47.2]].forEach(([id, a]) => set(id, { opacity: eo(pr(t, a, a + 0.5)) }));
+  // Rawdah card: men's time, then the women's-time notes
+  const wtime = t >= 36.6, wf = eo(pr(t, 36.6, 37.1));
+  $('r-nowt').textContent = wtime ? 'الآن: وقت النساء' : 'الآن: وقت الرجال';
+  set('r-dot', { '--c': wtime ? '#d6a8e6' : '#7fb2e6' });
+  const dip = 1 - 0.85 * Math.sin(Math.PI * pr(t, 36.35, 36.85));
+  $('r-time').textContent = wtime ? '3 س 26 د' : '2 س 11 د';
+  set('r-now', { opacity: dip }); set('r-rem', { opacity: dip }); set('r-wl', { opacity: wf });
+  $('rb-nowt').textContent = $('r-nowt').textContent; $('rb-rem').textContent = 'يتبدّل بعد ' + $('r-time').textContent;
+  set('rb-dot', { '--c': wtime ? 'var(--women)' : 'var(--men)' });
+  set('rb-now', { background: wtime ? '#f1e4f4' : '#e3edf7', color: wtime ? 'var(--women)' : 'var(--men)' });
+  $('r-ring').setAttribute('stroke-dasharray', `${wtime ? 0.86 - Math.floor((t - 36.6) / 0.6) * 0.012 : 0.6 - Math.floor(Math.max(0, t - 34) / 0.6) * 0.012} 2`);
+  // 26 languages ribbon
+  set('rtrack', { transform: `translateX(${(t - 39) * 160}px)` });
+  // offline: the signal bars fade while the map stays; install steps one by one
+  [...$('sig').children].forEach((r, i) => set(r, { opacity: 1 - eo(pr(t, 50.6 + (3 - i) * 0.25, 50.9 + (3 - i) * 0.25)) * 0.85 }));
+  set('p9b', { opacity: eo(pr(t, 51.8, 52.3)) });
+  [['s1', 52.0], ['s2', 52.55], ['s3', 53.05]].forEach(([id, a]) => set(id, { opacity: eo(pr(t, a, a + 0.4)), transform: `translateY(${(1 - eo(pr(t, a, a + 0.4))) * 20}px)` }));
+
+  // 10 · the dot becomes the QR's centre mark
+  const { p, sq } = dotAt(t);
+  const asMark = eo(pr(t, 55.7, 56.2));
+  set('dot', { opacity: t < 2.2 ? 0 : t < 2.6 ? eo(pr(t, 2.2, 2.6)) : 1, transform: `translate(${p[0]}px, ${p[1]}px) scale(${(1 + sq) * (1 + 1.4 * asMark)}, ${(1 - sq) * (1 + 1.4 * asMark)})` });
+  const ring = (el, at, xy) => { const d = t - at; set(el, { opacity: d > 0 && d < 0.8 ? (1 - d / 0.8) * 0.9 : 0, transform: `translate(${xy[0]}px, ${xy[1]}px) scale(${1 + d * 3.5})` }); };
+  ring('rg1', t < 20 ? 11.4 : t < 40 ? 34.0 : 45.0, t < 20 ? PH(221, 104) : t < 40 ? PH(221, 898) : PH(38, 494));
+  ring('rg2', t < 30 ? 18.0 : 56.0, t < 30 ? PH(190, 932) : QRC);
+};
+window.seek(0);
+</script>
+</body>
+</html>
