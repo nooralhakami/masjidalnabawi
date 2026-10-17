@@ -5,7 +5,7 @@ import { expect, idle, openMap, test } from './fixtures';
 // pill; Qurban open, the other two closed, until the supervisor changes one; a tap says the name, the state and how to leave.
 
 type Win = { __engine: any };
-const PARKING_PILL = 9;
+const PARKING_PILL = 5;
 
 const shown = async (page: Page) => {
   await idle(page);
