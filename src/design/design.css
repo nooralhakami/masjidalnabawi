@@ -1,0 +1,152 @@
+/* The /design gallery's own frame (dev only). */
+.g-main {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+  padding: 24px;
+  min-height: 100vh;
+  background: var(--bg);
+}
+.g-column {
+  display: grid;
+  gap: 28px;
+  flex: none;
+  max-width: 100%;
+}
+.g-colhead {
+  font: 600 12px/1 ui-monospace, monospace;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.g-section {
+  display: grid;
+  gap: 12px;
+}
+.g-h {
+  font: 700 13px/1.2 system-ui, sans-serif;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+.g-grid {
+  display: grid;
+  gap: 16px;
+}
+.g-col {
+  display: grid;
+  gap: 12px;
+  justify-items: stretch;
+}
+.g-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.g-bleed {
+  margin-inline: calc(-1 * var(--gutter));
+}
+.g-state {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+.g-state > :first-child {
+  justify-self: start;
+}
+.g-state.is-wide > :first-child,
+.g-cards .g-state > :first-child,
+.g-col > .g-state > :first-child {
+  justify-self: stretch;
+}
+.g-state figcaption {
+  font: 500 11px/1.3 ui-monospace, monospace;
+  color: var(--muted);
+  padding-inline: var(--gutter);
+}
+.g-grid .g-state figcaption {
+  padding-inline: 0;
+}
+.g-card {
+  padding: 16px;
+  border-radius: var(--r-card);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+}
+.g-phone {
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  border: 1px solid var(--line-strong);
+}
+.g-map {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(45deg, transparent 0 22px, rgb(255 255 255 / 0.05) 22px 44px),
+    radial-gradient(circle at 50% 40%, #6d7a5c, #3d4a36 70%);
+}
+.g-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 8px;
+}
+.g-swatch {
+  display: grid;
+  gap: 4px;
+}
+.g-swatch span {
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+.g-swatch code {
+  font: 500 10px/1.2 ui-monospace, monospace;
+  color: var(--muted);
+}
+.g-type {
+  display: grid;
+  gap: 6px;
+}
+.g-error {
+  color: var(--danger);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.g-note {
+  margin: 0;
+  font: 400 12px/1.4 system-ui, sans-serif;
+  color: var(--muted);
+}
+.g-chipbtn {
+  min-height: 44px;
+  padding-inline: 14px;
+  border: 1px solid var(--outline);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font: 600 13px system-ui, sans-serif;
+}
+.g-chipbtn.is-on {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.g-main.is-fit {
+  padding: 16px 0;
+}
+.g-main.is-fit .g-column {
+  flex: 1;
+  min-width: 0;
+  padding-inline: 16px;
+}
+
+/* Grid children may shrink below their content: components must wrap, not widen the column. */
+.g-state > *,
+.g-col > *,
+.g-grid > *,
+.g-section > * {
+  min-width: 0;
+}

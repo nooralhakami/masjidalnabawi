@@ -9,7 +9,8 @@ export const SITE = {
   // The QR code is generated from this address so the displayed, copied and downloaded codes stay in sync.
   QR_URL: 'https://masjidalnabawi.vercel.app/',
   QR_IMAGE: '',
-  ORG_NAME: '[ORG_NAME]',
+  // The organisation's name under the title in the landing footer; empty hides the line (owner, 2026-10-16).
+  ORG_NAME: '',
   DEFAULT_LANG: 'ar' as LangCode,
   SITE_URL: 'https://masjidalnabawi.vercel.app/',
   /**

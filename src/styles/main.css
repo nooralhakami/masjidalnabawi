@@ -1,29 +1,8 @@
-@import 'tailwindcss';
-@import './tokens.css';
+/* map.html (phase 1 placeholder page). */
+@import './index.css';
 
-@theme {
-  --font-sans: var(--font-ui);
-  --font-display: var(--font-display);
-}
-
-html {
-  /* Latin digits of equal width: distances and times don't jitter as they update. */
-  font-variant-numeric: tabular-nums;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: var(--font-ui);
-  -webkit-text-size-adjust: 100%;
-}
-/* Naskh covers the Urdu and Pashto letters (ٹ ڈ ڑ ښ ږ ړ ډ ټ ...) that IBM Plex Sans Arabic lacks. */
-html[lang='ur'],
-html[lang='ps'] {
-  font-family: var(--font-urdu);
-}
-body {
-  margin: 0;
-  min-height: 100dvh;
-}
-:focus-visible {
-  outline: 3px solid var(--gold);
-  outline-offset: 2px;
+html,
+body,
+#app {
+  height: 100%;
 }

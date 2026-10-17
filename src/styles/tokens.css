@@ -1,124 +1,228 @@
-/* Design tokens — mirrors the design canvas (light + dark). */
-:root {
+/*
+ * Design tokens (docs/DESIGN.md). Every colour in the app comes from here.
+ * Light is the default. Dark applies with [data-theme='dark'] on <html> or on any element (the
+ * /design gallery shows both side by side), or from the device setting when no theme is chosen.
+ * tests/unit/tokens.test.ts checks contrast for both themes.
+ */
+:root,
+[data-theme='light'] {
+  /* palette (owner) */
   --green-900: #0e4d3a;
   --green-700: #17785a;
-  --green-300: #8fd3b4;
-  --gold: #c9a15b;
-  --gold-ink: #2a1f08;
-  /* Halo behind a must-visit site's marker: a warm light, same in both themes. */
-  --star-glow: 255 214 120;
-  /* Landmark stories: a dark full-screen scene, the same in both themes. */
+  --mint-300: #8fd3b4;
+  --gold-500: #c9a15b;
+  --ivory-100: #f4f1ea;
+  --white: #ffffff;
+  --dark-900: #0f1714;
+  --ink-800: #1e2a26;
+
+  /* categories (white glyphs on them; never white text: see DESIGN §1-e) */
+  --cat-men: #1f64a8;
+  --cat-women: #83409b;
+  --cat-acc: #0e8478;
+  --cat-hotel: #6a4e39;
+  --cat-food: #c0601c;
+  --cat-land: #5a3e9c;
+  --cat-emg: #c3362c;
+  --cat-shop: #b4236b;
+  --cat-hist: #8a5a1f;
+  --cat-park-sub: #9f1239;
+  --cat-gray: #98a09c;
+  --dir-south: #2f7d4f;
+  --dir-west: #c96f1e;
+  --dir-north: #b03f66;
+  --dir-east: #2a77b5;
+  --women-area: rgb(236 79 154 / 0.18);
+  /* the same pink, solid: the map draws it with its own opacity */
+  --women-area-solid: #ec4f9a;
+
+  /* routes */
+  --route-walk: #17785a;
+  --route-drive: #2a77b5;
+  --route-level-a: #f5d90a;
+  --route-level-b: #3f7d20;
+  --ramp-up: #f5d90a;
+  --ramp-down: #3f7d20;
+  /* the visitor's dot (the live app's blue, in both themes) */
+  --me: #0288d1;
+
+  /* semantic: light */
+  --bg: #f4f1ea;
+  --surface: #fbfaf6;
+  --surface-2: #ffffff;
+  --panel: rgb(251 250 246 / 0.96);
+  --field: #f1eee6;
+  --line: #ece7dc;
+  --line-strong: #dcd3c0;
+  /* boundary of an interactive control (≥ 3:1 against the surfaces) */
+  --outline: #7a8680;
+  --ink: #1e2a26;
+  --muted: #55635d;
+  --heading: #0e4d3a;
+  --accent: #0e4d3a;
+  --accent-ink: #ffffff;
+  --accent-pressed: #0a3a2b;
+  --focus: #17785a;
+  --gold-line: rgb(201 161 91 / 0.55);
+  --danger: #b3261e;
+  --danger-tint: #fbe9e7;
+  --success: #1e6b45;
+  --success-tint: #e3f1e8;
+  --warn: #8a5300;
+  --warn-tint: #fbf0dc;
+  --skeleton: #e8e3d7;
+  --scrim: rgb(15 23 20 / 0.32);
   --story-bg: #0b1210;
+  /* the stories are dark in both themes (the live app's tokens) */
   --story-ink: #ffffff;
   --story-ink-soft: rgb(255 255 255 / 0.82);
   --story-bar: rgb(255 255 255 / 0.32);
   --story-chip: rgb(255 255 255 / 0.16);
   --story-scrim: 0 0 0;
+  --star-glow: 255 214 120;
+  --gold-ink: #2a1f08;
 
-  --bg: #f4f1ea;
-  --surface: #fbfaf6;
-  --surface-2: #ffffff;
-  --field: #f1eee6;
-  --line: #ece7dc;
-  --line-strong: #dcd3c0;
-  --ink: #1e2a26;
-  --muted: #55635d;
-  --primary: var(--green-900);
-  --primary-ink: #ffffff;
-  --heading: var(--green-900);
-  --tint-gold: #f2e8d4;
-  --tint-green: #e5efe9;
+  /* geometry */
+  --r-chip: 20px;
+  --r-btn: 16px;
+  --r-card: 24px;
+  --r-sheet: 28px;
+  --r-pill: 999px;
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.25rem;
+  --s-6: 1.5rem;
+  --s-8: 2rem;
+  --s-12: 3rem;
+  --gutter: 16px;
+  --hit: 44px;
 
-  --dir-south: #2f7d4f;
-  --dir-west: #c96f1e;
-  --dir-north: #b03f66;
-  --dir-east: #2a77b5;
-  --cat-men: #1f64a8;
-  --cat-women: #83409b;
-  --cat-acc: #0e8478;
-  --cat-gray: #98a09c;
-  --cat-hotel: #6a4e39;
-  --cat-food: #c0601c;
-  --cat-land: #5a3e9c;
-  --cat-emg: #c3362c;
-  /* Car park ramps, as in the owner's drawing: yellow up to level A, green down to level B. */
-  --ramp-up: #f5d90a;
-  --ramp-down: #3f7d20;
-  --women-area: #ec4f9a;
-  /* Historic sites: an old-bronze tone, apart from the purple of modern landmarks. */
-  --cat-hist: #8a5a1f;
-  /* Shopping: malls, hypermarkets, markets. */
-  --cat-shop: #b4236b;
-  --cat-park-sub: #9f1239;
+  /* elevation: soft, and never a blur over the map */
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.08), 0 2px 8px rgb(14 77 58 / 0.1);
+  --shadow-2: 0 8px 24px rgb(0 0 0 / 0.14), 0 1px 3px rgb(0 0 0 / 0.08);
 
-  --radius-sm: 12px;
-  --radius: 16px;
-  --radius-lg: 22px;
-  --radius-xl: 28px;
-  --shadow-sm: 0 4px 12px rgb(14 77 58 / 0.12), 0 1px 3px rgb(30 42 38 / 0.08);
-  --shadow: 0 10px 28px rgb(14 77 58 / 0.14), 0 2px 6px rgb(30 42 38 / 0.08);
-  /* Panels over the map: near-opaque, no backdrop blur. A blur behind panels has to be recomputed
-     on every frame while the map moves and was the main cause of stutter on phones (SPEC F13);
-     at this opacity it was barely visible anyway. */
-  --glass: rgb(250 249 245 / 0.95);
-  --glass-line: rgb(255 255 255 / 0.7);
-  --glass-blur: none;
-  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
-  --spring: cubic-bezier(0.22, 1.15, 0.36, 1);
-  --dur: 200ms;
+  /* motion */
+  --m-fast: 120ms;
+  --m-base: 220ms;
+  --m-emph: 360ms;
+  --m-draw: 700ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emph: cubic-bezier(0.3, 0, 0, 1);
 
-  --font-ui: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  /* type */
+  --font-ui: 'IBM Plex Sans Arabic', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Noto Sans SC', 'Noto Sans Thai', 'Noto Sans Ethiopic', 'Noto Sans Devanagari', 'Noto Sans Bengali', 'Noto Sans Malayalam', 'Noto Sans Tamil', sans-serif;
   --font-display: 'Noto Kufi Arabic', 'IBM Plex Sans Arabic', system-ui, sans-serif;
-  --font-urdu: 'Noto Naskh Arabic', 'IBM Plex Sans Arabic', serif;
+  --font-naskh: 'Noto Naskh Arabic', 'IBM Plex Sans Arabic', serif;
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.375rem;
+  --fs-2xl: 1.75rem;
+  --fs-3xl: 2.25rem;
 
   color-scheme: light;
 }
 
+/* semantic: dark (also repeated below for the device setting) */
+[data-theme='dark'] {
+  --bg: #0f1714;
+  --surface: #18231f;
+  --surface-2: #22302b;
+  --panel: rgb(16 24 21 / 0.96);
+  --field: #26352f;
+  --line: #2c3a35;
+  --line-strong: #3a4a43;
+  --outline: #7c8f87;
+  --ink: #ece8df;
+  --muted: #a3b2ab;
+  --heading: #8fd3b4;
+  --accent: #17785a;
+  --accent-ink: #ffffff;
+  --accent-pressed: #12634a;
+  --focus: #8fd3b4;
+  --gold-line: rgb(216 179 112 / 0.45);
+  --gold-500: #d8b370;
+  --danger: #ffb4ab;
+  --danger-tint: #4a1f1b;
+  --success: #8fd3b4;
+  --success-tint: #1b3a2f;
+  --warn: #f2c27a;
+  --warn-tint: #3a3122;
+  --skeleton: #2a3833;
+  --cat-park-sub: #e11d48;
+  --route-walk: #3fbf95;
+  --scrim: rgb(0 0 0 / 0.5);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.3);
+  --shadow-2: 0 8px 24px rgb(0 0 0 / 0.45), 0 1px 3px rgb(0 0 0 / 0.3);
+  color-scheme: dark;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
+  :root:not([data-theme]) {
     --bg: #0f1714;
     --surface: #18231f;
     --surface-2: #22302b;
+    --panel: rgb(16 24 21 / 0.96);
     --field: #26352f;
     --line: #2c3a35;
     --line-strong: #3a4a43;
+    --outline: #7c8f87;
     --ink: #ece8df;
     --muted: #a3b2ab;
-    --primary: var(--green-700);
-    --heading: var(--green-300);
+    --heading: #8fd3b4;
+    --accent: #17785a;
+    --accent-ink: #ffffff;
+    --accent-pressed: #12634a;
+    --focus: #8fd3b4;
+    --gold-line: rgb(216 179 112 / 0.45);
+    --gold-500: #d8b370;
+    --danger: #ffb4ab;
+    --danger-tint: #4a1f1b;
+    --success: #8fd3b4;
+    --success-tint: #1b3a2f;
+    --warn: #f2c27a;
+    --warn-tint: #3a3122;
+    --skeleton: #2a3833;
     --cat-park-sub: #e11d48;
-    --tint-gold: #3a3122;
-    --tint-green: #1b3a2f;
-    --glass: rgb(16 24 21 / 0.94);
-    --glass-line: rgb(255 255 255 / 0.08);
-    --shadow-sm: 0 4px 12px rgb(0 0 0 / 0.3), 0 1px 3px rgb(0 0 0 / 0.2);
-    --shadow: 0 10px 28px rgb(0 0 0 / 0.4), 0 2px 6px rgb(0 0 0 / 0.25);
+    --route-walk: #3fbf95;
+    --scrim: rgb(0 0 0 / 0.5);
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.3);
+    --shadow-2: 0 8px 24px rgb(0 0 0 / 0.45), 0 1px 3px rgb(0 0 0 / 0.3);
     color-scheme: dark;
   }
 }
 
-:root[data-theme='dark'] {
-  --bg: #0f1714;
-  --surface: #18231f;
-  --surface-2: #22302b;
-  --field: #26352f;
-  --line: #2c3a35;
-  --line-strong: #3a4a43;
-  --ink: #ece8df;
-  --muted: #a3b2ab;
-  --primary: var(--green-700);
-  --heading: var(--green-300);
-  --tint-gold: #3a3122;
-  --tint-green: #1b3a2f;
-  --glass: rgb(16 24 21 / 0.94);
-  --glass-line: rgb(255 255 255 / 0.08);
-  --shadow-sm: 0 4px 12px rgb(0 0 0 / 0.3), 0 1px 3px rgb(0 0 0 / 0.2);
-  --shadow: 0 10px 28px rgb(0 0 0 / 0.4), 0 2px 6px rgb(0 0 0 / 0.25);
-  color-scheme: dark;
-}
-
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --dur: 0ms;
+    --m-fast: 0ms;
+    --m-base: 0ms;
+    --m-emph: 0ms;
+    --m-draw: 0ms;
+  }
+}
+
+/*
+ * Sun mode (DESIGN §1, phase 8): for reading in strong sunlight. Borders as strong as controls,
+ * secondary text as dark (or, at night, as light) as the main text, panels fully opaque. It follows
+ * the device's «increase contrast» setting, or data-contrast="more" on <html> (the visitor's switch,
+ * once the owner places it). Colours stay the owner's: only the weaker ones are lifted.
+ */
+:root[data-contrast='more'] {
+  --muted: var(--ink);
+  --line: var(--outline);
+  --line-strong: var(--ink);
+  --panel: var(--surface-2);
+  --gold-line: var(--gold-500);
+}
+@media (prefers-contrast: more) {
+  :root:not([data-contrast='less']) {
+    --muted: var(--ink);
+    --line: var(--outline);
+    --line-strong: var(--ink);
+    --panel: var(--surface-2);
+    --gold-line: var(--gold-500);
   }
 }

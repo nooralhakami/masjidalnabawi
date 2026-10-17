@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { POI_BY_ID, VISITS } from '../../src/data';
 import { LANGS } from '../../src/i18n';
 import { FEATURED_IDS, SLIDE_MS, VISIT_LIST, imageFor, isPrayerSlide, nextPos, prevPos, segmentFill, slideCount, slideLang, slideText, visitRank } from '../../src/domain/visits';
-import { markerSpec } from '../../src/ui/markers';
+import { markerSpec } from '../../src/presentation/markers';
 
 describe('must-visit data', () => {
   it('every site is a historic place, listed once', () => {

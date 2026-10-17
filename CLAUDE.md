@@ -1,45 +1,102 @@
-# CLAUDE.md — rules for anyone (AI or human) changing this project
+# CLAUDE.md — قواعد العمل في «next» (لأي إنسان أو ذكاء اصطناعي)
 
-Read first: `SPEC.md` (what the app must do — binding) → `ARCHITECTURE.md` (where things live, dependency rule).
-The owner is not a programmer: explain changes in plain Arabic, one concept at a time.
+**اقرأ أولاً بهذا الترتيب:**
+1. `docs/SPEC.md` (ملزم).
+2. `docs/ARCHITECTURE.md`.
+3. `docs/DESIGN.md`.
+4. `docs/PLAN.md`.
+5. `docs/PARITY.md`.
+6. `docs/PROGRESS.md`.
 
-## Stack & commands
-- TypeScript + Vite, no framework. Leaflet + leaflet-rotate. Vitest, Playwright. Python 3 for data scripts.
-- `npm ci` · `npm run dev` (http://localhost:5173/map.html) · `npm test` · `npm run test:e2e` · `npm run build` · `npm run perf`
-- Deploy = push to GitHub `main` (Vercel builds it). **Only after the owner says yes.**
+**المالك ليس مبرمجاً:** اشرح كل تغيير بعربية بسيطة، فكرة واحدة كل مرة. ابدأ بما تغيّر للزائر، ثم بالتفاصيل.
 
-## Definition of done
-1. Unit tests, e2e tests and build all pass (paste the summary lines).
-2. Visible changes checked in the browser at phone size (375×812), light and dark if styling changed.
-3. Performance budget (SPEC F13) still met when touching map/markers/layers/CSS on the map.
-4. Docs updated when behaviour or data changes (SPEC changelog, ARCHITECTURE, docs/*).
-5. Small commits, one concern each, message explains *why*.
+## قيود صارمة
+- **هذا المستودع هو الموقع الحي:** `main` يُنشر للزوار مباشرة على `masjidalnabawi.vercel.app`. فلا دفع إلى `main` أبداً. كل تغيير على فرع، ثم طلب دمج يراجعه المالك ويدمجه بنفسه.
+- **الإصدار السابق (Leaflet):** محفوظ في الفرع `legacy-v1-leaflet` للرجوع إليه. لا يُعدَّل.
+- **مكان العمل:** هذا المستودع وحده، على الفرع المحدد للجلسة.
+- **لا PR إلا بطلب صريح.** ولا دمج إلا بيد المالك.
+- **ملفات لا تُعدَّل:** `data/`، والملفات المنقولة حرفياً (`src/{data,domain,routing,location,i18n}`)، ومنطق `src/presentation` و`src/navigation`. `parity.test.ts` يكشف أي انحراف.
 
-## Warnings — stop, warn the owner, wait for a yes (SPEC §7)
-- Asking for location before a tap; storing or sending location.
-- Changing owner decisions (gate names, parking access, restroom types, Rawdah schedule, approved coordinates).
-- Adding religious/historic text not confirmed by two sources.
-- Publishing to the live site.
-- Copying data from Google Maps or Authority systems without written permission.
-- Removing a feature, changing tested behaviour, or adding a new dependency.
-- Putting any secret in front-end code.
+## الأوامر
+- `npm ci`
+- `npm run dev` (http://localhost:5173/map.html)
+- `npm test` (نحو دقيقتين: اختبارات الشوارع ثقيلة)
+- `npm run build`
+- `npm run design:audit`: فحص معرض نظام التصميم (`/design.html` على خادم التطوير) على 320 و360 و375 و412 بالعربية والإنجليزية، نهاراً وليلاً.
+- `npm run test:e2e`: Playwright على نسخة البناء.
+- `npm run perf`: ميزانيات الأداء (SPEC §6). يقبل `PERF_QUERY=layers=base` لقياس أرضية MapLibre وحدها.
 
-## Code rules
-- Respect the dependency rule in ARCHITECTURE.md; `domain/` and `routing/` stay pure (no DOM, no Leaflet).
-- Every user-facing string in all 26 languages (`src/i18n/strings.ts`, `src/i18n/landing-strings.ts`, `data/i18n.json`; data texts of the 20 added languages come from `docs/translations/*.json` via `scripts/translations-to-i18n.py`); tests enforce it. Never hard-code Arabic/English text in components.
-- Colours only via tokens in `src/styles/tokens.css`; logical CSS properties (RTL); digits stay Latin.
-- The Haramain logo (used with the Authority's permission) is built from `docs/haramain-logo-source.jpg` by `scripts/logo-from-source.py` into a light and a dark transparent PNG; don't recolour it with CSS filters.
-- Data: never hand-edit generated files (`streets.json`, `garage.json`, OSM-derived places) — change the script or its source and rebuild. Position nudges go in `data/overrides.json`.
-- Map performance: no work proportional to all POIs on every frame; no `backdrop-filter`/blur work during map gestures; reuse markers instead of recreating them.
-- Accessibility: real buttons/links, aria-labels on icon buttons, 40–44 px targets, contrast 4.5:1, respect `prefers-reduced-motion`.
+**ملاحظات البيئة:**
+- **npm:** `npm install` من الصفر يتعثر في npm 10.9.4 بخطأ `edgesOut`، فملف القفل بُدئ من ملف التطبيق الحالي. لا تحذف `package-lock.json`.
+- **Playwright:** 1.63 يتوقع Chromium رقم 1243، والمثبّت في الحاوية 1194. فمرّر `executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'` ولا تشغّل `playwright install`.
+- **MapLibre:** الإصدار 6 بلا export افتراضي (`import { Map } from 'maplibre-gl'`)، والعامل يُجمع بـ`?worker&url` (ARCHITECTURE §5).
+- **الخادم المحلي:** إن كتبت خادماً بنفسك فأرسل ملفات `.mjs` بنوع `text/javascript`، وإلا رُفض عامل الخريطة.
 
-## Lessons (mistakes not to repeat)
-- v0 once left gate descriptions in Arabic in all languages and corrupted UTF-8 characters → tests now fail on both.
-- OSM pedestrian ways often stop short at road crossings and some cut through hotel blocks → streets build links dead ends (35 m) and penalises unnamed footways.
-- The nearest street node to a place can be on the wrong street → pick the best node within 150 m.
-- Cars once cut through car-park aisles, hotel driveways and unnamed service roads, and could turn back anywhere → cars use public roads only, routed turn by turn (no U-turn, OSM turn restrictions, main roads preferred); a site's drive ends at its public car park.
-- A route's draw-in animation measured its length once and hid part of the line after zoom → `pathLength="1"`.
-- Owner rejected merging markers into count bubbles: markers stay in place and shrink when zoomed out.
-- The live domain is `masjidalnabawi.vercel.app` (not "masjidnabawi").
-- Backdrop blur over the moving map stutters on phones; toggling many-selector classes on <body> per gesture costs a 50–60 ms restyle → panels are near-opaque without blur (docs/PERF.md).
-- The language menu was cut off on a 360 px phone though it fitted at 375 px → check popovers at 320, 360, 375 and 412 px in an RTL and an LTR language; size them to the space left on screen. After CSS edits, if the dev preview looks unchanged, restart it (it can serve stale CSS); "Outdated Optimize Dep" errors mean clearing `node_modules/.vite`.
+## تعريف الإنجاز
+1. **الاختبارات:** اختبارات الوحدة وe2e والبناء ناجحة. الصق سطور الخلاصة.
+2. **الفحص المرئي:** 375×812 نهاراً وليلاً، بالعربية والإنجليزية. والنوافذ المنبثقة على 320 و360 و412 بلغة RTL ولغة LTR.
+3. **الأداء:** عند لمس الخريطة أو طبقاتها أو CSS فوقها، تبقى ميزانيات SPEC §6 خضراء، وتُسجَّل الأرقام قبل وبعد في `docs/PERF.md`.
+4. **الوثائق:** SPEC (سجل التغييرات)، وARCHITECTURE، وPARITY، وPROGRESS محدّثة.
+5. **commits:** صغيرة، كل واحد لمسألة واحدة، والرسالة تشرح «لماذا».
+
+## قائمة التحذيرات: توقّف، حذّر المالك، انتظر «نعم»
+- ⚠️ طلب موقع الزائر قبل ضغطه زراً، أو حفظه، أو إرساله.
+- ⚠️ تغيير قرارات المالك: أسماء الأبواب، وأنواع المواقف ودورات المياه، وجدول الروضة، والإحداثيات المعتمدة، وألوان الفئات.
+- ⚠️ نص ديني أو تاريخي لا يؤكده مصدران، أو أي ادعاء بأن المحتوى مراجَع شرعياً.
+- ⚠️ النشر على أي موقع.
+- ⚠️ نسخ بيانات من خرائط Google أو أنظمة الهيئة. شعار الهيئة مأذون به.
+- ⚠️ حذف ميزة، أو تغيير سلوك يحميه اختبار، أو إضافة مكتبة. اذكر السبب والحجم.
+- ⚠️ أي مفتاح سري في كود الواجهة.
+- ⚠️ أي تعارض بين البرومبت والكود الحالي: اعرضه ولا تحسمه وحدك.
+
+## قواعد الكود
+- **قاعدة الاعتماد** (ARCHITECTURE §2): `domain/` و`routing/` و`presentation/` و`navigation/` بلا DOM ولا `maplibre-gl`. و`ui/` و`map/` لا يستورد أحدهما الآخر.
+- **النصوص:** كل نص للمستخدم بالـ26 لغة عبر i18n، والاختبارات تفرض ذلك. لا نص عربي أو إنجليزي مكتوب في المكوّنات. الأرقام لاتينية، وﷺ تبقى ولا تنفصل وحدها في سطر.
+- **الألوان والاتجاه:** الألوان من tokens فقط (`src/styles/tokens.css`). استعمل خصائص CSS المنطقية لأجل RTL.
+- **التقريب:** كل عتبة تقريب بسلّم Leaflet القديم، وتمر بـ`legacyZoom()` وحدها. مع بلاطات 256: تقريب MapLibre = تقريب Leaflet − 1.
+- **أداء الخريطة:**
+  - لا عمل يتناسب مع عدد الأماكن في كل إطار.
+  - التصفية بـ`setFilter` أو `feature-state`، لا بإعادة رفع البيانات.
+  - لا `backdrop-filter` فوق الخريطة.
+  - لا تبديل classes على `<body>` أثناء الإيماءات.
+  - عنصر DOM واحد فقط فوق الخريطة متحرك معها: نقطة الزائر.
+- **ملفات مولَّدة:** لا تعدّلها يدوياً (`streets.json`، `garage.json`، أماكن OSM). غيّر السكربت أو مصدره وأعد البناء. التحريك بالأمتار يكون في `data/overrides.json`.
+- **البلاطات:** لا تُخزَّن بلاطات الخريطة، وسطر مصدر Esri وOSM ظاهر دائماً.
+- **إمكانية الوصول:**
+  - أزرار حقيقية، و`aria-label` لكل زر أيقونة.
+  - لمس ≥ 44px، وتباين ≥ 4.5:1.
+  - احترام `prefers-reduced-motion`.
+  - التخزين المحلي داخل try/catch.
+- **الصياغة:** لا «مجاني»، ولا «يعمل بدون إنترنت» مطلقاً. الصياغة المعتمدة: «تبقى واجهتها متاحة حتى مع ضعف الاتصال».
+- **الإصدارات:** مثبّتة بدقة (بلا `^`)، ويُفضَّل ما مضى على نشره أسبوعان على الأقل.
+
+## دروس من المشروع الحالي (لا تكررها)
+- **الترجمة:** v0 ترك وصف البوابات بالعربية في كل اللغات، وأفسد محارف UTF-8. الاختبارات تفشل الآن على الحالتين.
+- **ممرات OSM:** ممرات المشاة تتوقف قبل التقاطعات، وبعضها يقطع الفنادق. الحل: ربط النهايات المقطوعة (35 م)، وعقوبة للممرات غير المسمّاة.
+- **أقرب عقدة شارع:** قد تكون على شارع خاطئ. الحل: الأفضل ضمن 150 م.
+- **السيارات:** كانت تقطع ممرات المواقف والأزقة وتدور للخلف. الآن: الطرق العامة فقط، منعطفاً منعطفاً، مع قيود الانعطاف.
+- **حركة رسم المسار:** قاست الطول مرة واحدة، فاختفى جزء بعد التقريب. ارسم بنسبة التقدّم لا بالطول المطلق.
+- **قرار المالك:** رفض دمج العلامات في فقاعات عدد. تبقى في مكانها وتصغر.
+- **النطاق الحي:** `masjidalnabawi.vercel.app`، وليس masjidnabawi.
+- **السلاسة على الجوال:**
+  - الضبابية فوق الخريطة المتحركة تقطّع الحركة.
+  - تبديل classes على body يكلّف 50–60 ms في كل مرة.
+  - الحل: أسطح شبه معتمة، ولا تبديل أثناء الإيماءات.
+- **النوافذ المنبثقة:** قائمة اللغات انقطعت على 360px رغم أنها تناسب 375. افحص النوافذ المنبثقة على 320 و360 و375 و412، بلغة RTL ولغة LTR.
+- **معاينة التطوير:**
+  - إن بدا CSS قديماً فأعد تشغيل المعاينة.
+  - خطأ "Outdated Optimize Dep" يعني امسح `node_modules/.vite`.
+- **الكردية:** في البيانات LTR (كرمانجية لاتينية). RTL فقط: ar وur وfa وps.
+- **مدخل المواقف الجنوبي الغربي:** صار «شارع عمر بن الخطاب» (`omar`) منذ 2026-10-14، لا قباء.
+- **العرض الأول للخريطة:** ملاءمة حدود البوابات الخارجية، لا مركز وتقريب ثابتان.
+- **أدوات Tailwind:** تُستعمل ببادئة `tw:` فقط. من دونها تتصادم أسماء أدواته (`ring`، `hidden`، `block`، `shadow`…) مع أسماء مكوّناتنا. حدث ذلك فعلاً: إطار مربع حول حلقة الروضة.
+- **ARIA في Preact:** خصائص `aria-*` تأخذ قيماً منطقية (`aria-pressed={on}`)، لا `String(on)`.
+- **`transform` في JSX:** لا تضعه في style عنصر يحرّكه JS، لأن Preact يعيد كتابته في كل رسم فيقاتل النابض. اكتبه من المؤثرات (effects) فقط، كما في BottomSheet.
+- **الأبيض على ألوان الفئات:** لا نص أبيض على لون فئة، لأن المطاعم وجهة الغرب والمغلق تفشل 4.5:1. استعمل مزيج 14% والنص الحبري (DESIGN §1-ج).
+- **WebGL في الحاوية:** طريق Chromium الافتراضي (Vulkan SwiftShader) يرسم على خيط الصفحة، فيُظهر مهاماً طويلة ليست من التطبيق. قِس بـ`--use-angle=swiftshader`، وهو موجود في `perf.mjs` و`playwright.config.ts`.
+- **حدث `idle` في MapLibre:** لا يُطلق مرة ثانية إن كانت الخريطة ساكنة أصلاً. اطلب إطاراً قبل الانتظار (`once('idle')` ثم `triggerRepaint()`).
+- **SVG كصورة مستقلة:** يحتاج `xmlns`، وإلا يكون «broken» ولا يُرسم على canvas.
+- **الصور المفقودة في MapLibre 6:** تُزوَّد عبر `setMissingStyleImageResolver`، فحدث `styleimagemissing` لم يعد يكفي.
+- **ارتفاع حاوية الخريطة:** CSS الخاص بـ MapLibre يجعل الحاوية `position: relative`، فأعطها `width/height: 100%` صراحةً وإلا صار ارتفاعها صفراً.
+- **لا `pkill -f` أو `pgrep -f` بنمط يظهر في أمرك نفسه:** يقتل الطرفية التي تشغّله. احفظ رقم العملية وأوقفها به.
+- **رموز `sed`:** `&` في جزء الاستبدال تعني «النص المطابق». للتعديلات التي فيها `&` استعمل Python.
