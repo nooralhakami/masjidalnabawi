@@ -8,7 +8,8 @@ import type { MapEngine } from '../map/engine';
 import { mapZoom } from '../map/zoom';
 import { NavigationTracker, type NavigationHost } from '../navigation/tracker';
 import { lotsToAsk, planExit, planRoutes, type GarageStart, type Plan } from '../routing/plan';
-import { garageQ, level, nav, notify, route, selected, travel } from '../state/store';
+import { bearing } from '../presentation/route-view';
+import { garageQ, headingUp, level, nav, notify, route, selected, setHeadingUp, travel } from '../state/store';
 
 /** Within this distance of the car park leg, the visitor is in the car park: no re-planning from the streets. */
 const IN_CAR_PARK_M = 60;
@@ -17,6 +18,9 @@ const AHEAD_M = 150;
 /** Where the car is, as the visitor said (owner, 2026-10-14), holds this long and this near. */
 const ANSWER_MS = 10 * 60_000;
 const ANSWER_M = 40;
+/** Heading-up: the way ahead over this many metres sets which way is up; turns under this many degrees wait. */
+const HEADING_AHEAD_M = 40;
+const HEADING_MIN_TURN = 6;
 
 export interface TripLayout {
   /** Bottom of the search bar and pills, in px from the top. */
@@ -38,6 +42,8 @@ export class Trip {
   readonly tracker: NavigationTracker;
   private plans: Plan[] = [];
   private chosen = 0;
+  /** Heading-up just turned on: the follows zoom to street level until the map is there (a new fix can interrupt one ease). */
+  private closeUp = false;
   private garageAnswer: { start: GarageStart; at: number; pos: LatLng } | null = null;
   /** The route planner (routing/plan.ts); a test can put one that finds nothing. */
   planner = planRoutes;
@@ -147,10 +153,29 @@ export class Trip {
 
   /** «إنهاء المسار», a new destination, or closing the card: the trip ends entirely (GPS watch, wake lock, bar). */
   end(): void {
+    // A map turned with the route goes back to north up.
+    if (this.engine.map.getBearing() !== 0) this.engine.map.easeTo({ bearing: 0, duration: reduce() ? 0 : 500 });
     this.tracker.stop();
     this.engine.route.clear();
     this.plans = [];
     route.value = null;
+  }
+
+  /**
+   * Heading-up on or off (owner, 2026-10-17). On: follow the visitor again and turn the map so the
+   * way ahead points up. Off: back to north up, the visitor still followed.
+   */
+  setHeadingUp(on: boolean): void {
+    setHeadingUp(on);
+    if (on) {
+      // Street level, as a navigation app: the turns ahead readable.
+      this.closeUp = true;
+      if (!this.tracker.snapshot.follow) this.tracker.toggleFollow();
+      else {
+        const p = this.tracker.snapshot.position;
+        if (p) this.follow(p[0], p[1]);
+      }
+    } else this.engine.map.easeTo({ bearing: 0, duration: reduce() ? 0 : 500 });
   }
 
   /** «My location»: show the visitor and keep watching (it used to read once and stop). */
@@ -239,7 +264,28 @@ export class Trip {
     const top = this.layout.top();
     const bar = this.layout.bar();
     const padding = bar > top + 80 ? { top, bottom: Math.max(0, h - bar), left: 0, right: 0 } : { top: 0, bottom: 0, left: 0, right: 0 };
-    this.engine.map.easeTo({ center: [lng, lat], padding, duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600 });
+    const heading = this.headingAhead();
+    // Heading-up: the visitor in the lower part of the view, so more of the way ahead shows.
+    if (heading !== undefined) padding.top += Math.round((h - padding.top - padding.bottom) * 0.35);
+    if (this.closeUp && this.engine.map.getZoom() >= mapZoom(18) - 0.05) this.closeUp = false;
+    const zoom = this.closeUp ? mapZoom(18) : undefined;
+    this.engine.map.easeTo({ center: [lng, lat], padding, bearing: heading ?? this.engine.map.getBearing(), zoom, duration: reduce() ? 0 : 600 });
+  }
+
+  /**
+   * Heading-up: the direction of the route over the next 40 m (steadier than the phone's compass
+   * when walking slowly). Small turns are left alone, so the map does not wobble.
+   */
+  private headingAhead(): number | undefined {
+    if (!headingUp.value) return undefined;
+    const ahead = this.tracker.ahead(HEADING_AHEAD_M);
+    if (!ahead || ahead.length < 2) return undefined;
+    const [a, b] = [ahead[0], ahead[ahead.length - 1]];
+    if (Math.hypot((b[0] - a[0]) * 111_320, (b[1] - a[1]) * 101_300) < 5) return undefined;
+    const to = bearing(a, b);
+    const now = this.engine.map.getBearing();
+    const turn = Math.abs(((to - now + 540) % 360) - 180);
+    return turn < HEADING_MIN_TURN ? now : to;
   }
 
   /** After the card has drawn the route summary (its height decides the camera's room). */
@@ -247,3 +293,5 @@ export class Trip {
     return new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 0))));
   }
 }
+
+const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;

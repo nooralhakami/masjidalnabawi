@@ -51,6 +51,9 @@ test.describe('during a route', () => {
     await page.locator('.pc-actions .btn-block').click();
     await expect(page.locator('.route-card')).toBeVisible({ timeout: 20_000 });
     await expect.poll(() => page.evaluate(() => (window as unknown as { __wake: string[] }).__wake)).toContain('request:screen');
+    await expect(page.locator('.sheet.is-peek')).toHaveCount(1, { timeout: 20_000 });
+    await page.locator('.sheet-handle').click();
+    await page.waitForTimeout(600);
     await page.locator('.route-card .rc-end').click();
     await expect.poll(() => page.evaluate(() => (window as unknown as { __wake: string[] }).__wake)).toContain('release');
   });

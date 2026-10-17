@@ -43,7 +43,7 @@ export function RouteCard({ p, r, closed = false, onClose, onEnd, onWayOut, onWa
       </header>
 
       <div class="route-box" role="status">
-        <div class="route-stats">
+        <div class="route-stats" data-peek-end>
           <span class="rs">
             <span class="sr-only">{t('r_dist')}: </span>
             <span class="rs-v">{t('meters', { m: num(round5(r.meters)) })}</span>

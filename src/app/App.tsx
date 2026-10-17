@@ -10,7 +10,7 @@ import { applyLang } from '../i18n/dom';
 import { loadLang } from '../i18n-next/load';
 import type { MapEngine } from '../map/engine';
 import { isClosed } from '../domain/facilities';
-import { filter, garageQ, level, markersHidden, nav, notify, parkingSub, query, rawdahH, route, selected, sheet, sheetH, toast, toiletSub, travel, typed } from '../state/store';
+import { filter, garageQ, headingUp, level, markersHidden, nav, notify, parkingSub, query, rawdahH, route, selected, sheet, sheetH, toast, toiletSub, travel, typed } from '../state/store';
 import type { AdminPanel as AdminPanelT } from '../ui/admin/AdminPanel';
 import { AdminGate } from '../ui/admin/AdminGate';
 import { adminUnlocked } from '../state/admin';
@@ -143,6 +143,13 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
   };
 
   /** «Route from my location»: the button shows it is busy while the location is asked and the way planned. */
+  // A route drawn: the card steps down to a slim strip (name and close), so the map and the route
+  // show; dragging it up brings the details (owner, 2026-10-17).
+  const hasRoute = !!route.value;
+  useEffect(() => {
+    if (hasRoute) sheet.value = 'peek';
+  }, [hasRoute]);
+
   const runRoute = async (p: Poi) => {
     setRouting(true);
     try {
@@ -299,7 +306,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
           {garageQ.value ? (
             <GarageAsk key={garageQ.value.lots.map((l) => l.id).join()} lots={garageQ.value.lots} onAnswer={garageQ.value.answer} />
           ) : nav.value ? (
-            <NavBar s={nav.value} level={route.value?.drive?.level} onFollow={() => trip.tracker.toggleFollow()} onEnd={() => trip.end()} onKeep={() => trip.tracker.keepGoing()} />
+            <NavBar s={nav.value} level={route.value?.drive?.level} onFollow={() => trip.tracker.toggleFollow()} headingUp={headingUp.value} onHeadingUp={() => trip.setHeadingUp(!headingUp.value)} onEnd={() => trip.end()} onKeep={() => trip.tracker.keepGoing()} />
           ) : null}
         </div>
       ) : null}

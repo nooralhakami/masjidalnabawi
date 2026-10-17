@@ -72,6 +72,16 @@ export const nav = signal<NavigationSnapshot | null>(null);
 /** How tall the sheet is settling to, so the notices and the navigation bar sit just above it. */
 export const sheetH = signal(0);
 
+/**
+ * Heading-up while navigating (owner, 2026-10-17): the map turns so the way ahead points up, and
+ * follows the visitor. Optional, off by default, remembered on this device.
+ */
+export const headingUp = signal(load('heading-up') === '1');
+export function setHeadingUp(on: boolean): void {
+  headingUp.value = on;
+  save('heading-up', on ? '1' : null);
+}
+
 /** «Where is your car?» (in or by the car park): the question on screen, answered through `answer`. */
 export interface GarageQuestion {
   lots: Poi[];

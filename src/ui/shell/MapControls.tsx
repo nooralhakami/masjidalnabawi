@@ -34,16 +34,16 @@ export function MapControls({ onZoom, onTurn, onNorth, watchNorth }: Omit<MapCon
   );
   return (
     <div class="map-controls">
-      <div class="mc-group">
+      <div class="mc-group mc-zoom">
         <IconButton icon="plus" label={t('zoom_in')} onClick={() => onZoom(1)} />
         <IconButton icon="minus" label={t('zoom_out')} onClick={() => onZoom(-1)} />
       </div>
       <div class="mc-group">
-        <IconButton icon="rotate-right" label={t('rot_right')} onClick={() => onTurn(15)} />
+        <IconButton icon="rotate-right" class="mc-turn" label={t('rot_right')} onClick={() => onTurn(15)} />
         <span ref={compass} class="mc-compass">
           <IconButton icon="rotate-reset" label={t('rot_reset')} onClick={onNorth} />
         </span>
-        <IconButton icon="rotate-left" label={t('rot_left')} onClick={() => onTurn(-15)} />
+        <IconButton icon="rotate-left" class="mc-turn" label={t('rot_left')} onClick={() => onTurn(-15)} />
       </div>
     </div>
   );
