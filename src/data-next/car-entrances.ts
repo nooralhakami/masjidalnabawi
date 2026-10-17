@@ -1,5 +1,5 @@
 /**
- * Three more vehicle entrances to the car park under the Haram's courtyards (owner, 2026-10-16),
+ * Vehicle entrances to the car park under the Haram's courtyards (owner, 2026-10-16),
  * kept apart from the live app's data/ (which «next» does not change). Qurban is open today, the
  * other two closed (owner); the supervisor opens or closes each. They are not in the route planner
  * yet: their lanes inside the car park are not known, so no route goes through them, open or closed.
@@ -9,7 +9,7 @@
  * owner's photo). The eastern one is on the eastern road, at its end near the Haram: approximate,
  * as where it meets the car park roads is not known yet (closed for the eastern expansion works).
  */
-export type CarEntranceId = 'quba' | 'qurban' | 'east';
+export type CarEntranceId = 'omar' | 'sultana' | 'quba' | 'qurban' | 'east';
 
 export interface CarEntrance {
   id: CarEntranceId;
@@ -23,6 +23,10 @@ export interface CarEntrance {
 }
 
 export const CAR_ENTRANCES: readonly CarEntrance[] = [
+  // Sultana and Omar ibn al-Khattab (owner, 2026-10-17): the two entrances the route planner already
+  // drives through, at the street points of the owner's drawing (data/garage.json «entrances»). Open.
+  { id: 'sultana', lat: 24.4708932, lng: 39.6062431, name: 'ent_sultana', open: true },
+  { id: 'omar', lat: 24.46572, lng: 39.60657, name: 'ent_omar', open: true },
   { id: 'quba', lat: 24.465375, lng: 39.607755, name: 'ent_quba', note: 'ent_quba_note', open: false },
   { id: 'qurban', lat: 24.464994, lng: 39.612841, name: 'ent_qurban', open: true },
   { id: 'east', lat: 24.468547, lng: 39.615174, name: 'ent_east', note: 'ent_east_note', open: false },
