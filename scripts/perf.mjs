@@ -137,8 +137,11 @@ async function main() {
     await begin();
     const zin = page.locator('.map-overlay .mc-group').first().locator('button').first();
     const zout = page.locator('.map-overlay .mc-group').first().locator('button').nth(1);
-    for (const b of [zout, zout, zin, zin, zin, zout]) {
-      await b.click();
+    // With a route the zoom and turn buttons step aside (trip mode): the same calls they make.
+    const trip = await page.evaluate(() => document.querySelector('.map-page')?.hasAttribute('data-trip'));
+    for (const [b, step] of [[zout, -1], [zout, -1], [zin, 1], [zin, 1], [zin, 1], [zout, -1]]) {
+      if (trip) await page.evaluate((s) => window.__engine.zoomBy(s), step);
+      else await b.click();
       await page.waitForTimeout(450);
     }
     results.zoom = await end();
@@ -147,14 +150,12 @@ async function main() {
     // Rotate: the rotation buttons, several steps each way.
     await begin();
     const rot = page.locator('.map-overlay .mc-group').nth(1).locator('button');
-    for (let i = 0; i < 6; i++) {
-      await rot.first().click();
-      await page.waitForTimeout(300);
-    }
-    for (let i = 0; i < 6; i++) {
-      await rot.last().click();
-      await page.waitForTimeout(300);
-    }
+    for (const [btn, deg] of [[rot.first(), 15], [rot.last(), -15]])
+      for (let i = 0; i < 6; i++) {
+        if (trip) await page.evaluate((d) => window.__engine.turn(d), deg);
+        else await btn.click();
+        await page.waitForTimeout(300);
+      }
     results.rotate = await end();
     log('rotate done');
 
