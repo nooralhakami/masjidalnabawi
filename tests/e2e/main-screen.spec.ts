@@ -31,12 +31,13 @@ test.describe('filters', () => {
     ['gates', 112],
     ['women', 35],
     ['toilets', 40],
+    // Historic sites and car parks after the restrooms (owner, 2026-10-17).
+    ['historic', 17],
+    ['parking', 13],
     ['hotels', 43],
     ['food', 44],
     ['shopping', 15],
     ['landmarks', 38],
-    ['historic', 17],
-    ['parking', 13],
     ['emergency', 9],
   ];
 
@@ -54,7 +55,7 @@ test.describe('filters', () => {
     await openMap(page);
     const parks = () => page.evaluate(() => (window as unknown as Win).__engine.view.ids.filter((id: number) => (window as unknown as Win).__engine.poi(id).category === 'parking').length);
     expect(await parks()).toBe(0);
-    await pill(page, 9).click();
+    await pill(page, 5).click();
     await expect.poll(parks).toBe(13);
 
     await pill(page, 3).click();

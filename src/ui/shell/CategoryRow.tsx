@@ -3,6 +3,14 @@ import { FILTERS, PARKING_SUBS, TOILET_SUBS } from '../../domain/filters';
 import { Icon, type IconName } from '../kit/Icon';
 import { useI18n } from '../i18n';
 
+/**
+ * The pills' order on the map (owner, 2026-10-17): historic sites and car parks right after the
+ * restrooms. domain/filters.ts (the live app's, ported as is) keeps its own order; only the row
+ * shows them in this one.
+ */
+export const PILL_ORDER: readonly FilterId[] = ['all', 'gates', 'women', 'toilets', 'historic', 'parking', 'hotels', 'food', 'shopping', 'landmarks', 'emergency'];
+const PILLS = PILL_ORDER.map((id) => FILTERS.find((f) => f.id === id)!).filter(Boolean);
+
 /** Icon and colour of each filter pill (as in the live app's ui/pills.ts). */
 export const FILTER_LOOK: Record<FilterId, [IconName, string]> = {
   all: ['grid', 'var(--green-700)'],
@@ -61,7 +69,7 @@ export function CategoryRow({
   return (
     <div class="cat-wrap">
       <nav class="cat-row" aria-label={t('filters')}>
-        {FILTERS.map(({ id, label }) => (
+        {PILLS.map(({ id, label }) => (
           <CategoryButton key={id} id={id} label={t(label)} count={counts[id]} selected={id === filter} onPick={onFilter} />
         ))}
         <button
