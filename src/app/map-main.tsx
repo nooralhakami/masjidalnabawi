@@ -20,7 +20,7 @@ import { tNext } from '../i18n-next/strings';
 import { CAR_ENTRANCES } from '../data-next/car-entrances';
 import { entranceOpen } from '../state/entrances';
 import { MapEngine, type BaseLayer } from '../map/engine';
-import { filter, markersHidden, nav, notify, parkingSub, query, rawdahH, searching, selected, sheetH, toiletSub } from '../state/store';
+import { filter, headingUp, markersHidden, nav, notify, route, parkingSub, query, rawdahH, searching, selected, sheetH, toiletSub } from '../state/store';
 import { LangContext } from '../ui/i18n';
 import { MapControls, MapTools } from '../ui/shell/MapControls';
 import { WeatherChip } from '../ui/shell/WeatherChip';
@@ -79,7 +79,8 @@ async function main() {
   }
 
   const trip = new Trip(engine, {
-    top: () => document.querySelector('.app-top')?.getBoundingClientRect().bottom ?? 0,
+    // With a route, the top bar steps aside (trip mode): only the safe area is left above.
+    top: () => (route.value ? 16 : (document.querySelector('.app-top')?.getBoundingClientRect().bottom ?? 0)),
     sheet: () => sheetH.value,
     bar: () => document.querySelector('.nav-bar, .garage-ask')?.getBoundingClientRect().top ?? innerHeight - sheetH.value,
   });
@@ -109,6 +110,10 @@ async function main() {
       if (scale) scale.style.marginBottom = on ? `${h + bar}px` : r ? `${r + 4}px` : '';
     });
   });
+  // Trip mode (owner, 2026-10-17): with a route on the map, the top bar, the pills and the map's
+  // own buttons step aside, the compass staying (kit.css «trip mode»). Set once when a route starts
+  // or ends, never during a gesture, and on the page wrapper, not <body>.
+  effect(() => void document.querySelector('.map-page')!.toggleAttribute('data-trip', route.value !== null));
   fac.onChange(() => engine.refreshStatus());
   effect(() => engine.setEntrances(entranceOpen.value));
   addEventListener('resize', () => engine.refit());
@@ -169,7 +174,11 @@ async function main() {
     const lang = getLang();
     render(
       <LangContext.Provider value={lang}>
-        <MapControls onZoom={(s) => engine.zoomBy(s)} onTurn={(d) => engine.turn(d)} onNorth={() => engine.resetNorth()} watchNorth={watchNorth} />
+        <MapControls onZoom={(s) => engine.zoomBy(s)} onTurn={(d) => engine.turn(d)} onNorth={() => {
+          // North up: heading-up (if on) stops too, or the next step would turn the map again.
+          if (headingUp.value) trip.setHeadingUp(false);
+          engine.resetNorth();
+        }} watchNorth={watchNorth} />
       </LangContext.Provider>,
       document.getElementById('overlay')!,
     );

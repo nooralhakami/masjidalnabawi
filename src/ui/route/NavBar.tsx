@@ -2,6 +2,7 @@ import { STATE_LABEL, navKnown, type NavView } from '../../presentation/route-vi
 import { Button } from '../kit/Button';
 import { Count } from '../kit/Count';
 import { Icon } from '../kit/Icon';
+import { tNext } from '../../i18n-next/strings';
 import { useI18n } from '../i18n';
 import { StepBanner } from '../sheet/StepBanner';
 
@@ -10,6 +11,9 @@ export interface NavBarProps {
   /** The car park level of the route, for the step banner's edge. */
   level?: 'A' | 'B';
   onFollow(): void;
+  /** Heading-up: the map turns with the route (owner, 2026-10-17). */
+  headingUp?: boolean;
+  onHeadingUp?(): void;
   onEnd(): void;
   onKeep(): void;
 }
@@ -19,7 +23,7 @@ export interface NavBarProps {
  * and metres left, how the tracking is going, «تتبّعني», the car park step, and the progress. On
  * arrival: «وصلت إلى وجهتك» with «إنهاء التتبع» and «متابعة».
  */
-export function NavBar({ s, level, onFollow, onEnd, onKeep }: NavBarProps) {
+export function NavBar({ s, level, onFollow, headingUp = false, onHeadingUp, onEnd, onKeep }: NavBarProps) {
   const { t } = useI18n();
   if (s.state === 'arrived')
     return (
@@ -63,6 +67,14 @@ export function NavBar({ s, level, onFollow, onEnd, onKeep }: NavBarProps) {
           <Icon name="locate" size={18} />
           <span>{t(s.follow ? 'nav_unfollow' : 'nav_follow')}</span>
         </button>
+        {onHeadingUp ? (
+          <button type="button" class="nav-heading" aria-pressed={headingUp} aria-label={tNext('nav_heading_up')} title={tNext('nav_heading_up')} onClick={onHeadingUp}>
+            {/* A navigation arrow: the way ahead, up. */}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <path d="M12 3l7 17-7-4-7 4z" fill={headingUp ? 'currentColor' : 'none'} />
+            </svg>
+          </button>
+        ) : null}
       </div>
       {s.step ? <StepBanner step={s.step} level={level} /> : null}
       {known ? (

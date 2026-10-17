@@ -1345,6 +1345,21 @@
   min-width: 0;
   font-size: var(--fs-sm);
 }
+/* The narrowest phones: the numbers and the two buttons keep the first line, the status takes the
+   second whole, instead of breaking letter by letter. */
+@media (max-width: 359px) {
+  .nav-row {
+    flex-wrap: wrap;
+    row-gap: var(--s-1, 4px);
+  }
+  .nav-counts {
+    margin-inline-end: auto;
+  }
+  .nav-label {
+    order: 3;
+    flex-basis: 100%;
+  }
+}
 .nav-label.is-warn {
   color: var(--warn);
 }
@@ -1367,6 +1382,26 @@
   border-color: var(--accent);
   color: var(--accent);
 }
+/* Heading-up (owner, 2026-10-17): an arrow, filled while the map turns with the route. */
+.nav-heading {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--hit);
+  height: var(--hit);
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.nav-heading[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--surface);
+}
+.nav-heading:focus-visible,
 .nav-follow:focus-visible,
 .garage-ask-opt:focus-visible {
   outline: 3px solid var(--gold-500);
@@ -1832,3 +1867,54 @@
     margin-inline: auto;
   }
 }
+
+/* ---------- Trip mode (owner, 2026-10-17) ----------
+   With a route on the map, everything that is not the route steps aside so the visitor sees the
+   way: the top bar and the pills slide up, the left column (weather, stories, library, base map,
+   my location) and the zoom and turn buttons fade out; the compass stays (it shows north, and a
+   tap turns the map back). The card is a slim strip (App.tsx), the navigation bar keeps «my
+   location» and heading-up. Set once on the page wrapper when the route starts or ends: no class
+   changes during a gesture. */
+.app-top,
+.map-overlay-left,
+.map-controls .mc-zoom,
+.map-controls .mc-turn {
+  transition:
+    transform 260ms var(--ease, ease),
+    opacity 200ms ease,
+    visibility 0s linear 0s;
+}
+.map-page[data-trip] .app-top {
+  transform: translateY(calc(-100% - var(--s-3) - env(safe-area-inset-top)));
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    transform 260ms var(--ease, ease),
+    opacity 200ms ease,
+    visibility 0s linear 260ms;
+}
+.map-page[data-trip] .map-overlay-left,
+.map-page[data-trip] .map-controls .mc-zoom,
+.map-page[data-trip] .map-controls .mc-turn {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 200ms ease,
+    visibility 0s linear 200ms;
+}
+/* Without its two turn buttons, the compass stands alone in its group. */
+.map-page[data-trip] .map-controls .mc-turn {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-top,
+  .map-overlay-left,
+  .map-controls .mc-zoom,
+  .map-controls .mc-turn,
+  .map-page[data-trip] .app-top,
+  .map-page[data-trip] .map-overlay-left,
+  .map-page[data-trip] .map-controls .mc-zoom {
+    transition: none;
+  }
+}
+

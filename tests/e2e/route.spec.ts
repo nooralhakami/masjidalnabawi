@@ -36,6 +36,15 @@ function placeAt(id: number): [number, number] {
   return [p.lat + (o.north ?? 0) / 111_320, p.lng + (o.east ?? 0) / (111_320 * Math.cos((p.lat * Math.PI) / 180))];
 }
 
+/** With a route, the card is a slim strip (trip mode, owner 2026-10-17): open it to reach its buttons. */
+async function showCard(page: Page) {
+  await expect(page.locator('.sheet.is-peek')).toHaveCount(1, { timeout: 20_000 });
+  await page.locator('.sheet-handle').click();
+  await expect(page.locator('.sheet.is-half')).toHaveCount(1);
+  // The sheet's spring settles.
+  await page.waitForTimeout(600);
+}
+
 async function openAndRoute(page: Page, id: number, lang = 'ar') {
   await openMap(page, lang, `?poi=${id}`);
   // Three browsers drawing WebGL in software share this machine: a card can take a few seconds.
@@ -57,6 +66,7 @@ test.describe('walking from the west plaza', () => {
     expect(await drawn(page, 'route-walk')).toBeGreaterThan(0);
     expect(await drawn(page, 'route-arrows')).toBeGreaterThan(3);
     await expect(page.locator('.me-dot')).toBeVisible();
+    await showCard(page);
     await card(page).locator('.rc-end').click();
     expect(await routeActive(page)).toBe(false);
     expect(await drawn(page, 'route-walk')).toBe(0);
@@ -64,6 +74,7 @@ test.describe('walking from the west plaza', () => {
 
   test('distance and time stay on screen above the end button; the bar never covers the sheet', async ({ page, errors: _ }) => {
     await openAndRoute(page, 204);
+    await showCard(page);
     await expect(card(page).locator('.route-box')).toBeInViewport({ ratio: 1, timeout: 20_000 });
     await expect(card(page).locator('.rc-end')).toBeInViewport();
     await expect(navBar(page)).toBeVisible();
@@ -89,9 +100,9 @@ test.describe('walking from the west plaza', () => {
     expect(await routeActive(page)).toBe(true);
     await expect(navBar(page)).toBeVisible();
 
-    await page.getByRole('combobox').fill('215');
-    await expect(page.locator('#search-results')).toBeVisible();
-    await page.getByRole('combobox').press('Enter');
+    // A new destination (search is out of the way during a route, owner 2026-10-17: a place opened
+    // from elsewhere in the app, as a story's «على الخريطة»).
+    await page.evaluate(() => document.dispatchEvent(new CustomEvent('open-place', { detail: (window as unknown as Win).__engine.poi(215) })));
     await expect(page.locator('.pc-title')).toContainText('215', { timeout: 15_000 });
     expect(await routeActive(page)).toBe(false);
     await expect(navBar(page)).toHaveCount(0);
@@ -164,6 +175,7 @@ test.describe('live location while walking', () => {
     expect(await page.evaluate(() => (window as unknown as Win).__engine.route.isFocused)).toBe(true);
     expect(await drawn(page, 'route-focus')).toBeGreaterThan(0);
     expect(await page.evaluate(() => (window as unknown as Win).__engine.map.getPaintProperty('route-walk', 'line-opacity'))).toBeLessThan(0.5);
+    await showCard(page);
     await card(page).locator('.rc-end').click();
     expect(await drawn(page, 'route-focus')).toBe(0);
   });
@@ -238,6 +250,7 @@ test.describe('travelling by car', () => {
     expect(await drawn(page, 'route-car', 'drive')).toBeGreaterThan(0);
     expect(await drawn(page, 'route-car', 'garage')).toBeGreaterThan(0);
     expect((await marks(page)).filter((m) => m.startsWith('ramp:'))).toEqual(['ramp:P']);
+    await showCard(page);
     await card(page).locator('.rc-end').click();
     expect(await drawn(page, 'route-car', 'drive')).toBe(0);
     await page.reload();
@@ -306,6 +319,7 @@ test.describe('by car to the car park under the Haram (owner’s drawing, 2026-1
     expect(await marks(page)).toContain('level-label:الدور A');
     await expect(page.locator('.route-legend')).toBeVisible();
     // The way out: from the bay, down to level B, to an exit.
+    await showCard(page);
     await card(page).locator('.rc-wayout').click();
     await expect(card(page).locator('.leg-ent')).toContainText('مخرج');
     expect((await marks(page)).filter((m) => m.startsWith('level-ramp'))).toEqual(['level-ramp:↓B']);

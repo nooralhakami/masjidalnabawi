@@ -55,6 +55,12 @@ export function BottomSheet({ detent, onDetent, allowed = DETENTS, extra = 0, la
         const handle = sheet.current!.querySelector<HTMLElement>('.sheet-handle');
         const need = (handle?.offsetHeight ?? 0) + content.offsetHeight + (parseFloat(getComputedStyle(body).paddingBottom) || 0);
         h.half = Math.min(h.full, Math.ceil(need), Math.round(el.clientHeight * 0.45));
+        // The peek ends under the element marked [data-peek-end] (a route's distance and time), whole.
+        const end = content.querySelector<HTMLElement>('[data-peek-end]');
+        if (end) {
+          const top = sheet.current!.getBoundingClientRect().top;
+          h.peek = Math.min(h.half, Math.ceil(end.getBoundingClientRect().bottom - top + 12));
+        }
       }
       setHeights((old) => (old.half === h.half && old.full === h.full && old.peek === h.peek ? old : h));
     };
@@ -206,7 +212,8 @@ export function BottomSheet({ detent, onDetent, allowed = DETENTS, extra = 0, la
           data-sheet-drag
           aria-label={t('sheet_label')}
           aria-expanded={detent === 'full'}
-          onClick={() => onDetent(detent === 'full' ? 'half' : 'full')}
+          // Peek opens to half (a route's details); half and full swap.
+          onClick={() => onDetent(detent === 'half' ? 'full' : 'half')}
           onKeyDown={(e) => {
             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
               e.preventDefault();
