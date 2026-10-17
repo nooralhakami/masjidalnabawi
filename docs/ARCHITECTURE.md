@@ -148,6 +148,9 @@ tests/unit/  tests/e2e/  scripts/perf.mjs
   - The accuracy circle is a GeoJSON circle (fill).
   - The heading cone is compensated for bearing.
 - **Marker pop-in.** A new filter (or markers shown again) fades the marker layers in: opacity 0 for one frame, then a 200 ms paint transition back to 1 (`MapEngine.pop`, the live app's `.mk-pop`). Only on a tap, never during a gesture; skipped with reduced motion. The nine must-visit sites and the open card's pin do not fade.
+- **Trip mode and heading-up (2026-10-17).**
+  - **Trip mode:** while a route shows, `.map-page[data-trip]` (set once when the route starts or ends, by an effect in `map-main.tsx`) slides the top bar and fades the left column and the zoom and turn buttons. The compass stays. The sheet steps down to a peek that ends under the card's `[data-peek-end]` (the route's distance and time).
+  - **Heading-up:** `Trip.follow` sets the camera's bearing to the direction of the next 40 m of the route (`tracker.ahead`) and ignores turns under 6°. When the mode is turned on, the follows zoom to street level until the map is there. The visitor sits in the lower part of the view (extra top padding). The setting is the `headingUp` signal (`state/store.ts`, key `heading-up`).
 - **Gesture hygiene.**
   - Nothing toggles classes on `<body>` during gestures.
   - No `backdrop-filter`.
