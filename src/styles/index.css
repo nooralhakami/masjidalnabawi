@@ -1,0 +1,7 @@
+/* The app's stylesheet: Tailwind (preflight; utilities only with the tw: prefix), then ours. */
+/* Tailwind's utilities take the tw: prefix (tw:flex …): unprefixed, a utility named like one of our
+   classes (.ring drew a box-shadow round the Rawdah ring) would style our components behind our back. */
+@import 'tailwindcss' prefix(tw);
+@import './tokens.css';
+@import './base.css';
+@import './kit.css';

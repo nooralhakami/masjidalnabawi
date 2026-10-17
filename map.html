@@ -8,18 +8,18 @@
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="دليل الزوار" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="description" content="خريطة تفاعلية للبوابات ودورات المياه والمواقف والخدمات حول المسجد النبوي، بحث سريع ومسارات مشي بـ26 لغة." />
-    <link rel="preconnect" href="https://server.arcgisonline.com" />
+    <link rel="preconnect" href="https://server.arcgisonline.com" crossorigin />
     <script>try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
     <script>
-      /* Start downloading the first satellite tiles before any JS library loads (same fit as setup.ts:
-         outer-gate bounds, 16px padding, zoom 14–19). Leaflet later finds them in the browser cache. */
+      /* Start downloading the first satellite tiles before any JS loads, as the live app does: the same
+         fit (outer-gate bounds, 16 px padding, Leaflet zoom 14–19). MapLibre asks for the very same tile
+         URLs at that view (its zoom is one less, its 256 px raster tiles one level up), with fetch() in
+         CORS mode, so the preload is a CORS fetch too. tests/unit/map-zoom.test.ts checks the bounds. */
       (function () {
         try {
-          // A shared place link (?poi=) zooms straight to that place, so these overview tiles would go unused.
           if (/[?&]poi=/.test(location.search)) return;
-          var S = 24.4659727, N = 24.470891, W = 39.608038, E = 39.6142706, pad = 32, ts = 256;
+          var S = 24.4660176, N = 24.4710527, W = 39.6077755, E = 39.6142706, pad = 32, ts = 256;
           var w = innerWidth, h = innerHeight;
           function px(lat, lng, z) {
             var s = ts * Math.pow(2, z), r = (lat * Math.PI) / 180;
@@ -33,7 +33,8 @@
             for (var x = Math.floor((cx - w / 2) / ts); x <= Math.floor((cx + w / 2) / ts); x++) {
               var l = document.createElement('link');
               l.rel = 'preload';
-              l.as = 'image';
+              l.as = 'fetch';
+              l.crossOrigin = 'anonymous';
               l.setAttribute('fetchpriority', 'high');
               l.href = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + z + '/' + y + '/' + x;
               document.head.appendChild(l);
@@ -45,6 +46,6 @@
   </head>
   <body>
     <div id="app"></div>
-    <script type="module" src="/src/map/main.ts"></script>
+    <script type="module" src="/src/app/map-main.tsx"></script>
   </body>
 </html>

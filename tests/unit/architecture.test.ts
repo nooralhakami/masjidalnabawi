@@ -7,7 +7,7 @@ const ROOT = join(__dirname, '../../src');
 function files(dir: string): string[] {
   return readdirSync(dir).flatMap((f) => {
     const p = join(dir, f);
-    return statSync(p).isDirectory() ? files(p) : p.endsWith('.ts') ? [p] : [];
+    return statSync(p).isDirectory() ? files(p) : /\.tsx?$/.test(p) ? [p] : [];
   });
 }
 const importsOf = (file: string): string[] =>
@@ -19,7 +19,14 @@ const FORBIDDEN: Record<string, string[]> = {
   data: ['domain', 'routing', 'location', 'i18n', 'ui', 'map', 'navigation', 'landing'],
   domain: ['routing', 'location', 'ui', 'map', 'navigation', 'landing'],
   routing: ['location', 'ui', 'map', 'navigation', 'landing'],
-  ui: ['map', 'navigation'],
+  ui: ['map', 'navigation', 'app'],
+  // Layers added by the rebuild (docs/ARCHITECTURE.md §2); the rules above are the live app's, unchanged.
+  presentation: ['location', 'navigation', 'state', 'ui', 'map', 'app', 'landing'],
+  navigation: ['state', 'ui', 'map', 'app', 'landing'],
+  state: ['ui', 'map', 'app', 'landing'],
+  map: ['ui', 'app', 'landing', 'state'],
+  'data-next': ['domain', 'routing', 'location', 'i18n', 'i18n-next', 'presentation', 'navigation', 'state', 'ui', 'map', 'app', 'landing'],
+  'i18n-next': ['domain', 'routing', 'location', 'presentation', 'navigation', 'state', 'ui', 'map', 'app', 'landing'],
 };
 
 describe('architecture: module boundaries (ARCHITECTURE.md §2)', () => {
@@ -32,10 +39,10 @@ describe('architecture: module boundaries (ARCHITECTURE.md §2)', () => {
     });
   }
 
-  it('domain/ and routing/ stay free of the DOM and Leaflet', () => {
+  it('domain/, routing/, presentation/ and navigation/ stay free of the DOM, Leaflet and MapLibre', () => {
     const offenders = files(ROOT)
-      .filter((f) => ['domain', 'routing'].includes(moduleOf(f)))
-      .filter((f) => /from 'leaflet'|\bdocument\.|\bwindow\./.test(readFileSync(f, 'utf8')))
+      .filter((f) => ['domain', 'routing', 'presentation', 'navigation'].includes(moduleOf(f)))
+      .filter((f) => /from 'leaflet'|from 'maplibre-gl'|\bdocument\.|\bwindow\./.test(readFileSync(f, 'utf8')))
       .map((f) => f.slice(ROOT.length + 1));
     expect(offenders).toEqual([]);
   });

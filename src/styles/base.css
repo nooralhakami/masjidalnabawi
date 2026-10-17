@@ -1,0 +1,68 @@
+/* Base: type, focus, helpers. Colours only from tokens.css. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--fs-base);
+  line-height: 1.55;
+  /* Digits stay Latin; counters line up. */
+  font-variant-numeric: lining-nums;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+[data-theme] {
+  background: var(--bg);
+  color: var(--ink);
+}
+/* Urdu and Pashto read in Naskh, as in the live app. */
+:lang(ur),
+:lang(ps) {
+  --font-ui: var(--font-naskh);
+}
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  color: var(--heading);
+  line-height: 1.25;
+  margin: 0;
+}
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+}
+:focus-visible,
+.is-focus {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.ic {
+  display: inline-flex;
+  flex: none;
+  line-height: 0;
+}
+/* Arrows and chevrons are drawn pointing left (forward in Arabic): turned for left-to-right text. */
+.flip:dir(ltr) {
+  transform: scaleX(-1);
+}
+/* The ﷺ sign in Naskh, never alone on a line (the text puts a no-break space before it). */
+.sal {
+  font-family: var(--font-naskh);
+}

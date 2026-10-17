@@ -6,6 +6,8 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client", "node", "vite-plugin-pwa/client"],
     "strict": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,

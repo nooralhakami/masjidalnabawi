@@ -1,4 +1,5 @@
 import qrcode from 'qrcode-generator';
+// Ported verbatim from the live app (src/landing/qr.ts).
 import { SITE } from '../config/site.config';
 
 /** URL the QR code opens: QR_URL if set, else map.html on whatever host serves this page. */
