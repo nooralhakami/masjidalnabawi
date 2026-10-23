@@ -1,8 +1,9 @@
 /**
  * Vehicle entrances to the car park under the Haram's courtyards (owner, 2026-10-16),
  * kept apart from the live app's data/ (which «next» does not change). Qurban is open today, the
- * other two closed (owner); the supervisor opens or closes each. They are not in the route planner
- * yet: their lanes inside the car park are not known, so no route goes through them, open or closed.
+ * other two closed (owner); the supervisor opens or closes each. Qurban is in the route planner since
+ * 2026-10-23 (level A only: scripts/qurban-lanes.py, closing it takes it out of the routes); Quba and the
+ * eastern one are not: their lanes inside the car park are not known, so no route goes through them.
  *
  * Positions: from the owner's marked screenshots, matched to the map by seven outer gates (under a
  * metre off each). Quba is the opening beside Omar ibn al-Khattab's in the south-west tunnel (the

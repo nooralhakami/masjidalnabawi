@@ -17,7 +17,8 @@ import { planExit, planRoutes } from '../../src/routing/plan';
 // reference figures in the brief. Any drift in data or logic fails here: fix the cause, never the number.
 
 const DATA_SHA256: Record<string, string> = {
-  'garage.json': '5f09848588060b59a88ce9369b7b6c869183539607bd5a8f7f986d256f1f37b6',
+  // Changed on purpose (owner, 2026-10-23): the Qurban entrance and its roads, from scripts/qurban-lanes.py.
+  'garage.json': 'bb621d6aca2fa671b6de86cbc32431d8a63d6d097ddfc25aa1c9d7f891df783c',
   'i18n.json': 'c7ebab28bfedc70cc8579b36f34dbf00b90258e4a404d302ed51ede985bb41d3',
   'library/companions.json': 'bd1436b59040021ea4dc82444ea94a1ed1e5af0397a9d9abd14d86daa626f644',
   'library/hadith.json': '5355a6ad828a05161da43c37a96ed0407447eab55fc1abe60cfdf441b3570b4b',

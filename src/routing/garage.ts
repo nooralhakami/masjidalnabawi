@@ -25,7 +25,7 @@ import { fromM, toM, type XY } from './walk';
  *    at its exit (owner, 2026-10-13): the visitor parks where they like inside.
  */
 
-export type EntranceId = 'omar' | 'sultana';
+export type EntranceId = 'omar' | 'sultana' | 'qurban';
 export type Level = 'A' | 'B';
 type LaneKind = 'entry' | 'exit' | 'link' | 'shared' | 'ramp_up' | 'ramp_down';
 interface Lane {
@@ -65,9 +65,9 @@ export interface GarageData {
    * ground from the streets to that point, which every car must take (the Sultana side: round the
    * loop at the junction and down the ramp).
    */
-  entrances: { id: EntranceId; lane: string; street: LatLng; approach?: LatLng[] }[];
+  entrances: { id: EntranceId; lane: string; street: LatLng; approach?: LatLng[]; /** The level it joins (B when absent; Qurban joins A only, owner 2026-10-23). */ level?: Level }[];
   /** `mouth`: where the exit road leaves the car park; `departure`: the way on to the streets, where drawn. */
-  exits: { id: EntranceId; lane: string; street: LatLng; mouth: LatLng; departure?: LatLng[] }[];
+  exits: { id: EntranceId; lane: string; street: LatLng; mouth: LatLng; departure?: LatLng[]; level?: Level }[];
   lots: Lot[];
 }
 
@@ -75,6 +75,17 @@ export const GARAGE = garageJson as unknown as GarageData;
 export const ENTRANCES = GARAGE.entrances;
 export const EXITS = GARAGE.exits;
 export const LEVELS: readonly Level[] = ['B', 'A'];
+
+/**
+ * Entrances the supervisor has closed (owner, 2026-10-23: the Qurban one): the planner leaves them
+ * out, for the way in and for the way out. All open until told otherwise.
+ */
+const closed = new Set<EntranceId>();
+export function setEntranceOpen(id: EntranceId, open: boolean): void {
+  if (open) closed.delete(id);
+  else closed.add(id);
+}
+export const isEntranceOpen = (id: EntranceId) => !closed.has(id);
 
 /** Points this close are one junction; a road ending (or starting) this close to another joins it. */
 const MERGE_M = 1.5;
@@ -138,10 +149,8 @@ function buildGraph(data: GarageData): Graph {
     const onLevel = roads.filter((l) => !l.levels || l.levels.includes(level));
     const ls = new Map(onLevel.map((l) => [l.id, l.path.map(toM)]));
     const add = (id: string, p: XY) => ls.has(id) && ls.set(id, insertInto(ls.get(id)!, p));
-    if (level === 'B') {
-      for (const e of data.entrances) add(e.lane, toM(e.street));
-      for (const x of data.exits) add(x.lane, toM(x.mouth));
-    }
+    for (const e of data.entrances) if ((e.level ?? 'B') === level) add(e.lane, toM(e.street));
+    for (const x of data.exits) if ((x.level ?? 'B') === level) add(x.lane, toM(x.mouth));
     for (const lot of data.lots) {
       const d = doors(lot, level);
       add(d.entry_lane, toM(d.entry));
@@ -424,7 +433,7 @@ export function garageRoute(entrance: EntranceId, lot: Poi, level: Level = 'B'):
   const ent = ENTRANCES.find((e) => e.id === entrance);
   const l = lotData(lot);
   if (!ent || !l) return null;
-  const roads = shortest(nodeAt(toM(ent.street), 'B'), nodeAt(toM(doors(l, level).entry), level));
+  const roads = shortest(nodeAt(toM(ent.street), ent.level ?? 'B'), nodeAt(toM(doors(l, level).entry), level));
   const gate = roads && lotGate(lot, roads.pts[roads.pts.length - 1]);
   return roads && gate ? finish(roads, gate, level, l, false) : null;
 }
@@ -437,7 +446,7 @@ export function garageExit(lot: Poi, exit: EntranceId, level: Level = 'B'): Gara
   const x = EXITS.find((e) => e.id === exit);
   const l = lotData(lot);
   if (!x || !l) return null;
-  const roads = shortest(nodeAt(toM(doors(l, level).exit), level), nodeAt(toM(x.mouth), 'B'));
+  const roads = shortest(nodeAt(toM(doors(l, level).exit), level), nodeAt(toM(x.mouth), x.level ?? 'B'));
   const gate = roads && lotGate(lot, roads.pts[0]);
   return roads && gate ? finish(roads, gate, level, l, true) : null;
 }

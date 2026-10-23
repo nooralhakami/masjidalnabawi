@@ -1675,5 +1675,23 @@
    "image": "garage-nw-correction-2026-10-13.jpg",
    "what_ar": "في الركن الشمالي الغربي الطريق متصل: النازل من مدخل سلطانة يكمل جنوباً مباشرة دون انعطاف شرقاً ثم غرباً."
   }
+ ],
+ "extra_lanes_file": "docs/routes/garage-qurban-2026-10-23.json",
+ "extra_entrances": [
+  {
+   "id": "qurban",
+   "lane": "qurban-road-in-A",
+   "level": "A",
+   "at": "start",
+   "_note": "owner 2026-10-23: the Qurban entrance joins level A only; the street point is the start of the road (its south end)"
+  }
+ ],
+ "extra_exits": [
+  {
+   "id": "qurban",
+   "lane": "qurban-road-out-A",
+   "level": "A",
+   "_note": "owner 2026-10-23: the way out to the south on level A (lane 44 joins lane 36)"
+  }
  ]
 }

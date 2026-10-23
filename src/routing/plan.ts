@@ -3,7 +3,7 @@ import type { LatLng, Poi } from '../data/types';
 import { parkingAccess, parkingEntrances } from '../domain/parking';
 import { loadStreets, type Reach, type Streets } from './streets';
 import { pickRoutes, turnPenalty } from './alternatives';
-import { ENTRANCES, EXITS, garageExit, garageRoute, garageRouteFrom, garageRouteFromLot, lotsByDistance, nearGarage, type EntranceId, type Level, type GarageStep, type RampOnWay, type Stretch } from './garage';
+import { ENTRANCES, EXITS, garageExit, isEntranceOpen, garageRoute, garageRouteFrom, garageRouteFromLot, lotsByDistance, nearGarage, type EntranceId, type Level, type GarageStep, type RampOnWay, type Stretch } from './garage';
 import { fromM, insideRect, network, openTogether, pathLength, restroomDoor, ringPath, segmentHits, toM, walkPath, walkPaths, type XY } from './walk';
 
 /**
@@ -437,7 +437,7 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B', heading?: nu
   // The car park's two entrances (Omar ibn al-Khattab street, Sultana) as street nodes the car can reach. Where the owner
   // drew the way to an entrance (an approach), the streets lead to its start, on the carriageway that
   // goes its way, and the car then follows it.
-  const gates = ENTRANCES.map((e) => {
+  const gates = ENTRANCES.filter((e) => isEntranceOpen(e.id)).map((e) => {
     if (!e.approach?.length) return { e, k: S.nearestNode(toM(e.street), 'drive'), approach: [] as LatLng[] };
     // Join the approach where it is cheapest: at any of its points, on a road going its way — but not
     // in its last stretch by the car park mouth, where a side street also passes (the owner's drawing
@@ -534,6 +534,7 @@ export async function planRoutes(from: LatLng, to: Poi, mode: Mode = 'walk', opt
 export function planExit(lot: Poi, level: Level = 'B'): Plan[] {
   const plans: Plan[] = [];
   for (const x of EXITS) {
+    if (!isEntranceOpen(x.id)) continue;
     const way = garageExit(lot, x.id, level);
     if (!way) continue;
     const onward = x.departure ?? [x.mouth, x.street];

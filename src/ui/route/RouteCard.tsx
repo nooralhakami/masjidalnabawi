@@ -1,5 +1,6 @@
 import type { Poi } from '../../data/types';
 import { num } from '../../i18n';
+import { tNext } from '../../i18n-next/strings';
 import type { RouteSummary } from '../../presentation/route-view';
 import { Button, IconButton } from '../kit/Button';
 import { Icon } from '../kit/Icon';
@@ -67,8 +68,8 @@ export function RouteCard({ p, r, closed = false, onClose, onEnd, onWayOut, onWa
                 {t('r_drive')} · {t('km', { k: (d.meters / 1000).toFixed(1) })}
               </span>
             ) : null}
-            {d.entrance ? <span class="leg leg-ent">{t(d.entrance === 'omar' ? 'g_in_omar' : 'g_in_sultana')}</span> : null}
-            {d.exit ? <span class="leg leg-ent">{t(d.exit === 'omar' ? 'g_out_omar' : 'g_out_sultana')}</span> : null}
+            {d.entrance ? <span class="leg leg-ent">{d.entrance === 'qurban' ? tNext('g_in_qurban') : t(d.entrance === 'omar' ? 'g_in_omar' : 'g_in_sultana')}</span> : null}
+            {d.exit ? <span class="leg leg-ent">{d.exit === 'qurban' ? tNext('g_out_qurban') : t(d.exit === 'omar' ? 'g_out_omar' : 'g_out_sultana')}</span> : null}
             {d.carPark ? <span class="leg leg-ent">{t('g_public_parking')}</span> : null}
             {d.lot ? <span class="leg leg-lot">{d.level ? t('r_lot_level', { n: d.lot, l: d.level }) : t('r_lot', { n: d.lot })}</span> : null}
             {d.walkMeters > 5 ? (

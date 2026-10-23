@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { POI_BY_ID } from '../../src/data';
 import type { LatLng } from '../../src/data';
 import { parkingAccess, parkingEntrances } from '../../src/domain/parking';
-import { ENTRANCES, EXITS, GARAGE, LEVELS, garageExit, garageRoute, garageRouteFrom, inGarage, lotRect, type GarageRoute } from '../../src/routing/garage';
+import { ENTRANCES, EXITS, GARAGE, LEVELS, garageExit, setEntranceOpen, garageRoute, garageRouteFrom, inGarage, lotRect, type GarageRoute } from '../../src/routing/garage';
 import { lotsToAsk, planExit, planRoute, planRoutes } from '../../src/routing/plan';
 import { fromM, insideRect, network, pathLength, toM, walkPath } from '../../src/routing/walk';
 
@@ -12,9 +12,14 @@ const at = (p: { lat: number; lng: number }): LatLng => [p.lat, p.lng];
 const d = (a: [number, number], b: [number, number]) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 
 describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
-  it('has the two entrances, the two exits and all 13 lots', () => {
-    expect(ENTRANCES.map((e) => e.id).sort()).toEqual(['omar', 'sultana']);
-    expect(GARAGE.exits.map((e) => e.id).sort()).toEqual(['omar', 'sultana']);
+  it('has the three entrances, the three exits and all 13 lots', () => {
+    expect(ENTRANCES.map((e) => e.id).sort()).toEqual(['omar', 'qurban', 'sultana']);
+    expect(GARAGE.exits.map((e) => e.id).sort()).toEqual(['omar', 'qurban', 'sultana']);
+    // Qurban (owner, 2026-10-23) joins level A only, at the south-east.
+    expect(ENTRANCES.find((e) => e.id === 'qurban')!.level).toBe('A');
+    expect(GARAGE.exits.find((e) => e.id === 'qurban')!.level).toBe('A');
+    expect(ENTRANCES.find((e) => e.id === 'qurban')!.street[0]).toBeLessThan(24.4655);
+    expect(ENTRANCES.find((e) => e.id === 'qurban')!.street[1]).toBeGreaterThan(39.612);
     expect(GARAGE.lots.map((l) => l.id).sort()).toEqual(LOTS.map((l) => l.id));
     // The entrances are the car park entrances mapped in OpenStreetMap on the Quba and Sultana sides.
     expect(ENTRANCES.find((e) => e.id === 'omar')!.street[0]).toBeLessThan(24.4665); // south-west
@@ -26,12 +31,15 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
   /** An entrance a lot can be reached from inside the car park. */
   const inBy = (lot: { id: number }) => (SOUTH.includes(lot.id) ? 'omar' : 'sultana');
 
-  it('every lot, on each level, can be reached by an entrance and left by both exits; the south lots and lot 13 only from Omar ibn al-Khattab street', () => {
+  it('every lot, on each level, can be reached by Omar and by Qurban and left by Omar and Sultana; the south lots and lot 13 are never reached from Sultana, and are the ones left by Qurban', () => {
     for (const lot of LOTS) {
       for (const level of LEVELS) {
         expect(garageRoute('omar', lot, level), `omar → P${lot.id - 900}${level}`).not.toBeNull();
+        expect(garageRoute('qurban', lot, level), `qurban → P${lot.id - 900}${level}`).not.toBeNull();
         expect(garageRoute('sultana', lot, level) === null, `sultana → P${lot.id - 900}${level}`).toBe(SOUTH.includes(lot.id));
-        for (const x of EXITS) expect(garageExit(lot, x.id, level), `P${lot.id - 900}${level} → ${x.id}`).not.toBeNull();
+        for (const x of ['omar', 'sultana'] as const) expect(garageExit(lot, x, level), `P${lot.id - 900}${level} → ${x}`).not.toBeNull();
+        // The one-way roads lead to the Qurban exit only from the south-east lots (1-4 and 13).
+        expect(garageExit(lot, 'qurban', level) === null, `P${lot.id - 900}${level} → qurban`).toBe(!SOUTH.includes(lot.id));
       }
     }
   });
@@ -88,9 +96,21 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
     }
   });
 
-  it('from the streets to a south lot: in by Omar ibn al-Khattab street, as there is no way round inside (owner, 2026-10-14)', async () => {
+  it('from the streets to a south lot: in by Omar ibn al-Khattab street or, since the south-east ramps (owner, 2026-10-23), by Qurban; never by Sultana', async () => {
     const p = await planRoute([24.476, 39.611], P(901), 'drive'); // from the north
-    expect(p.entrance).toBe('omar');
+    expect(['omar', 'qurban']).toContain(p.entrance);
+  });
+
+  it('a closed Qurban entrance is left out of the way in and of the way out (the supervisor’s button)', async () => {
+    setEntranceOpen('qurban', false);
+    try {
+      const p = await planRoute([24.476, 39.611], P(901), 'drive');
+      expect(p.entrance).toBe('omar');
+      expect(planExit(P(901), 'B').every((x) => x.exit !== 'qurban')).toBe(true);
+    } finally {
+      setEntranceOpen('qurban', true);
+    }
+    expect(planExit(P(901), 'B').some((x) => x.exit === 'qurban')).toBe(true);
   });
 
   it('level A is reached by the yellow ramp (after lot 11) and left by the green one (between facilities 220 and 222)', () => {
@@ -103,13 +123,18 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
     expect(toM(down.path[0])[0]).toBeGreaterThan(Math.min(x220, x222));
     expect(toM(down.path[0])[0]).toBeLessThan(Math.max(x220, x222));
     for (const lot of LOTS) {
-      for (const e of ENTRANCES) {
+      // Omar and Sultana join level B. From Omar the south lots on B (1-4) now use the south-east ramps
+      // (owner, 2026-10-23): up the yellow one and down the green one, shorter than the lap round the east.
+      for (const e of ENTRANCES.filter((e) => !e.level)) {
         if (!garageRoute(e.id, lot, 'B')) continue;
-        expect(garageRoute(e.id, lot, 'B')!.ramps, `in to P${lot.id - 900}B`).toEqual([]);
+        const shortcut = e.id === 'omar' && [901, 902, 903, 904].includes(lot.id);
+        expect(garageRoute(e.id, lot, 'B')!.ramps.map((r) => r.to), `in to P${lot.id - 900}B`).toEqual(shortcut ? ['A', 'B'] : []);
         expect(garageRoute(e.id, lot, 'A')!.ramps.map((r) => r.to), `in to P${lot.id - 900}A`).toEqual(['A']);
       }
-      for (const x of EXITS) {
-        expect(garageExit(lot, x.id, 'B')!.ramps, `out of P${lot.id - 900}B`).toEqual([]);
+      // Qurban joins level A: no ramp to a lot on A; down the green ramp to a lot on B.
+      expect(garageRoute('qurban', lot, 'A')!.ramps, `qurban in to P${lot.id - 900}A`).toEqual([]);
+      expect(garageRoute('qurban', lot, 'B')!.ramps.map((r) => r.to), `qurban in to P${lot.id - 900}B`).toEqual(['B']);
+      for (const x of EXITS.filter((x) => !x.level)) {
         expect(garageExit(lot, x.id, 'A')!.ramps.map((r) => r.to), `out of P${lot.id - 900}A`).toEqual(['B']);
       }
     }
@@ -138,7 +163,9 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
     expect(lanes(912)).toContain('ramp-up-A-nw');
     expect(lanes(905)).toEqual(expect.arrayContaining(['ramp-up-A-nw', 'a-nw-opening']));
     // The south lots on A: north beside road 13, then up the south-west yellow ramp (owner, 2026-10-15).
-    expect(garageRoute('omar', P(901), 'A')!.roads.map((r) => r.lane)).toEqual(expect.arrayContaining(['sw-north', 'ramp-up-A-sw']));
+    expect(garageRoute('omar', P(905), 'A')!.roads.map((r) => r.lane)).toEqual(expect.arrayContaining(['sw-north', 'ramp-up-A-sw']));
+    // The south-east lots on A (owner, 2026-10-23): up the yellow ramp at the south-east corner instead.
+    expect(garageRoute('omar', P(901), 'A')!.roads.map((r) => r.lane)).toEqual(expect.arrayContaining(['qurban-ramp-link', 'ramp-up-qurban']));
   });
 
   it('the north-west yellow ramp (owner, 2026-10-14): from the exit road to Sultana, beside the green ramp, up to the inner road on A', () => {
@@ -386,15 +413,16 @@ describe('the owner’s corrections on the east and south-west sides (2026-10-14
     const out = lane('exit-omar').path.map(toM);
     expect(out[out.length - 1][0]).toBeLessThan(out[0][0] - 100);
     expect(out[out.length - 1][1]).toBeLessThan(out[0][1] - 40);
-    // Out of a south lot to Omar ibn al-Khattab street: down the road beside 209/210, then west.
-    expect(garageExit(P(904), 'omar')!.roads.map((r) => r.lane).slice(-3)).toEqual(['exit-south-west', 'sw-mid', 'exit-omar']);
+    // Out of a south lot to Omar ibn al-Khattab street: the south-east ramps (owner, 2026-10-23) lead up
+    // to A, west along the inner road, then down the south-west green ramp to the exit road.
+    expect(garageExit(P(904), 'omar')!.roads.map((r) => r.lane).slice(-3)).toEqual(['ramp-down-B-sw', 'sw-mid', 'exit-omar']);
     // Owner, 2026-10-15: in from Omar, east to road 6 or north beside road 13; at its top north-east to
     // the west link, or west to the yellow ramp, which runs south up to A and east onto road 6 there.
     expect(garageRoute('omar', P(905), 'B')!.roads.map((r) => r.lane)).toEqual(['omar-in', 'outer-south', 'sw-north', 'west-link', 'west-lane']);
     const up = lane('ramp-up-A-sw').path.map(toM);
     expect(up[up.length - 1][1]).toBeLessThan(up[0][1] - 80); // heading south
     expect(nearLane(lane('ramp-up-A-sw').path.at(-1)!, 'outer-south')).toBeLessThan(1);
-    expect(garageRoute('omar', P(901), 'A')!.roads.map((r) => r.lane)).toEqual(expect.arrayContaining(['sw-north', 'ramp-up-A-sw']));
+    expect(garageRoute('omar', P(905), 'A')!.roads.map((r) => r.lane)).toEqual(expect.arrayContaining(['sw-north', 'ramp-up-A-sw']));
     // Level A to the green ramp: down road 13, west, north on the new road, west to the green.
     expect(garageExit(P(901), 'omar', 'A')!.roads.map((r) => r.lane)).toEqual(
       expect.arrayContaining(['exit-south-west', 'a-sw-west', 'sw-north', 'a-sw-to-green', 'ramp-down-B-sw', 'sw-mid']),
@@ -411,7 +439,9 @@ describe('the owner’s corrections on the east and south-west sides (2026-10-14
     expect(lane('p13-exit').kind).toBe('exit');
     expect(garageExit(P(913), 'omar')!.roads[0].lane).toBe('p13-exit');
     // From road 6 round the loop and down the short link to road 4 (the south lots on B).
-    expect(garageRoute('omar', P(901), 'B')!.roads.map((r) => r.lane)).toEqual(['omar-in', 'outer-south', 'east-link', 'east-lane', 'south-lane']);
+    // (Lots 1-4 on B from Omar use the south-east ramps since 2026-10-23: up, west on A, down.)
+    expect(garageRoute('omar', P(901), 'B')!.roads.map((r) => r.lane)).toEqual(['omar-in', 'outer-south', 'qurban-ramp-link', 'ramp-up-qurban', 'south-lane', 'a-qurban-west-down', 'a-qurban-west-east', 'ramp-down-qurban', 'south-lane']);
+    expect(garageRoute('omar', P(913), 'B')!.roads.map((r) => r.lane)).toContain('p13-in');
     // The orange still joins lot 13's exit to its entrance.
     const o = lane('se-shared').path;
     expect(nearLane(o[0], 'p13-exit')).toBeLessThan(1);

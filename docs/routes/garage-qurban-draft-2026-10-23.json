@@ -109,7 +109,33 @@
           880
         ]
       ],
-      "_note": "red, right curve, orange arrow pointing north: from the south into the car park at its south-east corner"
+      "_note": "red, right curve, orange arrow pointing north: from the south into the car park at its south-east corner; owner 2026-10-23 (fourth message): the entry road is a separate road EAST of the exit road, with a small kerb between them: its south part follows the light-blue curve he drew on garage-map.png (px_east, pixels of that image, calibrated on facilities 201-204 in crop2_control_points); it reaches the corner at the end of the east road and then the foot of lane 46",
+      "px_east": [
+        [
+          1305,
+          1165
+        ],
+        [
+          1340,
+          1060
+        ],
+        [
+          1368,
+          960
+        ],
+        [
+          1388,
+          860
+        ],
+        [
+          1402,
+          760
+        ],
+        [
+          1408,
+          670
+        ]
+      ]
     },
     {
       "id": "qurban-road-out-A",
@@ -141,7 +167,33 @@
           1356
         ]
       ],
-      "_note": "red, left curve, orange arrow pointing south: from the corner out to the south"
+      "_note": "red, left curve, orange arrow pointing south: from the corner out to the south; owner 2026-10-23 (fifth message): the exit road moves a little EAST, to the red curve he drew on garage-map.png (px_exit_east, calibrated on facilities 201-204 in crop3_control_points); it starts where lane 44 meets it and ends at the bottom of that curve (the surface entrance marker is no longer its end)",
+      "px_exit_east": [
+        [
+          1368,
+          910
+        ],
+        [
+          1350,
+          1010
+        ],
+        [
+          1325,
+          1110
+        ],
+        [
+          1295,
+          1215
+        ],
+        [
+          1268,
+          1310
+        ],
+        [
+          1250,
+          1411
+        ]
+      ]
     },
     {
       "id": "a-qurban-arc",
@@ -429,5 +481,71 @@
         891
       ]
     }
-  ]
+  ],
+  "crop2_control_points": [
+    {
+      "id": 201,
+      "px": [
+        1050,
+        283
+      ]
+    },
+    {
+      "id": 203,
+      "px": [
+        615,
+        283
+      ]
+    },
+    {
+      "id": 202,
+      "px": [
+        1050,
+        597
+      ]
+    },
+    {
+      "id": 204,
+      "px": [
+        614,
+        597
+      ]
+    }
+  ],
+  "crop3_control_points": [
+    {
+      "id": 201,
+      "px": [
+        1077,
+        514
+      ]
+    },
+    {
+      "id": 203,
+      "px": [
+        658,
+        514
+      ]
+    },
+    {
+      "id": 202,
+      "px": [
+        1077,
+        816
+      ]
+    },
+    {
+      "id": 204,
+      "px": [
+        658,
+        816
+      ]
+    }
+  ],
+  "entrance_marker": {
+    "lat": 24.464994,
+    "lng": 39.612841,
+    "kerb_m": 7,
+    "_note": "owner 2026-10-23 (sixth message): both mouths meet at the Qurban marker on the map (src/data-next/car-entrances.ts), the entry road on its east side and the exit road on its west side with a small kerb between; the north ends stay where the drawing put them (tied to the facilities and to lanes 44 and 46) and the south parts are redrawn as smooth curves from the mouths"
+  }
 }
