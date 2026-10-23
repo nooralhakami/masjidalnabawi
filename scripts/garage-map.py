@@ -91,6 +91,8 @@ if os.path.exists(DRAFT):
 DCOL = {'entry': '#1e6fd9', 'exit': '#d62828', 'shared': '#f08c00', 'link': '#00a5c8', 'ramp_up': '#d9b400', 'ramp_down': '#2b8a3e'}
 dcolour = lambda l: '#9b5de5' if l.get('unconfirmed') else '#d62828' if l.get('levels') == ['A'] and l['kind'] != 'link' else DCOL[l['kind']]
 for l, pts in drafts:
+    if l.get('merged_into'):
+        continue
     c = '#9b5de5' if l.get('unconfirmed') else '#d62828' if l.get('levels') == ['A'] else dcolour(l)
     for a, b in zip(pts, pts[1:]):
         L = math.dist(a, b)
@@ -104,6 +106,8 @@ FIXED_LABEL = {
     'a-qurban-east-up': ((40, 0), 0.35), 'a-qurban-arc': ((0, 30), 0.5),
 }
 for n, (l, pts) in enumerate(drafts, len(lanes) + 1):
+    if l.get('merged_into'):
+        continue
     i = max(range(1, len(pts)), key=lambda k: math.dist(pts[k - 1], pts[k]))
     a, b = pts[i - 1], pts[i]
     ang = math.atan2(b[1] - a[1], b[0] - a[0])
@@ -129,7 +133,7 @@ im.save('docs/routes/garage-map.png')
 
 KIND = {'entry': 'دخول (أزرق)', 'exit': 'خروج (أحمر)', 'shared': 'ممر في الاتجاهين (برتقالي)', 'link': 'وصلة', 'ramp_up': 'صعود إلى A (أصفر)', 'ramp_down': 'نزول إلى B (أخضر)'}
 rows = [f"| {n} | `{l['id']}` | {KIND[l['kind']]}{' · الدور A فقط (بنفسجي)' if l.get('levels') == ['A'] else ' · B فقط' if l.get('levels') == ['B'] else ''} |" for n, (l, _) in enumerate(lanes, 1)]
-drows = [f"| {n} | `{l['id']}` | {KIND[l['kind']]}{' · الدور A فقط (أحمر)' if l.get('levels') == ['A'] else ''}{' · غير مؤكد (بنفسجي)' if l.get('unconfirmed') else ''} · مسودة |" for n, (l, _) in enumerate(drafts, len(lanes) + 1)]
+drows = [f"| {n} | `{l['id']}` | مدموج في `{l['merged_into']}` (قرار المالك) · مسودة |" if l.get('merged_into') else f"| {n} | `{l['id']}` | {KIND[l['kind']]}{' · الدور A فقط (أحمر)' if l.get('levels') == ['A'] else ''}{' · غير مؤكد (بنفسجي)' if l.get('unconfirmed') else ''} · مسودة |" for n, (l, _) in enumerate(drafts, len(lanes) + 1)]
 open('docs/routes/garage-map-legend.md', 'w').write(
     '# أرقام طرق المواقف في `garage-map.png`\n\n'
     'تُولَّد مع الصورة من `data/garage.json` بالأمر `python3 scripts/garage-map.py`، فتتغير الأرقام إذا أُضيف طريق.\n\n'

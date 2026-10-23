@@ -186,7 +186,8 @@
           872
         ]
       ],
-      "_note": "owner 2026-10-23: heads south. It is the bottom part of lane 42."
+      "_note": "owner 2026-10-23: merged into lane 42 (one road on level A). The number 38 is kept so the numbers the owner already used stay valid.",
+      "merged_into": "a-qurban-west-down"
     },
     {
       "id": "qurban-ramp-link",
@@ -258,7 +259,7 @@
           932
         ]
       ],
-      "_note": "owner 2026-10-23, red with a yellow arrow pointing south: from the upper road (x=980) down to the small rectangle; lane 38 is its bottom part"
+      "_note": "owner 2026-10-23, red with a yellow arrow pointing south: from the upper road (x=980) down to the small rectangle; lane 38 is its bottom part; merged with former 38 by the owner 2026-10-23: one road on level A, from the upper road south to the small rectangle"
     },
     {
       "id": "a-qurban-west-east",
@@ -324,7 +325,7 @@
           1078
         ]
       ],
-      "_note": "owner 2026-10-23: the third red curve (the left one, going out to the south); direction deduced from the arrows of lanes 36 and 43"
+      "_note": "owner 2026-10-23: the exit curve, joined to lane 36 (so it is the exit to the south): confirmed as the exit"
     },
     {
       "id": "a-qurban-to-east-up",

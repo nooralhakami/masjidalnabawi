@@ -46,7 +46,7 @@
 | 35 | `qurban-road-in-A` | دخول (أزرق) · الدور A فقط (أحمر) · مسودة |
 | 36 | `qurban-road-out-A` | خروج (أحمر) · الدور A فقط (أحمر) · مسودة |
 | 37 | `a-qurban-arc` | وصلة · الدور A فقط (أحمر) · مسودة |
-| 38 | `a-qurban-west-stub` | وصلة · الدور A فقط (أحمر) · مسودة |
+| 38 | `a-qurban-west-stub` | مدموج في `a-qurban-west-down` (قرار المالك) · مسودة |
 | 39 | `qurban-ramp-link` | وصلة · مسودة |
 | 40 | `ramp-up-qurban` | صعود إلى A (أصفر) · مسودة |
 | 41 | `ramp-down-qurban` | نزول إلى B (أخضر) · مسودة |
