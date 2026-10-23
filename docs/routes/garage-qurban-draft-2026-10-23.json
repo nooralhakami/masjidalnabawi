@@ -541,5 +541,11 @@
         816
       ]
     }
-  ]
+  ],
+  "entrance_marker": {
+    "lat": 24.464994,
+    "lng": 39.612841,
+    "kerb_m": 7,
+    "_note": "owner 2026-10-23 (sixth message): both mouths meet at the Qurban marker on the map (src/data-next/car-entrances.ts), the entry road on its east side and the exit road on its west side with a small kerb between; the north ends stay where the drawing put them (tied to the facilities and to lanes 44 and 46) and the south parts are redrawn as smooth curves from the mouths"
+  }
 }
