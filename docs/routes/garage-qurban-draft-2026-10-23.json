@@ -109,7 +109,33 @@
           880
         ]
       ],
-      "_note": "red, right curve, orange arrow pointing north: from the south into the car park at its south-east corner"
+      "_note": "red, right curve, orange arrow pointing north: from the south into the car park at its south-east corner; owner 2026-10-23 (fourth message): the entry road is a separate road EAST of the exit road, with a small kerb between them: its south part follows the light-blue curve he drew on garage-map.png (px_east, pixels of that image, calibrated on facilities 201-204 in crop2_control_points); it reaches the corner at the end of the east road and then the foot of lane 46",
+      "px_east": [
+        [
+          1305,
+          1165
+        ],
+        [
+          1340,
+          1060
+        ],
+        [
+          1368,
+          960
+        ],
+        [
+          1388,
+          860
+        ],
+        [
+          1402,
+          760
+        ],
+        [
+          1408,
+          670
+        ]
+      ]
     },
     {
       "id": "qurban-road-out-A",
@@ -427,6 +453,36 @@
       "px": [
         364,
         891
+      ]
+    }
+  ],
+  "crop2_control_points": [
+    {
+      "id": 201,
+      "px": [
+        1050,
+        283
+      ]
+    },
+    {
+      "id": 203,
+      "px": [
+        615,
+        283
+      ]
+    },
+    {
+      "id": 202,
+      "px": [
+        1050,
+        597
+      ]
+    },
+    {
+      "id": 204,
+      "px": [
+        614,
+        597
       ]
     }
   ]
