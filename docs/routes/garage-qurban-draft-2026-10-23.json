@@ -153,19 +153,19 @@
       "certain": false,
       "px": [
         [
-          1145,
-          464
+          1220,
+          490
         ],
         [
           1195,
           466
         ],
         [
-          1220,
-          490
+          1145,
+          464
         ]
       ],
-      "_note": "owner 2026-10-23: a link from the upper road to the top of the descent, to start the descent (red curve at the top). Was drawn at the foot of the ramps in the first round.",
+      "_note": "owner 2026-10-23 (third message): the arrow over 37 points WEST, not east: the road cannot be driven the other way. The car climbs lane 46 (north), turns west along this curve onto the upper road.",
       "space": "crop"
     },
     {
@@ -374,7 +374,7 @@
           490
         ]
       ],
-      "_note": "owner 2026-10-23: red, cyan arrow pointing NORTH. Conflicts with lane 37 (from the top road down to the descent): to be confirmed"
+      "_note": "owner 2026-10-23: red, cyan arrow pointing north; it ends in lane 37, which turns west onto the upper road (conflict resolved)"
     },
     {
       "id": "purple-unconfirmed",
