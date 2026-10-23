@@ -1,5 +1,12 @@
 # CLAUDE.md — قواعد العمل في «next» (لأي إنسان أو ذكاء اصطناعي)
 
+## Working notes (automation layer)
+Language: chat with the owner in Arabic; code, comments and skill files in English.
+
+**Skill routing:** motion graphics/video: `motion-design-plus` only (ignore `motion-design`) plus `lean-motion-video`. Arabic RTL UI/UX: `ui-ux-pro-max`. Large tasks: `checkpoint-loop` is available (optional). Before a push: `safe-deploy-gate` is available (optional); the project rules below still decide who merges and when to publish.
+
+---
+
 **اقرأ أولاً بهذا الترتيب:**
 1. `docs/SPEC.md` (ملزم).
 2. `docs/ARCHITECTURE.md`.

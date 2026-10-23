@@ -4,5 +4,6 @@ coverage
 test-results
 playwright-report
 .DS_Store
-.claude/
+.claude/*
+!.claude/skills/
 *.zip
