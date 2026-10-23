@@ -1,0 +1,433 @@
+{
+  "_note": "DRAFT, owner 2026-10-23: the roads at the Qurban entrance (south-east), still to be confirmed and corrected. NOT used by data/garage.json or the route planner: only drawn, numbered, on docs/routes/garage-map.png so the owner can mark corrections. Pixels are those of the owner's marked screenshot (docs/routes/garage-qurban-draft-source.png, 1616x1356, north up, 0.16 m per pixel). Owner's second round (2026-10-23): answers and extra roads drawn on garage-map.png; those lanes have space «crop» (pixels of that crop, calibrated on facilities 201-204).",
+  "legend_ar": {
+    "red": "الأحمر: الدور A فقط، ولا يعبّر بالضرورة عن المخرج",
+    "yellow": "الأصفر: طلوع من الدور B",
+    "green": "الأخضر: نزول من الدور A",
+    "cyan": "السماوي: وصلة"
+  },
+  "control_points": [
+    {
+      "id": 360,
+      "px": [
+        1268,
+        43
+      ]
+    },
+    {
+      "id": 361,
+      "px": [
+        1268,
+        227
+      ]
+    },
+    {
+      "id": 362,
+      "px": [
+        1268,
+        317
+      ]
+    },
+    {
+      "id": 363,
+      "px": [
+        1268,
+        534
+      ]
+    },
+    {
+      "id": 364,
+      "px": [
+        1268,
+        629
+      ]
+    },
+    {
+      "id": 365,
+      "px": [
+        1112,
+        918
+      ]
+    },
+    {
+      "id": 366,
+      "px": [
+        847,
+        918
+      ]
+    },
+    {
+      "id": 367,
+      "px": [
+        630,
+        918
+      ]
+    },
+    {
+      "id": 368,
+      "px": [
+        357,
+        918
+      ]
+    },
+    {
+      "id": 369,
+      "px": [
+        148,
+        918
+      ]
+    }
+  ],
+  "lanes": [
+    {
+      "id": "qurban-road-in-A",
+      "kind": "entry",
+      "levels": [
+        "A"
+      ],
+      "oneway": true,
+      "certain": false,
+      "px": [
+        [
+          1172,
+          1356
+        ],
+        [
+          1200,
+          1200
+        ],
+        [
+          1225,
+          1100
+        ],
+        [
+          1245,
+          990
+        ],
+        [
+          1255,
+          880
+        ]
+      ],
+      "_note": "red, right curve, orange arrow pointing north: from the south into the car park at its south-east corner"
+    },
+    {
+      "id": "qurban-road-out-A",
+      "kind": "exit",
+      "levels": [
+        "A"
+      ],
+      "oneway": true,
+      "certain": false,
+      "px": [
+        [
+          1215,
+          880
+        ],
+        [
+          1203,
+          960
+        ],
+        [
+          1190,
+          1050
+        ],
+        [
+          1170,
+          1150
+        ],
+        [
+          1128,
+          1356
+        ]
+      ],
+      "_note": "red, left curve, orange arrow pointing south: from the corner out to the south"
+    },
+    {
+      "id": "a-qurban-arc",
+      "kind": "link",
+      "levels": [
+        "A"
+      ],
+      "oneway": true,
+      "certain": false,
+      "px": [
+        [
+          1220,
+          490
+        ],
+        [
+          1195,
+          466
+        ],
+        [
+          1145,
+          464
+        ]
+      ],
+      "_note": "owner 2026-10-23 (third message): the arrow over 37 points WEST, not east: the road cannot be driven the other way. The car climbs lane 46 (north), turns west along this curve onto the upper road.",
+      "space": "crop"
+    },
+    {
+      "id": "a-qurban-west-stub",
+      "kind": "link",
+      "levels": [
+        "A"
+      ],
+      "oneway": true,
+      "certain": false,
+      "px": [
+        [
+          975,
+          826
+        ],
+        [
+          975,
+          872
+        ]
+      ],
+      "_note": "owner 2026-10-23: merged into lane 42 (one road on level A). The number 38 is kept so the numbers the owner already used stay valid.",
+      "merged_into": "a-qurban-west-down"
+    },
+    {
+      "id": "qurban-ramp-link",
+      "kind": "link",
+      "oneway": true,
+      "certain": false,
+      "px": [
+        [
+          1143,
+          880
+        ],
+        [
+          1143,
+          826
+        ]
+      ],
+      "_note": "cyan: joins the bottom road to the foot of the yellow ramp"
+    },
+    {
+      "id": "ramp-up-qurban",
+      "kind": "ramp_up",
+      "oneway": true,
+      "certain": false,
+      "px": [
+        [
+          1148,
+          826
+        ],
+        [
+          1148,
+          312
+        ]
+      ],
+      "_note": "yellow, black arrow north: the climb from B to A; at the top the cars turn west on the northern road (black arrow)"
+    },
+    {
+      "id": "ramp-down-qurban",
+      "kind": "ramp_down",
+      "oneway": true,
+      "certain": false,
+      "px": [
+        [
+          1195,
+          826
+        ],
+        [
+          1195,
+          312
+        ]
+      ],
+      "_note": "green, north: confirmed by the owner 2026-10-23"
+    },
+    {
+      "id": "a-qurban-west-down",
+      "kind": "link",
+      "levels": [
+        "A"
+      ],
+      "oneway": true,
+      "certain": false,
+      "space": "crop",
+      "px": [
+        [
+          980,
+          458
+        ],
+        [
+          980,
+          932
+        ]
+      ],
+      "_note": "owner 2026-10-23, red with a yellow arrow pointing south: from the upper road (x=980) down to the small rectangle; lane 38 is its bottom part; merged with former 38 by the owner 2026-10-23: one road on level A, from the upper road south to the small rectangle"
+    },
+    {
+      "id": "a-qurban-west-east",
+      "kind": "link",
+      "levels": [
+        "A"
+      ],
+      "oneway": true,
+      "certain": false,
+      "space": "crop",
+      "px": [
+        [
+          980,
+          932
+        ],
+        [
+          1165,
+          932
+        ],
+        [
+          1172,
+          942
+        ],
+        [
+          1140,
+          965
+        ],
+        [
+          1097,
+          978
+        ]
+      ],
+      "_note": "owner 2026-10-23: from the foot of lane 42 east, then a hook down to the bottom road"
+    },
+    {
+      "id": "a-qurban-exit-curve",
+      "kind": "exit",
+      "levels": [
+        "A"
+      ],
+      "oneway": true,
+      "certain": false,
+      "space": "crop",
+      "px": [
+        [
+          1097,
+          978
+        ],
+        [
+          1130,
+          985
+        ],
+        [
+          1175,
+          1000
+        ],
+        [
+          1182,
+          1020
+        ],
+        [
+          1170,
+          1078
+        ]
+      ],
+      "_note": "owner 2026-10-23: the exit curve, joined to lane 36 (so it is the exit to the south): confirmed as the exit"
+    },
+    {
+      "id": "a-qurban-to-east-up",
+      "kind": "link",
+      "levels": [
+        "A"
+      ],
+      "oneway": true,
+      "certain": false,
+      "space": "crop",
+      "px": [
+        [
+          1097,
+          978
+        ],
+        [
+          1135,
+          975
+        ],
+        [
+          1175,
+          955
+        ],
+        [
+          1222,
+          930
+        ]
+      ],
+      "_note": "owner 2026-10-23: red curve from the bottom road up to the foot of lane 46; direction deduced"
+    },
+    {
+      "id": "a-qurban-east-up",
+      "kind": "link",
+      "levels": [
+        "A"
+      ],
+      "oneway": true,
+      "certain": false,
+      "space": "crop",
+      "px": [
+        [
+          1222,
+          930
+        ],
+        [
+          1222,
+          490
+        ]
+      ],
+      "_note": "owner 2026-10-23: red, cyan arrow pointing north; it ends in lane 37, which turns west onto the upper road (conflict resolved)"
+    },
+    {
+      "id": "purple-unconfirmed",
+      "kind": "link",
+      "levels": [
+        "A"
+      ],
+      "oneway": true,
+      "certain": false,
+      "unconfirmed": true,
+      "space": "crop",
+      "px": [
+        [
+          1220,
+          570
+        ],
+        [
+          1290,
+          466
+        ]
+      ],
+      "_note": "owner 2026-10-23: purple, NOT confirmed. A diagonal from lane 46 to the outer east road (lane 3); direction unknown (drawn north-east)"
+    }
+  ],
+  "crop_control_points": [
+    {
+      "id": 201,
+      "px": [
+        867,
+        526
+      ]
+    },
+    {
+      "id": 202,
+      "px": [
+        868,
+        891
+      ]
+    },
+    {
+      "id": 203,
+      "px": [
+        364,
+        526
+      ]
+    },
+    {
+      "id": 204,
+      "px": [
+        364,
+        891
+      ]
+    }
+  ]
+}
