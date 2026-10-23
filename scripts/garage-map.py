@@ -2,11 +2,19 @@
 draw corrections on (owner, 2026-10-15). North is up; black arrows show each road's direction.
 Writes docs/routes/garage-map.png and docs/routes/garage-map-legend.md. Run after every rebuild of
 data/garage.json:
-    python3 scripts/garage-map.py
+    python3 scripts/garage-map.py        # both levels together
+    python3 scripts/garage-map.py A      # level A only  → docs/routes/garage-map-A.png
+    python3 scripts/garage-map.py B      # level B only  → docs/routes/garage-map-B.png
+    python3 scripts/garage-maps.py       # all three at once
+The numbers are the same in all three, so a number named on one map is the same road on the others.
+Ramps (yellow up, green down) show on both levels, as they join them.
 """
-import json, math, os
+import json, math, os, sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
+
+LEVEL = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] in ('A', 'B') else None
+SUFFIX = f'-{LEVEL}' if LEVEL else ''
 
 LAT0, LNG0 = 24.4673, 39.6111
 KY = 111_320
@@ -25,6 +33,10 @@ d = ImageDraw.Draw(im)
 P = lambda x, y: ((x - X0) * S, (Y1 - y) * S)
 FONT = next(f for f in ('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', '/System/Library/Fonts/Supplemental/Arial Bold.ttf') if os.path.exists(f))
 f, fs = ImageFont.truetype(FONT, 22), ImageFont.truetype(FONT, 17)
+
+def on_level(levels, kind):
+    """Whether a road is drawn on this map: ramps on both levels, the others where they are."""
+    return LEVEL is None or kind in ('ramp_up', 'ramp_down') or levels is None or LEVEL in levels
 
 # The mosque.
 mq = [m(*c) for c in routing['obstacles']['mosque_building']]
@@ -53,8 +65,11 @@ draft_ids = {l['id'] for l in json.load(open(DRAFT))['lanes']} if os.path.exists
 data_lane = {l['id']: l for l in g['lanes']}
 lanes = [(l, [P(*m(a, b)) for a, b in l['path']]) for l in g['lanes'] if l['id'] not in draft_ids]
 for l, pts in lanes:
-    d.line(pts, fill=colour(l), width=7)
+    if on_level(l.get('levels'), l['kind']):
+        d.line(pts, fill=colour(l), width=7)
 for n, (l, pts) in enumerate(lanes, 1):
+    if not on_level(l.get('levels'), l['kind']):
+        continue
     i = max(range(1, len(pts)), key=lambda k: math.dist(pts[k - 1], pts[k]))
     a, b = pts[i - 1], pts[i]
     ang = math.atan2(b[1] - a[1], b[0] - a[0])
@@ -97,8 +112,9 @@ if os.path.exists(DRAFT):
         drafts.append((l, [P(*m(a, b)) for a, b in path]))
 DCOL = {'entry': '#1e6fd9', 'exit': '#d62828', 'shared': '#f08c00', 'link': '#00a5c8', 'ramp_up': '#d9b400', 'ramp_down': '#2b8a3e'}
 dcolour = lambda l: '#9b5de5' if l.get('unconfirmed') else '#d62828' if l.get('levels') == ['A'] and l['kind'] != 'link' else DCOL[l['kind']]
+dlevels = lambda l: data_lane[l['id']].get('levels') if l['id'] in data_lane else l.get('levels')
 for l, pts in drafts:
-    if l.get('merged_into'):
+    if l.get('merged_into') or not on_level(dlevels(l), l['kind']):
         continue
     c = '#9b5de5' if l.get('unconfirmed') else '#d62828' if l.get('levels') == ['A'] else dcolour(l)
     if l.get('integrated'):
@@ -118,7 +134,7 @@ FIXED_LABEL = {
     'a-qurban-east-up': ((40, 0), 0.35), 'a-qurban-arc': ((0, 30), 0.5),
 }
 for n, (l, pts) in enumerate(drafts, len(lanes) + 1):
-    if l.get('merged_into'):
+    if l.get('merged_into') or not on_level(dlevels(l), l['kind']):
         continue
     i = max(range(1, len(pts)), key=lambda k: math.dist(pts[k - 1], pts[k]))
     a, b = pts[i - 1], pts[i]
@@ -135,13 +151,22 @@ for n, (l, pts) in enumerate(drafts, len(lanes) + 1):
     d.rounded_rectangle([cx - 20, cy - 16, cx + 20, cy + 16], radius=8, fill='white', outline=dcolour(l) if l.get('levels') != ['A'] or l.get('unconfirmed') else '#d62828', width=3)
     d.text((cx - 13, cy - 12), str(n), fill='black', font=f)
 for e in g['entrances']:
+    if LEVEL and (e.get('level') or 'B') != LEVEL:
+        continue
     x, y = P(*m(*e['street']))
     d.text((x - 40, y - 40), 'IN ' + e['id'].upper(), fill='#1e6fd9', font=f)
 for e in g['exits']:
+    if LEVEL and (e.get('level') or 'B') != LEVEL:
+        continue
     x, y = P(*m(*e['mouth']))
     d.text((x + 8, y + 8), 'OUT ' + e['id'].upper(), fill='#d62828', font=f)
 d.text((15, 15), 'N ^', fill='black', font=f)
-im.save('docs/routes/garage-map.png')
+if LEVEL:
+    d.text((70, 15), f'LEVEL {LEVEL} ({"upper" if LEVEL == "A" else "lower"}): the numbers are the same as in garage-map.png', fill='black', font=f)
+im.save(f'docs/routes/garage-map{SUFFIX}.png')
+if LEVEL:
+    print(f'level {LEVEL} → docs/routes/garage-map{SUFFIX}.png ({W}×{H})')
+    sys.exit(0)
 
 KIND = {'entry': 'دخول (أزرق)', 'exit': 'خروج (أحمر)', 'shared': 'ممر في الاتجاهين (برتقالي)', 'link': 'وصلة', 'ramp_up': 'صعود إلى A (أصفر)', 'ramp_down': 'نزول إلى B (أخضر)'}
 rows = [f"| {n} | `{l['id']}` | {KIND[l['kind']]}{' · الدور A فقط (بنفسجي)' if l.get('levels') == ['A'] else ' · B فقط' if l.get('levels') == ['B'] else ''} |" for n, (l, _) in enumerate(lanes, 1)]
@@ -149,6 +174,7 @@ drows = [f"| {n} | `{l['id']}` | مدموج في `{l['merged_into']}` (قرار 
 open('docs/routes/garage-map-legend.md', 'w').write(
     '# أرقام طرق المواقف في `garage-map.png`\n\n'
     'تُولَّد مع الصورة من `data/garage.json` بالأمر `python3 scripts/garage-map.py`، فتتغير الأرقام إذا أُضيف طريق.\n\n'
+    'ثلاث صور بالأرقام نفسها: `garage-map.png` (الدوران معاً)، و`garage-map-A.png` (الدور العلوي A)، و`garage-map-B.png` (الدور السفلي B). تُولَّد كلها بـ`python3 scripts/garage-maps.py`. الطلعة الصفراء والنزلة الخضراء تظهران في الدورين لأنهما تصلان بينهما.\n\n'
     '| الرقم | الطريق في البيانات | نوعه |\n|---|---|---|\n' + '\n'.join(rows) + '\n'
     + ('\n## مدخل قربان (أرقام المسودة نفسها): الخط المتصل في حساب المسارات، والمنقط مسودة لم تدخل بعد\n\n| الرقم | الطريق في المسودة | نوعه |\n|---|---|---|\n' + '\n'.join(drows) + '\n' if drows else '')
 )
