@@ -48,7 +48,10 @@ for lot in g['lots']:
 # The roads: blue in, red out, orange either way, cyan links, green down, yellow up, purple level A only.
 COL = {'entry': '#1e6fd9', 'exit': '#d62828', 'shared': '#f08c00', 'link': '#00a5c8', 'ramp_up': '#d9b400', 'ramp_down': '#2b8a3e'}
 colour = lambda l: '#9b5de5' if l.get('levels') == ['A'] else COL[l['kind']]
-lanes = [(l, [P(*m(a, b)) for a, b in l['path']]) for l in g['lanes']]
+DRAFT = 'docs/routes/garage-qurban-draft-2026-10-23.json'
+draft_ids = {l['id'] for l in json.load(open(DRAFT))['lanes']} if os.path.exists(DRAFT) else set()
+data_lane = {l['id']: l for l in g['lanes']}
+lanes = [(l, [P(*m(a, b)) for a, b in l['path']]) for l in g['lanes'] if l['id'] not in draft_ids]
 for l, pts in lanes:
     d.line(pts, fill=colour(l), width=7)
 for n, (l, pts) in enumerate(lanes, 1):
@@ -83,6 +86,10 @@ if os.path.exists(DRAFT):
         cfx = np.polyfit([c['px'][0] for c in cc], [fm[c['id']][0] for c in cc], 1)
         cfy = np.polyfit([c['px'][1] for c in cc], [fm[c['id']][1] for c in cc], 1)
     for l in dr['lanes']:
+        if l['id'] in data_lane:  # already in the route planner: its path as the planner has it
+            l['integrated'] = True
+            drafts.append((l, [P(*m(a, b)) for a, b in data_lane[l['id']]['path']]))
+            continue
         if l.get('space') == 'crop':
             drafts.append((l, [P(float(np.polyval(cfx, x)), float(np.polyval(cfy, y))) for x, y in l['px']]))
             continue
@@ -94,7 +101,12 @@ for l, pts in drafts:
     if l.get('merged_into'):
         continue
     c = '#9b5de5' if l.get('unconfirmed') else '#d62828' if l.get('levels') == ['A'] else dcolour(l)
-    for a, b in zip(pts, pts[1:]):
+    if l.get('integrated'):
+        d.line(pts, fill=c, width=7)
+        continue_dash = False
+    else:
+        continue_dash = True
+    for a, b in (zip(pts, pts[1:]) if continue_dash else []):
         L = math.dist(a, b)
         for k in range(0, int(L // 18) + 1):
             t0, t1 = k * 18 / L, min(1, (k * 18 + 10) / L)
@@ -133,11 +145,11 @@ im.save('docs/routes/garage-map.png')
 
 KIND = {'entry': 'دخول (أزرق)', 'exit': 'خروج (أحمر)', 'shared': 'ممر في الاتجاهين (برتقالي)', 'link': 'وصلة', 'ramp_up': 'صعود إلى A (أصفر)', 'ramp_down': 'نزول إلى B (أخضر)'}
 rows = [f"| {n} | `{l['id']}` | {KIND[l['kind']]}{' · الدور A فقط (بنفسجي)' if l.get('levels') == ['A'] else ' · B فقط' if l.get('levels') == ['B'] else ''} |" for n, (l, _) in enumerate(lanes, 1)]
-drows = [f"| {n} | `{l['id']}` | مدموج في `{l['merged_into']}` (قرار المالك) · مسودة |" if l.get('merged_into') else f"| {n} | `{l['id']}` | {KIND[l['kind']]}{' · الدور A فقط (أحمر)' if l.get('levels') == ['A'] else ''}{' · غير مؤكد (بنفسجي)' if l.get('unconfirmed') else ''} · مسودة |" for n, (l, _) in enumerate(drafts, len(lanes) + 1)]
+drows = [f"| {n} | `{l['id']}` | مدموج في `{l['merged_into']}` (قرار المالك) · مسودة |" if l.get('merged_into') else f"| {n} | `{l['id']}` | {KIND[l['kind']]}{' · الدور A فقط (أحمر)' if l.get('levels') == ['A'] else ''}{' · غير مؤكد (بنفسجي)' if l.get('unconfirmed') else ''} · {'في حساب المسارات' if l.get('integrated') else 'مسودة'} |" for n, (l, _) in enumerate(drafts, len(lanes) + 1)]
 open('docs/routes/garage-map-legend.md', 'w').write(
     '# أرقام طرق المواقف في `garage-map.png`\n\n'
     'تُولَّد مع الصورة من `data/garage.json` بالأمر `python3 scripts/garage-map.py`، فتتغير الأرقام إذا أُضيف طريق.\n\n'
     '| الرقم | الطريق في البيانات | نوعه |\n|---|---|---|\n' + '\n'.join(rows) + '\n'
-    + ('\n## مسودة مدخل قربان (منقطة في الصورة، ولا تدخل البيانات ولا حساب المسارات حتى يؤكدها المالك)\n\n| الرقم | الطريق في المسودة | نوعه |\n|---|---|---|\n' + '\n'.join(drows) + '\n' if drows else '')
+    + ('\n## مدخل قربان (أرقام المسودة نفسها): الخط المتصل في حساب المسارات، والمنقط مسودة لم تدخل بعد\n\n| الرقم | الطريق في المسودة | نوعه |\n|---|---|---|\n' + '\n'.join(drows) + '\n' if drows else '')
 )
 print(f'{len(lanes)} roads + {len(drafts)} drafts → docs/routes/garage-map.png ({W}×{H}) and docs/routes/garage-map-legend.md')
