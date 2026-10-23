@@ -72,19 +72,37 @@ if os.path.exists(DRAFT):
     ax = np.array([c['px'][0] for c in cp]); ay = np.array([c['px'][1] for c in cp])
     lng_fit = np.polyfit(ax, [pois[c['id']]['lng'] for c in cp], 1)
     lat_fit = np.polyfit(ay, [pois[c['id']]['lat'] for c in cp], 1)
+    # The owner's second round was drawn on a crop of this very map: its pixels go straight to metres,
+    # calibrated on facilities 201-204 (their positions, with the nudges).
+    cc = dr.get('crop_control_points', [])
+    if cc:
+        fm = {}
+        for c in cc:
+            q = pois[c['id']]; o = ov.get(str(c['id']), {})
+            fm[c['id']] = m(q['lat'] + o.get('north', 0) / KY, q['lng'] + o.get('east', 0) / KX)
+        cfx = np.polyfit([c['px'][0] for c in cc], [fm[c['id']][0] for c in cc], 1)
+        cfy = np.polyfit([c['px'][1] for c in cc], [fm[c['id']][1] for c in cc], 1)
     for l in dr['lanes']:
+        if l.get('space') == 'crop':
+            drafts.append((l, [P(float(np.polyval(cfx, x)), float(np.polyval(cfy, y))) for x, y in l['px']]))
+            continue
         path = [(float(np.polyval(lat_fit, y)), float(np.polyval(lng_fit, x))) for x, y in l['px']]
         drafts.append((l, [P(*m(a, b)) for a, b in path]))
 DCOL = {'entry': '#1e6fd9', 'exit': '#d62828', 'shared': '#f08c00', 'link': '#00a5c8', 'ramp_up': '#d9b400', 'ramp_down': '#2b8a3e'}
-dcolour = lambda l: '#d62828' if l.get('levels') == ['A'] and l['kind'] != 'link' else DCOL[l['kind']]
+dcolour = lambda l: '#9b5de5' if l.get('unconfirmed') else '#d62828' if l.get('levels') == ['A'] and l['kind'] != 'link' else DCOL[l['kind']]
 for l, pts in drafts:
-    c = '#d62828' if l.get('levels') == ['A'] else dcolour(l)
+    c = '#9b5de5' if l.get('unconfirmed') else '#d62828' if l.get('levels') == ['A'] else dcolour(l)
     for a, b in zip(pts, pts[1:]):
         L = math.dist(a, b)
         for k in range(0, int(L // 18) + 1):
             t0, t1 = k * 18 / L, min(1, (k * 18 + 10) / L)
             d.line([(a[0] + (b[0] - a[0]) * t0, a[1] + (b[1] - a[1]) * t0), (a[0] + (b[0] - a[0]) * t1, a[1] + (b[1] - a[1]) * t1)], fill=c, width=7)
-FIXED_LABEL = {'qurban-road-in-A': ((40, 0), 0.5), 'qurban-road-out-A': ((-40, 0), 0.5)}
+FIXED_LABEL = {
+    'qurban-road-in-A': ((40, 0), 0.5), 'qurban-road-out-A': ((-40, 0), 0.5),
+    'a-qurban-west-stub': ((-42, -12), 0.5), 'a-qurban-west-east': ((0, -34), 0.45),
+    'a-qurban-exit-curve': ((46, 8), 0.55), 'a-qurban-to-east-up': ((34, -30), 0.6),
+    'a-qurban-east-up': ((40, 0), 0.35), 'a-qurban-arc': ((0, 30), 0.5),
+}
 for n, (l, pts) in enumerate(drafts, len(lanes) + 1):
     i = max(range(1, len(pts)), key=lambda k: math.dist(pts[k - 1], pts[k]))
     a, b = pts[i - 1], pts[i]
@@ -98,7 +116,7 @@ for n, (l, pts) in enumerate(drafts, len(lanes) + 1):
     if l['id'] in FIXED_LABEL:  # the two red curves run side by side: one label each side, whatever their direction
         (dx, dy), t_ = FIXED_LABEL[l['id']]
         cx, cy = a[0] + (b[0] - a[0]) * t_ + dx, a[1] + (b[1] - a[1]) * t_ + dy
-    d.rounded_rectangle([cx - 20, cy - 16, cx + 20, cy + 16], radius=8, fill='white', outline=dcolour(l) if l.get('levels') != ['A'] else '#d62828', width=3)
+    d.rounded_rectangle([cx - 20, cy - 16, cx + 20, cy + 16], radius=8, fill='white', outline=dcolour(l) if l.get('levels') != ['A'] or l.get('unconfirmed') else '#d62828', width=3)
     d.text((cx - 13, cy - 12), str(n), fill='black', font=f)
 for e in g['entrances']:
     x, y = P(*m(*e['street']))
@@ -111,7 +129,7 @@ im.save('docs/routes/garage-map.png')
 
 KIND = {'entry': 'دخول (أزرق)', 'exit': 'خروج (أحمر)', 'shared': 'ممر في الاتجاهين (برتقالي)', 'link': 'وصلة', 'ramp_up': 'صعود إلى A (أصفر)', 'ramp_down': 'نزول إلى B (أخضر)'}
 rows = [f"| {n} | `{l['id']}` | {KIND[l['kind']]}{' · الدور A فقط (بنفسجي)' if l.get('levels') == ['A'] else ' · B فقط' if l.get('levels') == ['B'] else ''} |" for n, (l, _) in enumerate(lanes, 1)]
-drows = [f"| {n} | `{l['id']}` | {KIND[l['kind']]}{' · الدور A فقط (أحمر)' if l.get('levels') == ['A'] else ''} · مسودة |" for n, (l, _) in enumerate(drafts, len(lanes) + 1)]
+drows = [f"| {n} | `{l['id']}` | {KIND[l['kind']]}{' · الدور A فقط (أحمر)' if l.get('levels') == ['A'] else ''}{' · غير مؤكد (بنفسجي)' if l.get('unconfirmed') else ''} · مسودة |" for n, (l, _) in enumerate(drafts, len(lanes) + 1)]
 open('docs/routes/garage-map-legend.md', 'w').write(
     '# أرقام طرق المواقف في `garage-map.png`\n\n'
     'تُولَّد مع الصورة من `data/garage.json` بالأمر `python3 scripts/garage-map.py`، فتتغير الأرقام إذا أُضيف طريق.\n\n'
