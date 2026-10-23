@@ -114,7 +114,7 @@ for l, pts in drafts:
 FIXED_LABEL = {
     'qurban-road-in-A': ((38, 0), 0.3), 'qurban-road-out-A': ((-40, 0), 0.5),
     'a-qurban-west-stub': ((-42, -12), 0.5), 'a-qurban-west-east': ((0, -34), 0.45),
-    'a-qurban-exit-curve': ((46, 8), 0.55), 'a-qurban-to-east-up': ((34, -30), 0.6),
+    'a-qurban-exit-curve': ((-46, 8), 0.55), 'a-qurban-to-east-up': ((34, -30), 0.6),
     'a-qurban-east-up': ((40, 0), 0.35), 'a-qurban-arc': ((0, 30), 0.5),
 }
 for n, (l, pts) in enumerate(drafts, len(lanes) + 1):

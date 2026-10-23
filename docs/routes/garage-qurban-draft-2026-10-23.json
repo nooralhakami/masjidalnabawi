@@ -167,7 +167,33 @@
           1356
         ]
       ],
-      "_note": "red, left curve, orange arrow pointing south: from the corner out to the south"
+      "_note": "red, left curve, orange arrow pointing south: from the corner out to the south; owner 2026-10-23 (fifth message): the exit road moves a little EAST, to the red curve he drew on garage-map.png (px_exit_east, calibrated on facilities 201-204 in crop3_control_points); it starts where lane 44 meets it and ends at the bottom of that curve (the surface entrance marker is no longer its end)",
+      "px_exit_east": [
+        [
+          1368,
+          910
+        ],
+        [
+          1350,
+          1010
+        ],
+        [
+          1325,
+          1110
+        ],
+        [
+          1295,
+          1215
+        ],
+        [
+          1268,
+          1310
+        ],
+        [
+          1250,
+          1411
+        ]
+      ]
     },
     {
       "id": "a-qurban-arc",
@@ -483,6 +509,36 @@
       "px": [
         614,
         597
+      ]
+    }
+  ],
+  "crop3_control_points": [
+    {
+      "id": 201,
+      "px": [
+        1077,
+        514
+      ]
+    },
+    {
+      "id": 203,
+      "px": [
+        658,
+        514
+      ]
+    },
+    {
+      "id": 202,
+      "px": [
+        1077,
+        816
+      ]
+    },
+    {
+      "id": 204,
+      "px": [
+        658,
+        816
       ]
     }
   ]
