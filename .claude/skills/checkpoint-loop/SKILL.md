@@ -1,6 +1,6 @@
 ---
 name: checkpoint-loop
-description: Split any task of more than ~10 steps into small phases tracked in CHECKPOINT.md, run exactly one phase per session, then stop and hand off to a fresh session. Use at the start of any large task, when a session nears 25 tool calls, when the owner says "continue" / "تابع" / "اكمل", or when resuming from an existing CHECKPOINT.md.
+description: Split any task of more than ~10 steps into small phases tracked in CHECKPOINT.md, track phases, and hand off to a fresh session when the owner asks. Use at the start of any large task, when a session gets long, when the owner says "continue" / "تابع" / "اكمل", or when resuming from an existing CHECKPOINT.md.
 ---
 
 # checkpoint-loop
@@ -10,10 +10,10 @@ Goal: no more 400k-token sessions and no "continue" chains. One phase per sessio
 ## Start of session
 1. If `CHECKPOINT.md` exists at repo root: read ONLY it, plus the files listed under "التالي". Do not re-read the project.
 2. If it does not exist and the task is large (>10 steps): write a plan of 3-5 phases, wait for owner approval, then create it.
-3. Count tool calls from the first one. Write the running count to `الخطوات المستخدمة`.
+3. Optionally note the running number of steps in `الخطوات المستخدمة`.
 
 ## Phase design
-- One phase = one verifiable outcome, at most ~15 steps (e.g. "library page lists all companions", not "finish library").
+- One phase = one verifiable outcome (e.g. "library page lists all companions", not "finish library").
 - Phase 1 is always the smallest slice that proves the approach.
 
 ## The loop (one phase per session)
@@ -22,10 +22,9 @@ Goal: no more 400k-token sessions and no "continue" chains. One phase per sessio
 3. **Update** `CHECKPOINT.md` (format below).
 4. **Stop.** Reply in Arabic: what changed for the visitor first, then details; then give the resume prompt.
 
-## Hard stops
-- At 22 tool calls: finish the current step, update the file, stop. Cap is 25, never exceed it.
-- On "continue" in the same session after the phase is done: do NOT start the next phase. Re-send the resume prompt.
-- Same failure twice (e.g. 403, failing test): write it under العوائق and stop. Do not loop.
+## Pace
+- There is no cap on tool calls. Stop after a phase when the owner wants a fresh session; otherwise continue to the next phase when asked.
+- Same failure twice (e.g. 403, failing test): write it under العوائق and tell the owner instead of looping.
 
 ## CHECKPOINT.md format (keys fixed so Hermes can parse and summarize to Telegram; Arabic headings)
 ```

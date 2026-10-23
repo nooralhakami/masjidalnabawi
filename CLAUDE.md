@@ -1,20 +1,9 @@
 # CLAUDE.md — قواعد العمل في «next» (لأي إنسان أو ذكاء اصطناعي)
 
-## Session guard (automation layer, applies to every session)
-Language: chat with the owner and Hermes-facing summaries/headers in Arabic; code, comments and skill files in English.
+## Working notes (automation layer)
+Language: chat with the owner in Arabic; code, comments and skill files in English.
 
-**Step budget:** hard cap 25 tool calls per session (steps, not tokens).
-- Task over ~10 steps: use skill `checkpoint-loop`. If `CHECKPOINT.md` exists, read it first and nothing else.
-- At 22 steps: finish the current step, update `CHECKPOINT.md`, stop, ask for a fresh session. Never chain "continue".
-- Never reprint whole files. Show `git diff --stat` or a short summary.
-
-**Planning gate:** before editing more than 2 files, post a 3-5 bullet plan and wait for approval.
-
-**Network:** a host returning 403 (e.g. shamela.ws): try once, never loop, never open a parallel session. Use a local alternative or ask the owner to supply the data (script/file). Log it under Blockers in `CHECKPOINT.md`.
-
-**Deploy:** run skill `safe-deploy-gate` before any push. Work on a branch; never push to the default branch. Tests must be 100% and the owner must type «اعتمد النشر». Max 3 self-fix attempts; never skip, delete, loosen or edit tests just to pass. After 3 failures stop and record it in `CHECKPOINT.md`. The existing rules below (no PR unless asked, owner merges, no Vercel deploy without «انشر») still apply and are stricter where they differ.
-
-**Skill routing:** motion graphics/video: `motion-design-plus` only (ignore `motion-design`) plus `lean-motion-video`. Arabic RTL UI/UX: `ui-ux-pro-max`.
+**Skill routing:** motion graphics/video: `motion-design-plus` only (ignore `motion-design`) plus `lean-motion-video`. Arabic RTL UI/UX: `ui-ux-pro-max`. Large tasks: `checkpoint-loop` is available (optional). Before a push: `safe-deploy-gate` is available (optional); the project rules below still decide who merges and when to publish.
 
 ---
 

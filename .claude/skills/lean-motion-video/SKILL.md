@@ -26,6 +26,6 @@ Do not commit rendered binaries (mp4/wav); add them to `.gitignore` unless the o
 `scripts/assemble.*` reads every `meta.json`, orders by `start`, composes the timeline, renders full resolution one time, mixes audio. Then one QA pass: text, rhythm, audio sync, duration. Deliver the file; do not re-render for cosmetic tweaks without owner request.
 
 ## Budget
-- At most 25 tool calls per session means about 2-3 scenes. Then use `checkpoint-loop` to hand off.
+- No cap on tool calls. Use `checkpoint-loop` to hand off if a session gets long.
 - Reuse assets by path from `_shared/`; never paste base64 or whole scene code into chat.
 - Report in Arabic: what the viewer sees, scene by scene, plus steps used.
