@@ -1,6 +1,6 @@
 import { effect, signal } from '@preact/signals';
 import { CAR_ENTRANCES, type CarEntranceId } from '../data-next/car-entrances';
-import { setEntranceOpen } from '../routing/garage';
+import { ENTRANCES, setEntranceOpen } from '../routing/garage';
 
 /**
  * Which of the new vehicle entrances are open, starting from car-entrances.ts (owner). Like the
@@ -13,5 +13,9 @@ export function toggleEntrance(id: CarEntranceId): void {
   entranceOpen.value = { ...entranceOpen.value, [id]: !entranceOpen.value[id] };
 }
 
-// The Qurban entrance is in the route planner (owner, 2026-10-23): closed, no route goes through it.
-effect(() => setEntranceOpen('qurban', entranceOpen.value.qurban));
+// Every entrance the route planner knows (Omar ibn al-Khattab street, Sultana, Qurban) follows the
+// supervisor's button: closed, no route goes in or out through it (owner, 2026-10-23 for Qurban,
+// 2026-10-24 for the other two). Quba and the east one are not in the planner.
+effect(() => {
+  for (const e of ENTRANCES) setEntranceOpen(e.id, entranceOpen.value[e.id]);
+});
