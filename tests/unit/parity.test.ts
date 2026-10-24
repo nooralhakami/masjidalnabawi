@@ -1,6 +1,3 @@
-import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { POIS, POI_BY_ID } from '../../src/data';
 import { Facilities } from '../../src/domain/facilities';
@@ -12,35 +9,13 @@ import { visiblePois } from '../../src/domain/visible';
 import { LANGS, dirOf } from '../../src/i18n';
 import { planExit, planRoutes } from '../../src/routing/plan';
 
-// Parity with the live app (masjidalnabawi@e0c6ca7, read-only reference; docs/SPEC.md §8).
-// The values below were produced by the live app's own code (ported byte for byte) and match the
-// reference figures in the brief. Any drift in data or logic fails here: fix the cause, never the number.
-
-const DATA_SHA256: Record<string, string> = {
-  // Changed on purpose (owner, 2026-10-23): the Qurban entrance and its roads, from scripts/qurban-lanes.py.
-  'garage.json': 'bb621d6aca2fa671b6de86cbc32431d8a63d6d097ddfc25aa1c9d7f891df783c',
-  'i18n.json': 'c7ebab28bfedc70cc8579b36f34dbf00b90258e4a404d302ed51ede985bb41d3',
-  'library/companions.json': 'cb2e8982ef8a3304065984e423149db99549bda22cf1da7f994d4f188422add4',
-  'library/hadith.json': '5355a6ad828a05161da43c37a96ed0407447eab55fc1abe60cfdf441b3570b4b',
-  'library/mosque.json': 'a3ab09950f32f8385bc492a3e3642e98079f171580df16714e330044d9b0728d',
-  'overrides.json': '80318a09ba935d7fa5e8e8fa6bb9dd005c41d0e2a5b25ca6be24454084aaa3ab',
-  'pois.json': '582989f464dcfc5fc345b009d161f86edd786171134bb33e31c74c2f40649a90',
-  'routing.json': '660e012570c0461496836ad3bf7789e96e5accbe777901b0378cd3f1f98c6d1a',
-  'rules.json': 'c7c9f355d89ea55b4ac3a25d127a2f7c26b5fd0283027af89352901cc91a5d0e',
-  'streets.json': '2e941e163929fe86a09ef79befc234d694cd3460f551267a85d62e05dc384972',
-  'visits.json': 'c34e7a0575112221548b3c6e69fcaec87cd24f358beeb4e7d0569029bd8b1c5d',
-};
+// Reference behaviour, first produced by the live app's own code (masjidalnabawi@e0c6ca7; docs/SPEC.md
+// §8): routes, search, the Rawdah schedule, counts and languages. A change here is a change the visitor
+// sees, so it needs the owner's word and a note in docs/DECISIONS.md. The data files themselves are
+// checked by content in data-integrity.test.ts (owner, 2026-10-24: no more byte-for-byte hashes).
 
 const P = (id: number) => POI_BY_ID.get(id)!;
 const round = (n: number) => Math.round(n);
-
-describe('parity: data/ is byte-identical to the live app', () => {
-  for (const [file, sha] of Object.entries(DATA_SHA256)) {
-    it(file, () => {
-      expect(createHash('sha256').update(readFileSync(join(__dirname, '../../data', file))).digest('hex')).toBe(sha);
-    });
-  }
-});
 
 describe('parity: walking', () => {
   it('from [24.469, 39.6125] to restroom 227: 415 m, 6 minutes, one route', async () => {
