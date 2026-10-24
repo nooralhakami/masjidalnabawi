@@ -1,4 +1,4 @@
-"""Write docs/library/review/<id>.md from data/library/companions.json and mosque.json: one page per
+"""Write docs/library/review/<id>.md from data/library/companions/ and mosque.json: one page per
 companion or mosque place for the reviewer, every fact with its sources (links to the page) and what it still needs.
 
     python3 scripts/library-review.py
@@ -8,7 +8,9 @@ import json, os
 LABELS = [('full_name', 'الاسم والنسب'), ('titles', 'الألقاب'), ('born', 'المولد'), ('islam', 'متى أسلم'), ('islam_story', 'قصة إسلامه'),
           ('virtues', 'مناقبه (من صحيح البخاري وكتب التراجم)'), ('known_for', 'ما اشتهر به'), ('stories', 'قصص ومواقف'), ('death', 'وفاته'), ('burial', 'مدفنه')]
 
+# One file per companion (data/library/companions/<id>.json), in the order companions.json lists.
 d = json.load(open('data/library/companions.json', encoding='utf-8'))
+d['companions'] = [json.load(open(f'data/library/companions/{i}.json', encoding='utf-8')) for i in d['order']]
 S = d['sources']
 pois = {p['id']: p['name_ar'] for p in json.load(open('data/pois.json', encoding='utf-8'))}
 os.makedirs('docs/library/review', exist_ok=True)

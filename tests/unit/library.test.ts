@@ -1,8 +1,10 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import hadith from '../../data/library/hadith.json';
-import companions from '../../data/library/companions.json';
 import mosque from '../../data/library/mosque.json';
 import poisJson from '../../data/pois.json';
+import { COMPANION_DATA as companions } from '../../src/domain/mosque-places';
 import { approvalProblems, published, shownCompanions, shownMosquePlaces, textFor, type CompanionData, type LibraryItem, type MosqueData } from '../../src/domain/library';
 
 const LANGS = ['ar', 'en', 'tr', 'ur', 'id', 'uz', 'bn', 'fr', 'fa', 'ru', 'ms', 'ha', 'ml', 'sw', 'ps', 'so', 'ta', 'hi', 'bs', 'de', 'zh', 'am', 'ku', 'az', 'th', 'es'];
@@ -148,5 +150,18 @@ describe('what the visitor sees (owner decision 2026-10-15: drafts shown with a 
   it('without the owner decision, drafts stay hidden', () => {
     const d = { ...(companions as unknown as CompanionData), display: 'approved-only' as const };
     expect(shownCompanions(d)).toEqual([]);
+  });
+});
+
+describe('one file per companion (2026-10-24)', () => {
+  it('companions.json lists every card file exactly once, and each file is named after its card', () => {
+    const dir = join(__dirname, '../../data/library/companions');
+    const files = readdirSync(dir)
+      .map((f) => f.replace(/\.json$/, ''))
+      .sort();
+    const { order } = JSON.parse(readFileSync(join(__dirname, '../../data/library/companions.json'), 'utf8')) as { order: string[] };
+    expect([...order].sort()).toEqual(files);
+    expect(new Set(order).size).toBe(order.length);
+    for (const id of files) expect(JSON.parse(readFileSync(join(dir, `${id}.json`), 'utf8')).id, id).toBe(id);
   });
 });
