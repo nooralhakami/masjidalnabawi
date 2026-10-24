@@ -1,3 +1,4 @@
+import type { Spot } from '../routing/spot';
 import { computed, effect, signal } from '@preact/signals';
 import type { Poi } from '../data/types';
 import type { NavigationSnapshot } from '../navigation/tracker';
@@ -85,6 +86,8 @@ export function setHeadingUp(on: boolean): void {
 /** «Where is your car?» (in or by the car park): the question on screen, answered through `answer`. */
 export interface GarageQuestion {
   lots: Poi[];
+  /** Where the visitor stands above the car park: the words of «I am not in the car park». */
+  spot: Spot;
   answer(start: GarageStart | null): void;
 }
 export const garageQ = signal<GarageQuestion | null>(null);

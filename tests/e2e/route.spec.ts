@@ -341,7 +341,7 @@ test.describe('in the car park, the visitor says where the car is (owner, 2026-1
     await expect(ask).toBeVisible({ timeout: 30_000 });
     await expect(ask.locator('.garage-ask-opt')).toHaveCount(4); // two lots, on the road, outside
     await expect(ask.locator('.garage-ask-opt').first()).toBeFocused();
-    await ask.locator('.garage-ask-opt', { hasText: 'على الطريق' }).click();
+    await ask.locator('.garage-ask-opt', { hasText: 'على الطرق تحت الأرض المؤدية إلى المواقف' }).click();
     await ask.locator('.garage-ask-opt', { hasText: 'B' }).click();
     await expect(ask).toHaveCount(0);
     await expect.poll(() => marks(page), { timeout: 30_000 }).toContain('lot-gate:12B');
@@ -354,6 +354,30 @@ test.describe('in the car park, the visitor says where the car is (owner, 2026-1
     await openAndRoute(page, 912);
     await page.locator('.garage-ask .garage-ask-opt').last().click();
     await expect(card(page).locator('.leg-ent')).toBeVisible({ timeout: 30_000 });
+  });
+
+  test('the question has a close button and closes on a tap outside it; the card comes back and nothing is drawn (owner, 2026-10-24)', async ({ page, errors: _ }) => {
+    await page.addInitScript(() => localStorage.setItem('travel', 'drive'));
+    await openAndRoute(page, 912);
+    await expect(page.locator('.garage-ask')).toBeVisible({ timeout: 30_000 });
+    await page.locator('.garage-ask-x').click();
+    await expect(page.locator('.garage-ask')).toHaveCount(0);
+    expect(await routeActive(page)).toBe(false);
+    // Again: press «start the route» and answer anew; this time close it with a tap on the map.
+    await openAndRoute(page, 912);
+    await expect(page.locator('.garage-ask')).toBeVisible({ timeout: 30_000 });
+    await page.mouse.click(200, 120);
+    await expect(page.locator('.garage-ask')).toHaveCount(0);
+    expect(await routeActive(page)).toBe(false);
+  });
+
+  test('«not in the car park» says where the visitor is (the plaza here), and «on the road» says it means the underground roads', async ({ page, errors: _ }) => {
+    await page.addInitScript(() => localStorage.setItem('travel', 'drive'));
+    await openAndRoute(page, 912);
+    const ask = page.locator('.garage-ask');
+    await expect(ask).toBeVisible({ timeout: 30_000 });
+    await expect(ask.locator('.garage-ask-opt').nth(2)).toHaveText('على الطرق تحت الأرض المؤدية إلى المواقف');
+    await expect(ask.locator('.garage-ask-opt').last()).toHaveText(/ساحة الحرم|داخل المسجد|شارع بجانب المواقف/);
   });
 
   test('Esc dismisses the question and draws nothing', async ({ page, errors: _ }) => {

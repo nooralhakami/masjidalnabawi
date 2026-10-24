@@ -1451,6 +1451,7 @@
   gap: var(--s-2);
 }
 .garage-ask {
+  position: relative;
   display: grid;
   gap: var(--s-2);
   padding: var(--s-4);
@@ -1459,9 +1460,26 @@
   border: 1px solid var(--line);
   box-shadow: var(--shadow-2);
 }
+.garage-ask-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
 .garage-ask-q {
+  flex: 1;
   font-size: var(--fs-lg);
   color: var(--heading);
+}
+.garage-ask-x {
+  flex: none;
+}
+/* Over the whole screen, under the question: a tap outside it closes it. */
+.garage-ask-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: transparent;
 }
 .garage-ask-opt {
   min-height: var(--hit);
