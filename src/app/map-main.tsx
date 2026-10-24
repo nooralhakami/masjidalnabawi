@@ -15,8 +15,7 @@ import { VISIT_LIST } from '../domain/visits';
 import { currentWeather, WEATHER_TTL_MS } from '../domain/weather';
 import { getLang, nm, t } from '../i18n';
 import { applyLang, initialLang } from '../i18n/dom';
-import { loadLang } from '../i18n-next/load';
-import { tNext } from '../i18n-next/strings';
+import { loadLang } from '../i18n/load';
 import { CAR_ENTRANCES } from '../data-next/car-entrances';
 import { entranceOpen } from '../state/entrances';
 import { MapEngine, type BaseLayer } from '../map/engine';
@@ -58,13 +57,13 @@ async function main() {
       // The new vehicle entrances (owner, 2026-10-16): a tap says the name, the state and how to leave.
       entranceText: (id, open) => {
         const e = CAR_ENTRANCES.find((x) => x.id === id);
-        return e ? { name: tNext(e.name), state: open ? t('a_open') : tNext('ent_closed') } : null;
+        return e ? { name: t(e.name), state: open ? t('a_open') : t('ent_closed') } : null;
       },
       onEntrance: (id) => {
         const e = CAR_ENTRANCES.find((x) => x.id === id);
         if (!e) return;
         const open = entranceOpen.value[e.id];
-        notify(`${tNext(e.name)} · ${open ? t('a_open') : tNext('ent_closed')}${e.note ? ` — ${tNext(e.note)}` : ''}`, 'info', 7000);
+        notify(`${t(e.name)} · ${open ? t('a_open') : t('ent_closed')}${e.note ? ` — ${t(e.note)}` : ''}`, 'info', 7000);
       },
     });
   } catch {

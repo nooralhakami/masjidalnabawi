@@ -2,7 +2,7 @@ import './stories.css';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { Poi } from '../../data/types';
 import { SLIDE_MS, VISIT_LIST, imageFor, isPrayerSlide, nextPos, prevPos, segmentFill, slideLang, slideText, type Pos } from '../../domain/visits';
-import { SALAWAT_AR } from '../../i18n-next/strings';
+import { SALAWAT_AR } from '../../i18n';
 import { useI18n } from '../i18n';
 import { Icon } from '../kit/Icon';
 

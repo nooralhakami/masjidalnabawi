@@ -1,5 +1,4 @@
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { tNext } from '../../i18n-next/strings';
 import { checkAdminPassword } from '../../state/admin';
 import { useI18n } from '../i18n';
 import { Icon } from '../kit/Icon';
@@ -42,7 +41,7 @@ export function AdminGate({ onUnlock, onClose }: { onUnlock(): void; onClose(): 
           </button>
         </div>
         <label class="admin-gate-field">
-          <span>{tNext('admin_pass')}</span>
+          <span>{t('admin_pass')}</span>
           <input
             ref={input}
             type="password"
@@ -55,11 +54,11 @@ export function AdminGate({ onUnlock, onClose }: { onUnlock(): void; onClose(): 
         </label>
         {wrong ? (
           <p class="admin-gate-err" id="admin-gate-err" role="alert">
-            {tNext('admin_wrong')}
+            {t('admin_wrong')}
           </p>
         ) : null}
         <button type="submit" class="btn btn-primary btn-block" aria-busy={busy}>
-          <span class="btn-label">{tNext('admin_enter')}</span>
+          <span class="btn-label">{t('admin_enter')}</span>
         </button>
       </form>
     </div>

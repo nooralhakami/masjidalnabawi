@@ -16,7 +16,7 @@ export interface CarEntrance {
   id: CarEntranceId;
   lat: number;
   lng: number;
-  /** Interface keys (src/i18n-next): the name, and a line for the visitor if any. */
+  /** Interface keys (src/i18n/locales): the name, and a line for the visitor if any. */
   name: string;
   note?: string;
   /** Open when the page loads (until the supervisor changes it). */

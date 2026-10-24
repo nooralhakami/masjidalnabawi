@@ -2,7 +2,6 @@ import { useEffect, useState } from 'preact/hooks';
 import { POIS } from '../../data';
 import type { Facilities } from '../../domain/facilities';
 import { CAR_ENTRANCES } from '../../data-next/car-entrances';
-import { tNext } from '../../i18n-next/strings';
 import { entranceOpen, toggleEntrance } from '../../state/entrances';
 import { useI18n } from '../i18n';
 import { Icon } from '../kit/Icon';
@@ -48,13 +47,13 @@ export function AdminPanel({ fac, onNotApplicable }: { fac: Facilities; onNotApp
         </div>
         <p>{t('admin_note')}</p>
         {/* The new vehicle entrances (owner, 2026-10-16): closed until opened here. */}
-        <h3 class="admin-sub">{tNext('ent_title')}</h3>
+        <h3 class="admin-sub">{t('ent_title')}</h3>
         {CAR_ENTRANCES.map((e) => {
           const open = entranceOpen.value[e.id];
           return (
             <div class="admin-ent" key={e.id}>
               <span>
-                {tNext(e.name)} — <strong class={open ? 'is-open' : 'is-closed'}>{open ? t('a_open') : tNext('ent_closed')}</strong>
+                {t(e.name)} — <strong class={open ? 'is-open' : 'is-closed'}>{open ? t('a_open') : t('ent_closed')}</strong>
               </span>
               <button type="button" class="btn btn-ghost" data-ent={e.id} aria-pressed={open} onClick={() => toggleEntrance(e.id)}>
                 <span class="btn-label">{t('admin_btn')}</span>

@@ -2,7 +2,6 @@ import { STATE_LABEL, navKnown, type NavView } from '../../presentation/route-vi
 import { Button } from '../kit/Button';
 import { Count } from '../kit/Count';
 import { Icon } from '../kit/Icon';
-import { tNext } from '../../i18n-next/strings';
 import { useI18n } from '../i18n';
 import { StepBanner } from '../sheet/StepBanner';
 
@@ -75,7 +74,7 @@ export function NavBar({ s, level, onFollow, headingUp = false, onHeadingUp, onE
           <span>{t(s.follow ? 'nav_unfollow' : 'nav_follow')}</span>
         </button>
         {onHeadingUp ? (
-          <button type="button" class="nav-heading" aria-pressed={headingUp} aria-label={tNext('nav_heading_up')} title={tNext('nav_heading_up')} onClick={onHeadingUp}>
+          <button type="button" class="nav-heading" aria-pressed={headingUp} aria-label={t('nav_heading_up')} title={t('nav_heading_up')} onClick={onHeadingUp}>
             {/* A navigation arrow: the way ahead, up. */}
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" aria-hidden="true" focusable="false">
               <path d="M12 3l7 17-7-4-7 4z" fill={headingUp ? 'currentColor' : 'none'} />

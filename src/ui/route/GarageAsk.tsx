@@ -1,6 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { Poi } from '../../data/types';
-import { tNext } from '../../i18n-next/strings';
 import type { GarageStart } from '../../routing/plan';
 import type { Spot } from '../../routing/spot';
 import { useI18n } from '../i18n';
@@ -49,8 +48,8 @@ export function GarageAsk({ lots, spot, onAnswer }: GarageAskProps) {
     ? [
         ...(first ? [{ label: t('gq_yes_lot', { n: first.id - 900 }), primary: true, pick: () => setLot(first) }] : []),
         ...others.map((l) => ({ label: t('gq_in_lot', { n: l.id - 900 }), pick: () => setLot(l) })),
-        { label: tNext('gq_road_under'), pick: () => setLot(null) },
-        { label: tNext(OUTSIDE[spot]), pick: () => done('outside') },
+        { label: t('gq_road_under'), pick: () => setLot(null) },
+        { label: t(OUTSIDE[spot]), pick: () => done('outside') },
       ]
     : (['B', 'A'] as const).map((level) => ({ label: t('lvl_name', { l: level }), pick: () => done({ lot: lot ?? null, level }) }));
 

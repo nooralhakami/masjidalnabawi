@@ -5,7 +5,7 @@ import { SITE } from '../config/site.config';
 import type { LangCode } from '../data/types';
 import { getLang, t } from '../i18n';
 import { applyLang, initialLang } from '../i18n/dom';
-import { loadLang } from '../i18n-next/load';
+import { loadLang } from '../i18n/load';
 import { applyTheme, currentTheme, savedTheme } from '../ui/theme';
 import { imageToPng, mapUrl, qrPng, qrSvg } from './qr';
 import { landingHtml } from './view';

@@ -3,7 +3,6 @@ import type { JSX } from 'preact';
 import { brandStar } from '../../presentation/icons';
 import { Icon } from '../kit/Icon';
 import { IconButton } from '../kit/Button';
-import { tNext } from '../../i18n-next/strings';
 import { useI18n } from '../i18n';
 
 /**
@@ -126,7 +125,7 @@ export function SearchBar({
             {value ? <IconButton icon="close" label={t('clear')} class="search-clear" onClick={onClear} /> : null}
           </label>
           {onContrast ? (
-            <button type="button" class="icon-btn contrast-btn" aria-label={tNext('contrast_more')} title={tNext('contrast_more')} aria-pressed={contrast} onClick={onContrast}>
+            <button type="button" class="icon-btn contrast-btn" aria-label={t('contrast_more')} title={t('contrast_more')} aria-pressed={contrast} onClick={onContrast}>
               {/* The usual contrast sign: a circle half filled. */}
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true" focusable="false">
                 <circle cx="12" cy="12" r="8.5" />
