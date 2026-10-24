@@ -708,6 +708,10 @@ a {
   margin: 0;
   color: var(--story-ink-soft);
 }
+.credit strong {
+  color: var(--gold-500);
+  font-weight: 700;
+}
 
 /* ---------- notices ---------- */
 .toast-host {

@@ -2,6 +2,7 @@
 
 الدليل بواجهته الجديدة وخريطة WebGL، بالبيانات والمنطق نفسيهما من الإصدار السابق. الإصدار السابق (Leaflet) محفوظ في الفرع `legacy-v1-leaflet`. والنسخة الجديدة بُنيت في المستودع [masjidalnabawi-next](https://github.com/nooralhakami/masjidalnabawi-next) ثم نُقلت إلى هنا (2026-10-16).
 
+- **صاحب الفكرة والمطوّر والمبرمج:** نورالدين الحكمي (Nooraddeen Alhakami).
 - **ابدأ من:** `docs/SPEC.md`، ثم `docs/PLAN.md`، ثم `docs/PROGRESS.md`.
 - **قواعد العمل:** `CLAUDE.md`.
 - **قائمة الفحص اليدوي على الجوال:** `docs/CHECKLIST.md`.
