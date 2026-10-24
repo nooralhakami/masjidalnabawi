@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "author": "Nooraddeen Alhakami",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
