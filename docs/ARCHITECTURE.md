@@ -54,7 +54,7 @@ src/
   i18n-next/     strings.ts — strings the live app never had, in the 26 languages (checked first by ui/i18n)
   presentation/  marker-look.ts  search-view.ts (groups, 8 shown, highlight)  icons.ts
   navigation/    tracker.ts (ported logic)  steps.ts
-  state/         store.ts (signals: filter, sub-filters, typed/query, selected, sheet, travel, level, toast, recent)  persist.ts (localStorage, try/catch)
+  state/         store.ts (signals: filter, sub-filters, typed/query, selected, sheet, travel, level, toast, recent, weather)  persist.ts (localStorage, try/catch)
   ui/
     kit/         Button IconButton Chip Toggle FloorSwitch Toast Skeleton Icon Ring
     shell/       TopBar SearchBar CategoryRow SubFilters MapControls WeatherChip
