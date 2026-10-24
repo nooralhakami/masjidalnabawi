@@ -1,6 +1,10 @@
+import { existsSync } from 'node:fs';
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 4174;
+/** The browser: $CHROME if given, else the container's Chromium 1194 if present, else Playwright's own (CI). */
+const CONTAINER_CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const CHROME = process.env.CHROME ?? (existsSync(CONTAINER_CHROME) ? CONTAINER_CHROME : undefined);
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -17,9 +21,9 @@ export default defineConfig({
     locale: 'ar',
     trace: 'retain-on-failure',
     launchOptions: {
-      // Playwright 1.63 expects Chromium 1243; this container has 1194 (CLAUDE.md). WebGL runs on
-      // SwiftShader here, which needs this flag in headless Chromium.
-      executablePath: process.env.CHROME ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+      // Playwright 1.63 expects Chromium 1243; the container has 1194 (tests/CLAUDE.md). WebGL runs on
+      // SwiftShader, which needs these flags in headless Chromium.
+      executablePath: CHROME,
       args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader'],
     },
   },

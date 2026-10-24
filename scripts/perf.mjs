@@ -10,13 +10,16 @@
 // Frame times are printed for comparison only: this container draws WebGL in software
 // (SwiftShader), so they say nothing about a phone's GPU; those are measured on a real device
 // (docs/PERF.md).
+import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { chromium, devices } from 'playwright-core';
 
 const PORT = 4180;
 const THROTTLE = 4;
 const BUDGET = { longTaskMs: { pan: 50, rotate: 50, zoom: 100 }, overheadP50Ms: 5 };
-const CHROME = process.env.CHROME ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+// $CHROME if given, else the container's Chromium 1194 if present, else Playwright's own browser.
+const CONTAINER_CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const CHROME = process.env.CHROME ?? (existsSync(CONTAINER_CHROME) ? CONTAINER_CHROME : undefined);
 
 const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'ignore' });
 const stop = () => server.kill();

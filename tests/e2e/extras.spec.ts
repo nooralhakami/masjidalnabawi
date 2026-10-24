@@ -217,7 +217,8 @@ test.describe('landmark stories', () => {
     await page.waitForTimeout(6500);
     await expect(page.locator('.st-text')).toHaveText(first!);
     await page.locator('[data-act="pause"]').click();
-    await expect(page.locator('.st-text')).not.toHaveText(first!, { timeout: 8000 });
+    // A 6 s slide; on a loaded machine frames come slowly and each counts at most 500 ms, so allow 20 s.
+    await expect(page.locator('.st-text')).not.toHaveText(first!, { timeout: 20_000 });
   });
 
   test('the map shows the site and the sources are listed; a shared link (?visit=) opens that site', async ({ page, errors: _ }) => {

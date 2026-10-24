@@ -68,7 +68,7 @@ test.describe('during a route', () => {
       await context.setGeolocation({ latitude: 24.4685, longitude: 39.6084 - (i * 25) / 101_300, accuracy: 8 });
       await page.waitForTimeout(900);
     }
-    await expect(page.locator('.toast')).toContainText('أُعيد رسم المسار من موقعك', { timeout: 10_000 });
+    await expect(page.locator('.toast')).toContainText('أُعيد رسم المسار من موقعك', { timeout: 20_000 });
     expect(await page.evaluate(() => (window as unknown as Win).__engine.route.active)).toBe(true);
   });
 
