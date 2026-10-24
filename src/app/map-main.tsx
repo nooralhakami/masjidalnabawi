@@ -4,7 +4,7 @@
  */
 import { computed, effect } from '@preact/signals';
 import { render } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import '../styles/fonts';
 import '../styles/main.css';
 import { POI_BY_ID } from '../data';
@@ -12,7 +12,7 @@ import { Facilities } from '../domain/facilities';
 import { isHidden } from '../domain/filters';
 import { visiblePois } from '../domain/visible';
 import { VISIT_LIST } from '../domain/visits';
-import { currentWeather, WEATHER_TTL_MS, type Weather } from '../domain/weather';
+import { currentWeather, WEATHER_TTL_MS } from '../domain/weather';
 import { getLang, nm, t } from '../i18n';
 import { applyLang, initialLang } from '../i18n/dom';
 import { loadLang } from '../i18n-next/load';
@@ -20,7 +20,7 @@ import { tNext } from '../i18n-next/strings';
 import { CAR_ENTRANCES } from '../data-next/car-entrances';
 import { entranceOpen } from '../state/entrances';
 import { MapEngine, type BaseLayer } from '../map/engine';
-import { filter, headingUp, markersHidden, nav, notify, route, parkingSub, query, rawdahH, searching, selected, sheetH, toiletSub } from '../state/store';
+import { filter, headingUp, markersHidden, nav, notify, route, parkingSub, query, rawdahH, searching, selected, sheetH, toiletSub, weather } from '../state/store';
 import { LangContext } from '../ui/i18n';
 import { MapControls, MapTools } from '../ui/shell/MapControls';
 import { WeatherChip } from '../ui/shell/WeatherChip';
@@ -126,25 +126,17 @@ async function main() {
   };
 
   // The weather in Madinah, every 30 minutes (none offline: the chip stays hidden).
-  let weather: Weather | null = null;
-  const weatherListeners = new Set<(w: Weather | null) => void>();
   const loadWeather = async () => {
-    weather = (await currentWeather()) ?? weather;
-    weatherListeners.forEach((f) => f(weather));
+    weather.value = (await currentWeather()) ?? weather.value;
   };
   void loadWeather();
   setInterval(() => void loadWeather(), WEATHER_TTL_MS);
 
   function Tools() {
     const [base, setBase] = useState<BaseLayer>(engine.baseLayer);
-    const [w, setW] = useState(weather);
-    useEffect(() => {
-      weatherListeners.add(setW);
-      return () => void weatherListeners.delete(setW);
-    }, []);
     return (
       <MapTools
-        weather={<WeatherChip w={w} />}
+        weather={<WeatherChip w={weather.value} />}
         onStories={() => document.dispatchEvent(new CustomEvent('stories-request', { detail: 0 }))}
         onLibrary={() => document.dispatchEvent(new CustomEvent('library-request'))}
         onLocate={() => void trip.locate()}

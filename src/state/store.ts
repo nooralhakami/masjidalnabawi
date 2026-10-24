@@ -5,6 +5,7 @@ import type { NavigationSnapshot } from '../navigation/tracker';
 import type { RouteSummary } from '../presentation/route-view';
 import type { GarageStart } from '../routing/plan';
 import type { FilterId, ParkingSub, ToiletSub } from '../domain/filters';
+import type { Weather } from '../domain/weather';
 import { load, save } from './persist';
 
 /**
@@ -19,6 +20,12 @@ export const filter = signal<FilterId>('all');
 export const toiletSub = signal<ToiletSub>('all');
 export const parkingSub = signal<ParkingSub>('all');
 export const markersHidden = signal(false);
+
+/**
+ * The weather in Madinah now (map-main fetches it every 30 minutes; null until a reading arrives, and
+ * offline). A signal, so the chip shows a reading that arrives before or after it mounts.
+ */
+export const weather = signal<Weather | null>(null);
 
 /** What is typed in the search box, and what the map and the results follow (after a short pause). */
 export const typed = signal('');
