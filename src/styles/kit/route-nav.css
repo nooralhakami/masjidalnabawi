@@ -1,0 +1,418 @@
+/* ---------- Routes and live navigation (phase 5) ---------- */
+.route-card {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+}
+.rc-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+.rc-titles {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 0;
+}
+.rc-title {
+  font-size: var(--fs-lg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.route-box {
+  display: grid;
+  gap: var(--s-2);
+}
+.route-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-2) var(--s-4);
+}
+.rs-v {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--heading);
+  font-variant-numeric: tabular-nums;
+}
+.rs-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.rs-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--c);
+}
+.route-nearest,
+.route-unsure,
+.route-legend {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.route-unsure {
+  color: var(--warn);
+}
+.route-legs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+.leg {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 0 var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--field);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.leg-drive {
+  background: color-mix(in srgb, var(--route-drive) 14%, var(--surface-2));
+}
+.leg-walk {
+  background: color-mix(in srgb, var(--route-walk) 14%, var(--surface-2));
+}
+.route-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.route-legend-swatch {
+  width: 22px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--route-drive);
+  box-shadow: 0 0 0 3px var(--ramp-up);
+}
+.rc-foot {
+  display: flex;
+  gap: var(--s-2);
+}
+.rc-foot .btn-block {
+  flex: 1;
+}
+
+/* The navigation bar and the car park question sit just above the sheet (--sheet-h, from the sheet). */
+.nav-host {
+  position: absolute;
+  inset-inline: var(--gutter);
+  bottom: calc(var(--sheet-h, 0px) + var(--s-3) + env(safe-area-inset-bottom));
+  z-index: 6;
+  display: grid;
+  max-width: 420px;
+  margin-inline: auto;
+  pointer-events: none;
+}
+.nav-host > * {
+  pointer-events: auto;
+}
+.nav-bar {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-card);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-2);
+}
+.nav-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+.nav-counts {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  flex: none;
+}
+.nav-big {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--heading);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.nav-big.nav-m {
+  font-size: var(--fs-lg);
+}
+.nav-big small {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  font-weight: 600;
+}
+.nav-label {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-sm);
+}
+/* The narrowest phones: the numbers and the two buttons keep the first line, the status takes the
+   second whole, instead of breaking letter by letter. */
+@media (max-width: 359px) {
+  .nav-row {
+    flex-wrap: wrap;
+    row-gap: var(--s-1, 4px);
+  }
+  .nav-counts {
+    margin-inline-end: auto;
+  }
+  .nav-label {
+    order: 3;
+    flex-basis: 100%;
+  }
+}
+.nav-label.is-warn {
+  color: var(--warn);
+}
+.nav-follow {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--hit);
+  padding: 0 var(--s-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+.nav-follow[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+/* Heading-up (owner, 2026-10-17): an arrow, filled while the map turns with the route. */
+.nav-heading {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--hit);
+  height: var(--hit);
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.nav-heading[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--surface);
+}
+.nav-heading:focus-visible,
+.nav-follow:focus-visible,
+.garage-ask-opt:focus-visible {
+  outline: 3px solid var(--gold-500);
+  outline-offset: 2px;
+}
+.nav-bar .step-banner {
+  box-shadow: none;
+  background: var(--field);
+}
+.nav-progress {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+.nav-progress > span {
+  display: block;
+  height: 100%;
+  background: var(--route-walk);
+  transition: inline-size var(--m-base, 200ms) var(--ease);
+}
+.nav-bar.is-arrived {
+  gap: var(--s-3);
+  padding: var(--s-3);
+}
+.nav-arrived {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--heading);
+}
+.nav-arrived-ic {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--success) 16%, var(--surface-2));
+  color: var(--success);
+}
+.nav-arrived-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-2);
+}
+.garage-ask {
+  position: relative;
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-2);
+}
+.garage-ask-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+.garage-ask-q {
+  flex: 1;
+  font-size: var(--fs-lg);
+  color: var(--heading);
+}
+.garage-ask-x {
+  flex: none;
+}
+/* Over the whole screen, under the question: a tap outside it closes it. */
+.garage-ask-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: transparent;
+}
+.garage-ask-opt {
+  min-height: var(--hit);
+  padding: 0 var(--s-4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-btn);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+.garage-ask-opt.is-primary {
+  border-color: transparent;
+  background: var(--green-700);
+  color: var(--white);
+}
+
+/* The visitor's dot: the one element over the map that moves with it (MapLibre places it). */
+.me {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+}
+.me-dot,
+.me-pulse {
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+}
+.me-dot {
+  background: var(--me);
+  box-shadow: 0 0 0 3px var(--white), 0 2px 6px color-mix(in srgb, var(--me) 50%, transparent);
+}
+.me-pulse {
+  background: color-mix(in srgb, var(--me) 35%, transparent);
+  animation: me-pulse 2s var(--ease) infinite;
+}
+@keyframes me-pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+/* The cone points up (north) in the element; the marker turns it to the heading, with the map. */
+.me-cone {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 72px;
+  height: 72px;
+  margin: -36px 0 0 -36px;
+  border-radius: 50%;
+  background: conic-gradient(from -28deg, color-mix(in srgb, var(--me) 42%, transparent) 0deg 56deg, transparent 56deg 360deg);
+  -webkit-mask: radial-gradient(circle, #000 0 30%, transparent 70%);
+  mask: radial-gradient(circle, #000 0 30%, transparent 70%);
+  opacity: 0;
+  transition: opacity 250ms;
+}
+.me.has-heading .me-cone {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .me-pulse {
+    animation: none;
+  }
+}
+
+/* Half open, the card's footer (walking/car, level, route, share) sits at the bottom of the visible
+   part of the sheet, over the rest of the card (the live app's .sheet[data-state=half] .sheet-foot). */
+.sheet.is-half .place-card {
+  position: static;
+}
+.sheet.is-half .pc-foot {
+  position: absolute;
+  inset-inline: 0;
+  top: var(--half, 55dvh);
+  transform: translateY(-100%);
+  padding: var(--s-3) var(--gutter) calc(var(--s-3) + env(safe-area-inset-bottom));
+  background: var(--surface);
+}
+
+/* Over the toasts, so «locating…» never covers the car park question's buttons. */
+.nav-host.is-modal {
+  z-index: 8;
+  max-height: calc(100dvh - 24px);
+}
+.nav-host.is-modal .garage-ask {
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+}
+/* Narrow phones: «follow me» keeps its icon (its name is on the button), so the status line has room. */
+@media (max-width: 400px) {
+  .nav-follow > span:not(.ic) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .nav-follow {
+    min-width: var(--hit);
+    justify-content: center;
+    padding: 0;
+  }
+}
+.nav-label {
+  overflow-wrap: anywhere;
+}
+.rc-foot {
+  flex-wrap: wrap;
+}
+.rc-foot .btn {
+  flex: 1 1 auto;
+  width: auto;
+  white-space: nowrap;
+}

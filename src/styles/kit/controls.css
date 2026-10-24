@@ -1,0 +1,344 @@
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 48px;
+  min-width: var(--hit);
+  padding-inline: var(--s-5);
+  border: 1px solid transparent;
+  border-radius: var(--r-btn);
+  font-weight: 600;
+  font-size: var(--fs-base);
+  line-height: 1.2;
+  transition:
+    transform var(--m-fast) var(--ease),
+    background-color var(--m-fast) var(--ease);
+  user-select: none;
+}
+.btn-block {
+  flex: 1;
+  width: 100%;
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.btn-primary:active:not(:disabled),
+.btn-primary.is-pressed {
+  background: var(--accent-pressed);
+}
+.btn-secondary {
+  background: var(--surface-2);
+  color: var(--heading);
+  border-color: var(--outline);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--heading);
+}
+.btn-danger {
+  background: var(--danger-tint);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.btn:active:not(:disabled),
+.btn.is-pressed,
+.icon-btn:active:not(:disabled),
+.icon-btn.is-pressed {
+  transform: scale(0.97);
+}
+.btn-secondary:active:not(:disabled),
+.btn-secondary.is-pressed,
+.btn-ghost:active:not(:disabled),
+.btn-ghost.is-pressed {
+  background: var(--field);
+}
+.btn:disabled,
+.icon-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn.is-loading {
+  cursor: progress;
+}
+.spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: var(--hit);
+  height: var(--hit);
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  transition: transform var(--m-fast) var(--ease);
+}
+.icon-btn:active:not(:disabled) {
+  background: var(--field);
+}
+.icon-btn.is-floating {
+  background: var(--panel);
+  box-shadow: var(--shadow-1);
+  border: 1px solid var(--line);
+}
+.icon-btn[aria-pressed='true'] {
+  color: var(--heading);
+  background: var(--field);
+}
+
+/* ---------- Chips ---------- */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding-inline: var(--s-3);
+  border-radius: var(--r-chip);
+  background: var(--field);
+  color: var(--ink);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  max-width: 100%;
+}
+/* Long chip texts (a lot's access line) wrap inside the chip instead of widening the card. */
+.chip > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding-block: 4px;
+  line-height: 1.35;
+}
+.chip-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 0 2px var(--surface-2);
+}
+.chip-ok {
+  background: var(--success-tint);
+  color: var(--success);
+}
+.chip-warn {
+  background: var(--warn-tint);
+  color: var(--warn);
+}
+.chip-danger {
+  background: var(--danger-tint);
+  color: var(--danger);
+}
+.chip-info {
+  background: var(--field);
+  color: var(--heading);
+}
+.chip-sub {
+  background: color-mix(in srgb, var(--cat-park-sub) 14%, var(--surface-2));
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px var(--cat-park-sub);
+}
+
+/* ---------- Category row ---------- */
+.cat-wrap {
+  display: grid;
+  gap: var(--s-2);
+}
+.cat-row {
+  display: flex;
+  gap: var(--s-2);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding-block: 2px;
+  padding-inline: var(--gutter);
+  scroll-padding-inline: var(--gutter);
+}
+.cat-row::-webkit-scrollbar {
+  display: none;
+}
+.cat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex: none;
+  min-height: var(--hit);
+  padding-inline: 6px var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: var(--shadow-1);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  scroll-snap-align: start;
+  transition: transform var(--m-fast) var(--ease);
+}
+.cat-btn:active,
+.cat-btn.is-pressed {
+  transform: scale(0.97);
+}
+.cat-ic {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--c);
+  color: var(--white);
+}
+.cat-n {
+  min-width: 26px;
+  padding-inline: 6px;
+  border-radius: var(--r-pill);
+  background: var(--field);
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-align: center;
+  line-height: 22px;
+  font-variant-numeric: tabular-nums;
+}
+/* Chosen: a calm tint of the category with an edge in its colour; the text stays ink (DESIGN §1-e). */
+.cat-btn[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--c) 14%, var(--surface-2));
+  border-color: var(--c);
+  box-shadow:
+    inset 0 0 0 1.5px var(--c),
+    var(--shadow-1);
+}
+.cat-btn[aria-pressed='true'] .cat-n {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.cat-eye {
+  width: var(--hit);
+  justify-content: center;
+  padding: 0;
+  color: var(--muted);
+}
+.cat-eye[aria-pressed='true'] {
+  color: var(--heading);
+  border-color: var(--heading);
+}
+
+.segmented {
+  display: inline-flex;
+  justify-self: start;
+  margin-inline: var(--gutter);
+  padding: 3px;
+  border-radius: var(--r-pill);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+}
+.seg {
+  min-height: var(--hit);
+  min-width: 64px;
+  padding-inline: var(--s-3);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.seg[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* ---------- Slide toggle (walk/drive, level) ---------- */
+.slide-toggle {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--n), 1fr);
+  padding: 4px;
+  border-radius: var(--r-btn);
+  background: var(--field);
+  border: 1px solid var(--line-strong);
+  isolation: isolate;
+}
+.slide-thumb {
+  position: absolute;
+  inset-block: 4px;
+  inset-inline-start: 4px;
+  width: calc((100% - 8px) / var(--n));
+  border-radius: calc(var(--r-btn) - 4px);
+  background: var(--tone-bg);
+  box-shadow: var(--shadow-1);
+  transform: translateX(calc(100% * var(--i) * var(--sx, 1)));
+  transition: transform var(--toggle-ms) var(--toggle-ease);
+  z-index: -1;
+}
+.slide-toggle:dir(rtl) {
+  --sx: -1;
+}
+.slide-opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: var(--hit);
+  border: 0;
+  border-radius: calc(var(--r-btn) - 4px);
+  background: transparent;
+  color: var(--muted);
+  font-weight: 600;
+  transition: color var(--m-fast) var(--ease);
+}
+.slide-opt[aria-checked='true'] {
+  color: var(--tone-ink);
+}
+.tone-walk {
+  --tone-bg: var(--green-700);
+  --tone-ink: var(--white);
+}
+.tone-drive {
+  --tone-bg: var(--route-drive);
+  --tone-ink: var(--white);
+}
+.tone-level-a {
+  --tone-bg: var(--route-level-a);
+  --tone-ink: var(--ink-800);
+}
+.tone-level-b {
+  --tone-bg: var(--route-level-b);
+  --tone-ink: var(--white);
+}
+.slide-toggle.is-disabled {
+  opacity: 0.45;
+}
+.floor-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+.floor-row .slide-toggle {
+  flex: 1;
+}
+.floor-k {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+}
