@@ -2,7 +2,7 @@ import type { LangCode } from '../data/types';
 import { getLang, t } from '../i18n';
 
 /**
- * Interface texts added by «next» (the ported src/i18n stays byte for byte as the live app's).
+ * Interface texts added by «next» (the ported src/i18n keeps the live app's texts).
  * Every key in every one of the 26 languages — tests/unit/ui-strings.test.ts enforces it.
  * Translations accepted as they are by the owner (2026-10-16): no native speaker's review needed.
  */

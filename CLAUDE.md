@@ -30,7 +30,13 @@ Language: chat with the owner in Arabic; code, comments and skill files in Engli
 - **لا طلب دمج ولا دمج إلا بطلب صريح من المالك** («افتح الطلب»، «ادمج»).
 - **الإصدار السابق (Leaflet):** محفوظ في الفرع `legacy-v1-leaflet` للرجوع إليه. لا يُعدَّل.
 - **مكان العمل:** هذا المستودع وحده، على الفرع المحدد للجلسة.
-- **ملفات لا تُعدَّل:** `data/`، والملفات المنقولة حرفياً (`src/{data,domain,routing,location,i18n}`)، ومنطق `src/presentation` و`src/navigation`. `parity.test.ts` يكشف أي انحراف.
+- **البيانات `data/`:** تُعدَّل بقصد فقط:
+  - الملفات المولَّدة من سكربتها.
+  - ما فيه قرار للمالك (أبواب، مواقف، روضة، إحداثيات معتمدة) بموافقته (قائمة التحذيرات).
+  - المحتوى يفحصه `data-integrity.test.ts` و`data.test.ts` و`library.test.ts`.
+- **الكود المنقول من الموقع القديم** (`src/{data,domain,routing,location,i18n}`، ومنطق `presentation` و`navigation`):
+  - يُصلح ويُحسَّن كأي كود.
+  - بشرط أن تبقى نتائج `parity.test.ts` كما هي، أو يوافق المالك على تغييرها ويُكتب ذلك في `docs/DECISIONS.md`.
 
 ## الأوامر
 - `npm ci`
