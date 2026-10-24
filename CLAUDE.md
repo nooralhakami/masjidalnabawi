@@ -38,6 +38,8 @@ Language: chat with the owner in Arabic; code, comments and skill files in Engli
 - **Playwright:** 1.63 يتوقع Chromium رقم 1243، والمثبّت في الحاوية 1194. فمرّر `executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'` ولا تشغّل `playwright install`.
 - **MapLibre:** الإصدار 6 بلا export افتراضي (`import { Map } from 'maplibre-gl'`)، والعامل يُجمع بـ`?worker&url` (ARCHITECTURE §5).
 - **الخادم المحلي:** إن كتبت خادماً بنفسك فأرسل ملفات `.mjs` بنوع `text/javascript`، وإلا رُفض عامل الخريطة.
+- **`.npmrc`:** لا تعمل سكربتات تثبيت الحزم، والإصدارات تُحفظ بدقة، ويرفض npm أي إصدار عمره أقل من 14 يوماً. لا تتجاوزه بـ`--ignore-scripts=false` أو `--min-release-age=0`.
+- **CSP في `vercel.json`:** كل `<script>` مكتوب داخل `index.html` أو `map.html` مسموح ببصمته. إن عدّلته فحدّث بصمته (`tests/unit/security-headers.test.ts` يذكر البصمة الصحيحة). وكل نطاق خارجي جديد (بلاطات، API) يضاف إلى `connect-src` و`img-src`، ويتحقق منه `tests/e2e/csp.spec.ts`.
 
 ## تعريف الإنجاز
 1. **الاختبارات:** اختبارات الوحدة وe2e والبناء ناجحة. الصق سطور الخلاصة.
