@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { test as base, expect, type Page } from '@playwright/test';
 
 // 1×1 transparent PNG served for every map tile, so tests are fast and need no network.
@@ -10,6 +11,11 @@ export const test = base.extend<{ errors: string[] }>({
     const errors: string[] = [];
     page.on('console', (m) => m.type() === 'error' && !NOISE.test(m.text()) && errors.push(m.text()));
     page.on('pageerror', (e) => errors.push(e.message));
+    // As Vercel does, a built file that does not exist is a 404 (vite preview would send the page instead).
+    await page.route(/\/assets\//, (r) => {
+      const path = new URL(r.request().url()).pathname;
+      return existsSync(new URL(`../../dist${path}`, import.meta.url)) ? r.fallback() : r.fulfill({ status: 404, body: 'Not found' });
+    });
     await page.route(/arcgisonline|openstreetmap|cartocdn/, (r) => r.fulfill({ contentType: 'image/png', body: PIXEL }));
     await page.route(/api\.open-meteo\.com/, (r) =>
       r.fulfill({ contentType: 'application/json', body: JSON.stringify({ current: { temperature_2m: 33.4, weather_code: 0, is_day: 1 } }) }),

@@ -65,7 +65,13 @@ function inlineCss(): Plugin {
         });
         file.source = html;
       }
-      for (const path of inlined) delete bundle[path];
+      // A lazy chunk (the stories) may still list an inlined file among the CSS it preloads: deleting
+      // it then makes that preload 404 and the chunk fail to load. Keep those; drop only the rest.
+      const preloaded = new Set<string>();
+      for (const file of Object.values(bundle)) {
+        if (file.type === 'chunk' && !file.isEntry) for (const css of file.viteMetadata?.importedCss ?? []) preloaded.add(css);
+      }
+      for (const path of inlined) if (!preloaded.has(path)) delete bundle[path];
     },
   };
 }
