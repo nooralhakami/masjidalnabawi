@@ -20,7 +20,7 @@ const DATA_SHA256: Record<string, string> = {
   // Changed on purpose (owner, 2026-10-23): the Qurban entrance and its roads, from scripts/qurban-lanes.py.
   'garage.json': 'bb621d6aca2fa671b6de86cbc32431d8a63d6d097ddfc25aa1c9d7f891df783c',
   'i18n.json': 'c7ebab28bfedc70cc8579b36f34dbf00b90258e4a404d302ed51ede985bb41d3',
-  'library/companions.json': 'bd1436b59040021ea4dc82444ea94a1ed1e5af0397a9d9abd14d86daa626f644',
+  'library/companions.json': 'cb2e8982ef8a3304065984e423149db99549bda22cf1da7f994d4f188422add4',
   'library/hadith.json': '5355a6ad828a05161da43c37a96ed0407447eab55fc1abe60cfdf441b3570b4b',
   'library/mosque.json': 'a3ab09950f32f8385bc492a3e3642e98079f171580df16714e330044d9b0728d',
   'overrides.json': '80318a09ba935d7fa5e8e8fa6bb9dd005c41d0e2a5b25ca6be24454084aaa3ab',
