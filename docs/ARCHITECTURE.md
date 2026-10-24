@@ -69,7 +69,9 @@ src/
   map/
     setup.ts       map, Esri + light raster sources, bounds, attribution, scale, rotation, compass
     zoom.ts        legacyZoom() — the one bridge between MapLibre zoom and the app's Leaflet-era thresholds
-    pois.ts        one GeoJSON source, layers, filter expressions, feature-state (selected / closed)
+    engine.ts      as built: the MapLibre map, its sources, the base layers, select / focus / restyle, the camera, taps (setup.ts and camera.ts were folded in)
+    pois.ts        as built: the places' GeoJSON (places, gate pairs, car entrances, women's areas), the layer filters a filter or search sets, the pop-in, what a tap lands on
+    poi-layers.ts  as built: the places' layer definitions (dots, chips, numbers, pin, must-visit sites, car entrances), split from pois.ts on 2026-10-24
     sprites.ts     icons, number chips and Arabic labels drawn once to canvas → map.addImage
     women-areas.ts fill layer from routing.json
     route.ts       base / focus / alternatives / arrows / car-park casings / markers (as built: layers exist only while a route is shown, and only those it needs)
@@ -77,7 +79,7 @@ src/
     camera.ts      fly/fit with safe insets for top bar and sheet; reduced motion
   app/            map-main.tsx (entry: engine, store → map effects, ?poi=) · App.tsx (everything over the map) · trip.ts (location on demand, plans, re-route, switch, way out, car park question, live navigation)
   landing/        view.ts (pure HTML string, prerendered in Arabic at build) · main.ts (no framework: theme, language, copy/share/PNG, install) · qr.ts (ported) · landing.css
-  styles/         tokens.css · base.css · …
+  styles/         tokens.css · base.css · kit.css (imports kit/: controls, search-header, sheet-place, rawdah-feedback, map-page, route-nav, extras, error-trip — in that order, which is the cascade order) · …
   design/         /design gallery (dev only, never in the production build)
 tests/unit/  tests/e2e/  scripts/perf.mjs
 ```
