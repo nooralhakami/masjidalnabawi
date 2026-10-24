@@ -5,7 +5,6 @@ import { isClosed } from '../../domain/facilities';
 import { groupResults, highlight, MAX_RESULTS, shownOrder } from '../../presentation/search-view';
 import { isAdminWord } from '../../state/admin';
 import { forgetRecent, query, recent, remember, typed } from '../../state/store';
-import { tNext } from '../../i18n-next/strings';
 import { useI18n } from '../i18n';
 import { Icon } from '../kit/Icon';
 import { PlaceBadge } from '../sheet/PlaceCard';
@@ -44,9 +43,13 @@ export function SearchArea({ rank, status, onPick, dark, onTheme, contrast, onCo
   const input = useRef<HTMLInputElement>(null);
   const timer = useRef(0);
   const [open, setOpen] = useState(false);
-  const [active, setActive] = useState(0);
   const value = typed.value;
   const q = query.value;
+  // The chosen row, kept with the query it was chosen for: a new query starts at the first row at
+  // once, in the same render. An effect resetting it after the paint undid an ↓ pressed in between.
+  const [chosen, setChosen] = useState({ q: '', i: 0 });
+  const active = chosen.q === q ? chosen.i : 0;
+  const setActive = (next: number | ((i: number) => number)) => setChosen((c) => ({ q, i: typeof next === 'number' ? next : next(c.q === q ? c.i : 0) }));
   const ranked = q.trim() ? rank(q) : [];
   const groups = groupResults(ranked);
   const rows = shownOrder(groups);
@@ -55,7 +58,6 @@ export function SearchArea({ rank, status, onPick, dark, onTheme, contrast, onCo
   const showResults = !adminAsked && open && !!q.trim() && value.trim() !== '';
   const expanded = showRecent || showResults || adminAsked;
 
-  useEffect(() => setActive(0), [q]);
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const set = (v: string) => {
@@ -178,7 +180,7 @@ export function SearchArea({ rank, status, onPick, dark, onTheme, contrast, onCo
               <Icon name="settings" size={18} />
             </span>
             <span class="search-row-text">
-              <span class="search-row-name">{tNext('admin_enter')}</span>
+              <span class="search-row-name">{t('admin_enter')}</span>
             </span>
           </button>
         </SearchPanel>
