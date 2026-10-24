@@ -5,6 +5,7 @@
   overflow: hidden;
   /* clip, not just hidden: a hidden box can still be scrolled by a focus inside it, which lifted
      the whole sheet by 300 px when the route card replaced the place card (seen in phase 5). */
+  /* biome-ignore lint/suspicious/noDuplicateProperties: hidden above is the fallback where clip is unsupported. */
   overflow: clip;
   pointer-events: none;
 }

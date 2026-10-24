@@ -62,7 +62,10 @@ export class Facilities {
   toggleMaintenance(id: number): void {
     const cur = this.live.get(id);
     if (!cur) return;
-    if (cur.status === 'works') return this.setWorks(cur.worksBy ?? id, false);
+    if (cur.status === 'works') {
+      this.setWorks(cur.worksBy ?? id, false);
+      return;
+    }
     this.live.set(id, { status: cur.status === 'open' ? 'maintenance' : 'open' });
     this.emit();
   }

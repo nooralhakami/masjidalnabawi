@@ -6,6 +6,7 @@ export function Skeleton({ width = '100%', height = 14, round = false }: { width
 /** A place card while its details load. */
 export function PlaceCardSkeleton({ label }: { label: string }) {
   return (
+    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: kept as it is; a role="status" would change what screen readers announce.
     <div class="place-card" aria-busy="true" aria-label={label}>
       <div class="pc-head">
         <Skeleton width={48} height={48} round />
