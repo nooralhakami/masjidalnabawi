@@ -71,7 +71,24 @@ const UI_PAIRS: [string, string][] = [
   ['focus', 'bg'],
 ];
 /** Category colours carry white glyphs (icons), never white text. */
-const GLYPH_ON = ['cat-men', 'cat-women', 'cat-acc', 'cat-hotel', 'cat-food', 'cat-land', 'cat-emg', 'cat-shop', 'cat-hist', 'cat-park-sub', 'dir-south', 'dir-west', 'dir-north', 'dir-east', 'route-drive', 'route-level-b'];
+const GLYPH_ON = [
+  'cat-men',
+  'cat-women',
+  'cat-acc',
+  'cat-hotel',
+  'cat-food',
+  'cat-land',
+  'cat-emg',
+  'cat-shop',
+  'cat-hist',
+  'cat-park-sub',
+  'dir-south',
+  'dir-west',
+  'dir-north',
+  'dir-east',
+  'route-drive',
+  'route-level-b',
+];
 // --route-walk is a line colour only (lighter at night to read over the imagery); the walk toggle uses --green-700.
 
 describe('design tokens: contrast', () => {
@@ -108,6 +125,14 @@ describe('design tokens: contrast', () => {
   });
 
   it('category colours are the owner’s (DESIGN.md §1-c)', () => {
-    expect([LIGHT['cat-men'], LIGHT['cat-women'], LIGHT['cat-acc'], LIGHT['cat-hotel'], LIGHT['cat-food'], LIGHT['cat-land'], LIGHT['cat-emg']]).toEqual(['#1f64a8', '#83409b', '#0e8478', '#6a4e39', '#c0601c', '#5a3e9c', '#c3362c']);
+    expect([LIGHT['cat-men'], LIGHT['cat-women'], LIGHT['cat-acc'], LIGHT['cat-hotel'], LIGHT['cat-food'], LIGHT['cat-land'], LIGHT['cat-emg']]).toEqual([
+      '#1f64a8',
+      '#83409b',
+      '#0e8478',
+      '#6a4e39',
+      '#c0601c',
+      '#5a3e9c',
+      '#c3362c',
+    ]);
   });
 });

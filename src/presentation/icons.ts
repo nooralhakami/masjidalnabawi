@@ -12,7 +12,8 @@ const PATHS = {
   lock: '<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
   hotel: '<path d="M3 19V6"/><path d="M3 15h18v4"/><path d="M21 15v-3a3 3 0 0 0-3-3h-7v6"/><circle cx="7" cy="11.5" r="1.8"/>',
   food: '<path d="M7 3v18"/><path d="M4.5 3v5a2.5 2.5 0 0 0 5 0V3"/><path d="M17 21V3c-2.2 1.2-3.5 4-3.5 8H17"/>',
-  historic: '<path d="M4 21h16"/><path d="M6 21V11h12v10"/><path d="M9 11a3 3 0 0 1 6 0"/><path d="M12 4.5c1.2 1 1.8 2 1.8 3.2H10.2c0-1.2.6-2.2 1.8-3.2z"/><path d="M19.5 21V6"/><path d="M18.5 6h2"/><path d="M10.5 21v-4h3v4"/>',
+  historic:
+    '<path d="M4 21h16"/><path d="M6 21V11h12v10"/><path d="M9 11a3 3 0 0 1 6 0"/><path d="M12 4.5c1.2 1 1.8 2 1.8 3.2H10.2c0-1.2.6-2.2 1.8-3.2z"/><path d="M19.5 21V6"/><path d="M18.5 6h2"/><path d="M10.5 21v-4h3v4"/>',
   bag: '<path d="M5.5 8h13l-1 12.5h-11z"/><path d="M9 10V6.5a3 3 0 0 1 6 0V10"/>',
   landmark: '<path d="M12 3l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.3 6.8 19l1-5.8L3.6 9.1l5.8-.8z"/>',
   emergency: '<path d="M9.5 4h5v5.5H20v5h-5.5V20h-5v-5.5H4v-5h5.5z"/>',
@@ -23,7 +24,8 @@ const PATHS = {
   toilets:
     '<circle cx="7" cy="5" r="1.8"/><circle cx="17" cy="5" r="1.8"/><path d="M5 21v-6H4v-4.5A1.5 1.5 0 0 1 5.5 9h3a1.5 1.5 0 0 1 1.5 1.5V15H9v6"/><path d="M15.5 21v-4h-2l2-8h3l2 8h-2v4"/><path d="M12 3v18"/>',
   grid: '<rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>',
-  'eye-off': '<path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 4.3A10.8 10.8 0 0 1 21 12a10.8 10.8 0 0 1-3.2 5.5M6.2 6.2A10.8 10.8 0 0 0 3 12a10.8 10.8 0 0 0 9 7.7 10.8 10.8 0 0 0 3.1-.5"/>',
+  'eye-off':
+    '<path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 4.3A10.8 10.8 0 0 1 21 12a10.8 10.8 0 0 1-3.2 5.5M6.2 6.2A10.8 10.8 0 0 0 3 12a10.8 10.8 0 0 0 9 7.7 10.8 10.8 0 0 0 3.1-.5"/>',
   search: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
   locate: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22"/>',
   layers: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>',
@@ -32,7 +34,8 @@ const PATHS = {
   'rotate-left': '<path d="M9 5H5v4"/><path d="M5.5 9A7 7 0 1 1 7 17"/>',
   'rotate-right': '<path d="M15 5h4v4"/><path d="M18.5 9A7 7 0 1 0 17 17"/>',
   // Compass needle: the filled (north) half is coloured by CSS and turned to true north.
-  'rotate-reset': '<circle cx="12" cy="12" r="9.5" stroke-width="1.5"/><path class="needle-n" d="M12 3.6l2.8 8.4h-5.6z" fill="currentColor" stroke="none"/><path class="needle-s" d="M10.6 12h2.8l-1.4 3z" fill="currentColor" stroke="none"/><g class="kaaba"><rect x="9.6" y="15.4" width="4.8" height="4.8" rx=".4" stroke-width=".7"/><rect class="kaaba-band" x="9.6" y="16.5" width="4.8" height=".9" stroke="none"/></g><circle cx="12" cy="12" r="1.3" fill="var(--surface-2, #fff)" stroke="none"/>',
+  'rotate-reset':
+    '<circle cx="12" cy="12" r="9.5" stroke-width="1.5"/><path class="needle-n" d="M12 3.6l2.8 8.4h-5.6z" fill="currentColor" stroke="none"/><path class="needle-s" d="M10.6 12h2.8l-1.4 3z" fill="currentColor" stroke="none"/><g class="kaaba"><rect x="9.6" y="15.4" width="4.8" height="4.8" rx=".4" stroke-width=".7"/><rect class="kaaba-band" x="9.6" y="16.5" width="4.8" height=".9" stroke="none"/></g><circle cx="12" cy="12" r="1.3" fill="var(--surface-2, #fff)" stroke="none"/>',
   close: '<path d="M6 6l12 12M18 6L6 18"/>',
   globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>',
   chevdown: '<path d="M6 9l6 6 6-6"/>',
@@ -64,7 +67,8 @@ const PATHS = {
   cloud: '<path d="M7 18h10.5a4 4 0 0 0 .4-8 5.5 5.5 0 0 0-10.6 1.5A3.3 3.3 0 0 0 7 18z"/>',
   rain: '<path d="M7 14.5h10.5a4 4 0 0 0 .4-8 5.5 5.5 0 0 0-10.6 1.5A3.3 3.3 0 0 0 7 14.5z"/><path d="M9 17.5l-1 3M13 17.5l-1 3M17 17.5l-1 3"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/>',
-  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  settings:
+    '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
 } as const;
 
 export type IconName = keyof typeof PATHS;

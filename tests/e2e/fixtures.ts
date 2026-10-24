@@ -56,7 +56,10 @@ export async function zoomTo(page: Page, legacy: number, center: [number, number
 
 /** Ids of the places drawn in a map layer right now (in the view, after collisions). */
 export async function drawn(page: Page, layer: string): Promise<number[]> {
-  return page.evaluate((l) => [...new Set((window as any).__engine.map.queryRenderedFeatures({ layers: [l] }).map((f: any) => Number(f.properties.id)))].sort((a: any, b: any) => a - b) as number[], layer);
+  return page.evaluate(
+    (l) => [...new Set((window as any).__engine.map.queryRenderedFeatures({ layers: [l] }).map((f: any) => Number(f.properties.id)))].sort((a: any, b: any) => a - b) as number[],
+    layer,
+  );
 }
 
 /** Resolves when the map's next movement (zoom, turn, pan) has ended: start it before the click. */

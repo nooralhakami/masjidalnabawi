@@ -13,8 +13,7 @@ export interface Weather {
 
 const MADINAH = { lat: 24.4672, lng: 39.6112 };
 export const WEATHER_URL =
-  `https://api.open-meteo.com/v1/forecast?latitude=${MADINAH.lat}&longitude=${MADINAH.lng}` +
-  '&current=temperature_2m,weather_code,is_day&timezone=Asia%2FRiyadh';
+  `https://api.open-meteo.com/v1/forecast?latitude=${MADINAH.lat}&longitude=${MADINAH.lng}` + '&current=temperature_2m,weather_code,is_day&timezone=Asia%2FRiyadh';
 /** Reuse a reading for half an hour. */
 export const WEATHER_TTL_MS = 30 * 60_000;
 const KEY = 'weather.v1';

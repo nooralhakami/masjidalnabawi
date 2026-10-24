@@ -10,4 +10,3 @@ export function nearestOuterGate(p: Poi): { poi: Poi; meters: number } | null {
   const best = nearest(p, OUTER);
   return best ? { poi: best.item, meters: best.meters } : null;
 }
-

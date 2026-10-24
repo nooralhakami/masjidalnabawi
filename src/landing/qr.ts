@@ -24,7 +24,8 @@ export function qrSvg(text: string, size = 216, color = '#0E4D3A'): string {
   const q = 2; // quiet zone in modules (the card adds more around it)
   const u = size / (n + q * 2);
   let d = '';
-  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (dark(r, c)) d += `M${((c + q) * u).toFixed(2)} ${((r + q) * u).toFixed(2)}h${u.toFixed(2)}v${u.toFixed(2)}h-${u.toFixed(2)}z`;
+  for (let r = 0; r < n; r++)
+    for (let c = 0; c < n; c++) if (dark(r, c)) d += `M${((c + q) * u).toFixed(2)} ${((r + q) * u).toFixed(2)}h${u.toFixed(2)}v${u.toFixed(2)}h-${u.toFixed(2)}z`;
   return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" aria-hidden="true" shape-rendering="crispEdges"><rect width="${size}" height="${size}" fill="#fff"/><path d="${d}" fill="${color}"/></svg>`;
 }
 

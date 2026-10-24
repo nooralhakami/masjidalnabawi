@@ -16,9 +16,35 @@ const files = (dir: string): string[] =>
   });
 const SOURCES = files(ROOT).map((f) => [f.slice(ROOT.length + 1), readFileSync(f, 'utf8')] as const);
 // Every quoted key inside a t( … ) call, the ternaries included: t(dark ? 'theme_day' : 'theme_night').
-const KEYS = [...new Set(SOURCES.flatMap(([, s]) => [...s.matchAll(/\bt\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g)].flatMap((m) => [...m[1].replace(/[!=]==\s*'[^']*'/g, '').matchAll(/'([a-z][a-z0-9_]*)'/g)].map((k) => k[1]))))];
+const KEYS = [
+  ...new Set(
+    SOURCES.flatMap(([, s]) =>
+      [...s.matchAll(/\bt\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g)].flatMap((m) => [...m[1].replace(/[!=]==\s*'[^']*'/g, '').matchAll(/'([a-z][a-z0-9_]*)'/g)].map((k) => k[1])),
+    ),
+  ),
+];
 // Keys built from a variable part, as the live app does (g_step_n, ro_women, p_gates …).
-const DYNAMIC = ['g_step_n', 'g_step_e', 'g_step_s', 'g_step_w', 'g_step_up', 'g_step_down', 'g_step_lot_in', 'g_step_lot_out', 'p_gates', 'p_toilets', 'p_parking', 'p_landmarks', 'p_wheelchair', 'p_emergency', 'p_women', 'p_hotels', 'p_food', 'p_shopping', 'p_historic'];
+const DYNAMIC = [
+  'g_step_n',
+  'g_step_e',
+  'g_step_s',
+  'g_step_w',
+  'g_step_up',
+  'g_step_down',
+  'g_step_lot_in',
+  'g_step_lot_out',
+  'p_gates',
+  'p_toilets',
+  'p_parking',
+  'p_landmarks',
+  'p_wheelchair',
+  'p_emergency',
+  'p_women',
+  'p_hotels',
+  'p_food',
+  'p_shopping',
+  'p_historic',
+];
 
 describe('ui strings', () => {
   it('finds the keys the components use', () => expect(KEYS.length).toBeGreaterThan(40));

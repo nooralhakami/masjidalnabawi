@@ -137,4 +137,3 @@ test('no placeholder organisation name in the footer (owner: hidden until there 
   await expect(footer).not.toContainText('ORG_NAME');
   await expect(footer.locator('.nav-title')).toBeVisible();
 });
-

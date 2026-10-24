@@ -32,9 +32,10 @@ describe('markers', () => {
   });
 
   it('no emoji in any marker', () => {
-    for (const p of POIS) for (const t of ['s', 'm', 'l'] as const) {
-      expect(markerSpec(p, t, p.status, false).html).not.toMatch(/\p{Extended_Pictographic}/u);
-    }
+    for (const p of POIS)
+      for (const t of ['s', 'm', 'l'] as const) {
+        expect(markerSpec(p, t, p.status, false).html).not.toMatch(/\p{Extended_Pictographic}/u);
+      }
   });
 
   it('outer gates: dot when zoomed out, numbered chip from 17', () => {

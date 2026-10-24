@@ -6,7 +6,6 @@ import { SALAWAT_AR } from '../../i18n-next/strings';
 import { useI18n } from '../i18n';
 import { Icon } from '../kit/Icon';
 
-
 const COUNT_KEY = 'salawat-count';
 /** A press held this long pauses the story (a quick tap moves on). */
 const HOLD_MS = 220;

@@ -17,7 +17,12 @@ const vercel = JSON.parse(readFileSync(join(root, 'vercel.json'), 'utf-8')) as {
 const all = vercel.headers.find((h) => h.source === '/(.*)')!;
 const header = (key: string) => all?.headers.find((h) => h.key === key)?.value;
 const csp = header('Content-Security-Policy') ?? header('Content-Security-Policy-Report-Only') ?? '';
-const directive = (name: string) => csp.split(';').map((d) => d.trim().split(/\s+/)).find((d) => d[0] === name)?.slice(1) ?? [];
+const directive = (name: string) =>
+  csp
+    .split(';')
+    .map((d) => d.trim().split(/\s+/))
+    .find((d) => d[0] === name)
+    ?.slice(1) ?? [];
 const origin = (url: string) => new URL(url.replace(/\{[a-z]\}/g, 'a')).origin;
 
 describe('security headers (vercel.json)', () => {

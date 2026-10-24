@@ -53,7 +53,8 @@ test.describe('filters', () => {
 
   test('parking only appears with its pill; restroom sub-filters work', async ({ page, errors: _ }) => {
     await openMap(page);
-    const parks = () => page.evaluate(() => (window as unknown as Win).__engine.view.ids.filter((id: number) => (window as unknown as Win).__engine.poi(id).category === 'parking').length);
+    const parks = () =>
+      page.evaluate(() => (window as unknown as Win).__engine.view.ids.filter((id: number) => (window as unknown as Win).__engine.poi(id).category === 'parking').length);
     expect(await parks()).toBe(0);
     await pill(page, 5).click();
     await expect.poll(parks).toBe(13);

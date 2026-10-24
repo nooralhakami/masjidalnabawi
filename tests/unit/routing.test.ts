@@ -12,7 +12,7 @@ const at = (id: number): LatLng => {
 
 // Visitors standing in the south, west and north plazas.
 const STARTS: [string, LatLng][] = [
-  ['south plaza', [24.4664, 39.6110]],
+  ['south plaza', [24.4664, 39.611]],
   ['west plaza', [24.4685, 39.6084]],
   ['north plaza', [24.4704, 39.6105]],
 ];
@@ -53,7 +53,7 @@ describe('walking routes', () => {
   }
 
   it('short trips take a direct right-angle route', () => {
-    const path = walkPath([24.4664, 39.6110], at(205));
+    const path = walkPath([24.4664, 39.611], at(205));
     expect(pathLength(path)).toBeLessThan(150);
   });
 
@@ -67,7 +67,7 @@ describe('walking routes', () => {
   });
 
   it('north ↔ south takes the shorter way round the ring', () => {
-    const p = walkPath([24.4704, 39.6105], [24.4664, 39.6110]);
+    const p = walkPath([24.4704, 39.6105], [24.4664, 39.611]);
     // Either side is roughly half the ring; never the long way.
     expect(pathLength(p)).toBeLessThan(network().P / 2 + 120);
   });
@@ -87,7 +87,11 @@ describe('every reachable place, from every plaza side', () => {
 
   it('covers the outdoor places (facilities, outer gates, parking, services)', () => {
     expect(reachable.length).toBeGreaterThan(140);
-    for (let id = 201; id <= 236; id++) expect(reachable.some((p) => p.id === id), String(id)).toBe(true);
+    for (let id = 201; id <= 236; id++)
+      expect(
+        reachable.some((p) => p.id === id),
+        String(id),
+      ).toBe(true);
   });
 
   for (const [name, start] of SIDES) {
@@ -151,7 +155,10 @@ describe('walkway network', () => {
       const path = walkPath([24.4655, 39.6085], door).map(toM);
       const last = Math.hypot(path[path.length - 1][0] - path[path.length - 2][0], path[path.length - 1][1] - path[path.length - 2][1]);
       expect(last, `${id}`).toBeLessThan(30);
-      expect(path.some(([, y]) => Math.abs(y + 25) < 1), `${id} along the south plaza`).toBe(true);
+      expect(
+        path.some(([, y]) => Math.abs(y + 25) < 1),
+        `${id} along the south plaza`,
+      ).toBe(true);
     }
   });
 
@@ -210,7 +217,13 @@ describe('restrooms are buildings: routes pass beside them, never over them (own
   const box = { x0: -6, x1: 6, y0: -6, y1: 6 };
   const through = (line: [number, number][]) => line.some((p, i) => i > 0 && segmentHits(line[i - 1], p, box));
   it('a walkway through a building is bent round it, by the shorter side', () => {
-    const bent = aroundBuildings([[-30, 1], [30, 1]], [box]);
+    const bent = aroundBuildings(
+      [
+        [-30, 1],
+        [30, 1],
+      ],
+      [box],
+    );
     expect(through(bent)).toBe(false);
     expect(bent[0]).toEqual([-30, 1]);
     expect(bent[bent.length - 1]).toEqual([30, 1]);
@@ -219,15 +232,28 @@ describe('restrooms are buildings: routes pass beside them, never over them (own
     expect(Math.min(...bent.map((p) => p[1]))).toBeGreaterThanOrEqual(0.99);
   });
   it('a corner vertex inside the building is bent round too', () => {
-    const bent = aroundBuildings([[-30, -20], [0, 0], [30, 20]], [box]);
+    const bent = aroundBuildings(
+      [
+        [-30, -20],
+        [0, 0],
+        [30, 20],
+      ],
+      [box],
+    );
     expect(through(bent)).toBe(false);
   });
   it('a spur that ends inside the building (the way to a restroom) is left as drawn', () => {
-    const line: [number, number][] = [[-30, 0], [0, 0]];
+    const line: [number, number][] = [
+      [-30, 0],
+      [0, 0],
+    ];
     expect(aroundBuildings(line, [box])).toEqual(line);
   });
   it('a line that does not touch the building is unchanged', () => {
-    const line: [number, number][] = [[-30, 20], [30, 20]];
+    const line: [number, number][] = [
+      [-30, 20],
+      [30, 20],
+    ];
     expect(aroundBuildings(line, [box])).toEqual(line);
   });
   it('the network knows every restroom as a 12 m square building', () => {

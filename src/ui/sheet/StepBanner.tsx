@@ -2,7 +2,16 @@ import type { StepView } from '../../presentation/route-view';
 import { useI18n } from '../i18n';
 import { Icon, type IconName } from '../kit/Icon';
 
-const ICON: Record<NonNullable<StepView['now']>['kind'], IconName> = { n: 'arrowleft', e: 'arrowleft', s: 'arrowleft', w: 'arrowleft', up: 'arrowleft', down: 'arrowleft', lot_in: 'parking', lot_out: 'parking' };
+const ICON: Record<NonNullable<StepView['now']>['kind'], IconName> = {
+  n: 'arrowleft',
+  e: 'arrowleft',
+  s: 'arrowleft',
+  w: 'arrowleft',
+  up: 'arrowleft',
+  down: 'arrowleft',
+  lot_in: 'parking',
+  lot_out: 'parking',
+};
 /** The arrow turns to the compass point (screen up = north); ramps point the way of travel. */
 const TURN: Record<string, number> = { n: 90, e: 180, s: 270, w: 0, up: 90, down: 270 };
 

@@ -43,14 +43,7 @@ export interface IconButtonProps extends Omit<JSX.HTMLAttributes<HTMLButtonEleme
 /** 44 × 44 px, always labelled. */
 export function IconButton({ icon, label, floating, pressed, flip, class: cls, ...rest }: IconButtonProps) {
   return (
-    <button
-      type="button"
-      {...rest}
-      class={`icon-btn${floating ? ' is-floating' : ''}${cls ? ` ${cls}` : ''}`}
-      aria-label={label}
-      title={label}
-      aria-pressed={pressed}
-    >
+    <button type="button" {...rest} class={`icon-btn${floating ? ' is-floating' : ''}${cls ? ` ${cls}` : ''}`} aria-label={label} title={label} aria-pressed={pressed}>
       <Icon name={icon} flip={flip} />
     </button>
   );

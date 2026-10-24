@@ -5,7 +5,10 @@ import { applyOverrides } from '../../src/data/overrides';
 import type { Poi } from '../../src/data';
 
 const count = (pred: (p: Poi) => boolean) => POIS.filter(pred).length;
-const ids = (pred: (p: Poi) => boolean) => POIS.filter(pred).map((p) => p.id).sort((a, b) => a - b);
+const ids = (pred: (p: Poi) => boolean) =>
+  POIS.filter(pred)
+    .map((p) => p.id)
+    .sort((a, b) => a - b);
 const range = (a: number, b: number) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 
 describe('inner gate names and descriptions', () => {
@@ -21,7 +24,33 @@ describe('inner gate names and descriptions', () => {
     expect(POI_BY_ID.get(37)?.rawdah).toBe(true);
   });
   it('has translated names and descriptions for every named gate', () => {
-    for (const lang of ['en', 'tr', 'ur', 'id', 'uz', 'bn', 'fr', 'fa', 'ru', 'ms', 'ha', 'ml', 'sw', 'ps', 'so', 'ta', 'hi', 'bs', 'de', 'zh', 'am', 'ku', 'az', 'th', 'es'] as const) {
+    for (const lang of [
+      'en',
+      'tr',
+      'ur',
+      'id',
+      'uz',
+      'bn',
+      'fr',
+      'fa',
+      'ru',
+      'ms',
+      'ha',
+      'ml',
+      'sw',
+      'ps',
+      'so',
+      'ta',
+      'hi',
+      'bs',
+      'de',
+      'zh',
+      'am',
+      'ku',
+      'az',
+      'th',
+      'es',
+    ] as const) {
       for (const id of named) {
         const p = POI_BY_ID.get(id)!;
         expect(I18N[lang].gi?.[id]).toBeTruthy();
@@ -76,7 +105,10 @@ describe('pois.json', () => {
       [251, 252, 251, 'men'],
       [253, 254, 252, 'women'],
     ] as const) {
-      for (const [id, other] of [[a, b], [b, a]]) {
+      for (const [id, other] of [
+        [a, b],
+        [b, a],
+      ]) {
         const p = POI_BY_ID.get(id)!;
         expect(p.pairWith, `pair of ${id}`).toBe(other);
         expect(p.pairNo, `number of ${id}`).toBe(no);
@@ -137,7 +169,18 @@ describe('overrides', () => {
   it('only the owner-requested POIs are nudged (outer gates north 328–343, west 322–327, south 301–309 and 365–370; restrooms 205–209, 211–218 and north 220–230 (even); service buildings 501, 504–507; centres 511 and 604; women prayer halls 601–602); everything else is untouched', () => {
     const raw = rawPois as Poi[];
     const moved = (id: number) =>
-      (id >= 322 && id <= 343) || (id >= 301 && id <= 309) || (id >= 365 && id <= 370) || (id >= 205 && id <= 209) || (id >= 211 && id <= 218) || [220, 222, 224, 226, 228, 230].includes(id) || id === 501 || (id >= 504 && id <= 507) || id === 511 || id === 601 || id === 602 || id === 604;
+      (id >= 322 && id <= 343) ||
+      (id >= 301 && id <= 309) ||
+      (id >= 365 && id <= 370) ||
+      (id >= 205 && id <= 209) ||
+      (id >= 211 && id <= 218) ||
+      [220, 222, 224, 226, 228, 230].includes(id) ||
+      id === 501 ||
+      (id >= 504 && id <= 507) ||
+      id === 511 ||
+      id === 601 ||
+      id === 602 ||
+      id === 604;
     POIS.forEach((p, i) => {
       if (moved(p.id)) return;
       expect(p.lat).toBe(raw[i].lat);
@@ -180,7 +223,12 @@ describe('overrides', () => {
       expect(metres(id).east).toBeCloseTo(0, 5);
     }
     // 213–214 4 m south, 215–216 3 m north, 217–218 6 m north, north restrooms 220–230 (even) 4 m then 2 m north (6 m).
-    const north: [number[], number][] = [[[213, 214], -4], [[215, 216], 3], [[217, 218], 6], [[220, 222, 224, 226, 228, 230], 6]];
+    const north: [number[], number][] = [
+      [[213, 214], -4],
+      [[215, 216], 3],
+      [[217, 218], 6],
+      [[220, 222, 224, 226, 228, 230], 6],
+    ];
     for (const [group, m] of north) {
       for (const id of group) {
         expect(metres(id).north, String(id)).toBeCloseTo(m, 5);
@@ -205,7 +253,10 @@ describe('overrides', () => {
       const poly = ROUTING.women_prayer_areas.find((a) => a.id === id)!.polygon;
       return [poly.reduce((s, q) => s + q[0], 0) / poly.length, poly.reduce((s, q) => s + q[1], 0) / poly.length];
     };
-    for (const [pid, area] of [[601, 'north-east'], [602, 'north-west']] as const) {
+    for (const [pid, area] of [
+      [601, 'north-east'],
+      [602, 'north-west'],
+    ] as const) {
       const p = POI_BY_ID.get(pid)!;
       const [lat, lng] = centre(area);
       const metres = Math.hypot((p.lat - lat) * 111_320, (p.lng - lng) * 111_320 * Math.cos((lat * Math.PI) / 180));
@@ -242,7 +293,34 @@ describe('supporting data', () => {
 
   it('twenty-six languages with identical UI keys', () => {
     const langs = Object.keys(I18N);
-    expect(langs).toEqual(['ar', 'en', 'tr', 'ur', 'id', 'uz', 'bn', 'fr', 'fa', 'ru', 'ms', 'ha', 'ml', 'sw', 'ps', 'so', 'ta', 'hi', 'bs', 'de', 'zh', 'am', 'ku', 'az', 'th', 'es']);
+    expect(langs).toEqual([
+      'ar',
+      'en',
+      'tr',
+      'ur',
+      'id',
+      'uz',
+      'bn',
+      'fr',
+      'fa',
+      'ru',
+      'ms',
+      'ha',
+      'ml',
+      'sw',
+      'ps',
+      'so',
+      'ta',
+      'hi',
+      'bs',
+      'de',
+      'zh',
+      'am',
+      'ku',
+      'az',
+      'th',
+      'es',
+    ]);
     const keys = Object.keys(I18N.ar.ui).sort();
     for (const l of langs) expect(Object.keys(I18N[l as keyof typeof I18N].ui).sort()).toEqual(keys);
   });

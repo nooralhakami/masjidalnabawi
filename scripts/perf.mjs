@@ -142,7 +142,14 @@ async function main() {
     const zout = page.locator('.map-overlay .mc-group').first().locator('button').nth(1);
     // With a route the zoom and turn buttons step aside (trip mode): the same calls they make.
     const trip = await page.evaluate(() => document.querySelector('.map-page')?.hasAttribute('data-trip'));
-    for (const [b, step] of [[zout, -1], [zout, -1], [zin, 1], [zin, 1], [zin, 1], [zout, -1]]) {
+    for (const [b, step] of [
+      [zout, -1],
+      [zout, -1],
+      [zin, 1],
+      [zin, 1],
+      [zin, 1],
+      [zout, -1],
+    ]) {
       if (trip) await page.evaluate((s) => window.__engine.zoomBy(s), step);
       else await b.click();
       await page.waitForTimeout(450);
@@ -153,7 +160,10 @@ async function main() {
     // Rotate: the rotation buttons, several steps each way.
     await begin();
     const rot = page.locator('.map-overlay .mc-group').nth(1).locator('button');
-    for (const [btn, deg] of [[rot.first(), 15], [rot.last(), -15]])
+    for (const [btn, deg] of [
+      [rot.first(), 15],
+      [rot.last(), -15],
+    ])
       for (let i = 0; i < 6; i++) {
         if (trip) await page.evaluate((d) => window.__engine.turn(d), deg);
         else await btn.click();
@@ -161,7 +171,6 @@ async function main() {
       }
     results.rotate = await end();
     log('rotate done');
-
 
     await context.close();
     return results;
@@ -175,7 +184,9 @@ async function main() {
   stop();
 
   let ok = true;
-  console.log(`CPU throttle ${THROTTLE}x · Pixel 7 · budget: long task ≤ 50 ms (pan, rotate), ≤ 100 ms (zoom); markers add ≤ ${BUDGET.overheadP50Ms} ms JS per frame (p50) over MapLibre alone`);
+  console.log(
+    `CPU throttle ${THROTTLE}x · Pixel 7 · budget: long task ≤ 50 ms (pan, rotate), ≤ 100 ms (zoom); markers add ≤ ${BUDGET.overheadP50Ms} ms JS per frame (p50) over MapLibre alone`,
+  );
   console.log('(frame times: software WebGL in this container — for comparison only)\n');
   console.log('gesture  frames  JS/frame p50  p95  | floor p50  p95 | markers +p50 | long tasks  longest ms | frame p50  p95 ms');
   for (const [name, r] of Object.entries(full)) {

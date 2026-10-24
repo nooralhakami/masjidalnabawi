@@ -17,8 +17,7 @@ beforeEach(() => {
   setLang('ar');
 });
 
-const shown = (filter: FilterId, toiletSub: 'all' | 'open' | 'closed' = 'all') =>
-  POIS.filter((p) => passesFilter(p, { filter, toiletSub, searching: false }, fac));
+const shown = (filter: FilterId, toiletSub: 'all' | 'open' | 'closed' = 'all') => POIS.filter((p) => passesFilter(p, { filter, toiletSub, searching: false }, fac));
 
 describe('filters', () => {
   it('"all" shows everything except parking and the hidden wheelchair zones', () => {
@@ -29,7 +28,10 @@ describe('filters', () => {
 
   it('parking appears only with its pill or while searching', () => {
     for (const f of ['all', 'gates', 'toilets', 'landmarks', 'women'] as FilterId[]) {
-      expect(shown(f).some((p) => p.category === 'parking'), f).toBe(false);
+      expect(
+        shown(f).some((p) => p.category === 'parking'),
+        f,
+      ).toBe(false);
     }
     expect(shown('parking')).toHaveLength(13);
     expect(shown('parking').every((p) => p.category === 'parking')).toBe(true);
@@ -37,7 +39,11 @@ describe('filters', () => {
   });
 
   it('wheelchair zones are hidden everywhere, under every filter and in search (owner, 2026-10-10)', () => {
-    for (const f of FILTERS.map((x) => x.id)) expect(shown(f).some((p) => p.subCategory === 'wheelchair_zone'), f).toBe(false);
+    for (const f of FILTERS.map((x) => x.id))
+      expect(
+        shown(f).some((p) => p.subCategory === 'wheelchair_zone'),
+        f,
+      ).toBe(false);
     expect(passesFilter(P(401), { filter: 'all', toiletSub: 'all', searching: true }, fac)).toBe(false);
     expect(FILTERS.some((x) => x.label === 'p_wheelchair')).toBe(false);
     expect(shown('landmarks')).toHaveLength(38);
@@ -48,7 +54,12 @@ describe('filters', () => {
     const w = shown('women');
     const womenGates = POIS.filter((p) => p.subCategory === 'gate_inner' && p.women);
     expect(w.filter((p) => p.subCategory === 'toilet_women')).toHaveLength(14);
-    expect(w.filter((p) => p.subCategory === 'toilet_mixed').map((p) => p.id).sort()).toEqual([202, 210, 221]);
+    expect(
+      w
+        .filter((p) => p.subCategory === 'toilet_mixed')
+        .map((p) => p.id)
+        .sort(),
+    ).toEqual([202, 210, 221]);
     expect(w.filter((p) => p.category === 'women')).toHaveLength(2);
     expect(w.filter((p) => p.subCategory === 'gate_inner')).toHaveLength(womenGates.length);
     expect(w.some((p) => p.subCategory === 'toilet_men' || p.subCategory === 'gate_outer')).toBe(false);
@@ -60,7 +71,11 @@ describe('filters', () => {
     expect(shown('toilets', 'open')).toHaveLength(40);
     fac.toggleMaintenance(212);
     fac.toggleElevatorWorks(215);
-    expect(shown('toilets', 'closed').map((p) => p.id).sort()).toEqual([212, 215, 216]);
+    expect(
+      shown('toilets', 'closed')
+        .map((p) => p.id)
+        .sort(),
+    ).toEqual([212, 215, 216]);
     expect(shown('toilets', 'open')).toHaveLength(37);
   });
 
@@ -192,7 +207,11 @@ describe('search', () => {
   });
 
   it('the exhibition above restrooms 204 is findable by its description', () => {
-    for (const q of ['متحف', 'معرض', 'مخطوطات']) expect(search(POIS, q).map((p) => p.id), q).toContain(204);
+    for (const q of ['متحف', 'معرض', 'مخطوطات'])
+      expect(
+        search(POIS, q).map((p) => p.id),
+        q,
+      ).toContain(204);
     setLang('en');
     expect(search(POIS, 'manuscripts').map((p) => p.id)).toContain(204);
   });

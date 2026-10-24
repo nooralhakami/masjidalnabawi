@@ -45,7 +45,10 @@ describe('streets.json (generated from OpenStreetMap)', () => {
   });
 
   it('every way is [mode, oneway, ...at least two nodes that exist]', () => {
-    const bad = s.ways.filter(([mode, oneway, ...ids]) => !Number.isInteger(mode) || ![-1, 0, 1].includes(oneway) || ids.length < 2 || ids.some((i) => !Number.isInteger(i) || i < 0 || i >= s.nodes.length));
+    const bad = s.ways.filter(
+      ([mode, oneway, ...ids]) =>
+        !Number.isInteger(mode) || ![-1, 0, 1].includes(oneway) || ids.length < 2 || ids.some((i) => !Number.isInteger(i) || i < 0 || i >= s.nodes.length),
+    );
     expect(bad.length, JSON.stringify(bad[0])).toBe(0);
   });
 

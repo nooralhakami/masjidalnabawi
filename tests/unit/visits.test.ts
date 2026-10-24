@@ -59,7 +59,7 @@ describe('must-visit data', () => {
     }
   });
 
-  it('is ranked: Quba first, then Al-Baqi\'', () => {
+  it("is ranked: Quba first, then Al-Baqi'", () => {
     expect(visitRank(542)).toBe(1);
     expect(visitRank(531)).toBe(2);
     expect(visitRank(1)).toBeUndefined();

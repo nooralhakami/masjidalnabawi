@@ -112,9 +112,7 @@ function splitI18n(): Plugin {
       if (opts?.ssr) return null;
       const path = id.split('?')[0];
       if (path.endsWith('/data/i18n.json')) {
-        const stub = Object.fromEntries(
-          Object.entries(full).map(([l, p]) => [l, BASE_LANGS.includes(l) ? p : { n: p.n, short: p.short, dir: p.dir, ui: {} }]),
-        );
+        const stub = Object.fromEntries(Object.entries(full).map(([l, p]) => [l, BASE_LANGS.includes(l) ? p : { n: p.n, short: p.short, dir: p.dir, ui: {} }]));
         // Still JSON: Vite's own JSON plugin turns it into a module afterwards.
         return JSON.stringify(stub);
       }

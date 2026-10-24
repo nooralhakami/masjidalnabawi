@@ -57,7 +57,8 @@ describe('translations are complete', () => {
   });
 
   it('added keys never collide with data keys', () => {
-    for (const k of [...Object.keys(EXTRA_UI.ar), ...Object.keys(LANDING_UI.ar), ...Object.keys(STORIES_UI.ar), ...Object.keys(LIBRARY_UI.ar)]) expect(I18N.ar.ui[k], k).toBeUndefined();
+    for (const k of [...Object.keys(EXTRA_UI.ar), ...Object.keys(LANDING_UI.ar), ...Object.keys(STORIES_UI.ar), ...Object.keys(LIBRARY_UI.ar)])
+      expect(I18N.ar.ui[k], k).toBeUndefined();
     for (const k of Object.keys(LIBRARY_UI.ar)) expect(EXTRA_UI.ar[k] ?? LANDING_UI.ar[k] ?? STORIES_UI.ar[k], k).toBeUndefined();
     for (const k of Object.keys(STORIES_UI.ar)) expect(EXTRA_UI.ar[k] ?? LANDING_UI.ar[k], k).toBeUndefined();
   });

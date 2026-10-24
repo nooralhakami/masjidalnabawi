@@ -28,4 +28,3 @@ export async function checkAdminPassword(pw: string): Promise<boolean> {
 
 /** The password was given on this page (kept across a language change; a reload asks again). */
 export const adminUnlocked = signal(false);
-

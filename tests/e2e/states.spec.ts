@@ -102,7 +102,12 @@ test.describe('sun mode (high contrast)', () => {
           const card = document.querySelector('.top-card')!.getBoundingClientRect();
           const field = document.querySelector('.search-field')!.getBoundingClientRect();
           const btns = [...document.querySelectorAll('.top-card button, .top-card a')].map((b) => b.getBoundingClientRect()).filter((b) => b.width > 0);
-          return { left: card.left, right: card.right, field: field.width, inside: btns.every((b) => b.left >= card.left - 0.5 && b.right <= card.right + 0.5 && b.width >= 44 && b.height >= 44) };
+          return {
+            left: card.left,
+            right: card.right,
+            field: field.width,
+            inside: btns.every((b) => b.left >= card.left - 0.5 && b.right <= card.right + 0.5 && b.width >= 44 && b.height >= 44),
+          };
         });
         expect(r.left, `${width} ${lang}`).toBeGreaterThanOrEqual(0);
         expect(r.right, `${width} ${lang}`).toBeLessThanOrEqual(width);
@@ -111,7 +116,6 @@ test.describe('sun mode (high contrast)', () => {
       }
     }
   });
-
 });
 
 test('the home button in the search bar leads back to the landing page (the live app)', async ({ page, errors: _ }) => {
@@ -122,4 +126,3 @@ test('the home button in the search bar leads back to the landing page (the live
   await expect(page).toHaveURL(/\/(index\.html)?$/);
   await expect(page.locator('.btn-cta')).toBeVisible();
 });
-

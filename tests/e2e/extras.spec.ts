@@ -50,9 +50,32 @@ test.describe('Rawdah card', () => {
 
 test.describe('languages', () => {
   const LANGS: [string, 'rtl' | 'ltr'][] = [
-    ['ar', 'rtl'], ['en', 'ltr'], ['tr', 'ltr'], ['ur', 'rtl'], ['id', 'ltr'], ['uz', 'ltr'], ['bn', 'ltr'], ['fr', 'ltr'], ['fa', 'rtl'],
-    ['ru', 'ltr'], ['ms', 'ltr'], ['ha', 'ltr'], ['ml', 'ltr'], ['sw', 'ltr'], ['ps', 'rtl'], ['so', 'ltr'], ['ta', 'ltr'], ['hi', 'ltr'],
-    ['bs', 'ltr'], ['de', 'ltr'], ['zh', 'ltr'], ['am', 'ltr'], ['ku', 'ltr'], ['az', 'ltr'], ['th', 'ltr'], ['es', 'ltr'],
+    ['ar', 'rtl'],
+    ['en', 'ltr'],
+    ['tr', 'ltr'],
+    ['ur', 'rtl'],
+    ['id', 'ltr'],
+    ['uz', 'ltr'],
+    ['bn', 'ltr'],
+    ['fr', 'ltr'],
+    ['fa', 'rtl'],
+    ['ru', 'ltr'],
+    ['ms', 'ltr'],
+    ['ha', 'ltr'],
+    ['ml', 'ltr'],
+    ['sw', 'ltr'],
+    ['ps', 'rtl'],
+    ['so', 'ltr'],
+    ['ta', 'ltr'],
+    ['hi', 'ltr'],
+    ['bs', 'ltr'],
+    ['de', 'ltr'],
+    ['zh', 'ltr'],
+    ['am', 'ltr'],
+    ['ku', 'ltr'],
+    ['az', 'ltr'],
+    ['th', 'ltr'],
+    ['es', 'ltr'],
   ];
 
   test('menu: Arabic and English first, the less widespread languages folded under an arrow', async ({ page, errors: _ }) => {

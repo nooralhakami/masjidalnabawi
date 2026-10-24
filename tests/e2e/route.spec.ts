@@ -25,7 +25,8 @@ async function drawn(page: Page, layer: string, part?: string): Promise<number> 
   );
 }
 /** The route's marks besides its lines (labels and car park marks), as kind:text. */
-const marks = (page: Page) => page.evaluate(() => ((window as unknown as Win).__engine.route.shownMarks as { kind: string; text?: string }[]).map((m) => `${m.kind}:${m.text ?? ''}`));
+const marks = (page: Page) =>
+  page.evaluate(() => ((window as unknown as Win).__engine.route.shownMarks as { kind: string; text?: string }[]).map((m) => `${m.kind}:${m.text ?? ''}`));
 const routeActive = (page: Page) => page.evaluate(() => (window as unknown as Win).__engine.route.active as boolean);
 const metresOf = async (page: Page) => Number((await card(page).locator('.rs-v').first().textContent())!.replace(/\D/g, ''));
 

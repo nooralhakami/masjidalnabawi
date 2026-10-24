@@ -1,16 +1,6 @@
 export type Direction = 'south' | 'west' | 'north' | 'east';
 
-export type Category =
-  | 'gates'
-  | 'toilets'
-  | 'parking'
-  | 'landmarks'
-  | 'wheelchair'
-  | 'emergency'
-  | 'women'
-  | 'hotels'
-  | 'food'
-  | 'shopping';
+export type Category = 'gates' | 'toilets' | 'parking' | 'landmarks' | 'wheelchair' | 'emergency' | 'women' | 'hotels' | 'food' | 'shopping';
 
 export type SubCategory =
   | 'gate_outer'
@@ -165,7 +155,33 @@ export interface Rules {
   };
 }
 
-export type LangCode = 'ar' | 'en' | 'tr' | 'ur' | 'id' | 'uz' | 'bn' | 'fr' | 'fa' | 'ru' | 'ms' | 'ha' | 'ml' | 'sw' | 'ps' | 'so' | 'ta' | 'hi' | 'bs' | 'de' | 'zh' | 'am' | 'ku' | 'az' | 'th' | 'es';
+export type LangCode =
+  | 'ar'
+  | 'en'
+  | 'tr'
+  | 'ur'
+  | 'id'
+  | 'uz'
+  | 'bn'
+  | 'fr'
+  | 'fa'
+  | 'ru'
+  | 'ms'
+  | 'ha'
+  | 'ml'
+  | 'sw'
+  | 'ps'
+  | 'so'
+  | 'ta'
+  | 'hi'
+  | 'bs'
+  | 'de'
+  | 'zh'
+  | 'am'
+  | 'ku'
+  | 'az'
+  | 'th'
+  | 'es';
 
 export interface LangPack {
   n: string;

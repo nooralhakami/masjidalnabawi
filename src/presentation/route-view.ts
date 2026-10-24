@@ -12,7 +12,16 @@ export interface RouteSummary {
   /** Walking to a car park: the number of its nearest entrance. */
   nearestEntrance?: number;
   /** By car: the drive, the lot, and the walk from it. */
-  drive?: { meters: number; lot?: number; walkMeters: number; entrance?: 'omar' | 'sultana' | 'qurban'; unsure?: boolean; level?: 'A' | 'B'; exit?: 'omar' | 'sultana' | 'qurban'; carPark?: boolean };
+  drive?: {
+    meters: number;
+    lot?: number;
+    walkMeters: number;
+    entrance?: 'omar' | 'sultana' | 'qurban';
+    unsure?: boolean;
+    level?: 'A' | 'B';
+    exit?: 'omar' | 'sultana' | 'qurban';
+    carPark?: boolean;
+  };
   /** Every route offered (the chosen one included), and which one is chosen. */
   options: { minutes: number; meters: number }[];
   chosen: number;

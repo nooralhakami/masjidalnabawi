@@ -45,7 +45,19 @@ export class MeMarker {
     if (!m.getSource('me')) m.addSource('me', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     if (m.getLayer('me-accuracy')) m.removeLayer('me-accuracy');
     m.addLayer(
-      { id: 'me-accuracy', type: 'circle', source: 'me', paint: { 'circle-color': this.color(), 'circle-opacity': 0.12, 'circle-stroke-color': this.color(), 'circle-stroke-opacity': 0.35, 'circle-stroke-width': 1, 'circle-pitch-alignment': 'map' } },
+      {
+        id: 'me-accuracy',
+        type: 'circle',
+        source: 'me',
+        paint: {
+          'circle-color': this.color(),
+          'circle-opacity': 0.12,
+          'circle-stroke-color': this.color(),
+          'circle-stroke-opacity': 0.35,
+          'circle-stroke-width': 1,
+          'circle-pitch-alignment': 'map',
+        },
+      },
       before && m.getLayer(before) ? before : undefined,
     );
     if (this.to) {

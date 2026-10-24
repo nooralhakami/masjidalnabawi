@@ -135,17 +135,11 @@ export function markerSpec(p: Poi, tier: Tier, status: Status | undefined, selec
 
   if (p.subCategory === 'gate_outer') {
     // Number chip edged in the side colour; a 6px dot when zoomed out.
-    inner =
-      (tier === 's' || compact) && !selected
-        ? `<span class="mk-gdot" style="--c:${look.color}"></span>`
-        : `<span class="mk-chip" style="--c:${look.color}">${p.id}</span>`;
+    inner = (tier === 's' || compact) && !selected ? `<span class="mk-gdot" style="--c:${look.color}"></span>` : `<span class="mk-chip" style="--c:${look.color}">${p.id}</span>`;
     z = 100;
   } else if (p.subCategory === 'gate_inner') {
     const c = p.women ? 'var(--cat-women)' : look.color;
-    inner =
-      tier === 'l' || selected
-        ? `<span class="mk-inum" style="--c:${c}">${p.id}</span>`
-        : `<span class="mk-gdot mk-gdot-in" style="--c:${c}"></span>`;
+    inner = tier === 'l' || selected ? `<span class="mk-inum" style="--c:${c}">${p.id}</span>` : `<span class="mk-gdot mk-gdot-in" style="--c:${c}"></span>`;
     z = 50;
   } else if (p.category === 'parking') {
     const subscriber = p.access === 'subscribers';

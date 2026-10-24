@@ -3,7 +3,7 @@ import { prayerTimes, rawdahState, splitDuration } from '../../src/domain/rawdah
 
 /** Madinah wall-clock time (UTC+3) → instant. */
 const mad = (iso: string) => new Date(`${iso}+03:00`);
-const madHour = (d: Date) => (d.getUTCHours() + 3) % 24 + d.getUTCMinutes() / 60;
+const madHour = (d: Date) => ((d.getUTCHours() + 3) % 24) + d.getUTCMinutes() / 60;
 
 describe('rawdah schedule (Gate 37)', () => {
   const day = '2026-10-04';

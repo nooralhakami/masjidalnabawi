@@ -51,7 +51,10 @@ const noop = () => {};
 const FAC = new Facilities();
 FAC.toggleMaintenance(212);
 FAC.toggleElevatorWorks(215); // women's lift works: closes 216 with it (R1)
-const COUNTS = Object.fromEntries(FILTERS.map(({ id }) => [id, visiblePois(id, 'all', '', new Facilities(), undefined, id === 'parking' ? 'all' : undefined).length])) as Record<FilterId, number>;
+const COUNTS = Object.fromEntries(FILTERS.map(({ id }) => [id, visiblePois(id, 'all', '', new Facilities(), undefined, id === 'parking' ? 'all' : undefined).length])) as Record<
+  FilterId,
+  number
+>;
 const WOMEN_TURN = rawdahState(new Date('2026-10-16T05:00:00Z'));
 const MEN_TURN = rawdahState(new Date('2026-10-16T12:00:00Z'));
 
@@ -80,7 +83,23 @@ function State({ name, children, wide }: { name: string; children: ComponentChil
 
 function Swatches() {
   const names = ['bg', 'surface', 'surface-2', 'field', 'line-strong', 'outline', 'ink', 'muted', 'heading', 'accent', 'focus', 'gold-500', 'danger', 'success', 'warn'];
-  const cats = ['cat-men', 'cat-women', 'cat-acc', 'cat-hotel', 'cat-food', 'cat-land', 'cat-emg', 'cat-shop', 'cat-hist', 'cat-park-sub', 'cat-gray', 'route-walk', 'route-drive', 'route-level-a', 'route-level-b'];
+  const cats = [
+    'cat-men',
+    'cat-women',
+    'cat-acc',
+    'cat-hotel',
+    'cat-food',
+    'cat-land',
+    'cat-emg',
+    'cat-shop',
+    'cat-hist',
+    'cat-park-sub',
+    'cat-gray',
+    'route-walk',
+    'route-drive',
+    'route-level-a',
+    'route-level-b',
+  ];
   return (
     <>
       <div class="g-swatches">
@@ -202,7 +221,14 @@ function Categories() {
   const [hidden, setHidden] = useState(false);
   const [ts, setTs] = useState<ToiletSub>('all');
   const [ps, setPs] = useState<ParkingSub>('all');
-  const props = (f: FilterId) => ({ counts: COUNTS, hidden, onHidden: setHidden, toiletSub: ts, parkingSub: ps, onSub: (s: string) => (f === 'parking' ? setPs(s as ParkingSub) : setTs(s as ToiletSub)) });
+  const props = (f: FilterId) => ({
+    counts: COUNTS,
+    hidden,
+    onHidden: setHidden,
+    toiletSub: ts,
+    parkingSub: ps,
+    onSub: (s: string) => (f === 'parking' ? setPs(s as ParkingSub) : setTs(s as ToiletSub)),
+  });
   return (
     <div class="g-col g-bleed">
       <State name="interactive (counts from data, via visiblePois)" wide>
@@ -329,7 +355,18 @@ function SheetDemo() {
       <div class="g-phone" style={{ height: '640px' }}>
         <div class="g-map" aria-hidden="true" />
         <BottomSheet detent={detent} onDetent={setDetent} label={nm(P(215))} extra={travel === 'drive' ? 120 : 64}>
-          <PlaceCard p={P(215)} fac={FAC} travel={travel} level={level} onTravel={setTravel} onLevel={setLevel} onRoute={noop} onShare={noop} onClose={() => setDetent('closed')} onGo={noop} />
+          <PlaceCard
+            p={P(215)}
+            fac={FAC}
+            travel={travel}
+            level={level}
+            onTravel={setTravel}
+            onLevel={setLevel}
+            onRoute={noop}
+            onShare={noop}
+            onClose={() => setDetent('closed')}
+            onGo={noop}
+          />
         </BottomSheet>
       </div>
       <p class="g-note" lang="en" dir="ltr">
@@ -344,7 +381,20 @@ function Cards() {
   const [level, setLevel] = useState<Level>('A');
   const card = (id: number, extra: Partial<Parameters<typeof PlaceCard>[0]> = {}) => (
     <div class="g-card">
-      <PlaceCard p={P(id)} fac={FAC} travel="walk" level="B" onTravel={noop} onLevel={noop} onRoute={noop} onShare={noop} onClose={noop} onGo={noop} now={new Date('2026-10-16T05:00:00Z')} {...extra} />
+      <PlaceCard
+        p={P(id)}
+        fac={FAC}
+        travel="walk"
+        level="B"
+        onTravel={noop}
+        onLevel={noop}
+        onRoute={noop}
+        onShare={noop}
+        onClose={noop}
+        onGo={noop}
+        now={new Date('2026-10-16T05:00:00Z')}
+        {...extra}
+      />
     </div>
   );
   return (

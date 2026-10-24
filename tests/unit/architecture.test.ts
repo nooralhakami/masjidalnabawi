@@ -10,10 +10,12 @@ function files(dir: string): string[] {
     return statSync(p).isDirectory() ? files(p) : /\.tsx?$/.test(p) ? [p] : [];
   });
 }
-const importsOf = (file: string): string[] =>
-  [...readFileSync(file, 'utf8').matchAll(/from '(\.\.?\/[^']+)'/g)].map((m) => m[1]);
+const importsOf = (file: string): string[] => [...readFileSync(file, 'utf8').matchAll(/from '(\.\.?\/[^']+)'/g)].map((m) => m[1]);
 const moduleOf = (file: string) => file.slice(ROOT.length + 1).split('/')[0];
-const target = (file: string, spec: string) => join(file, '..', spec).slice(ROOT.length + 1).split('/')[0];
+const target = (file: string, spec: string) =>
+  join(file, '..', spec)
+    .slice(ROOT.length + 1)
+    .split('/')[0];
 
 const FORBIDDEN: Record<string, string[]> = {
   data: ['domain', 'routing', 'location', 'i18n', 'ui', 'map', 'navigation', 'landing'],
@@ -34,7 +36,11 @@ describe('architecture: module boundaries (ARCHITECTURE.md §2)', () => {
     it(`${mod}/ does not import ${banned.join(', ')}`, () => {
       const offenders = files(ROOT)
         .filter((f) => moduleOf(f) === mod)
-        .flatMap((f) => importsOf(f).filter((s) => banned.includes(target(f, s))).map((s) => `${f.slice(ROOT.length + 1)} → ${s}`));
+        .flatMap((f) =>
+          importsOf(f)
+            .filter((s) => banned.includes(target(f, s)))
+            .map((s) => `${f.slice(ROOT.length + 1)} → ${s}`),
+        );
       expect(offenders).toEqual([]);
     });
   }

@@ -12,14 +12,23 @@ const shown = async (page: Page) => {
   return page.evaluate(() => {
     const m = (window as unknown as Win).__engine.map;
     return m.getLayoutProperty('car-entrances', 'visibility') === 'visible'
-      ? m.queryRenderedFeatures({ layers: ['car-entrances'] }).map((f: any) => `${f.properties.eid}:${f.properties.open}`).sort()
+      ? m
+          .queryRenderedFeatures({ layers: ['car-entrances'] })
+          .map((f: any) => `${f.properties.eid}:${f.properties.open}`)
+          .sort()
       : [];
   });
 };
 
 async function tapEntrance(page: Page, id: string) {
   // In the middle of the screen, clear of the map's buttons, close enough that neighbours (Omar and Quba, 100 m apart) don't overlap.
-  const LL: Record<string, [number, number]> = { sultana: [39.6062431, 24.4708932], omar: [39.60657, 24.46572], quba: [39.607755, 24.465375], qurban: [39.612841, 24.464994], east: [39.615174, 24.468547] };
+  const LL: Record<string, [number, number]> = {
+    sultana: [39.6062431, 24.4708932],
+    omar: [39.60657, 24.46572],
+    quba: [39.607755, 24.465375],
+    qurban: [39.612841, 24.464994],
+    east: [39.615174, 24.468547],
+  };
   await page.evaluate((c) => (window as unknown as Win).__engine.map.jumpTo({ center: c, zoom: 17 }), LL[id]);
   await idle(page);
   const at = await page.evaluate((eid) => {

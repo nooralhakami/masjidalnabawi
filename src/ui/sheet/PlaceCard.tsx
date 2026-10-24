@@ -85,18 +85,36 @@ export function PlaceCard({ p, fac, travel, level, onTravel, onLevel, onRoute, o
 
       <div class="chips">
         <Chip dot={`var(--dir-${p.direction})`}>{t('side', { d: dirName(p.direction) })}</Chip>
-        {status === 'open' ? <Chip tone="ok" icon="check">{t('a_open')}</Chip> : null}
-        {status === 'maintenance' ? <Chip tone="warn" icon="works">{t('maint')}</Chip> : null}
-        {status === 'works' ? <Chip tone="warn" icon="works">{t('a_works')}</Chip> : null}
+        {status === 'open' ? (
+          <Chip tone="ok" icon="check">
+            {t('a_open')}
+          </Chip>
+        ) : null}
+        {status === 'maintenance' ? (
+          <Chip tone="warn" icon="works">
+            {t('maint')}
+          </Chip>
+        ) : null}
+        {status === 'works' ? (
+          <Chip tone="warn" icon="works">
+            {t('a_works')}
+          </Chip>
+        ) : null}
         <Chip>{t('num_label', { id: p.id })}</Chip>
         {p.category === 'parking' ? (
           p.access === 'subscribers' ? (
-            <Chip tone="sub" icon="lock">{t('park_sub')}</Chip>
+            <Chip tone="sub" icon="lock">
+              {t('park_sub')}
+            </Chip>
           ) : (
             <Chip tone="info">{t('park_public')}</Chip>
           )
         ) : null}
-        {eb && !closed ? <Chip tone="info" icon="works">{t('elev')}</Chip> : null}
+        {eb && !closed ? (
+          <Chip tone="info" icon="works">
+            {t('elev')}
+          </Chip>
+        ) : null}
       </div>
 
       {/* Closed: the nearest open one first, in view without dragging the sheet (owner, 2026-10-16). */}
