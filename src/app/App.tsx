@@ -49,6 +49,7 @@ import { PlaceCard } from '../ui/sheet/PlaceCard';
 import { detentHeights } from '../ui/sheet/physics';
 import { CategoryRow } from '../ui/shell/CategoryRow';
 import { applyContrast, applyTheme, currentTheme } from '../ui/theme';
+import { listen } from './events';
 
 /** Extra height of the half-open card for its walking/car row, and the level row by car (as the live app). */
 const extraFor = (tr: 'walk' | 'drive') => (tr === 'drive' ? 120 : 64);
@@ -182,30 +183,23 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
   };
 
   useEffect(() => {
-    const onPick = (e: Event) => {
-      const id = (e as CustomEvent<number | null>).detail;
+    const onPick = (id: number | null) => {
       const p = id !== null ? POI_BY_ID.get(id) : undefined;
       if (p) select(p, false);
       // While a route is followed, a stray tap on the map must not end it (use «إنهاء المسار»).
       else if (selected.value !== null && !trip.active) deselect();
     };
-    const onOpen = (e: Event) => select((e as CustomEvent<Poi>).detail, true);
-    const onStories = (e: Event) => void openStories((e as CustomEvent<number>).detail ?? 0);
-    const onLibrary = () => void openLibrary();
-    document.addEventListener('map-tap', onPick);
-    document.addEventListener('open-place', onOpen);
-    document.addEventListener('stories-request', onStories);
-    document.addEventListener('library-request', onLibrary);
+    const stop = [
+      listen('map-tap', onPick),
+      listen('open-place', (p) => select(p, true)),
+      listen('stories-request', (at) => void openStories(at ?? 0)),
+      listen('library-request', () => void openLibrary()),
+    ];
     if (initial) select(initial, true);
     if (initialVisit !== undefined) void openStories(initialVisit);
     if (initialLib !== undefined) void openLibrary(initialLib);
     if (adminUnlocked.value) void loadAdmin();
-    return () => {
-      document.removeEventListener('map-tap', onPick);
-      document.removeEventListener('open-place', onOpen);
-      document.removeEventListener('stories-request', onStories);
-      document.removeEventListener('library-request', onLibrary);
-    };
+    return () => stop.forEach((f) => f());
   }, []);
 
   const share = async (url: string, title: string, copied: string) => {

@@ -14,7 +14,7 @@ import { visiblePois } from '../domain/visible';
 import { VISIT_LIST } from '../domain/visits';
 import { currentWeather, WEATHER_TTL_MS } from '../domain/weather';
 import { getLang, nm, t } from '../i18n';
-import { applyLang, initialLang } from '../i18n/dom';
+import { applyLang, initialLang, onLangChange } from '../i18n/dom';
 import { loadLang } from '../i18n/load';
 import { CAR_ENTRANCES } from '../data-next/car-entrances';
 import { entranceOpen } from '../state/entrances';
@@ -26,6 +26,7 @@ import { WeatherChip } from '../ui/shell/WeatherChip';
 import { MapError } from '../ui/shell/MapError';
 import { applyContrast, applyTheme, savedContrast, savedTheme } from '../ui/theme';
 import { App } from './App';
+import { emit } from './events';
 import { initPwa } from './pwa';
 import { Trip } from './trip';
 
@@ -51,7 +52,7 @@ async function main() {
       container: document.getElementById('map')!,
       nameOf: (p) => nm(p),
       status: (id) => fac.status(id),
-      onPick: (id) => document.dispatchEvent(new CustomEvent('map-tap', { detail: id })),
+      onPick: (id) => emit('map-tap', id),
       routeText: { minutes: (m) => t('r_min', { t: m }), level: (l) => t('lvl_name', { l }), entrance: (p) => nm(p) },
       meLabel: () => t('you'),
       // The new vehicle entrances (owner, 2026-10-16): a tap says the name, the state and how to leave.
@@ -136,8 +137,8 @@ async function main() {
     return (
       <MapTools
         weather={<WeatherChip w={weather.value} />}
-        onStories={() => document.dispatchEvent(new CustomEvent('stories-request', { detail: 0 }))}
-        onLibrary={() => document.dispatchEvent(new CustomEvent('library-request'))}
+        onStories={() => emit('stories-request', 0)}
+        onLibrary={() => emit('library-request', undefined)}
         onLocate={() => void trip.locate()}
         base={base}
         onBase={() => {
@@ -192,7 +193,7 @@ async function main() {
   };
   draw();
 
-  document.addEventListener('langchange', () => {
+  onLangChange(() => {
     document.title = t('title');
     engine.restyle();
     draw();

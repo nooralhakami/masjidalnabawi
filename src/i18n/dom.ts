@@ -27,5 +27,12 @@ export function applyLang(l: LangCode): void {
   } catch {
     /* storage unavailable */
   }
-  document.dispatchEvent(new CustomEvent<LangCode>('langchange', { detail: getLang() }));
+  document.dispatchEvent(new CustomEvent<LangCode>(LANG_CHANGE, { detail: getLang() }));
+}
+
+const LANG_CHANGE = 'langchange';
+
+/** Run `fn` after every language switch (applyLang). */
+export function onLangChange(fn: () => void): void {
+  document.addEventListener(LANG_CHANGE, fn);
 }
