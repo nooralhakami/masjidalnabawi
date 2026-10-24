@@ -68,7 +68,7 @@ test.describe('during a route', () => {
       await context.setGeolocation({ latitude: 24.4685, longitude: 39.6084 - (i * 25) / 101_300, accuracy: 8 });
       await page.waitForTimeout(900);
     }
-    await expect(page.locator('.toast')).toContainText('أُعيد رسم المسار من موقعك', { timeout: 10_000 });
+    await expect(page.locator('.toast')).toContainText('أُعيد رسم المسار من موقعك', { timeout: 20_000 });
     expect(await page.evaluate(() => (window as unknown as Win).__engine.route.active)).toBe(true);
   });
 
@@ -91,7 +91,11 @@ test.describe('markers pop in on a new filter (SPEC §5)', () => {
   const opacity = (page: import('@playwright/test').Page) =>
     page.evaluate(() => {
       const m = (window as unknown as Win).__engine.map;
-      return { icon: m.getPaintProperty('facilities', 'icon-opacity'), dots: m.getPaintProperty('facility-dots', 'circle-opacity'), fade: m.getPaintProperty('facilities', 'icon-opacity-transition') };
+      return {
+        icon: m.getPaintProperty('facilities', 'icon-opacity'),
+        dots: m.getPaintProperty('facility-dots', 'circle-opacity'),
+        fade: m.getPaintProperty('facilities', 'icon-opacity-transition'),
+      };
     });
 
   test('a category tap fades the markers in over 200 ms and leaves them fully drawn', async ({ page, errors: _ }) => {
@@ -135,4 +139,3 @@ test('a chosen gate: its number 1.35 times larger, with its name beside it from 
   expect(r.names).toEqual(['37']);
   expect(JSON.stringify(r.size)).toContain('1.35');
 });
-

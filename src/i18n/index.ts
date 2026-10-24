@@ -12,8 +12,32 @@ import { LIBRARY_UI } from './library-strings';
  * an arrow in the language menu.
  */
 export const LANGS: readonly LangCode[] = [
-  'ar', 'en', 'ur', 'id', 'fr', 'tr', 'bn', 'fa', 'ru', 'ms', 'es', 'hi', 'zh', 'de',
-  'ha', 'ps', 'uz', 'sw', 'so', 'az', 'ku', 'ml', 'ta', 'am', 'th', 'bs',
+  'ar',
+  'en',
+  'ur',
+  'id',
+  'fr',
+  'tr',
+  'bn',
+  'fa',
+  'ru',
+  'ms',
+  'es',
+  'hi',
+  'zh',
+  'de',
+  'ha',
+  'ps',
+  'uz',
+  'sw',
+  'so',
+  'az',
+  'ku',
+  'ml',
+  'ta',
+  'am',
+  'th',
+  'bs',
 ];
 export const MORE_LANGS: ReadonlySet<LangCode> = new Set<LangCode>(['ha', 'ps', 'uz', 'sw', 'so', 'az', 'ku', 'ml', 'ta', 'am', 'th', 'bs']);
 
@@ -37,7 +61,10 @@ const EMOJI = /[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}️‍]/gu;
 
 /** Remove emoji from data strings (the redesign uses SVG icons instead). */
 export function stripEmoji(s: string): string {
-  return s.replace(EMOJI, '').replace(/\s{2,}/g, ' ').trim();
+  return s
+    .replace(EMOJI, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 }
 
 function fill(s: string, vars?: Record<string, string | number>): string {

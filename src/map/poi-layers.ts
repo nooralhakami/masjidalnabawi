@@ -16,25 +16,56 @@ export function addPoiLayers(m: MLMap, palette: Palette, version: number): void 
   const img = (...parts: (string | ExpressionSpecification)[]) => ['concat', ...parts, `@${version}`] as ExpressionSpecification;
   /** A colour token on a feature, as a paint colour (read from tokens.css). */
   const colorOf = (get: ExpressionSpecification): ExpressionSpecification => {
-    const tokens = ['dir-south', 'dir-west', 'dir-north', 'dir-east', 'cat-women', 'cat-men', 'cat-acc', 'cat-hotel', 'cat-food', 'cat-land', 'cat-emg', 'cat-shop', 'cat-hist', 'cat-park-sub', 'cat-gray'];
+    const tokens = [
+      'dir-south',
+      'dir-west',
+      'dir-north',
+      'dir-east',
+      'cat-women',
+      'cat-men',
+      'cat-acc',
+      'cat-hotel',
+      'cat-food',
+      'cat-land',
+      'cat-emg',
+      'cat-shop',
+      'cat-hist',
+      'cat-park-sub',
+      'cat-gray',
+    ];
     return ['match', get, ...tokens.flatMap((t) => [t, palette.get(t)]), palette.get('cat-land')] as unknown as ExpressionSpecification;
   };
   const white = '#ffffff';
   const symbol = { 'icon-allow-overlap': true, 'icon-ignore-placement': true } as const;
   m.addLayer({ id: 'women-fill', type: 'fill', source: 'women', paint: { 'fill-color': palette.get('women-area-solid'), 'fill-opacity': 0.22 } });
-  m.addLayer({ id: 'women-line', type: 'line', source: 'women', paint: { 'line-color': palette.get('women-area-solid'), 'line-opacity': 0.55, 'line-width': 1.5, 'line-dasharray': [4, 2.7] } });
+  m.addLayer({
+    id: 'women-line',
+    type: 'line',
+    source: 'women',
+    paint: { 'line-color': palette.get('women-area-solid'), 'line-opacity': 0.55, 'line-width': 1.5, 'line-dasharray': [4, 2.7] },
+  });
   // Gates zoomed out: small dots in the side colour (the live app's .mk-gdot; 3 px at 15 and below).
   m.addLayer({
     id: 'inner-dots',
     type: 'circle',
     source: 'pois',
-    paint: { 'circle-radius': ['step', ['zoom'], 1.5, at(16), 4], 'circle-color': colorOf(['get', 'color']), 'circle-stroke-color': white, 'circle-stroke-width': ['step', ['zoom'], 0.75, at(16), 1] },
+    paint: {
+      'circle-radius': ['step', ['zoom'], 1.5, at(16), 4],
+      'circle-color': colorOf(['get', 'color']),
+      'circle-stroke-color': white,
+      'circle-stroke-width': ['step', ['zoom'], 0.75, at(16), 1],
+    },
   });
   m.addLayer({
     id: 'outer-dots',
     type: 'circle',
     source: 'pois',
-    paint: { 'circle-radius': ['step', ['zoom'], 1.5, at(16), 3], 'circle-color': colorOf(['get', 'color']), 'circle-stroke-color': white, 'circle-stroke-width': ['step', ['zoom'], 0.75, at(16), 1] },
+    paint: {
+      'circle-radius': ['step', ['zoom'], 1.5, at(16), 3],
+      'circle-color': colorOf(['get', 'color']),
+      'circle-stroke-color': white,
+      'circle-stroke-width': ['step', ['zoom'], 0.75, at(16), 1],
+    },
   });
   // Facilities up to 16: plain dots, 4 / 5 / 8 px with a white ring (1 / 1 / 1.5 px), drawn as GPU
   // circles (no symbol placement, the cheapest layer there is). Mixed restrooms are half blue, half
@@ -56,7 +87,11 @@ export function addPoiLayers(m: MLMap, palette: Palette, version: number): void 
     type: 'symbol',
     source: 'pois',
     maxzoom: at(ICON_FROM),
-    layout: { ...symbol, 'icon-image': img('dot:mixed:', ['to-string', ['get', 'closed']]), 'icon-size': ['interpolate', ['linear'], ['zoom'], at(14), 0.5, at(15), 0.625, at(16), 1] },
+    layout: {
+      ...symbol,
+      'icon-image': img('dot:mixed:', ['to-string', ['get', 'closed']]),
+      'icon-size': ['interpolate', ['linear'], ['zoom'], at(14), 0.5, at(15), 0.625, at(16), 1],
+    },
   });
   // From 17: the disc with its icon, 14 px (20 px at 19).
   m.addLayer({
@@ -75,7 +110,12 @@ export function addPoiLayers(m: MLMap, palette: Palette, version: number): void 
     id: 'parking',
     type: 'symbol',
     source: 'pois',
-    layout: { ...symbol, 'icon-image': img('park:', ['to-string', ['get', 'n']], ':', ['to-string', ['get', 'sub']]), 'icon-size': ['step', ['zoom'], 0.7, at(16), 1], 'icon-anchor': 'center' },
+    layout: {
+      ...symbol,
+      'icon-image': img('park:', ['to-string', ['get', 'n']], ':', ['to-string', ['get', 'sub']]),
+      'icon-size': ['step', ['zoom'], 0.7, at(16), 1],
+      'icon-anchor': 'center',
+    },
   });
   // Outer-gate number chips from 17; one that would overlap another stays a dot (the live app's «compact»).
   m.addLayer({

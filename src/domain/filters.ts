@@ -62,10 +62,7 @@ export function passesFilter(p: Poi, s: FilterState, fac: Facilities): boolean {
       return false;
     case 'women':
       return (
-        p.category === 'women' ||
-        p.subCategory === 'toilet_women' ||
-        p.subCategory === 'toilet_mixed' ||
-        (p.subCategory === 'gate_inner' && p.women === true && fac.isOpen(p.id))
+        p.category === 'women' || p.subCategory === 'toilet_women' || p.subCategory === 'toilet_mixed' || (p.subCategory === 'gate_inner' && p.women === true && fac.isOpen(p.id))
       );
     case 'toilets': {
       if (p.category !== 'toilets') return false;

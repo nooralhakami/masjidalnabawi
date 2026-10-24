@@ -60,7 +60,17 @@ export const ARRIVE_READS = 2;
 /** An instruction for the car park is shown from this far before its first step. */
 export const STEP_AHEAD_M = 150;
 
-const STOPPED: NavigationSnapshot = { position: null, accuracy: 0, remainingMeters: 0, remainingMinutes: 0, state: 'stopped', heading: null, follow: false, progress: 0, step: null };
+const STOPPED: NavigationSnapshot = {
+  position: null,
+  accuracy: 0,
+  remainingMeters: 0,
+  remainingMinutes: 0,
+  state: 'stopped',
+  heading: null,
+  follow: false,
+  progress: 0,
+  step: null,
+};
 
 export class NavigationTracker {
   private track: RouteTrack | null = null;

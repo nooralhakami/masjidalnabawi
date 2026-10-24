@@ -25,7 +25,8 @@ async function drawn(page: Page, layer: string, part?: string): Promise<number> 
   );
 }
 /** The route's marks besides its lines (labels and car park marks), as kind:text. */
-const marks = (page: Page) => page.evaluate(() => ((window as unknown as Win).__engine.route.shownMarks as { kind: string; text?: string }[]).map((m) => `${m.kind}:${m.text ?? ''}`));
+const marks = (page: Page) =>
+  page.evaluate(() => ((window as unknown as Win).__engine.route.shownMarks as { kind: string; text?: string }[]).map((m) => `${m.kind}:${m.text ?? ''}`));
 const routeActive = (page: Page) => page.evaluate(() => (window as unknown as Win).__engine.route.active as boolean);
 const metresOf = async (page: Page) => Number((await card(page).locator('.rs-v').first().textContent())!.replace(/\D/g, ''));
 
@@ -222,13 +223,13 @@ test.describe('live location while walking', () => {
       await context.setGeolocation(step(i));
       await page.waitForTimeout(1000);
     }
+    await expect.poll(() => left(page), { timeout: 15_000 }).toBeLessThan(start - 10);
     const mid = await left(page);
-    expect(mid).toBeLessThan(start - 10);
     for (let i = 7; i >= 0; i--) {
       await context.setGeolocation(step(i));
       await page.waitForTimeout(1000);
     }
-    expect(await left(page)).toBeGreaterThan(mid + 10);
+    await expect.poll(() => left(page), { timeout: 15_000 }).toBeGreaterThan(mid + 10);
     await expect(navBar(page)).toHaveAttribute('data-state', 'away');
     await expect(page.locator('.nav-label')).toContainText('تبتعد');
   });

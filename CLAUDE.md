@@ -44,6 +44,7 @@ Language: chat with the owner in Arabic; code, comments and skill files in Engli
 - `npm test` (نحو دقيقة: اختبارات الشوارع ثقيلة)
 - `npm run build` (ثم `scripts/check-build.mjs`: يفشل إن طلب جزء ملفاً لم يُبنَ)
 - `npm run test:e2e`: Playwright على نسخة البناء (تفاصيل التشغيل في `tests/CLAUDE.md`).
+- `npm run lint`: Biome (فحص الكود وتنسيقه). و`npm run format` يصلح التنسيق.
 - `npm run design:audit`: معرض نظام التصميم على 320 و360 و375 و412، بالعربية والإنجليزية، نهاراً وليلاً.
 - `npm run perf`: ميزانيات الأداء (SPEC §6). يقبل `PERF_QUERY=layers=base` لقياس أرضية MapLibre وحدها.
 

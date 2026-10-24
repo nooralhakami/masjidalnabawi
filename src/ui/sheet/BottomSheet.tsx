@@ -217,7 +217,13 @@ export function BottomSheet({ detent, onDetent, allowed = DETENTS, extra = 0, la
           onKeyDown={(e) => {
             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
               e.preventDefault();
-              onDetent(stepDetent(detent, e.key === 'ArrowUp' ? 1 : -1, allowed.filter((d) => d !== 'closed')));
+              onDetent(
+                stepDetent(
+                  detent,
+                  e.key === 'ArrowUp' ? 1 : -1,
+                  allowed.filter((d) => d !== 'closed'),
+                ),
+              );
             }
           }}
         >

@@ -40,7 +40,8 @@ test.describe('markers: every place in its own spot, smaller when zoomed out (ow
         const e = (window as unknown as Win).__engine;
         const b = e.map.getBounds();
         const ids = new Set<number>();
-        for (const l of ['facilities', 'facility-dots', 'mixed-dots', 'featured', 'parking', 'outer-dots', 'inner-dots']) for (const f of e.map.queryRenderedFeatures({ layers: [l] })) ids.add(Number(f.properties.id));
+        for (const l of ['facilities', 'facility-dots', 'mixed-dots', 'featured', 'parking', 'outer-dots', 'inner-dots'])
+          for (const f of e.map.queryRenderedFeatures({ layers: [l] })) ids.add(Number(f.properties.id));
         const expected = (e.shownIds as number[]).filter((id) => {
           const p = e.poi(id);
           // Inner gates join from 17 under «All» (the live app's visibleAtZoom).

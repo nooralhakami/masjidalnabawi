@@ -44,7 +44,11 @@ const DRAW_MS = 700;
 const FADED = 0.35;
 const EMPTY: FeatureCollection = { type: 'FeatureCollection', features: [] };
 const lngLat = ([lat, lng]: LatLng): [number, number] => [lng, lat];
-const line = (path: readonly LatLng[], properties: Record<string, unknown>): Feature<LineString> => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: path.map(lngLat) }, properties });
+const line = (path: readonly LatLng[], properties: Record<string, unknown>): Feature<LineString> => ({
+  type: 'Feature',
+  geometry: { type: 'LineString', coordinates: path.map(lngLat) },
+  properties,
+});
 const point = (at: LatLng, properties: Record<string, unknown>): Feature<Point> => ({ type: 'Feature', geometry: { type: 'Point', coordinates: lngLat(at) }, properties });
 
 interface Mark {
@@ -115,28 +119,78 @@ export class RouteLayer {
     const part = (...p: string[]) => ['in', ['get', 'part'], ['literal', p]] as unknown as ExpressionSpecification;
     const add = (spec: Parameters<MLMap['addLayer']>[0]) => m.addLayer(spec, this.below());
     // The other routes: barely there (a faint trace); a tap near one chooses it (hitAlternative).
-    if (this.plans.length > 1) add({ id: 'route-alt', type: 'line', source: 'route-alts', layout: round, paint: { 'line-color': c('muted'), 'line-opacity': 0.16, 'line-width': 6 } });
-    add({ id: 'route-casing', type: 'line', source: 'route-lines', filter: part('walk', 'drive', 'garage'), layout: round, paint: { 'line-color': '#ffffff', 'line-opacity': 0.95, 'line-width': ['match', ['get', 'part'], 'drive', 12, 11] } });
-    if (edged) add({ id: 'route-edge', type: 'line', source: 'route-lines', filter: part('edge-a', 'edge-up', 'edge-down'), layout: round, paint: { 'line-color': ['match', ['get', 'part'], 'edge-down', c('ramp-down'), c('ramp-up')], 'line-width': 14 } });
+    if (this.plans.length > 1)
+      add({ id: 'route-alt', type: 'line', source: 'route-alts', layout: round, paint: { 'line-color': c('muted'), 'line-opacity': 0.16, 'line-width': 6 } });
+    add({
+      id: 'route-casing',
+      type: 'line',
+      source: 'route-lines',
+      filter: part('walk', 'drive', 'garage'),
+      layout: round,
+      paint: { 'line-color': '#ffffff', 'line-opacity': 0.95, 'line-width': ['match', ['get', 'part'], 'drive', 12, 11] },
+    });
+    if (edged)
+      add({
+        id: 'route-edge',
+        type: 'line',
+        source: 'route-lines',
+        filter: part('edge-a', 'edge-up', 'edge-down'),
+        layout: round,
+        paint: { 'line-color': ['match', ['get', 'part'], 'edge-down', c('ramp-down'), c('ramp-up')], 'line-width': 14 },
+      });
     if (kinds.has('walk')) {
       add({ id: 'route-walk', type: 'line', source: 'route-lines', filter: part('walk'), layout: round, paint: { 'line-width': 6, 'line-gradient': this.drawn(1) } });
-      add({ id: 'route-flow', type: 'line', source: 'route-lines', filter: part('walk'), layout: { 'line-cap': 'round' }, paint: { 'line-color': c('gold-500'), 'line-width': 2, 'line-dasharray': [0.5, 6] } });
+      add({
+        id: 'route-flow',
+        type: 'line',
+        source: 'route-lines',
+        filter: part('walk'),
+        layout: { 'line-cap': 'round' },
+        paint: { 'line-color': c('gold-500'), 'line-width': 2, 'line-dasharray': [0.5, 6] },
+      });
     }
     // The drive and the car park in one layer (both blue); the car park's tunnel dashes over it.
-    if (kinds.has('drive') || kinds.has('garage')) add({ id: 'route-car', type: 'line', source: 'route-lines', filter: part('drive', 'garage'), layout: round, paint: { 'line-color': c('route-drive'), 'line-width': ['match', ['get', 'part'], 'drive', 7, 6] } });
-    if (kinds.has('garage')) add({ id: 'route-garage-dash', type: 'line', source: 'route-lines', filter: part('garage'), paint: { 'line-color': '#ffffff', 'line-opacity': 0.85, 'line-width': 2, 'line-dasharray': [2, 3.5] } });
+    if (kinds.has('drive') || kinds.has('garage'))
+      add({
+        id: 'route-car',
+        type: 'line',
+        source: 'route-lines',
+        filter: part('drive', 'garage'),
+        layout: round,
+        paint: { 'line-color': c('route-drive'), 'line-width': ['match', ['get', 'part'], 'drive', 7, 6] },
+      });
+    if (kinds.has('garage'))
+      add({
+        id: 'route-garage-dash',
+        type: 'line',
+        source: 'route-lines',
+        filter: part('garage'),
+        paint: { 'line-color': '#ffffff', 'line-opacity': 0.85, 'line-width': 2, 'line-dasharray': [2, 3.5] },
+      });
     add({
       id: 'route-arrows',
       type: 'symbol',
       source: 'route-arrows',
-      layout: { 'icon-image': `rt-arrow@${this.version}`, 'icon-rotate': ['-', ['get', 'b'], 90], 'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true },
+      layout: {
+        'icon-image': `rt-arrow@${this.version}`,
+        'icon-rotate': ['-', ['get', 'b'], 90],
+        'icon-rotation-alignment': 'map',
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
+      },
     });
     // Start, end, labels and car park marks: one symbol layer of small images.
     add({
       id: 'route-marks',
       type: 'symbol',
       source: 'route-marks',
-      layout: { 'icon-image': ['get', 'img'], 'icon-allow-overlap': true, 'icon-ignore-placement': true, 'symbol-sort-key': ['get', 'z'], 'icon-offset': ['match', ['get', 'kind'], 'entrance-label', ['literal', [0, -27]], ['literal', [0, 0]]] },
+      layout: {
+        'icon-image': ['get', 'img'],
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
+        'symbol-sort-key': ['get', 'z'],
+        'icon-offset': ['match', ['get', 'kind'], 'entrance-label', ['literal', [0, -27]], ['literal', [0, 0]]],
+      },
     });
     this.addArrowImage();
     this.setFaded(this.focused);
@@ -218,7 +272,14 @@ export class RouteLayer {
     for (const r of plan.ramps ?? []) marks.push({ kind: 'level-ramp', at: r.at, text: `${r.to === 'A' ? '↑' : '↓'}${r.to}`, z: 1001 });
     if (plan.entrances && plan.nearest) {
       const sub = parkingAccess(plan.nearest) === 'subscribers';
-      for (const e of plan.entrances) marks.push({ kind: 'entrance', at: [e.lat, e.lng], text: e.id === plan.nearest.id ? 'nearest' : '', z: e.id === plan.nearest.id ? 900 : 899, img: this.entranceImage(e.id === plan.nearest.id, sub) });
+      for (const e of plan.entrances)
+        marks.push({
+          kind: 'entrance',
+          at: [e.lat, e.lng],
+          text: e.id === plan.nearest.id ? 'nearest' : '',
+          z: e.id === plan.nearest.id ? 900 : 899,
+          img: this.entranceImage(e.id === plan.nearest.id, sub),
+        });
       marks.push({ kind: 'entrance-label', at: [plan.nearest.lat, plan.nearest.lng], text: this.text.entrance(plan.nearest), z: 1002 });
     }
     for (const o of this.others) marks.push({ kind: 'alt', at: pointAlong(o.path, 0.5), text: this.text.minutes(this.plans[o.i].minutes), alt: o.i, path: o.path, z: 950 });
@@ -274,7 +335,16 @@ export class RouteLayer {
       const round = { 'line-cap': 'round', 'line-join': 'round' } as const;
       // Under the arrows and the marks, over the faded route.
       m.addLayer({ id: 'route-focus-casing', type: 'line', source: 'route-focus', layout: round, paint: { 'line-color': '#ffffff', 'line-width': 13 } }, 'route-arrows');
-      m.addLayer({ id: 'route-focus', type: 'line', source: 'route-focus', layout: round, paint: { 'line-color': ['match', ['get', 'mode'], 'drive', c('route-drive'), c('route-walk')], 'line-width': 8 } }, 'route-arrows');
+      m.addLayer(
+        {
+          id: 'route-focus',
+          type: 'line',
+          source: 'route-focus',
+          layout: round,
+          paint: { 'line-color': ['match', ['get', 'mode'], 'drive', c('route-drive'), c('route-walk')], 'line-width': 8 },
+        },
+        'route-arrows',
+      );
     }
     this.set('route-focus', on ? [line(path!, { mode })] : []);
     if (!on) for (const id of FOCUS_LAYERS) if (m.getLayer(id)) m.removeLayer(id);
@@ -386,7 +456,16 @@ export class RouteLayer {
       alt: { bg: c('surface-2'), fg: c('ink'), edge: c('line-strong'), edgeW: 1, r: 12, h: 24, font: '700 12px', alpha: 0.55 },
       ramp: { bg: c('route-drive'), fg: '#ffffff', edge: '#ffffff', edgeW: 2, r: 7, h: 24, font: '700 13px', minW: 24 },
       'lot-gate': { bg: '#ffffff', fg: c('route-drive'), edge: c('route-drive'), edgeW: 2, r: 7, h: 22, font: '700 12px' },
-      'level-ramp': { bg: mk.text?.startsWith('↑') ? c('ramp-up') : c('ramp-down'), fg: mk.text?.startsWith('↑') ? '#1e2a26' : '#ffffff', edge: '#ffffff', edgeW: 2, r: 7, h: 22, font: '700 12px', minW: 36 },
+      'level-ramp': {
+        bg: mk.text?.startsWith('↑') ? c('ramp-up') : c('ramp-down'),
+        fg: mk.text?.startsWith('↑') ? '#1e2a26' : '#ffffff',
+        edge: '#ffffff',
+        edgeW: 2,
+        r: 7,
+        h: 22,
+        font: '700 12px',
+        minW: 36,
+      },
       'level-label': { bg: c('ramp-up'), fg: '#1e2a26', edge: '#ffffff', edgeW: 2, r: 11, h: 22, font: '700 12px' },
       'entrance-label': { bg: c('surface-2'), fg: c('ink'), edge: c('gold-line'), edgeW: 1, r: 5, h: 18, font: '600 10px' },
     };

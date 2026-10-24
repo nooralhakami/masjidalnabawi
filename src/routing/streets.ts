@@ -134,12 +134,7 @@ export class Streets {
           let b = ids[i];
           if (t === 'drive' && oneway === -1) [a, b] = [b, a];
           const metres = Math.hypot(this.xy[a][0] - this.xy[b][0], this.xy[a][1] - this.xy[b][1]);
-          const l =
-            t === 'walk'
-              ? mode & 16 && !(mode & 4) && !(mode & 32)
-                ? metres * FOOTWAY_PENALTY
-                : metres
-              : metres * CLASS_WEIGHT[(mode >> 6) & 7];
+          const l = t === 'walk' ? (mode & 16 && !(mode & 4) && !(mode & 32) ? metres * FOOTWAY_PENALTY : metres) : metres * CLASS_WEIGHT[(mode >> 6) & 7];
           this.edges[t].push({ a, b, l, oneway: oneWay });
           this.out[t][a].push([b, l]);
           if (!oneWay) this.out[t][b].push([a, l]);
@@ -297,7 +292,7 @@ export class Streets {
       if (d > maxM || d >= bd) continue;
       const ok = this.out.drive[i].some(([j]) => {
         const b = (Math.atan2(this.xy[j][0] - this.xy[i][0], this.xy[j][1] - this.xy[i][1]) * 180) / Math.PI;
-        const diff = Math.abs((((b - bearing) % 360) + 540) % 360 - 180);
+        const diff = Math.abs(((((b - bearing) % 360) + 540) % 360) - 180);
         return diff <= 50;
       });
       if (ok) {

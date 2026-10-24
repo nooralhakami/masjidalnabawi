@@ -24,7 +24,11 @@ describe('parity: walking', () => {
   });
   it('from the south plaza to Quba Mosque: about 3.3 km, with two alternatives', async () => {
     const plans = await planRoutes([24.4655, 39.6111], P(542), 'walk');
-    expect(plans.map((p) => [round(p.walkM), p.minutes])).toEqual([[3324, 42], [3554, 45], [4315, 54]]);
+    expect(plans.map((p) => [round(p.walkM), p.minutes])).toEqual([
+      [3324, 42],
+      [3554, 45],
+      [4315, 54],
+    ]);
   });
 });
 

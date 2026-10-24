@@ -65,7 +65,13 @@ export interface GarageData {
    * ground from the streets to that point, which every car must take (the Sultana side: round the
    * loop at the junction and down the ramp).
    */
-  entrances: { id: EntranceId; lane: string; street: LatLng; approach?: LatLng[]; /** The level it joins (B when absent; Qurban joins A only, owner 2026-10-23). */ level?: Level }[];
+  entrances: {
+    id: EntranceId;
+    lane: string;
+    street: LatLng;
+    approach?: LatLng[] /** The level it joins (B when absent; Qurban joins A only, owner 2026-10-23). */;
+    level?: Level;
+  }[];
   /** `mouth`: where the exit road leaves the car park; `departure`: the way on to the streets, where drawn. */
   exits: { id: EntranceId; lane: string; street: LatLng; mouth: LatLng; departure?: LatLng[]; level?: Level }[];
   lots: Lot[];

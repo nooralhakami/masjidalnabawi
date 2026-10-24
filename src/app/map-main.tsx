@@ -166,11 +166,16 @@ async function main() {
     const lang = getLang();
     render(
       <LangContext.Provider value={lang}>
-        <MapControls onZoom={(s) => engine.zoomBy(s)} onTurn={(d) => engine.turn(d)} onNorth={() => {
-          // North up: heading-up (if on) stops too, or the next step would turn the map again.
-          if (headingUp.value) trip.setHeadingUp(false);
-          engine.resetNorth();
-        }} watchNorth={watchNorth} />
+        <MapControls
+          onZoom={(s) => engine.zoomBy(s)}
+          onTurn={(d) => engine.turn(d)}
+          onNorth={() => {
+            // North up: heading-up (if on) stops too, or the next step would turn the map again.
+            if (headingUp.value) trip.setHeadingUp(false);
+            engine.resetNorth();
+          }}
+          watchNorth={watchNorth}
+        />
       </LangContext.Provider>,
       document.getElementById('overlay')!,
     );
@@ -180,7 +185,10 @@ async function main() {
       </LangContext.Provider>,
       document.getElementById('overlay-left')!,
     );
-    render(<App key={lang} engine={engine} fac={fac} initial={initial} initialVisit={initialVisit} initialLib={initialLib} admin={admin} trip={trip} />, document.getElementById('ui')!);
+    render(
+      <App key={lang} engine={engine} fac={fac} initial={initial} initialVisit={initialVisit} initialLib={initialLib} admin={admin} trip={trip} />,
+      document.getElementById('ui')!,
+    );
     initial = initialVisit = initialLib = undefined;
   };
   draw();
@@ -190,7 +198,6 @@ async function main() {
     engine.restyle();
     draw();
   });
-
 
   // For the browser tests and the performance script only (automated browsers), never for visitors.
   if (navigator.webdriver) Object.assign(window, { __engine: engine, __fac: fac, __trip: trip });

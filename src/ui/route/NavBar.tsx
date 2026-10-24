@@ -63,7 +63,14 @@ export function NavBar({ s, level, onFollow, headingUp = false, onHeadingUp, onE
           </span>
         ) : null}
         <strong class={`nav-label${warn ? ' is-warn' : ''}`}>{label}</strong>
-        <button type="button" class="nav-follow" aria-pressed={s.follow} aria-label={t(s.follow ? 'nav_unfollow' : 'nav_follow')} title={t(s.follow ? 'nav_unfollow' : 'nav_follow')} onClick={onFollow}>
+        <button
+          type="button"
+          class="nav-follow"
+          aria-pressed={s.follow}
+          aria-label={t(s.follow ? 'nav_unfollow' : 'nav_follow')}
+          title={t(s.follow ? 'nav_unfollow' : 'nav_follow')}
+          onClick={onFollow}
+        >
           <Icon name="locate" size={18} />
           <span>{t(s.follow ? 'nav_unfollow' : 'nav_follow')}</span>
         </button>

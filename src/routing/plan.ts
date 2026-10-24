@@ -3,7 +3,22 @@ import type { LatLng, Poi } from '../data/types';
 import { parkingAccess, parkingEntrances } from '../domain/parking';
 import { loadStreets, type Reach, type Streets } from './streets';
 import { pickRoutes, turnPenalty } from './alternatives';
-import { ENTRANCES, EXITS, garageExit, isEntranceOpen, garageRoute, garageRouteFrom, garageRouteFromLot, lotsByDistance, nearGarage, type EntranceId, type Level, type GarageStep, type RampOnWay, type Stretch } from './garage';
+import {
+  ENTRANCES,
+  EXITS,
+  garageExit,
+  isEntranceOpen,
+  garageRoute,
+  garageRouteFrom,
+  garageRouteFromLot,
+  lotsByDistance,
+  nearGarage,
+  type EntranceId,
+  type Level,
+  type GarageStep,
+  type RampOnWay,
+  type Stretch,
+} from './garage';
 import { fromM, insideRect, network, openTogether, pathLength, restroomDoor, ringPath, segmentHits, toM, walkPath, walkPaths, type XY } from './walk';
 
 /**
@@ -331,7 +346,9 @@ export type GarageStart = { lot: Poi | null; level: Level } | 'outside';
 /** The lots a car by the car park might be in, nearest first (to ask the visitor), or none when it is not by the car park. */
 export function lotsToAsk(from: LatLng, n = 2): Poi[] {
   if (!nearGarage(from, LOTS)) return [];
-  return lotsByDistance(from, LOTS).slice(0, n).map((x) => x.lot);
+  return lotsByDistance(from, LOTS)
+    .slice(0, n)
+    .map((x) => x.lot);
 }
 
 /**
@@ -437,20 +454,22 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B', heading?: nu
   // The car park's two entrances (Omar ibn al-Khattab street, Sultana) as street nodes the car can reach. Where the owner
   // drew the way to an entrance (an approach), the streets lead to its start, on the carriageway that
   // goes its way, and the car then follows it.
-  const gates = ENTRANCES.filter((e) => isEntranceOpen(e.id)).map((e) => {
-    if (!e.approach?.length) return { e, k: S.nearestNode(toM(e.street), 'drive'), approach: [] as LatLng[] };
-    // Join the approach where it is cheapest: at any of its points, on a road going its way — but not
-    // in its last stretch by the car park mouth, where a side street also passes (the owner's drawing
-    // brings every car down the ramp).
-    const a = e.approach;
-    let best = { k: -1, i: 0, cost: Infinity };
-    for (let i = 0; i < a.length - APPROACH_TAIL; i++) {
-      const k = S.nearestNodeHeading(toM(a[i]), bearingOf(a[i], a[i + 1]), 15);
-      const rest = len(a.slice(i));
-      if (k >= 0 && r.dist[k] + rest < best.cost) best = { k, i, cost: r.dist[k] + rest };
-    }
-    return { e, k: best.k, approach: a.slice(best.i) };
-  }).filter((g) => g.k >= 0 && Number.isFinite(r.dist[g.k]));
+  const gates = ENTRANCES.filter((e) => isEntranceOpen(e.id))
+    .map((e) => {
+      if (!e.approach?.length) return { e, k: S.nearestNode(toM(e.street), 'drive'), approach: [] as LatLng[] };
+      // Join the approach where it is cheapest: at any of its points, on a road going its way — but not
+      // in its last stretch by the car park mouth, where a side street also passes (the owner's drawing
+      // brings every car down the ramp).
+      const a = e.approach;
+      let best = { k: -1, i: 0, cost: Infinity };
+      for (let i = 0; i < a.length - APPROACH_TAIL; i++) {
+        const k = S.nearestNodeHeading(toM(a[i]), bearingOf(a[i], a[i + 1]), 15);
+        const rest = len(a.slice(i));
+        if (k >= 0 && r.dist[k] + rest < best.cost) best = { k, i, cost: r.dist[k] + rest };
+      }
+      return { e, k: best.k, approach: a.slice(best.i) };
+    })
+    .filter((g) => g.k >= 0 && Number.isFinite(r.dist[g.k]));
   const plans: Plan[] = [];
   for (const lot of lots) {
     // Up through the lot's nearest entrance (one of its four surrounding facilities) to the destination.
@@ -497,11 +516,7 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B', heading?: nu
     const stairs: LatLng[] = up ? [at(lot), at(up.e)] : [];
     const driveM = len(drive) + len(aisle);
     const walkM = up ? len(stairs) + up.m : 0;
-    const legs: Leg[] = [
-      { kind: 'drive', path: drive },
-      { kind: 'garage', path: [...aisle, ...stairs.slice(1)] },
-      ...(up ? [{ kind: 'walk' as const, path: up.path }] : []),
-    ];
+    const legs: Leg[] = [{ kind: 'drive', path: drive }, { kind: 'garage', path: [...aisle, ...stairs.slice(1)] }, ...(up ? [{ kind: 'walk' as const, path: up.path }] : [])];
     plans.push({ mode: 'drive', legs, walkM, driveM, minutes: Math.max(1, Math.ceil(driveM / DRIVE_M_PER_MIN + walkM / WALK_M_PER_MIN)), lot });
   }
   // The quickest lot, and other lots (or the other entrance) within 30% of its time. Two plans are

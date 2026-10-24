@@ -32,7 +32,7 @@ export const STORIES_UI: Record<LangCode, Record<string, string>> = {
     st_play: 'Resume',
   },
   tr: {
-    st_open: 'Medine\'nin Mekânları',
+    st_open: "Medine'nin Mekânları",
     st_next: 'Sonraki',
     st_prev: 'Önceki',
     st_on_map: 'Haritada göster',

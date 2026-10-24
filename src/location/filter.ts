@@ -182,7 +182,7 @@ export class PositionFilter {
 export function bearing(aLat: number, aLng: number, bLat: number, bLng: number): number {
   const y = Math.sin((bLng - aLng) * RAD) * Math.cos(bLat * RAD);
   const x = Math.cos(aLat * RAD) * Math.sin(bLat * RAD) - Math.sin(aLat * RAD) * Math.cos(bLat * RAD) * Math.cos((bLng - aLng) * RAD);
-  return ((Math.atan2(y, x) / RAD) % 360 + 360) % 360;
+  return (((Math.atan2(y, x) / RAD) % 360) + 360) % 360;
 }
 
 export function metres(aLat: number, aLng: number, bLat: number, bLng: number): number {

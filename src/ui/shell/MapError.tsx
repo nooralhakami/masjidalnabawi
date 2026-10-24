@@ -15,9 +15,7 @@ export function MapError({ onRetry }: { onRetry(): void }) {
       </span>
       <h1 class="map-error-t">{t('map_fail')}</h1>
       <p class="map-error-p">{t('title')}</p>
-      <Button onClick={onRetry}>
-        {t('retry')}
-      </Button>
+      <Button onClick={onRetry}>{t('retry')}</Button>
     </div>
   );
 }

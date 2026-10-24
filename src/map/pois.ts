@@ -208,7 +208,12 @@ export function entranceAt(m: MLMap, x: number, y: number): string | null {
 
 /** The place under a tap: the nearest marker within 16 px, or null. */
 export function placeAt(m: MLMap, x: number, y: number): number | null {
-  const hits = near(m, x, y, PICK_LAYERS.filter((l) => m.getLayer(l)));
+  const hits = near(
+    m,
+    x,
+    y,
+    PICK_LAYERS.filter((l) => m.getLayer(l)),
+  );
   let best: { id: number; d: number } | null = null;
   for (const f of hits) {
     const [lng, lat] = (f.geometry as Point).coordinates;

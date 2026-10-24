@@ -285,10 +285,23 @@ describe('no route through the mosque building (found while adding alternatives,
 });
 
 describe('routes pass beside restroom buildings, never over them (owner, 2026-10-11)', () => {
-  const origins: LatLng[] = [[24.4668, 39.6111], [24.4718, 39.6035], [24.476, 39.611], [24.4686, 39.6165], [24.4655, 39.6085], [24.4685, 39.607]];
+  const origins: LatLng[] = [
+    [24.4668, 39.6111],
+    [24.4718, 39.6035],
+    [24.476, 39.611],
+    [24.4686, 39.6165],
+    [24.4655, 39.6085],
+    [24.4685, 39.607],
+  ];
   it('no offered route crosses a restroom building, except one holding its own start or end', async () => {
     const dests = Object.values(Object.fromEntries([...POI_BY_ID].map(([id, p]) => [id, p]))).filter(
-      (p) => p.subCategory === 'gate_inner' || p.subCategory === 'gate_outer' || p.category === 'toilets' || p.category === 'women' || p.category === 'emergency' || p.category === 'parking',
+      (p) =>
+        p.subCategory === 'gate_inner' ||
+        p.subCategory === 'gate_outer' ||
+        p.category === 'toilets' ||
+        p.category === 'women' ||
+        p.category === 'emergency' ||
+        p.category === 'parking',
     );
     const buildings = network().buildings;
     const bad: string[] = [];
@@ -336,7 +349,18 @@ describe('driving on public roads only, by the rules (owner, 2026-10-13)', () =>
   it('never turns back on itself (no U-turn) except where the road ends', () => {
     // A two-way street 0—1—2 with a side street 1—3; starting just east of 1 heading… either way is fine,
     // but a route from the middle of 0–1 to 0 must not go to 1 and come back.
-    const S = net([[RES, 0, 0, 1, 2], [RES, 0, 1, 3]], [[0, 0], [100, 0], [200, 0], [100, 100]]);
+    const S = net(
+      [
+        [RES, 0, 0, 1, 2],
+        [RES, 0, 1, 3],
+      ],
+      [
+        [0, 0],
+        [100, 0],
+        [200, 0],
+        [100, 100],
+      ],
+    );
     const r = S.reach(ll(60, 0), 'drive')!;
     const p = S.nodesTo(r, nodeAt(S, 0, 0));
     expect(p).toEqual([0]); // straight on to 0 — not via 1 and back
@@ -345,8 +369,22 @@ describe('driving on public roads only, by the rules (owner, 2026-10-13)', () =>
   it('obeys "no turn" and "only this turn" restrictions from OpenStreetMap', () => {
     // A cross at node 1: west arm 0, east arm 2, north arm 3, south arm 4, and a road 3—5—2 round the
     // north-east block; the car starts on the west arm heading east.
-    const nodes: [number, number][] = [[0, 0], [100, 0], [200, 0], [100, 100], [100, -100], [200, 100]];
-    const ways = [[RES, 0, 0, 1], [RES, 0, 1, 2], [RES, 0, 1, 3], [RES, 0, 1, 4], [RES, 0, 3, 5], [RES, 0, 5, 2]];
+    const nodes: [number, number][] = [
+      [0, 0],
+      [100, 0],
+      [200, 0],
+      [100, 100],
+      [100, -100],
+      [200, 100],
+    ];
+    const ways = [
+      [RES, 0, 0, 1],
+      [RES, 0, 1, 2],
+      [RES, 0, 1, 3],
+      [RES, 0, 1, 4],
+      [RES, 0, 3, 5],
+      [RES, 0, 5, 2],
+    ];
     // Without a restriction, west → north turns left at 1.
     expect(pathOf(net(ways, nodes), [20, 0], [100, 100])).toEqual([1, 3]);
     // "No left turn" 0→1→3: it must go another way round (on to 2, then up and back west).
@@ -360,8 +398,19 @@ describe('driving on public roads only, by the rules (owner, 2026-10-13)', () =>
 
   it('prefers a main road to a slightly shorter way through a neighbourhood', () => {
     // From 0 to 3: through the neighbourhood 0—1—3 (≈ 283 m) or on the main road 0—2—3 (300 m).
-    const nodes: [number, number][] = [[0, 0], [100, 100], [150, -10], [200, 0]];
-    const S = net([[RES, 0, 0, 1, 3], [PRI, 0, 0, 2, 3]], nodes);
+    const nodes: [number, number][] = [
+      [0, 0],
+      [100, 100],
+      [150, -10],
+      [200, 0],
+    ];
+    const S = net(
+      [
+        [RES, 0, 0, 1, 3],
+        [PRI, 0, 0, 2, 3],
+      ],
+      nodes,
+    );
     expect(pathOf(S, [1, 0], [200, 0])).toContain(2);
   });
 
@@ -380,7 +429,13 @@ describe('driving on public roads only, by the rules (owner, 2026-10-13)', () =>
     const quba = ENTRANCES.find((e) => e.id === 'omar')!;
     const k = S.nearestNode(toM(quba.street), 'drive');
     expect(Math.hypot(S.xy[k][0] - toM(quba.street)[0], S.xy[k][1] - toM(quba.street)[1])).toBeLessThan(1);
-    for (const from of [[24.4393, 39.6173], [24.456, 39.6], [24.476, 39.611], [24.4686, 39.6165], [24.4846, 39.5791]] as LatLng[]) {
+    for (const from of [
+      [24.4393, 39.6173],
+      [24.456, 39.6],
+      [24.476, 39.611],
+      [24.4686, 39.6165],
+      [24.4846, 39.5791],
+    ] as LatLng[]) {
       expect(Number.isFinite(S.reach(from, 'drive')!.dist[k]), String(from)).toBe(true);
     }
   });
@@ -407,7 +462,11 @@ describe('gates 37 and 38 are reached through the Rawdah entrance in front of ga
     const via = toM([P(603).lat, P(603).lng]);
     const mosque = network().obstacles[0];
     for (const id of [37, 38]) {
-      for (const from of [[24.471, 39.6106], [24.4686, 39.6141], [24.466, 39.6111]] as LatLng[]) {
+      for (const from of [
+        [24.471, 39.6106],
+        [24.4686, 39.6141],
+        [24.466, 39.6111],
+      ] as LatLng[]) {
         for (const plan of await planRoutes(from, P(id), 'walk')) {
           const path = plan.legs.flatMap((l) => l.path).map(toM);
           const k = path.findIndex((q) => Math.hypot(q[0] - via[0], q[1] - via[1]) < 1);

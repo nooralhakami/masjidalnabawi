@@ -10,7 +10,26 @@ import { applyLang } from '../i18n/dom';
 import { loadLang } from '../i18n-next/load';
 import type { MapEngine } from '../map/engine';
 import { isClosed } from '../domain/facilities';
-import { filter, garageQ, headingUp, level, markersHidden, nav, notify, parkingSub, query, rawdahH, route, selected, sheet, sheetH, toast, toiletSub, travel, typed } from '../state/store';
+import {
+  filter,
+  garageQ,
+  headingUp,
+  level,
+  markersHidden,
+  nav,
+  notify,
+  parkingSub,
+  query,
+  rawdahH,
+  route,
+  selected,
+  sheet,
+  sheetH,
+  toast,
+  toiletSub,
+  travel,
+  typed,
+} from '../state/store';
 import type { AdminPanel as AdminPanelT } from '../ui/admin/AdminPanel';
 import { AdminGate } from '../ui/admin/AdminGate';
 import { adminUnlocked } from '../state/admin';
@@ -73,7 +92,10 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
 
   // How many places each pill shows (the live app's counts), and what the chosen pill shows now.
   const counts = useComputed(() => {
-    const c = Object.fromEntries(FILTERS.map(({ id }) => [id, visiblePois(id, 'all', '', fac, undefined, id === 'parking' ? 'all' : undefined).length])) as Record<FilterId, number>;
+    const c = Object.fromEntries(FILTERS.map(({ id }) => [id, visiblePois(id, 'all', '', fac, undefined, id === 'parking' ? 'all' : undefined).length])) as Record<
+      FilterId,
+      number
+    >;
     c[filter.value] = visiblePois(filter.value, toiletSub.value, '', fac, undefined, parkingSub.value).length;
     return c;
   });
@@ -306,7 +328,15 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
           {garageQ.value ? (
             <GarageAsk key={garageQ.value.lots.map((l) => l.id).join()} lots={garageQ.value.lots} spot={garageQ.value.spot} onAnswer={garageQ.value.answer} />
           ) : nav.value ? (
-            <NavBar s={nav.value} level={route.value?.drive?.level} onFollow={() => trip.tracker.toggleFollow()} headingUp={headingUp.value} onHeadingUp={() => trip.setHeadingUp(!headingUp.value)} onEnd={() => trip.end()} onKeep={() => trip.tracker.keepGoing()} />
+            <NavBar
+              s={nav.value}
+              level={route.value?.drive?.level}
+              onFollow={() => trip.tracker.toggleFollow()}
+              headingUp={headingUp.value}
+              onHeadingUp={() => trip.setHeadingUp(!headingUp.value)}
+              onEnd={() => trip.end()}
+              onKeep={() => trip.tracker.keepGoing()}
+            />
           ) : null}
         </div>
       ) : null}

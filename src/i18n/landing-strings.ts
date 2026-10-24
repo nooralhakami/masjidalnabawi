@@ -310,7 +310,8 @@ export const LANDING_UI: Record<LangCode, Record<string, string>> = {
     nav_features: 'Fonctionnalités',
     nav_qr: 'Code QR',
     nav_install: 'Installer',
-    hero_p: 'Une carte interactive des portes, sanitaires, parkings et services autour de la Mosquée du Prophète, avec une recherche rapide et des itinéraires à pied clairs en {n} langues.',
+    hero_p:
+      'Une carte interactive des portes, sanitaires, parkings et services autour de la Mosquée du Prophète, avec une recherche rapide et des itinéraires à pied clairs en {n} langues.',
     st_places: 'lieux sur la carte',
     st_gates: 'portes',
     st_parking: 'parkings sur deux niveaux',
@@ -343,7 +344,8 @@ export const LANDING_UI: Record<LangCode, Record<string, string>> = {
     i1: 'Ouvrez le lien de la carte dans Safari.',
     i2: "Touchez le bouton Partager en bas de l'écran.",
     i3: "Choisissez « Sur l'écran d'accueil ».",
-    disclaimer: "Un guide pour vous aider à vous orienter ; l'état des installations et les horaires sur place peuvent différer. Suivez toujours les consignes des organisateurs sur place.",
+    disclaimer:
+      "Un guide pour vous aider à vous orienter ; l'état des installations et les horaires sur place peuvent différer. Suivez toujours les consignes des organisateurs sur place.",
     preview_alt: "Aperçu de l'écran de la carte sur un téléphone",
   },
   fa: {
@@ -439,7 +441,8 @@ export const LANDING_UI: Record<LangCode, Record<string, string>> = {
     nav_features: 'Ciri-ciri',
     nav_qr: 'Kod QR',
     nav_install: 'Pasang',
-    hero_p: 'Peta interaktif pintu, tandas, tempat letak kereta dan perkhidmatan di sekitar Masjid Nabawi, dengan carian pantas dan laluan berjalan kaki yang jelas dalam {n} bahasa.',
+    hero_p:
+      'Peta interaktif pintu, tandas, tempat letak kereta dan perkhidmatan di sekitar Masjid Nabawi, dengan carian pantas dan laluan berjalan kaki yang jelas dalam {n} bahasa.',
     st_places: 'tempat di peta',
     st_gates: 'pintu',
     st_parking: 'tempat letak kereta dua aras',
@@ -482,7 +485,8 @@ export const LANDING_UI: Record<LangCode, Record<string, string>> = {
     nav_features: 'Siffofi',
     nav_qr: 'Lambar QR',
     nav_install: 'Saka',
-    hero_p: "Taswira mai mu'amala ta ƙofofi, banɗakuna, wuraren ajiye mota da hidimomi a kewayen Masallacin Annabi, tare da nema da sauri da hanyoyin tafiya a ƙafa bayyanannu cikin harsuna {n}.",
+    hero_p:
+      "Taswira mai mu'amala ta ƙofofi, banɗakuna, wuraren ajiye mota da hidimomi a kewayen Masallacin Annabi, tare da nema da sauri da hanyoyin tafiya a ƙafa bayyanannu cikin harsuna {n}.",
     st_places: 'wurare a taswira',
     st_gates: 'ƙofofi',
     st_parking: 'wuraren ajiye mota masu hawa biyu',
@@ -654,7 +658,8 @@ export const LANDING_UI: Record<LangCode, Record<string, string>> = {
     nav_features: 'Astaamaha',
     nav_qr: 'Koodhka QR',
     nav_install: 'Rakib',
-    hero_p: 'Khariidad isdhexgal ah oo albaabada, musqulaha, baarkinada iyo adeegyada ku xeeran Masjidka Nabiga, leh raadin degdeg ah iyo jidad lugeed oo cad oo ku qoran {n} luqadood.',
+    hero_p:
+      'Khariidad isdhexgal ah oo albaabada, musqulaha, baarkinada iyo adeegyada ku xeeran Masjidka Nabiga, leh raadin degdeg ah iyo jidad lugeed oo cad oo ku qoran {n} luqadood.',
     st_places: 'goobood oo khariidadda ku jira',
     st_gates: 'albaabo',
     st_parking: 'baarkinno laba dabaq ah',
@@ -1117,7 +1122,8 @@ export const LANDING_UI: Record<LangCode, Record<string, string>> = {
     i1: 'Abre el enlace del mapa en Safari.',
     i2: 'Toca el botón Compartir en la parte inferior de la pantalla.',
     i3: 'Elige «Añadir a pantalla de inicio».',
-    disclaimer: 'Una guía para orientarte; el estado de las instalaciones y los horarios sobre el terreno pueden variar. Sigue siempre las indicaciones de los organizadores in situ.',
+    disclaimer:
+      'Una guía para orientarte; el estado de las instalaciones y los horarios sobre el terreno pueden variar. Sigue siempre las indicaciones de los organizadores in situ.',
     preview_alt: 'Vista previa de la pantalla del mapa en un móvil',
   },
 };

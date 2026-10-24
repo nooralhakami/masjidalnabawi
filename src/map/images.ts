@@ -42,7 +42,11 @@ export class IconAtlas {
     for (const n of names)
       for (const c of colors) {
         // As a stand-alone image an SVG needs its namespace (inline in the page it does not).
-        const svg = icon(n, 24).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ').replace('stroke="currentColor"', `stroke="${c}"`).replace('stroke-width="1.75"', 'stroke-width="2.4"').replace(/fill="currentColor"/g, `fill="${c}"`);
+        const svg = icon(n, 24)
+          .replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')
+          .replace('stroke="currentColor"', `stroke="${c}"`)
+          .replace('stroke-width="1.75"', 'stroke-width="2.4"')
+          .replace(/fill="currentColor"/g, `fill="${c}"`);
         const img = new Image();
         img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
         this.images.set(`${n}|${c}`, img);

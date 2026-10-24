@@ -7,13 +7,15 @@
 //
 //   node scripts/design-audit.mjs            (starts `vite` on port 5180)
 import { spawn } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, existsSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 
 const PORT = 5180;
 const BASE = `http://localhost:${PORT}/design.html`;
 // Playwright 1.63 expects Chromium 1243; the container has 1194 (CLAUDE.md).
-const CHROME = process.env.CHROME ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+// $CHROME if given, else the container's Chromium 1194 if present, else Playwright's own browser.
+const CONTAINER_CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const CHROME = process.env.CHROME ?? (existsSync(CONTAINER_CHROME) ? CONTAINER_CHROME : undefined);
 const server = spawn('npx', ['vite', '--port', String(PORT), '--strictPort'], { stdio: 'ignore' });
 process.on('exit', () => server.kill());
 

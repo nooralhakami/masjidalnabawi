@@ -16,9 +16,24 @@ export interface ToggleOption<T extends string> {
  * Two or more choices with a thumb that slides under the chosen one (spring easing from the sheet's
  * physics). A radio group: arrow keys move the choice, as screen readers expect.
  */
-export function SlideToggle<T extends string>({ label, options, value, onChange, disabled }: { label: string; options: readonly ToggleOption<T>[]; value: T; onChange(v: T): void; disabled?: boolean }) {
+export function SlideToggle<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  options: readonly ToggleOption<T>[];
+  value: T;
+  onChange(v: T): void;
+  disabled?: boolean;
+}) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
-  const i = Math.max(0, options.findIndex((o) => o.value === value));
+  const i = Math.max(
+    0,
+    options.findIndex((o) => o.value === value),
+  );
   const move = (to: number) => {
     const k = (to + options.length) % options.length;
     onChange(options[k].value);

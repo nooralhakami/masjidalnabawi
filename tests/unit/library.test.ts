@@ -56,7 +56,13 @@ describe('companion cards (drafts written from the cited pages)', () => {
   const data = companions as unknown as { sources: Record<string, { t: string; u?: string }>; companions: Card[] };
   /** Every fact of a card: objects with an Arabic text and sources, at any depth. */
   const facts = (v: unknown): Fact[] =>
-    Array.isArray(v) ? v.flatMap(facts) : v && typeof v === 'object' ? ('ar' in (v as object) && 'src' in (v as object) ? [v as Fact] : Object.values(v as object).flatMap(facts)) : [];
+    Array.isArray(v)
+      ? v.flatMap(facts)
+      : v && typeof v === 'object'
+        ? 'ar' in (v as object) && 'src' in (v as object)
+          ? [v as Fact]
+          : Object.values(v as object).flatMap(facts)
+        : [];
 
   it('every fact names its sources (book and volume/page or hadith number), from the declared list', () => {
     for (const c of data.companions) {
@@ -119,7 +125,11 @@ describe('companion cards (drafts written from the cited pages)', () => {
       for (const p of m.places) {
         if (p.review === 'approved') expect(approvalProblems(p as unknown as LibraryItem), p.id).toEqual([]);
         for (const c of p.related_companions ?? []) expect(ids.has(c), `${p.id}: ${c}`).toBe(true);
-        if (p.map_poi) expect(poisJson.some((x: { id: number }) => x.id === p.map_poi), `${p.id}: poi ${p.map_poi}`).toBe(true);
+        if (p.map_poi)
+          expect(
+            poisJson.some((x: { id: number }) => x.id === p.map_poi),
+            `${p.id}: poi ${p.map_poi}`,
+          ).toBe(true);
       }
       expect(published(m.places as unknown as LibraryItem[]).every((p) => p.reviewer)).toBe(true);
     });

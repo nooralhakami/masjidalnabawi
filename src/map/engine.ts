@@ -92,7 +92,13 @@ export class MapEngine {
       style: {
         version: 8,
         sources: {
-          esri: { type: 'raster', tileSize: 256, maxzoom: 19, tiles: [tiles.satellite], attribution: opts.attribution?.satellite ?? 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics' },
+          esri: {
+            type: 'raster',
+            tileSize: 256,
+            maxzoom: 19,
+            tiles: [tiles.satellite],
+            attribution: opts.attribution?.satellite ?? 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics',
+          },
           // The light map is OpenStreetMap: its credit is the OpenStreetMap line that always shows (below).
           light: { type: 'raster', tileSize: 256, maxzoom: 19, tiles: [SITE.LIGHT_TILES] },
           // Default data tiles (to zoom 18: positions kept to under a centimetre). Larger tiles (maxzoom
@@ -108,11 +114,21 @@ export class MapEngine {
     this.map.touchZoomRotate.enableRotation();
     this.map.keyboard.enable();
     // Esri's line whenever its imagery shows; OpenStreetMap's always (the streets and routes come from it).
-    this.map.addControl(new AttributionControl({ compact: false, customAttribution: opts.attribution?.osm ?? '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a>' }), 'bottom-left');
+    this.map.addControl(
+      new AttributionControl({
+        compact: false,
+        customAttribution: opts.attribution?.osm ?? '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a>',
+      }),
+      'bottom-left',
+    );
     this.map.addControl(new ScaleControl({ unit: 'metric', maxWidth: 90 }), 'bottom-left');
     const ratio = Math.min(3, Math.max(1, devicePixelRatio || 1));
     this.route = new RouteLayer(this.map, this.palette, opts.routeText, ratio);
-    this.me = new MeMarker(this.map, () => opts.meLabel(), () => this.palette.get('me'));
+    this.me = new MeMarker(
+      this.map,
+      () => opts.meLabel(),
+      () => this.palette.get('me'),
+    );
     const drawer = (this.drawer = createDrawer({
       palette: this.palette,
       icons: this.icons,
@@ -178,7 +194,8 @@ export class MapEngine {
   private prewarm() {
     const v = this.version;
     const queue = markerImageIds(v, this.opts.status);
-    const idle: (cb: (d: { timeRemaining(): number }) => void) => void = (window as unknown as { requestIdleCallback?: typeof idle }).requestIdleCallback ?? ((cb) => setTimeout(() => cb({ timeRemaining: () => 8 }), 16));
+    const idle: (cb: (d: { timeRemaining(): number }) => void) => void =
+      (window as unknown as { requestIdleCallback?: typeof idle }).requestIdleCallback ?? ((cb) => setTimeout(() => cb({ timeRemaining: () => 8 }), 16));
     const step = (d: { timeRemaining(): number }) => {
       if (v !== this.version) return;
       while (queue.length && d.timeRemaining() > 2) {
@@ -267,7 +284,24 @@ export class MapEngine {
     if (!this.map.getLayer('facilities')) return;
     this.map.removeLayer('featured');
     this.map.removeLayer('selected');
-    for (const id of ['car-entrances', 'esri', 'light', 'women-fill', 'women-line', 'inner-dots', 'outer-dots', 'facility-dots', 'mixed-dots', 'facilities', 'parking', 'outer-chips', 'inner-numbers', 'pairs', 'gate-names']) if (this.map.getLayer(id)) this.map.removeLayer(id);
+    for (const id of [
+      'car-entrances',
+      'esri',
+      'light',
+      'women-fill',
+      'women-line',
+      'inner-dots',
+      'outer-dots',
+      'facility-dots',
+      'mixed-dots',
+      'facilities',
+      'parking',
+      'outer-chips',
+      'inner-numbers',
+      'pairs',
+      'gate-names',
+    ])
+      if (this.map.getLayer(id)) this.map.removeLayer(id);
     for (const id of this.map.listImages()) if (id.endsWith(`@${old}`) && !id.startsWith('rt')) this.map.removeImage(id);
     this.route.restyle();
     this.addLayers();

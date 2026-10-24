@@ -77,7 +77,9 @@ export class Trip {
         }
       },
       requestWakeLock: async (onReleased) => {
-        const wl = (navigator as Navigator & { wakeLock?: { request(type: 'screen'): Promise<{ release(): Promise<void>; addEventListener(e: 'release', fn: () => void): void }> } }).wakeLock;
+        const wl = (
+          navigator as Navigator & { wakeLock?: { request(type: 'screen'): Promise<{ release(): Promise<void>; addEventListener(e: 'release', fn: () => void): void }> } }
+        ).wakeLock;
         if (!wl) return null;
         const lock = await wl.request('screen');
         lock.addEventListener('release', onReleased);
@@ -182,7 +184,12 @@ export class Trip {
   /** «My location»: show the visitor and keep watching (it used to read once and stop). */
   async locate(): Promise<void> {
     const f = await this.geo.start();
-    if (f) this.engine.map.flyTo({ center: [f.lng, f.lat], zoom: Math.max(this.engine.map.getZoom(), mapZoom(18)), duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 800 });
+    if (f)
+      this.engine.map.flyTo({
+        center: [f.lng, f.lat],
+        zoom: Math.max(this.engine.map.getZoom(), mapZoom(18)),
+        duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 800,
+      });
   }
 
   /** Draw the offered routes with `plans[i]` as the one to follow, and keep the card and navigation in step. */

@@ -377,10 +377,7 @@ export function roundCorners(P: XY[], r: number): XY[] {
     const e: XY = [v[0] + ((b[0] - v[0]) * d2) / l2, v[1] + ((b[1] - v[1]) * d2) / l2];
     for (let k = 0; k <= 6; k++) {
       const u = k / 6;
-      out.push([
-        (1 - u) * (1 - u) * s[0] + 2 * u * (1 - u) * v[0] + u * u * e[0],
-        (1 - u) * (1 - u) * s[1] + 2 * u * (1 - u) * v[1] + u * u * e[1],
-      ]);
+      out.push([(1 - u) * (1 - u) * s[0] + 2 * u * (1 - u) * v[0] + u * u * e[0], (1 - u) * (1 - u) * s[1] + 2 * u * (1 - u) * v[1] + u * u * e[1]]);
     }
   }
   out.push(P[P.length - 1]);
@@ -490,14 +487,20 @@ function graphRoute(A: XY, B: XY, N: Network, avoid?: Uint8Array): { pts: XY[]; 
     const first = chain[0];
     const last = chain[chain.length - 1];
     // The hooks used at each end: the ones that give the costs Dijkstra settled on.
-    const hS = hs.reduce((m, h) => {
-      const c = h.e.u === first ? h.d + h.along : h.e.v === first ? h.d + h.e.l - h.along : Infinity;
-      return c < m.c ? { h, c } : m;
-    }, { h: hs[0], c: Infinity }).h;
-    const hT = ht.reduce((m, h) => {
-      const c = h.e.u === last ? h.d + h.along : h.e.v === last ? h.d + h.e.l - h.along : Infinity;
-      return c < m.c ? { h, c } : m;
-    }, { h: ht[0], c: Infinity }).h;
+    const hS = hs.reduce(
+      (m, h) => {
+        const c = h.e.u === first ? h.d + h.along : h.e.v === first ? h.d + h.e.l - h.along : Infinity;
+        return c < m.c ? { h, c } : m;
+      },
+      { h: hs[0], c: Infinity },
+    ).h;
+    const hT = ht.reduce(
+      (m, h) => {
+        const c = h.e.u === last ? h.d + h.along : h.e.v === last ? h.d + h.e.l - h.along : Infinity;
+        return c < m.c ? { h, c } : m;
+      },
+      { h: ht[0], c: Infinity },
+    ).h;
     const pts: XY[] = [A, hS.q, ...chain.map((k) => N.nodes[k]), hT.q, B];
     best = { pts, length: avoid ? lengthOf(pts) : D[T], nodes: chain };
   }
@@ -542,7 +545,11 @@ export function walkPath(a: LatLng, b: LatLng): LatLng[] {
   pts ??= graph?.pts ?? [A, B];
   // The stretch from the walkways to a restroom's door may meet the building first (the door on its
   // far side): round it, close to the wall (the door itself is 1.5 m out, outside this margin).
-  pts = aroundBuildings(pts, N.buildings.filter((r) => !insideRect(A, r) && !insideRect(B, r)), DOOR_CLEAR_M);
+  pts = aroundBuildings(
+    pts,
+    N.buildings.filter((r) => !insideRect(A, r) && !insideRect(B, r)),
+    DOOR_CLEAR_M,
+  );
 
   // Drop near-duplicate points before rounding.
   const clean: XY[] = [pts[0]];

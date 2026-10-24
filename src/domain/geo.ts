@@ -18,10 +18,7 @@ export function distance(a: Pick<Poi, 'lat' | 'lng'>, b: Pick<Poi, 'lat' | 'lng'
 }
 
 /** Closest item to `from` among `candidates`, with its distance. */
-export function nearest<T extends Pick<Poi, 'lat' | 'lng'>>(
-  from: Pick<Poi, 'lat' | 'lng'>,
-  candidates: Iterable<T>,
-): { item: T; meters: number } | null {
+export function nearest<T extends Pick<Poi, 'lat' | 'lng'>>(from: Pick<Poi, 'lat' | 'lng'>, candidates: Iterable<T>): { item: T; meters: number } | null {
   let best: { item: T; meters: number } | null = null;
   for (const c of candidates) {
     const m = distance(from, c);

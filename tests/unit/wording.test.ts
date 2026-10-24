@@ -7,7 +7,9 @@ import { describe, expect, it } from 'vitest';
 
 const ROOT = join(__dirname, '../..');
 const sources = [
-  ...readdirSync(join(ROOT, 'src/i18n')).filter((f) => f.endsWith('.ts')).map((f) => join(ROOT, 'src/i18n', f)),
+  ...readdirSync(join(ROOT, 'src/i18n'))
+    .filter((f) => f.endsWith('.ts'))
+    .map((f) => join(ROOT, 'src/i18n', f)),
   join(ROOT, 'src/i18n-next/strings.ts'),
   join(ROOT, 'data/i18n.json'),
   join(ROOT, 'index.html'),

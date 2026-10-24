@@ -43,7 +43,15 @@ export function AdminGate({ onUnlock, onClose }: { onUnlock(): void; onClose(): 
         </div>
         <label class="admin-gate-field">
           <span>{tNext('admin_pass')}</span>
-          <input ref={input} type="password" autocomplete="current-password" dir="ltr" aria-invalid={wrong} aria-describedby={wrong ? 'admin-gate-err' : undefined} onInput={() => setWrong(false)} />
+          <input
+            ref={input}
+            type="password"
+            autocomplete="current-password"
+            dir="ltr"
+            aria-invalid={wrong}
+            aria-describedby={wrong ? 'admin-gate-err' : undefined}
+            onInput={() => setWrong(false)}
+          />
         </label>
         {wrong ? (
           <p class="admin-gate-err" id="admin-gate-err" role="alert">

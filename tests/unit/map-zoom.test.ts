@@ -29,7 +29,13 @@ describe('opening view: fitBounds over the outer gates, 16 px padding, whole zoo
   });
   it('phones open at Leaflet zoom 16 (15 on a small 320 × 568 phone); tablets and laptops at 17, a large screen at 18', () => {
     expect(fitView(b, 320, 568).legacyZoom).toBe(15);
-    for (const [w, h] of [[360, 740], [375, 812], [390, 844], [412, 915]]) expect(fitView(b, w, h).legacyZoom, `${w}×${h}`).toBe(16);
+    for (const [w, h] of [
+      [360, 740],
+      [375, 812],
+      [390, 844],
+      [412, 915],
+    ])
+      expect(fitView(b, w, h).legacyZoom, `${w}×${h}`).toBe(16);
     expect(fitView(b, 768, 1024).legacyZoom).toBe(17);
     expect(fitView(b, 1280, 800).legacyZoom).toBe(17);
     expect(fitView(b, 1920, 1080).legacyZoom).toBe(18);
@@ -37,12 +43,19 @@ describe('opening view: fitBounds over the outer gates, 16 px padding, whole zoo
   it('matches the live app’s own formula (its map.html tile preload, copied verbatim) at many sizes', () => {
     // From masjidalnabawi@e0c6ca7 map.html: the same fit as setup.ts, written out for the preload.
     const live = (w: number, h: number) => {
-      const S = b.south, N = b.north, W = b.west, E = b.east, pad = 32, ts = 256;
+      const S = b.south,
+        N = b.north,
+        W = b.west,
+        E = b.east,
+        pad = 32,
+        ts = 256;
       const px = (lat: number, lng: number, z: number) => {
-        const s = ts * Math.pow(2, z), r = (lat * Math.PI) / 180;
+        const s = ts * Math.pow(2, z),
+          r = (lat * Math.PI) / 180;
         return [((lng + 180) / 360) * s, (0.5 - Math.log((1 + Math.sin(r)) / (1 - Math.sin(r))) / (4 * Math.PI)) * s];
       };
-      const a = px(N, W, 0), c = px(S, E, 0);
+      const a = px(N, W, 0),
+        c = px(S, E, 0);
       const scale = Math.min((w - pad) / (c[0] - a[0]), (h - pad) / (c[1] - a[1]));
       return Math.max(14, Math.min(19, Math.floor(Math.log(scale) / Math.LN2)));
     };

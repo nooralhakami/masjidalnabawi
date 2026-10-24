@@ -3,6 +3,7 @@ import { icon, type IconName } from '../../presentation/icons';
 /** One icon from the shared SVG set (24 px grid, 1.75 px stroke). Decorative unless labelled. */
 export function Icon({ name, size = 20, flip = false, label }: { name: IconName; size?: number; flip?: boolean; label?: string }) {
   return (
+    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: the label comes with role="img" (set when labelled).
     <span
       class={`ic${flip ? ' flip' : ''}`}
       role={label ? 'img' : undefined}

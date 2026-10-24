@@ -66,7 +66,14 @@ export function SearchBar({
             </div>
           </div>
           <div class="quick" role="group">
-            <button type="button" class="quick-btn theme-btn" aria-label={t(dark ? 'theme_day' : 'theme_night')} title={t(dark ? 'theme_day' : 'theme_night')} aria-pressed={dark} onClick={onTheme}>
+            <button
+              type="button"
+              class="quick-btn theme-btn"
+              aria-label={t(dark ? 'theme_day' : 'theme_night')}
+              title={t(dark ? 'theme_day' : 'theme_night')}
+              aria-pressed={dark}
+              onClick={onTheme}
+            >
               <Icon name={dark ? 'sun' : 'moon'} size={18} />
             </button>
             {/* Back to the landing page (the live app's header button «go_home»). */}
@@ -80,7 +87,16 @@ export function SearchBar({
             ) : null}
           </div>
           {langShort && onLang ? (
-            <button type="button" class="lang-btn" id="lang-btn" aria-haspopup="true" aria-controls="lang-menu" aria-label={t('lang_title')} title={t('lang_title')} onClick={onLang}>
+            <button
+              type="button"
+              class="lang-btn"
+              id="lang-btn"
+              aria-haspopup="true"
+              aria-controls="lang-menu"
+              aria-label={t('lang_title')}
+              title={t('lang_title')}
+              onClick={onLang}
+            >
               <Icon name="globe" size={18} />
               <span>{langShort}</span>
               <span class="lang-chev">
@@ -126,7 +142,17 @@ export function SearchBar({
 }
 
 /** The panel under the search bar: a heading, then results, or loading rows, or «no results». */
-export function SearchPanel({ state, id, head, children }: { state: 'results' | 'loading' | 'empty' | 'recent'; id?: string; head?: ComponentChildren; children?: ComponentChildren }) {
+export function SearchPanel({
+  state,
+  id,
+  head,
+  children,
+}: {
+  state: 'results' | 'loading' | 'empty' | 'recent';
+  id?: string;
+  head?: ComponentChildren;
+  children?: ComponentChildren;
+}) {
   const { t } = useI18n();
   return (
     <div class="search-panel" id={id} role="listbox" aria-busy={state === 'loading' ? true : undefined}>

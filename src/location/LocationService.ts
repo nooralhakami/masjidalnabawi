@@ -178,8 +178,7 @@ export class LocationService {
     const moving = this.motion.push(est);
     const speed = this.motion.speed();
     const gps = pos.coords.heading;
-    const heading =
-      moving !== null && speed >= MOVING_SPEED ? moving : this.compass ?? (gps != null && !Number.isNaN(gps) && speed >= MOVING_SPEED ? gps : null);
+    const heading = moving !== null && speed >= MOVING_SPEED ? moving : (this.compass ?? (gps != null && !Number.isNaN(gps) && speed >= MOVING_SPEED ? gps : null));
     this.current = { lat: est.lat, lng: est.lng, accuracy: est.accuracy, heading, speed, time: Date.now() };
     if (this.status !== 'live') this.setStatus('live');
     this.fixListeners.forEach((fn) => fn(this.current!));
@@ -197,7 +196,9 @@ export class LocationService {
       window.addEventListener('deviceorientation', handler);
     };
     if (Ev && typeof Ev.requestPermission === 'function') {
-      Ev.requestPermission().then((r) => r === 'granted' && listen()).catch(() => undefined);
+      Ev.requestPermission()
+        .then((r) => r === 'granted' && listen())
+        .catch(() => undefined);
     } else listen();
   }
 
