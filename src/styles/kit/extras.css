@@ -1,0 +1,235 @@
+/* ---------- Phase 6: weather, languages, the Rawdah card on the map, the simulator ---------- */
+.weather-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-weight: 700;
+  box-shadow: var(--shadow-1);
+  white-space: nowrap;
+}
+.weather-chip .ic {
+  color: var(--gold-500);
+}
+.weather-chip[data-sky='cloudy'] .ic,
+.weather-chip[data-sky='fog'] .ic,
+.weather-chip[data-sky='rain'] .ic,
+.weather-chip[data-sky='storm'] .ic {
+  color: var(--muted);
+}
+.app-top .lang-menu {
+  position: absolute;
+  z-index: 2;
+  /* Under the language button, on the card's first row. */
+  top: calc(var(--s-3) + var(--hit) + var(--s-2));
+  inset-inline-end: var(--gutter);
+}
+.lang-menu {
+  min-width: 210px;
+  /* Never wider than the screen (long names such as O‘zbekcha (Turkiston) wrap instead). */
+  max-width: calc(100vw - 2 * var(--gutter));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border-radius: var(--r-card);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-2);
+}
+.lang-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: var(--hit);
+  padding: 0 var(--s-3);
+  border: 0;
+  border-radius: var(--r-btn);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.lang-menu button:hover {
+  background: var(--field);
+}
+.lang-menu button[aria-current='true'] {
+  color: var(--heading);
+  font-weight: 700;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-2));
+}
+.lang-menu button:focus-visible {
+  outline: 3px solid var(--gold-500);
+  outline-offset: -3px;
+}
+.lang-menu small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.lang-menu .lang-more {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-2);
+}
+/* While folded, the arrow stays pinned to the bottom of the menu so it is always seen. */
+.lang-menu .lang-more:has(.lang-more-btn[aria-expanded='false']) {
+  position: sticky;
+  bottom: -6px;
+}
+.lang-menu .lang-more-btn {
+  justify-content: center;
+  color: var(--muted);
+}
+.lang-menu .lang-more-btn .ic {
+  transition: transform var(--m-base) var(--ease);
+}
+.lang-menu .lang-more-btn[aria-expanded='true'] .ic {
+  transform: rotate(180deg);
+}
+.lang-menu [hidden] {
+  display: none;
+}
+.rawdah-host {
+  position: absolute;
+  inset-inline: var(--gutter);
+  bottom: calc(var(--s-4) + env(safe-area-inset-bottom));
+  z-index: 3;
+  max-width: 560px;
+  margin-inline: auto;
+}
+.admin {
+  position: absolute;
+  inset-inline-start: var(--gutter);
+  top: calc(200px + env(safe-area-inset-top));
+  z-index: 5;
+  width: min(320px, calc(100vw - 2 * var(--gutter)));
+  overflow: hidden;
+  border-radius: var(--r-card);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-2);
+}
+.admin summary {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--hit);
+  padding: 0 var(--s-4);
+  font-weight: 700;
+  cursor: pointer;
+}
+.admin-body {
+  display: grid;
+  gap: var(--s-2);
+  padding: 0 var(--s-4) var(--s-4);
+}
+.admin-body select {
+  min-height: var(--hit);
+  border: 1px solid var(--outline);
+  border-radius: var(--r-btn);
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+  padding: 0 var(--s-2);
+}
+.admin-row {
+  display: flex;
+  gap: var(--s-2);
+}
+.admin-row .btn {
+  flex: 1;
+}
+.admin-body p {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.admin-sub {
+  margin: var(--s-2) 0 0;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+.admin-ent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  font-size: var(--fs-sm);
+}
+.admin-ent .is-closed {
+  color: var(--danger);
+}
+.admin-ent .is-open {
+  color: var(--success);
+}
+/* The password before the supervisor's page (owner, 2026-10-16). */
+.admin-gate-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: var(--gutter);
+  background: var(--scrim);
+}
+.admin-gate {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-3);
+  width: 100%;
+  max-width: 360px;
+  padding: var(--s-4);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-2);
+}
+.admin-gate-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+.admin-gate-head h2 {
+  margin: 0;
+  font-size: var(--fs-lg, 1.125rem);
+}
+.admin-gate-field {
+  display: grid;
+  gap: var(--s-1, 4px);
+  font-weight: 600;
+}
+.admin-gate-field input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--hit);
+  border: 1px solid var(--outline);
+  border-radius: var(--r-btn);
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+  padding: 0 var(--s-3);
+}
+.admin-gate-field input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+.admin-gate-err {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}

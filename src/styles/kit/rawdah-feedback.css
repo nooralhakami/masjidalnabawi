@@ -1,0 +1,178 @@
+/* ---------- Rawdah card ---------- */
+.rawdah-stack {
+  display: grid;
+  gap: var(--s-2);
+}
+.rawdah-card {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 72px;
+  padding: var(--s-3);
+  border: 1px solid var(--line);
+  border-top-color: var(--gold-line);
+  border-radius: var(--r-card);
+  background: var(--panel);
+  box-shadow: var(--shadow-1);
+  text-align: start;
+  transition: transform var(--m-fast) var(--ease);
+}
+.rawdah-card:active {
+  transform: scale(0.985);
+}
+.rawdah-card > .ic:last-child {
+  color: var(--muted);
+}
+.rawdah-body {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+.rawdah-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--heading);
+}
+.rawdah-now {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--s-2);
+}
+.rawdah-left {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+.rawdah-permit,
+.rawdah-free {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  justify-self: start;
+  margin-top: 2px;
+  padding: 2px var(--s-2);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.rawdah-permit {
+  background: color-mix(in srgb, var(--cat-women) 12%, var(--surface-2));
+  color: var(--ink);
+}
+.rawdah-free {
+  background: var(--success-tint);
+  color: var(--success);
+}
+.rawdah-tile {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--cat-women);
+  color: var(--white);
+}
+.ring {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  color: var(--heading);
+}
+.ring > svg {
+  position: absolute;
+  inset: 0;
+}
+.ring-in {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.ring circle {
+  transition: stroke-dashoffset var(--m-emph) var(--ease);
+}
+
+/* ---------- Step banner ---------- */
+.step-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-card);
+  background: var(--panel);
+  box-shadow: var(--shadow-2);
+  border-inline-start: 6px solid var(--tone-bg);
+}
+.step-ic {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--tone-bg);
+  color: var(--tone-ink);
+}
+.step-text {
+  display: grid;
+  min-width: 0;
+}
+.step-text b {
+  font-size: var(--fs-lg);
+}
+.step-text small {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+/* ---------- Toast ---------- */
+.toast {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  max-width: min(92vw, 420px);
+  min-height: var(--hit);
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--r-pill);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-2);
+  font-weight: 500;
+}
+.toast-ok .ic {
+  color: var(--success);
+}
+.toast-error {
+  border-color: var(--danger);
+}
+.toast-error .ic {
+  color: var(--danger);
+}
+
+/* ---------- Skeleton ---------- */
+.skeleton {
+  display: block;
+  border-radius: 8px;
+  background: var(--skeleton);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+.skeleton.is-round {
+  border-radius: 50%;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  .spinner {
+    animation: none;
+  }
+  .slide-thumb {
+    transition: none;
+  }
+}
