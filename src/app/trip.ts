@@ -8,8 +8,9 @@ import type { MapEngine } from '../map/engine';
 import { mapZoom } from '../map/zoom';
 import { NavigationTracker, type NavigationHost } from '../navigation/tracker';
 import { lotsToAsk, planExit, planRoutes, type GarageStart, type Plan } from '../routing/plan';
+import { spotOf } from '../routing/spot';
 import { bearing } from '../presentation/route-view';
-import { garageQ, headingUp, level, nav, notify, route, selected, setHeadingUp, travel } from '../state/store';
+import { garageQ, headingUp, level, nav, notify, route, selected, setHeadingUp, sheet, travel } from '../state/store';
 
 /** Within this distance of the car park leg, the visitor is in the car park: no re-planning from the streets. */
 const IN_CAR_PARK_M = 60;
@@ -238,9 +239,14 @@ export class Trip {
     if (known) return known;
     const lots = lotsToAsk([lat, lng]);
     if (!lots.length) return undefined;
-    const start = await new Promise<GarageStart | null>((answer) => (garageQ.value = { lots, answer }));
+    // The place card steps down to its handle while the question is asked, so the two do not pile up
+    // (owner, 2026-10-24); a dismissed question brings it back, to press «start the route» again.
+    const before = sheet.value;
+    sheet.value = 'peek';
+    const start = await new Promise<GarageStart | null>((answer) => (garageQ.value = { lots, spot: spotOf([lat, lng]), answer }));
     garageQ.value = null;
     if (start) this.garageAnswer = { start, at: Date.now(), pos: [lat, lng] };
+    else if (sheet.value === 'peek') sheet.value = before;
     return start;
   }
 

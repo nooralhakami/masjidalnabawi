@@ -304,7 +304,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
         // tall to sit above a half-open card on a short phone); the navigation bar sits above the sheet.
         <div ref={navHost} class={`nav-host${garageQ.value ? ' is-modal' : ''}`} style={{ '--sheet-h': `${place && !garageQ.value ? sheetH.value : 0}px` }}>
           {garageQ.value ? (
-            <GarageAsk key={garageQ.value.lots.map((l) => l.id).join()} lots={garageQ.value.lots} onAnswer={garageQ.value.answer} />
+            <GarageAsk key={garageQ.value.lots.map((l) => l.id).join()} lots={garageQ.value.lots} spot={garageQ.value.spot} onAnswer={garageQ.value.answer} />
           ) : nav.value ? (
             <NavBar s={nav.value} level={route.value?.drive?.level} onFollow={() => trip.tracker.toggleFollow()} headingUp={headingUp.value} onHeadingUp={() => trip.setHeadingUp(!headingUp.value)} onEnd={() => trip.end()} onKeep={() => trip.tracker.keepGoing()} />
           ) : null}
