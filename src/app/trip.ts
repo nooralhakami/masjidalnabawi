@@ -1,7 +1,6 @@
 import { POI_BY_ID } from '../data';
 import type { LatLng, Poi } from '../data/types';
 import { t } from '../i18n';
-import { tNext } from '../i18n-next/strings';
 import { LocationService } from '../location/LocationService';
 import { RouteTrack } from '../location/progress';
 import type { MapEngine } from '../map/engine';
@@ -131,7 +130,7 @@ export class Trip {
     if (selected.value !== p.id) return;
     if (!next.length) {
       // Said, not silent: the button stops spinning and nothing is drawn.
-      notify(tNext('route_none'), 'error');
+      notify(t('route_none'), 'error');
       return;
     }
     if (mode === 'drive' && next[0].mode === 'walk') notify(t('drive_fallback'), 'info', 5000);

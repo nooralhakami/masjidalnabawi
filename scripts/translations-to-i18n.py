@@ -1,7 +1,7 @@
 """Builds the extra languages (Bengali, French, Persian, Russian, Malay, Hausa, Malayalam, Swahili, Pashto, Somali, Tamil, Hindi, Bosnian, German, Chinese, Amharic,
 Kurdish (Kurmanji), Azerbaijani, Thai, Spanish) into data/i18n.json.
 
-Sources: docs/translations/<lang>.json — hand translations of the interface, gate names, landmark and
+Sources: docs/translations/<lang>.json — hand translations of gate names, landmark and
 historic names and descriptions, plus sentence templates for the generated descriptions (hotels,
 restaurants, shops), which are rebuilt here from the English ones so they follow every data rebuild.
 
@@ -43,14 +43,14 @@ def generated(src, en_text):
 
 def main():
     i18n = json.load(open('data/i18n.json'))
-    en, ar = i18n['en'], i18n['ar']
+    en = i18n['en']
     missing = []
     for L in EXTRA:
         src = json.load(open(f'docs/translations/{L}.json'))
         pack = dict(src['pack'])
-        if sorted(src['ui']) != sorted(ar['ui']):
-            missing += [f'{L} ui.{k}' for k in sorted(set(ar['ui']) - set(src['ui']))]
-        pack['ui'] = {k: src['ui'][k] for k in ar['ui'] if k in src['ui']}
+        # Interface texts live in src/i18n/locales/<lang>.json since 2026-10-24; the `ui` part of
+        # docs/translations/<lang>.json is history and no longer copied.
+        pack.pop('ui', None)
         missing += [f'{L} gi.{k}' for k in en['gi'] if k not in src['gi']]
         pack['gi'] = {k: src['gi'][k] for k in en['gi'] if k in src['gi']}
         fallback = i18n[src.get('name_from', 'en')]['names']

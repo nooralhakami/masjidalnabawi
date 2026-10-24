@@ -321,8 +321,8 @@ describe('supporting data', () => {
       'th',
       'es',
     ]);
-    const keys = Object.keys(I18N.ar.ui).sort();
-    for (const l of langs) expect(Object.keys(I18N[l as keyof typeof I18N].ui).sort()).toEqual(keys);
+    // The interface texts themselves are checked in i18n.test.ts (src/i18n/locales, 2026-10-24).
+    expect(Object.keys(I18N).sort()).toEqual([...langs].sort());
   });
 });
 

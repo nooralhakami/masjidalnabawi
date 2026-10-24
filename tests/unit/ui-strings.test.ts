@@ -2,7 +2,6 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { LANGS, pack } from '../../src/i18n';
-import { NEXT_UI } from '../../src/i18n-next/strings';
 
 // Every text the new components show comes from i18n, in all 26 languages (CLAUDE.md): each
 // t('key') literal in src/ui must exist in every language pack, and no component carries Arabic
@@ -50,18 +49,10 @@ describe('ui strings', () => {
   it('finds the keys the components use', () => expect(KEYS.length).toBeGreaterThan(40));
   for (const key of [...KEYS, ...DYNAMIC]) {
     it(`«${key}» exists in all 26 languages`, () => {
-      const missing = LANGS.filter((l) => !pack(l).ui[key] && !NEXT_UI[l]?.[key]);
+      const missing = LANGS.filter((l) => !pack(l).ui[key]);
       expect(missing).toEqual([]);
     });
   }
-  it('the texts «next» adds are in all 26 languages, and never shadow one of the live app’s', () => {
-    const keys = Object.keys(NEXT_UI.en);
-    for (const l of LANGS) {
-      expect(Object.keys(NEXT_UI[l]).sort(), l).toEqual([...keys].sort());
-      for (const k of keys) expect(NEXT_UI[l][k].trim().length, `${l}.${k}`).toBeGreaterThan(0);
-      for (const k of keys) expect(pack(l).ui[k], `${l}.${k} already exists in src/i18n`).toBeUndefined();
-    }
-  });
   it('no component carries Arabic text of its own', () => {
     const offenders = SOURCES.filter(([, s]) => /[؀-ۿ]/.test(s.replace(/\/\/.*$|\/\*[\s\S]*?\*\//gm, '').replace(/`باب رقم \$\{p\.id\}`/g, ''))).map(([f]) => f);
     expect(offenders).toEqual([]);

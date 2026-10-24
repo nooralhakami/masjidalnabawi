@@ -2,72 +2,42 @@ import { describe, expect, it } from 'vitest';
 import { I18N, POIS, POI_BY_ID } from '../../src/data';
 import type { LangCode, Poi } from '../../src/data';
 import { LANGS, MORE_LANGS, ds, latinDigits, nm, t } from '../../src/i18n';
-import { EXTRA_UI } from '../../src/i18n/strings';
-import { LANDING_UI } from '../../src/i18n/landing-strings';
-import { STORIES_UI } from '../../src/i18n/stories-strings';
-import { LIBRARY_UI } from '../../src/i18n/library-strings';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { FILTERS, TOILET_SUBS } from '../../src/domain/filters';
 
 const P = (id: number): Poi => POI_BY_ID.get(id)!;
 
 describe('translations are complete', () => {
-  it('every data UI key exists in every language', () => {
-    const keys = Object.keys(I18N.ar.ui).sort();
-    for (const l of LANGS) expect(Object.keys(I18N[l].ui).sort(), l).toEqual(keys);
-  });
+  // The interface texts: src/i18n/locales/<lang>.json, one key per line (owner, 2026-10-24).
+  const file = (l: LangCode) => readFileSync(join(__dirname, '../../src/i18n/locales', `${l}.json`), 'utf8');
+  const locale = (l: LangCode) => JSON.parse(file(l)) as Record<string, string>;
+  const ph = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort().join();
 
-  it('every added UI key exists in every language and is non-empty', () => {
-    const keys = Object.keys(EXTRA_UI.ar).sort();
+  it('every interface key exists in every language, and none is empty', () => {
+    const keys = Object.keys(locale('ar')).sort();
+    expect(keys.length).toBeGreaterThan(300);
     for (const l of LANGS) {
-      expect(Object.keys(EXTRA_UI[l]).sort(), l).toEqual(keys);
-      for (const k of keys) expect(EXTRA_UI[l][k].trim(), `${l}.${k}`).not.toBe('');
+      expect(Object.keys(locale(l)).sort(), l).toEqual(keys);
+      for (const [k, v] of Object.entries(locale(l))) expect(v.trim(), `${l}.${k}`).not.toBe('');
     }
   });
 
-  it('every landing key exists in every language, with matching placeholders', () => {
-    const keys = Object.keys(LANDING_UI.ar).sort();
-    const ph = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort().join();
+  it('placeholders ({n}, {id} …) match across languages', () => {
+    const ar = locale('ar');
+    for (const l of LANGS) for (const [k, v] of Object.entries(locale(l))) expect(ph(v), `${l}.${k}`).toBe(ph(ar[k]));
+  });
+
+  it('each file lists its keys in order, one per line, so two changes rarely touch the same line', () => {
     for (const l of LANGS) {
-      expect(Object.keys(LANDING_UI[l]).sort(), l).toEqual(keys);
-      for (const k of keys) {
-        expect(LANDING_UI[l][k].trim(), `${l}.${k}`).not.toBe('');
-        expect(ph(LANDING_UI[l][k]), `${l}.${k}`).toBe(ph(LANDING_UI.ar[k]));
-      }
+      const keys = Object.keys(locale(l));
+      expect(keys, l).toEqual([...keys].sort());
+      expect(file(l), l).toBe(`${JSON.stringify(locale(l), null, 2)}\n`);
     }
   });
 
-  it('every story key exists in every language, non-empty, with matching placeholders', () => {
-    const keys = Object.keys(STORIES_UI.ar).sort();
-    const ph = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort().join();
-    for (const l of LANGS) {
-      expect(Object.keys(STORIES_UI[l]).sort(), l).toEqual(keys);
-      for (const k of keys) {
-        expect(STORIES_UI[l][k].trim(), `${l}.${k}`).not.toBe('');
-        expect(ph(STORIES_UI[l][k]), `${l}.${k}`).toBe(ph(STORIES_UI.ar[k]));
-      }
-    }
-  });
-
-  it('every library key exists in every language, non-empty', () => {
-    const keys = Object.keys(LIBRARY_UI.ar).sort();
-    for (const l of LANGS) {
-      expect(Object.keys(LIBRARY_UI[l]).sort(), l).toEqual(keys);
-      for (const k of keys) expect(LIBRARY_UI[l][k].trim(), `${l}.${k}`).not.toBe('');
-    }
-  });
-
-  it('added keys never collide with data keys', () => {
-    for (const k of [...Object.keys(EXTRA_UI.ar), ...Object.keys(LANDING_UI.ar), ...Object.keys(STORIES_UI.ar), ...Object.keys(LIBRARY_UI.ar)])
-      expect(I18N.ar.ui[k], k).toBeUndefined();
-    for (const k of Object.keys(LIBRARY_UI.ar)) expect(EXTRA_UI.ar[k] ?? LANDING_UI.ar[k] ?? STORIES_UI.ar[k], k).toBeUndefined();
-    for (const k of Object.keys(STORIES_UI.ar)) expect(EXTRA_UI.ar[k] ?? LANDING_UI.ar[k], k).toBeUndefined();
-  });
-
-  it('placeholders match across languages', () => {
-    const ph = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort().join();
-    for (const k of Object.keys(EXTRA_UI.ar)) {
-      for (const l of LANGS) expect(ph(EXTRA_UI[l][k]), `${l}.${k}`).toBe(ph(EXTRA_UI.ar[k]));
-    }
+  it('place names and descriptions stay in data/i18n.json, with no interface texts mixed in', () => {
+    for (const l of LANGS) expect((I18N[l] as Record<string, unknown>).ui, l).toBeUndefined();
   });
 
   it('every filter label resolves in every language', () => {

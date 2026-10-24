@@ -7,7 +7,7 @@ import { FILTERS, type FilterId, type ParkingSub, type ToiletSub } from '../doma
 import { visiblePois } from '../domain/visible';
 import { getLang, nm, pack, t } from '../i18n';
 import { applyLang } from '../i18n/dom';
-import { loadLang } from '../i18n-next/load';
+import { loadLang } from '../i18n/load';
 import type { MapEngine } from '../map/engine';
 import { isClosed } from '../domain/facilities';
 import {

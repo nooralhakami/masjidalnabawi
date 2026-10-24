@@ -7,10 +7,8 @@ import { describe, expect, it } from 'vitest';
 
 const ROOT = join(__dirname, '../..');
 const sources = [
-  ...readdirSync(join(ROOT, 'src/i18n'))
-    .filter((f) => f.endsWith('.ts'))
-    .map((f) => join(ROOT, 'src/i18n', f)),
-  join(ROOT, 'src/i18n-next/strings.ts'),
+  ...readdirSync(join(ROOT, 'src/i18n/locales')).map((f) => join(ROOT, 'src/i18n/locales', f)),
+  join(ROOT, 'src/i18n/index.ts'),
   join(ROOT, 'data/i18n.json'),
   join(ROOT, 'index.html'),
   join(ROOT, 'map.html'),
@@ -36,6 +34,6 @@ describe('wording (SPEC N13)', () => {
   });
 
   it('the install section uses the approved wording', () => {
-    expect(readFileSync(join(ROOT, 'src/i18n/landing-strings.ts'), 'utf8')).toContain('تبقى واجهتها متاحة حتى مع ضعف الاتصال');
+    expect(readFileSync(join(ROOT, 'src/i18n/locales/ar.json'), 'utf8')).toContain('تبقى واجهتها متاحة حتى مع ضعف الاتصال');
   });
 });

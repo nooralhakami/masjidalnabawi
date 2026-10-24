@@ -202,7 +202,8 @@ export interface LangPack {
   names?: Record<string, string>;
 }
 
-export type I18n = Record<LangCode, LangPack>;
+/** data/i18n.json: place names and descriptions per language; the interface texts are in src/i18n/locales. */
+export type I18n = Record<LangCode, Omit<LangPack, 'ui'>>;
 
 /** Per-POI nudge in metres, applied at load time. */
 export type Overrides = Record<string, { north?: number; east?: number }>;

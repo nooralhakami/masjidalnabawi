@@ -1,6 +1,5 @@
 import { SITE } from '../config/site.config';
 import { LANGS, MORE_LANGS, getLang, pack, t } from '../i18n';
-import { tNext } from '../i18n-next/strings';
 import { esc } from '../presentation/dom';
 import { brandStar, icon, type IconName } from '../presentation/icons';
 import { COUNTS } from './counts';
@@ -157,7 +156,7 @@ export function landingHtml(url: string): string {
       </div>
       <hr />
       <p class="on-dark-muted">${e('disclaimer')}</p>
-      <p class="credit on-dark-muted"><span>${esc(tNext('credit_role'))}</span> <strong>${esc(tNext('credit_name'))}</strong></p>
+      <p class="credit on-dark-muted"><span>${esc(t('credit_role'))}</span> <strong>${esc(t('credit_name'))}</strong></p>
     </div>
   </footer>
   <div class="toast-host" id="toast-host" aria-live="polite"></div>`;

@@ -1,10 +1,6 @@
 // Imported directly (not via ../data) so pages that only need text don't bundle the POI list.
 import i18nJson from '../../data/i18n.json';
 import type { Direction, I18n, LangCode, LangPack, Poi } from '../data/types';
-import { EXTRA_UI } from './strings';
-import { LANDING_UI } from './landing-strings';
-import { STORIES_UI } from './stories-strings';
-import { LIBRARY_UI } from './library-strings';
 
 /**
  * Menu order (owner, 2026-10-10): Arabic, English, then by how widely known and spoken a language
@@ -41,11 +37,24 @@ export const LANGS: readonly LangCode[] = [
 ];
 export const MORE_LANGS: ReadonlySet<LangCode> = new Set<LangCode>(['ha', 'ps', 'uz', 'sw', 'so', 'az', 'ku', 'ml', 'ta', 'am', 'th', 'bs']);
 
+/**
+ * The prayer on the Prophet ﷺ in the stories: Arabic in every language (the meaning is translated
+ * beside it, key st_pray_meaning), word for word as in the live app's ui/stories.ts.
+ */
+export const SALAWAT_AR = 'اللهم صل وسلم على نبينا محمد';
+
 const I18N = i18nJson as I18n;
 
-const PACKS: Record<LangCode, LangPack> = Object.fromEntries(
-  LANGS.map((l) => [l, { ...I18N[l], ui: { ...I18N[l].ui, ...EXTRA_UI[l], ...LANDING_UI[l], ...STORIES_UI[l], ...LIBRARY_UI[l] } }]),
-) as Record<LangCode, LangPack>;
+/**
+ * Every interface text, one file per language, one key per line (owner, 2026-10-24: the one place to
+ * add or change a text; tests/unit/ui-strings.test.ts keeps all 26 complete). Place names and
+ * descriptions stay in data/i18n.json, which the place scripts generate. The build ships Arabic and
+ * English in full and the others as i18n/<code>.json (vite.config.ts, splitI18n; ./load.ts).
+ */
+const LOCALES = import.meta.glob<Record<string, string>>('./locales/*.json', { eager: true, import: 'default' });
+const uiOf = (l: LangCode): Record<string, string> => ({ ...LOCALES[`./locales/${l}.json`] });
+
+const PACKS: Record<LangCode, LangPack> = Object.fromEntries(LANGS.map((l) => [l, { ...I18N[l], ui: uiOf(l) }])) as Record<LangCode, LangPack>;
 
 let current: LangCode = 'ar';
 

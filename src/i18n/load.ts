@@ -1,5 +1,5 @@
 import type { LangCode } from '../data/types';
-import { pack } from '../i18n';
+import { pack } from '.';
 
 /**
  * Bring a language's texts in before the page uses them (ARCHITECTURE §7). The build ships Arabic
