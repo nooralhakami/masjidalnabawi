@@ -1,0 +1,162 @@
+{
+ "id": "buraydah",
+ "review": "draft",
+ "name": "بريدة بن الحصيب",
+ "group": "scholars",
+ "full_name": {
+  "ar": "بريدة بن الحصيب بن عبد الله الأسلمي، يُكنى أبا عبد الله.",
+  "src": [
+   [
+    "siyar",
+    "2/469",
+    "https://shamela.ws/book/10906/2449"
+   ],
+   [
+    "usd",
+    "1/368",
+    "https://shamela.ws/book/1110/259"
+   ],
+   [
+    "istiab",
+    "1/185",
+    "https://shamela.ws/book/12288/187"
+   ],
+   [
+    "tabaqat",
+    "9/8",
+    "https://shamela.ws/book/146/3902"
+   ]
+  ]
+ },
+ "islam": {
+  "title": "إسلامه",
+  "ar": "أسلم حين مرّ به النبي ﷺ مهاجراً إلى المدينة، هو ومن معه من قومه.",
+  "src": [
+   [
+    "usd",
+    "1/368",
+    "https://shamela.ws/book/1110/259"
+   ],
+   [
+    "istiab",
+    "1/185",
+    "https://shamela.ws/book/12288/187"
+   ],
+   [
+    "tabaqat",
+    "9/8",
+    "https://shamela.ws/book/146/3902"
+   ]
+  ]
+ },
+ "virtues": [
+  {
+   "title": "بيعة الرضوان",
+   "ar": "شهد الحديبية وبيعة الرضوان تحت الشجرة.",
+   "src": [
+    [
+     "usd",
+     "1/368",
+     "https://shamela.ws/book/1110/259"
+    ],
+    [
+     "istiab",
+     "1/185",
+     "https://shamela.ws/book/12288/187"
+    ]
+   ]
+  }
+ ],
+ "stories": [
+  {
+   "title": "لقاؤه بالنبي ﷺ",
+   "ar": "لما لقي النبي ﷺ في الطريق قال له: «ممن أنت؟» قال: من أسلم، فقال لأبي بكر: «سلمنا». ثم قال: «من بني من؟» قال: من بني سهم، قال: «خرج سهمك».",
+   "src": [
+    [
+     "usd",
+     "1/369",
+     "https://shamela.ws/book/1110/260"
+    ],
+    [
+     "istiab",
+     "1/185",
+     "https://shamela.ws/book/12288/187"
+    ]
+   ]
+  },
+  {
+   "title": "قائد ونور",
+   "ar": "روى عن النبي ﷺ أن من مات من أصحابه في بلدة كان قائدهم ونورهم يوم القيامة.",
+   "src": [
+    [
+     "usd",
+     "1/368",
+     "https://shamela.ws/book/1110/259"
+    ],
+    [
+     "istiab",
+     "1/186",
+     "https://shamela.ws/book/12288/188"
+    ]
+   ]
+  },
+  {
+   "title": "وصيته",
+   "ar": "أوصى أن توضع في قبره جريدتان، فلم تُوجد إلا في جوالق حمار.",
+   "src": [
+    [
+     "siyar",
+     "2/470",
+     "https://shamela.ws/book/10906/2450"
+    ],
+    [
+     "tabaqat",
+     "9/8",
+     "https://shamela.ws/book/146/3902"
+    ]
+   ]
+  }
+ ],
+ "death": {
+  "ar": "مات بمرو من خراسان في خلافة يزيد بن معاوية؛ قال ابن سعد وأبو عبيد: سنة 63هـ، وقال غيرهما: سنة 62هـ.",
+  "src": [
+   [
+    "siyar",
+    "2/470",
+    "https://shamela.ws/book/10906/2450"
+   ],
+   [
+    "tabaqat",
+    "9/8",
+    "https://shamela.ws/book/146/3902"
+   ],
+   [
+    "istiab",
+    "1/185",
+    "https://shamela.ws/book/12288/187"
+   ]
+  ]
+ },
+ "burial": {
+  "ar": "دُفن بمرو، وبقي ولده فيها.",
+  "src": [
+   [
+    "usd",
+    "1/368",
+    "https://shamela.ws/book/1110/259"
+   ],
+   [
+    "istiab",
+    "1/186",
+    "https://shamela.ws/book/12288/188"
+   ],
+   [
+    "tabaqat",
+    "9/8",
+    "https://shamela.ws/book/146/3902"
+   ]
+  ]
+ },
+ "places": [],
+ "hadith_links": []
+}

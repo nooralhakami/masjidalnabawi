@@ -1,0 +1,126 @@
+{
+ "id": "abu-barza",
+ "review": "draft",
+ "name": "أبو برزة الأسلمي",
+ "group": "scholars",
+ "full_name": {
+  "ar": "أبو برزة الأسلمي، اسمه نضلة بن عبيد على الأصح، وغلبت عليه كنيته، واختُلف في اسمه فقيل: نضلة بن عبد الله، وقيل: عبد الله بن نضلة.",
+  "src": [
+   [
+    "siyar",
+    "3/41",
+    "https://shamela.ws/book/10906/2650"
+   ],
+   [
+    "istiab",
+    "4/1495",
+    "https://shamela.ws/book/12288/1482"
+   ],
+   [
+    "isabah",
+    "7/33",
+    "https://shamela.ws/book/9767/3565"
+   ]
+  ]
+ },
+ "islam": {
+  "title": "إسلامه",
+  "ar": "أسلم قديماً وشهد فتح مكة.",
+  "src": [
+   [
+    "siyar",
+    "3/41",
+    "https://shamela.ws/book/10906/2650"
+   ],
+   [
+    "istiab",
+    "4/1495",
+    "https://shamela.ws/book/12288/1482"
+   ],
+   [
+    "tabaqat",
+    "9/9",
+    "https://shamela.ws/book/146/3903"
+   ]
+  ]
+ },
+ "virtues": [
+  {
+   "title": "صفته",
+   "ar": "كان رجلاً مربوعاً آدم اللون.",
+   "src": [
+    [
+     "siyar",
+     "3/41",
+     "https://shamela.ws/book/10906/2650"
+    ],
+    [
+     "istiab",
+     "4/1495",
+     "https://shamela.ws/book/12288/1482"
+    ]
+   ]
+  },
+  {
+   "title": "جهاده",
+   "ar": "شهد مع رسول الله ﷺ مغازيه بعد الفتح حتى قُبض، وسكن البصرة ثم غزا خراسان.",
+   "src": [
+    [
+     "siyar",
+     "3/41",
+     "https://shamela.ws/book/10906/2650"
+    ],
+    [
+     "istiab",
+     "4/1495",
+     "https://shamela.ws/book/12288/1482"
+    ],
+    [
+     "tabaqat",
+     "9/9",
+     "https://shamela.ws/book/146/3903"
+    ]
+   ]
+  }
+ ],
+ "stories": [
+  {
+   "title": "ابن خطل",
+   "ar": "هو الذي قتل عبد العزى (ابن خطل) وهو متعلق بأستار الكعبة.",
+   "src": [
+    [
+     "siyar",
+     "3/41",
+     "https://shamela.ws/book/10906/2650"
+    ],
+    [
+     "istiab",
+     "4/1495",
+     "https://shamela.ws/book/12288/1482"
+    ]
+   ]
+  }
+ ],
+ "death": {
+  "ar": "مات بخراسان، قال ابن سعد: بمرو، وكان ذلك في أيام يزيد بن معاوية أو في آخر خلافة معاوية.",
+  "src": [
+   [
+    "siyar",
+    "3/43",
+    "https://shamela.ws/book/10906/2652"
+   ],
+   [
+    "istiab",
+    "4/1495",
+    "https://shamela.ws/book/12288/1482"
+   ],
+   [
+    "tabaqat",
+    "9/9",
+    "https://shamela.ws/book/146/3903"
+   ]
+  ]
+ },
+ "places": [],
+ "hadith_links": []
+}
