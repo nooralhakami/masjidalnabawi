@@ -66,10 +66,17 @@ DRAFT = 'docs/routes/garage-qurban-draft-2026-10-23.json'
 draft_ids = {l['id'] for l in json.load(open(DRAFT))['lanes']} if os.path.exists(DRAFT) else set()
 data_lane = {l['id']: l for l in g['lanes']}
 lanes = [(l, [P(*m(a, b)) for a, b in l['path']]) for l in g['lanes'] if l['id'] not in draft_ids]
+# A road split in two keeps one number, so the numbers the owner uses stay valid (road 6 is cut by the
+# green ramp on level A, owner 2026-10-25: its east part is on level B only).
+PART_OF = {'outer-south-east': 'outer-south'}
+numbered = [x for x in lanes if x[0]['id'] not in PART_OF]
+num = {l['id']: n for n, (l, _) in enumerate(numbered, 1)}
+num.update({k: num[v] for k, v in PART_OF.items()})
 for l, pts in lanes:
     if on_level(l.get('levels'), l['kind']):
         d.line(pts, fill=colour(l), width=7)
-for n, (l, pts) in enumerate(lanes, 1):
+for l, pts in lanes:
+    n = num[l['id']]
     if not on_level(l.get('levels'), l['kind']):
         continue
     i = max(range(1, len(pts)), key=lambda k: math.dist(pts[k - 1], pts[k]))
@@ -116,7 +123,7 @@ DCOL = {'entry': '#1e6fd9', 'exit': '#d62828', 'shared': '#f08c00', 'link': '#00
 dcolour = lambda l: '#9b5de5' if l.get('unconfirmed') else '#d62828' if l.get('levels') == ['A'] and l['kind'] != 'link' else DCOL[l['kind']]
 dlevels = lambda l: data_lane[l['id']].get('levels') if l['id'] in data_lane else l.get('levels')
 for l, pts in drafts:
-    if l.get('merged_into') or not on_level(dlevels(l), l['kind']):
+    if l.get('merged_into') or l.get('removed') or not on_level(dlevels(l), l['kind']):
         continue
     c = '#9b5de5' if l.get('unconfirmed') else '#d62828' if l.get('levels') == ['A'] else dcolour(l)
     if l.get('integrated'):
@@ -135,8 +142,8 @@ FIXED_LABEL = {
     'a-qurban-exit-curve': ((-46, 8), 0.55), 'a-qurban-to-east-up': ((34, -30), 0.6),
     'a-qurban-east-up': ((40, 0), 0.35), 'a-qurban-arc': ((0, 30), 0.5),
 }
-for n, (l, pts) in enumerate(drafts, len(lanes) + 1):
-    if l.get('merged_into') or not on_level(dlevels(l), l['kind']):
+for n, (l, pts) in enumerate(drafts, len(numbered) + 1):
+    if l.get('merged_into') or l.get('removed') or not on_level(dlevels(l), l['kind']):
         continue
     i = max(range(1, len(pts)), key=lambda k: math.dist(pts[k - 1], pts[k]))
     a, b = pts[i - 1], pts[i]
@@ -171,8 +178,8 @@ if LEVEL:
     sys.exit(0)
 
 KIND = {'entry': 'دخول (أزرق)', 'exit': 'خروج (أحمر)', 'shared': 'ممر في الاتجاهين (برتقالي)', 'link': 'وصلة', 'ramp_up': 'صعود إلى A (أصفر)', 'ramp_down': 'نزول إلى B (أخضر)'}
-rows = [f"| {n} | `{l['id']}` | {KIND[l['kind']]}{' · الدور A فقط (بنفسجي)' if l.get('levels') == ['A'] else ' · B فقط' if l.get('levels') == ['B'] else ''} |" for n, (l, _) in enumerate(lanes, 1)]
-drows = [f"| {n} | `{l['id']}` | مدموج في `{l['merged_into']}` (قرار المالك) · مسودة |" if l.get('merged_into') else f"| {n} | `{l['id']}` | {KIND[l['kind']]}{' · الدور A فقط (أحمر)' if l.get('levels') == ['A'] else ''}{' · غير مؤكد (بنفسجي)' if l.get('unconfirmed') else ''} · {'في حساب المسارات' if l.get('integrated') else 'مسودة'} |" for n, (l, _) in enumerate(drafts, len(lanes) + 1)]
+rows = [f"| {n} | `{l['id']}` | {KIND[l['kind']]}{' · الدور A فقط (بنفسجي)' if l.get('levels') == ['A'] else ' · B فقط' if l.get('levels') == ['B'] else ''} |" for n, (l, _) in enumerate(numbered, 1)]
+drows = [f"| {n} | `{l['id']}` | مدموج في `{l['merged_into']}` (قرار المالك) · مسودة |" if l.get('merged_into') else f"| {n} | `{l['id']}` | أُزيل (قرار المالك، {l['removed'][6:16]}) |" if l.get('removed') else f"| {n} | `{l['id']}` | {KIND[l['kind']]}{' · الدور A فقط (أحمر)' if l.get('levels') == ['A'] else ''}{' · غير مؤكد (بنفسجي)' if l.get('unconfirmed') else ''} · {'في حساب المسارات' if l.get('integrated') else 'مسودة'} |" for n, (l, _) in enumerate(drafts, len(numbered) + 1)]
 open('docs/routes/garage-map-legend.md', 'w').write(
     '# أرقام طرق المواقف في `garage-map.png`\n\n'
     'تُولَّد مع الصورة من `data/garage.json` بالأمر `python3 scripts/garage-map.py`، فتتغير الأرقام إذا أُضيف طريق.\n\n'
@@ -180,4 +187,4 @@ open('docs/routes/garage-map-legend.md', 'w').write(
     '| الرقم | الطريق في البيانات | نوعه |\n|---|---|---|\n' + '\n'.join(rows) + '\n'
     + ('\n## مدخل قربان (أرقام المسودة نفسها): الخط المتصل في حساب المسارات، والمنقط مسودة لم تدخل بعد\n\n| الرقم | الطريق في المسودة | نوعه |\n|---|---|---|\n' + '\n'.join(drows) + '\n' if drows else '')
 )
-print(f'{len(lanes)} roads + {len(drafts)} drafts → docs/routes/garage-map.png ({W}×{H}) and docs/routes/garage-map-legend.md')
+print(f'{len(numbered)} roads + {len(drafts)} drafts → docs/routes/garage-map.png ({W}×{H}) and docs/routes/garage-map-legend.md')

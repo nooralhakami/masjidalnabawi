@@ -495,7 +495,10 @@
     ]
    ],
    "oneway": true,
-   "_note": "owner 2026-10-15 (on the satellite map: the east side lower)"
+   "_note": "owner 2026-10-15 (on the satellite map: the east side lower); owner 2026-10-25: no east side on level A (the drawing of the south-east corner)",
+   "levels": [
+    "B"
+   ]
   },
   {
    "id": "south-lane",
@@ -588,6 +591,23 @@
      1085.72
     ],
     [
+     1612.6,
+     1085.8
+    ]
+   ],
+   "oneway": true,
+   "_note": "owner 2026-10-15 (on the satellite map: the east side lower)"
+  },
+  {
+   "id": "outer-south-east",
+   "kind": "entry",
+   "certain": true,
+   "px": [
+    [
+     1612.6,
+     1085.8
+    ],
+    [
      1647.4,
      1085.88
     ],
@@ -653,7 +673,10 @@
     ]
    ],
    "oneway": true,
-   "_note": "owner 2026-10-15 (on the satellite map: the east side lower)"
+   "levels": [
+    "B"
+   ],
+   "_note": "owner 2026-10-25: no east side on level A (the drawing of the south-east corner): road 6 on A ends by the green ramp; on B it goes on up the east side"
   },
   {
    "id": "p13-exit",
@@ -682,7 +705,10 @@
      744.42
     ]
    ],
-   "_note": "owner 2026-10-15 (on the satellite map: the east side lower)"
+   "_note": "owner 2026-10-15 (on the satellite map: the east side lower); owner 2026-10-25: no east side on level A (the drawing of the south-east corner)",
+   "levels": [
+    "B"
+   ]
   },
   {
    "id": "p13-in",
@@ -715,7 +741,10 @@
      603.39
     ]
    ],
-   "_note": "owner 2026-10-15 (on the satellite map: the east side lower)"
+   "_note": "owner 2026-10-15 (on the satellite map: the east side lower); owner 2026-10-25: no east side on level A (the drawing of the south-east corner)",
+   "levels": [
+    "B"
+   ]
   },
   {
    "id": "east-link",
@@ -736,7 +765,10 @@
      762.92
     ]
    ],
-   "_note": "owner 2026-10-15 (on the satellite map: the east side lower)"
+   "_note": "owner 2026-10-15 (on the satellite map: the east side lower); owner 2026-10-25: no east side on level A (the drawing of the south-east corner)",
+   "levels": [
+    "B"
+   ]
   },
   {
    "id": "se-shared",
@@ -753,7 +785,10 @@
     ]
    ],
    "oneway": false,
-   "_note": "owner 2026-10-15 (on the satellite map: the east side lower)"
+   "_note": "owner 2026-10-15 (on the satellite map: the east side lower); owner 2026-10-25: no east side on level A (the drawing of the south-east corner)",
+   "levels": [
+    "B"
+   ]
   },
   {
    "id": "west-link",

@@ -21,6 +21,8 @@ import { fromM, toM, type XY } from './walk';
  *    north road, lot 13 from the south (the way in from Omar ibn al-Khattab street). There is no way
  *    back at that exit (owner: «exit only»), so the south lots and lot 13 are reached only from there.
  *  - Lots 12 and 13 are on level B only (owner, 2026-10-25); a way asked for on A goes to B.
+ *  - Level A has no east side (owner, 2026-10-25): road 6 ends by the south-east green ramp and turns into
+ *    it; in from Qurban, a car climbs beside that ramp and turns west onto the road above lots 1-4.
  *  - Each of the 13 lots (on both levels) is entered right after its first facility and left by its
  *    own exit (the arrows in the drawing). A route ends at the lot's entrance and the way out starts
  *    at its exit (owner, 2026-10-13): the visitor parks where they like inside.

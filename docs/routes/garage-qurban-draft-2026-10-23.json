@@ -406,7 +406,8 @@
           930
         ]
       ],
-      "_note": "owner 2026-10-23: red curve from the bottom road up to the foot of lane 46; direction deduced"
+      "_note": "owner 2026-10-23: red curve from the bottom road up to the foot of lane 46; direction deduced",
+      "removed": "owner 2026-10-25: erased in the drawing of the south-east corner (road 6 now turns into the green ramp)"
     },
     {
       "id": "a-qurban-east-up",
@@ -449,7 +450,19 @@
           466
         ]
       ],
-      "_note": "owner 2026-10-23: purple, NOT confirmed. A diagonal from lane 46 to the outer east road (lane 3); direction unknown (drawn north-east)"
+      "_note": "owner 2026-10-23: purple, NOT confirmed. A diagonal from lane 46 to the outer east road (lane 3); direction unknown (drawn north-east)",
+      "removed": "owner 2026-10-25: the east side of level A was erased in the drawing of the south-east corner"
+    },
+    {
+      "id": "a-qurban-road6-green",
+      "kind": "link",
+      "levels": [
+        "A"
+      ],
+      "oneway": true,
+      "certain": true,
+      "derived": true,
+      "_note": "owner 2026-10-25 (drawing of the south-east corner, cyan): from the bottom road (6) left into the foot of the green ramp, beside the way out. No pixels: scripts/qurban-lanes.py builds it from road 6 and lane 43, where the ramp starts."
     }
   ],
   "crop_control_points": [

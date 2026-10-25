@@ -63,6 +63,9 @@
    "kind": "entry",
    "certain": true,
    "oneway": true,
+   "levels": [
+    "B"
+   ],
    "path": [
     [
      24.4678031,
@@ -181,6 +184,25 @@
      39.6127403
     ],
     [
+     24.4660964,
+     39.6131331
+    ]
+   ]
+  },
+  {
+   "id": "outer-south-east",
+   "kind": "entry",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "B"
+   ],
+   "path": [
+    [
+     24.4660964,
+     39.6131331
+    ],
+    [
      24.4660963,
      39.6133354
     ],
@@ -251,6 +273,9 @@
    "kind": "exit",
    "certain": true,
    "oneway": true,
+   "levels": [
+    "B"
+   ],
    "path": [
     [
      24.4686475,
@@ -279,6 +304,9 @@
    "kind": "entry",
    "certain": true,
    "oneway": true,
+   "levels": [
+    "B"
+   ],
    "path": [
     [
      24.4679495,
@@ -311,6 +339,9 @@
    "kind": "entry",
    "certain": true,
    "oneway": true,
+   "levels": [
+    "B"
+   ],
    "path": [
     [
      24.4679495,
@@ -331,6 +362,9 @@
    "kind": "shared",
    "certain": true,
    "oneway": false,
+   "levels": [
+    "B"
+   ],
    "path": [
     [
      24.46836,
@@ -1072,7 +1106,7 @@
    "oneway": true,
    "path": [
     [
-     24.4660963,
+     24.4660964,
      39.6130255
     ],
     [
@@ -1199,33 +1233,6 @@
    ]
   },
   {
-   "id": "a-qurban-to-east-up",
-   "kind": "link",
-   "levels": [
-    "A"
-   ],
-   "certain": true,
-   "oneway": true,
-   "path": [
-    [
-     24.4660961,
-     39.6129966
-    ],
-    [
-     24.4661011,
-     39.6130676
-    ],
-    [
-     24.4661347,
-     39.6131422
-    ],
-    [
-     24.4661767,
-     39.61323
-    ]
-   ]
-  },
-  {
    "id": "a-qurban-east-up",
    "kind": "link",
    "levels": [
@@ -1241,6 +1248,25 @@
     [
      24.4669158,
      39.61323
+    ]
+   ]
+  },
+  {
+   "id": "a-qurban-road6-green",
+   "kind": "link",
+   "levels": [
+    "A"
+   ],
+   "certain": true,
+   "oneway": true,
+   "path": [
+    [
+     24.4660964,
+     39.6131091
+    ],
+    [
+     24.4661387,
+     39.6131091
     ]
    ]
   }
