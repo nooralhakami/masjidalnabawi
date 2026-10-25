@@ -174,11 +174,11 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
         garageRoute('qurban', P(id), 'B')!.roads.map((r) => r.lane),
         `P${id - 900}B`,
       ).toContain('ramp-down-qurban');
-      // Out by Qurban: road 6, then the exit curve; no lap round the corner.
+      // Out by Qurban: from road 6 by the green ramp straight down (lane 44 merged into it); no lap round the corner.
       expect(
         garageExit(P(id), 'qurban', 'A')!.roads.map((r) => r.lane),
         `P${id - 900}A out`,
-      ).toEqual(['outer-south', 'a-qurban-exit-curve', 'qurban-road-out-A']);
+      ).toEqual(['outer-south', 'qurban-road-out-A']);
     }
   });
 

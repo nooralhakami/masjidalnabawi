@@ -120,12 +120,13 @@ if os.path.exists(DRAFT):
         path = [(float(np.polyval(lat_fit, y)), float(np.polyval(lng_fit, x))) for x, y in l['px']]
         drafts.append((l, [P(*m(a, b)) for a, b in path]))
 DCOL = {'entry': '#1e6fd9', 'exit': '#d62828', 'shared': '#f08c00', 'link': '#00a5c8', 'ramp_up': '#d9b400', 'ramp_down': '#2b8a3e'}
-dcolour = lambda l: '#9b5de5' if l.get('unconfirmed') else '#d62828' if l.get('levels') == ['A'] and l['kind'] != 'link' else DCOL[l['kind']]
+# The way in is blue like every entry (owner, 2026-10-25); the other level-A roads of the draft red.
+dcolour = lambda l: '#9b5de5' if l.get('unconfirmed') else '#d62828' if l.get('levels') == ['A'] and l['kind'] not in ('link', 'entry') else DCOL[l['kind']]
 dlevels = lambda l: data_lane[l['id']].get('levels') if l['id'] in data_lane else l.get('levels')
 for l, pts in drafts:
     if l.get('merged_into') or l.get('removed') or not on_level(dlevels(l), l['kind']):
         continue
-    c = '#9b5de5' if l.get('unconfirmed') else '#d62828' if l.get('levels') == ['A'] else dcolour(l)
+    c = dcolour(l) if l['kind'] == 'entry' else '#9b5de5' if l.get('unconfirmed') else '#d62828' if l.get('levels') == ['A'] else dcolour(l)
     if l.get('integrated'):
         d.line(pts, fill=c, width=7)
         continue_dash = False
@@ -157,7 +158,7 @@ for n, (l, pts) in enumerate(drafts, len(numbered) + 1):
     if l['id'] in FIXED_LABEL:  # the two red curves run side by side: one label each side, whatever their direction
         (dx, dy), t_ = FIXED_LABEL[l['id']]
         cx, cy = a[0] + (b[0] - a[0]) * t_ + dx, a[1] + (b[1] - a[1]) * t_ + dy
-    d.rounded_rectangle([cx - 20, cy - 16, cx + 20, cy + 16], radius=8, fill='white', outline=dcolour(l) if l.get('levels') != ['A'] or l.get('unconfirmed') else '#d62828', width=3)
+    d.rounded_rectangle([cx - 20, cy - 16, cx + 20, cy + 16], radius=8, fill='white', outline=dcolour(l) if l.get('levels') != ['A'] or l.get('unconfirmed') or l['kind'] == 'entry' else '#d62828', width=3)
     d.text((cx - 13, cy - 12), str(n), fill='black', font=f)
 for e in g['entrances']:
     if LEVEL and (e.get('level') or 'B') != LEVEL:
@@ -179,7 +180,7 @@ if LEVEL:
 
 KIND = {'entry': 'دخول (أزرق)', 'exit': 'خروج (أحمر)', 'shared': 'ممر في الاتجاهين (برتقالي)', 'link': 'وصلة', 'ramp_up': 'صعود إلى A (أصفر)', 'ramp_down': 'نزول إلى B (أخضر)'}
 rows = [f"| {n} | `{l['id']}` | {KIND[l['kind']]}{' · الدور A فقط (بنفسجي)' if l.get('levels') == ['A'] else ' · B فقط' if l.get('levels') == ['B'] else ''} |" for n, (l, _) in enumerate(numbered, 1)]
-drows = [f"| {n} | `{l['id']}` | مدموج في `{l['merged_into']}` (قرار المالك) · مسودة |" if l.get('merged_into') else f"| {n} | `{l['id']}` | أُزيل (قرار المالك، {l['removed'][6:16]}) |" if l.get('removed') else f"| {n} | `{l['id']}` | {KIND[l['kind']]}{' · الدور A فقط (أحمر)' if l.get('levels') == ['A'] else ''}{' · غير مؤكد (بنفسجي)' if l.get('unconfirmed') else ''} · {'في حساب المسارات' if l.get('integrated') else 'مسودة'} |" for n, (l, _) in enumerate(drafts, len(numbered) + 1)]
+drows = [f"| {n} | `{l['id']}` | مدموج في `{l['merged_into']}` (قرار المالك) · مسودة |" if l.get('merged_into') else f"| {n} | `{l['id']}` | أُزيل (قرار المالك، {l['removed'][6:16]}) |" if l.get('removed') else f"| {n} | `{l['id']}` | {KIND[l['kind']]}{(' · الدور A فقط' if l['kind'] == 'entry' else ' · الدور A فقط (أحمر)') if l.get('levels') == ['A'] else ''}{' · غير مؤكد (بنفسجي)' if l.get('unconfirmed') else ''} · {'في حساب المسارات' if l.get('integrated') else 'مسودة'} |" for n, (l, _) in enumerate(drafts, len(numbered) + 1)]
 open('docs/routes/garage-map-legend.md', 'w').write(
     '# أرقام طرق المواقف في `garage-map.png`\n\n'
     'تُولَّد مع الصورة من `data/garage.json` بالأمر `python3 scripts/garage-map.py`، فتتغير الأرقام إذا أُضيف طريق.\n\n'

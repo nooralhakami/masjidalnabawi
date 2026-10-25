@@ -109,7 +109,7 @@
           880
         ]
       ],
-      "_note": "red, right curve, orange arrow pointing north: from the south into the car park at its south-east corner; owner 2026-10-23 (fourth message): the entry road is a separate road EAST of the exit road, with a small kerb between them: its south part follows the light-blue curve he drew on garage-map.png (px_east, pixels of that image, calibrated on facilities 201-204 in crop2_control_points); it reaches the corner at the end of the east road and then the foot of lane 46",
+      "_note": "red, right curve, orange arrow pointing north: from the south into the car park at its south-east corner; owner 2026-10-23 (fourth message): the entry road is a separate road EAST of the exit road, with a small kerb between them: its south part follows the light-blue curve he drew on garage-map.png (px_east, pixels of that image, calibrated on facilities 201-204 in crop2_control_points); it reaches the corner at the end of the east road and then the foot of lane 46; owner 2026-10-25 (drawing of the south-east corner, «100% right»): straight up into the foot of lane 46, not east to the corner: px_2026_10_25, pixels of that drawing, calibrated on facilities 201-206 in crop4_control_points",
       "px_east": [
         [
           1305,
@@ -134,6 +134,64 @@
         [
           1408,
           670
+        ]
+      ],
+      "px_2026_10_25": [
+        [
+          1277,
+          1200
+        ],
+        [
+          1293,
+          1160
+        ],
+        [
+          1306,
+          1120
+        ],
+        [
+          1317,
+          1080
+        ],
+        [
+          1328,
+          1040
+        ],
+        [
+          1337,
+          1000
+        ],
+        [
+          1347,
+          960
+        ],
+        [
+          1356,
+          920
+        ],
+        [
+          1364,
+          880
+        ],
+        [
+          1372,
+          840
+        ],
+        [
+          1380,
+          800
+        ],
+        [
+          1388,
+          760
+        ],
+        [
+          1395,
+          720
+        ],
+        [
+          1399,
+          680
         ]
       ]
     },
@@ -167,7 +225,7 @@
           1356
         ]
       ],
-      "_note": "red, left curve, orange arrow pointing south: from the corner out to the south; owner 2026-10-23 (fifth message): the exit road moves a little EAST, to the red curve he drew on garage-map.png (px_exit_east, calibrated on facilities 201-204 in crop3_control_points); it starts where lane 44 meets it and ends at the bottom of that curve (the surface entrance marker is no longer its end)",
+      "_note": "red, left curve, orange arrow pointing south: from the corner out to the south; owner 2026-10-23 (fifth message): the exit road moves a little EAST, to the red curve he drew on garage-map.png (px_exit_east, calibrated on facilities 201-204 in crop3_control_points); it starts where lane 44 meets it and ends at the bottom of that curve (the surface entrance marker is no longer its end); owner 2026-10-25 (same drawing): from road 6 by the green ramp straight down to the south (px_2026_10_25); lane 44 merged into it",
       "px_exit_east": [
         [
           1368,
@@ -192,6 +250,56 @@
         [
           1250,
           1411
+        ]
+      ],
+      "px_2026_10_25": [
+        [
+          1346,
+          750
+        ],
+        [
+          1342,
+          800
+        ],
+        [
+          1337,
+          840
+        ],
+        [
+          1330,
+          880
+        ],
+        [
+          1321,
+          920
+        ],
+        [
+          1311,
+          960
+        ],
+        [
+          1299,
+          1000
+        ],
+        [
+          1286,
+          1040
+        ],
+        [
+          1273,
+          1080
+        ],
+        [
+          1258,
+          1120
+        ],
+        [
+          1242,
+          1160
+        ],
+        [
+          1226,
+          1200
         ]
       ]
     },
@@ -377,7 +485,8 @@
           1078
         ]
       ],
-      "_note": "owner 2026-10-23: the exit curve, joined to lane 36 (so it is the exit to the south): confirmed as the exit"
+      "_note": "owner 2026-10-23: the exit curve, joined to lane 36 (so it is the exit to the south): confirmed as the exit; owner 2026-10-25: merged into lane 36, which now starts on road 6 by the green ramp (the drawing of the south-east corner)",
+      "merged_into": "qurban-road-out-A"
     },
     {
       "id": "a-qurban-to-east-up",
@@ -560,5 +669,49 @@
     "lng": 39.612841,
     "kerb_m": 7,
     "_note": "owner 2026-10-23 (sixth message): both mouths meet at the Qurban marker on the map (src/data-next/car-entrances.ts), the entry road on its east side and the exit road on its west side with a small kerb between; the north ends stay where the drawing put them (tied to the facilities and to lanes 44 and 46) and the south parts are redrawn as smooth curves from the mouths"
-  }
+  },
+  "crop4_control_points": [
+    {
+      "id": 201,
+      "px": [
+        1108.0,
+        375.5
+      ]
+    },
+    {
+      "id": 202,
+      "px": [
+        1108.0,
+        671.5
+      ]
+    },
+    {
+      "id": 203,
+      "px": [
+        693.0,
+        375.5
+      ]
+    },
+    {
+      "id": 204,
+      "px": [
+        693.0,
+        672.0
+      ]
+    },
+    {
+      "id": 205,
+      "px": [
+        274.0,
+        375.5
+      ]
+    },
+    {
+      "id": 206,
+      "px": [
+        274.0,
+        672.0
+      ]
+    }
+  ]
 }
