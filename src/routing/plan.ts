@@ -11,6 +11,7 @@ import {
   garageRoute,
   garageRouteFrom,
   garageRouteFromLot,
+  lotLevel,
   lotsByDistance,
   nearGarage,
   type EntranceId,
@@ -392,17 +393,19 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B', heading?: nu
     const lot = lotFor(to);
     const up = lot && walkUp(lot, to);
     // Already in the very lot: only the walk up is left.
-    if (lot && start?.lot?.id === lot.id && start.level === level) {
+    if (lot && start?.lot?.id === lot.id && lotLevel(lot, start.level) === lotLevel(lot, level)) {
       const walkM = up ? up.m : 0;
       const legs: Leg[] = up ? [{ kind: 'walk', path: up.path }] : [{ kind: 'walk', path: [from, at(lot)] }];
-      return [{ mode: 'drive', legs, walkM, driveM: 0, minutes: Math.max(1, Math.ceil(walkM / WALK_M_PER_MIN)), lot, level }];
+      return [{ mode: 'drive', legs, walkM, driveM: 0, minutes: Math.max(1, Math.ceil(walkM / WALK_M_PER_MIN)), lot, level: lotLevel(lot, level) }];
     }
     const way = lot && (start?.lot ? garageRouteFromLot(start.lot, start.level, lot, level) : garageRouteFrom(from, lot, level, heading, start?.level ?? 'B'));
     if (lot && way) {
       const walkM = up ? up.m : 0;
       const legs: Leg[] = [{ kind: 'garage', path: way.path, parts: way.parts, steps: way.steps }, ...(up ? [{ kind: 'walk' as const, path: up.path }] : [])];
       const minutes = Math.ceil(way.meters / DRIVE_M_PER_MIN + walkM / WALK_M_PER_MIN);
-      return [{ mode: 'drive', legs, walkM, driveM: way.meters, minutes: Math.max(1, minutes), lot, gate: way.gate, garageCertain: way.certain, level, ramps: way.ramps }];
+      return [
+        { mode: 'drive', legs, walkM, driveM: way.meters, minutes: Math.max(1, minutes), lot, gate: way.gate, garageCertain: way.certain, level: way.level, ramps: way.ramps },
+      ];
     }
   }
   const S = await loadStreets();
@@ -489,7 +492,19 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B', heading?: nu
         { kind: 'garage', path: way.path, parts: way.parts, steps: way.steps },
         ...(up ? [{ kind: 'walk' as const, path: up.path }] : []),
       ];
-      plans.push({ mode: 'drive', legs, walkM, driveM, minutes: Math.max(1, minutes), lot, entrance: g.e.id, gate: way.gate, garageCertain: way.certain, level, ramps: way.ramps });
+      plans.push({
+        mode: 'drive',
+        legs,
+        walkM,
+        driveM,
+        minutes: Math.max(1, minutes),
+        lot,
+        entrance: g.e.id,
+        gate: way.gate,
+        garageCertain: way.certain,
+        level: way.level,
+        ramps: way.ramps,
+      });
     }
     if (ways.length) continue;
     // A lot missing from the drawing: the nearest ramp, then aisles along the ring round the Haram.
@@ -566,7 +581,7 @@ export function planExit(lot: Poi, level: Level = 'B'): Plan[] {
       lot,
       exit: x.id,
       gate: way.gate,
-      level,
+      level: way.level,
       ramps: way.ramps,
       garageCertain: way.certain,
     });

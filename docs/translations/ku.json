@@ -32,7 +32,8 @@
    "emergency": "Navenda tenduristiyê ya alîkariya yekem û rewşên awarte.",
    "landmark": "Cihekî navdar li herêma Mizgefta Pêxember.",
    "rawdah": "Ketina Rewdeyê bi destûrê, di demên diyarkirî de bi dor ji jin û mêran re.",
-   "parking": "Parkkirina binerdê ya du qatî (A û B), di navbera sazgehên {a} û {b} de."
+   "parking": "Parkkirina binerdê ya du qatî (A û B), di navbera sazgehên {a} û {b} de.",
+   "parking_one": "Parkkirina binerdê li qata {l}, di navbera sazgehên {a} û {b} de."
   }
  },
  "ui": {

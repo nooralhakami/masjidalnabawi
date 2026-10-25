@@ -2195,8 +2195,11 @@
   "lat": 24.4697928,
   "lng": 39.6136895,
   "direction": "east",
-  "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 231/232 ومرفقي 233/234.",
-  "alias": "12A 12B P12 parking",
+  "description_ar": "مواقف تحت الساحة في الدور B، تقع بين مرفقي 231/232 ومرفقي 233/234.",
+  "alias": "12B P12 parking",
+  "levels": [
+   "B"
+  ],
   "access": "public"
  },
  {
@@ -2207,8 +2210,11 @@
   "lat": 24.4689742,
   "lng": 39.6136895,
   "direction": "east",
-  "description_ar": "مواقف تحت الساحة بدورين (A وB)، تقع بين مرفقي 233/234 ومرفقي 235/236.",
-  "alias": "13A 13B P13 parking",
+  "description_ar": "مواقف تحت الساحة في الدور B، تقع بين مرفقي 233/234 ومرفقي 235/236.",
+  "alias": "13B P13 parking",
+  "levels": [
+   "B"
+  ],
   "access": "subscribers"
  },
  {

@@ -32,7 +32,8 @@
    "emergency": "Centre de santé pour les premiers secours et les urgences.",
    "landmark": "Lieu remarquable dans le secteur de la Mosquée du Prophète.",
    "rawdah": "Entrée de la Rawdah sur autorisation, partagée entre femmes et hommes à des horaires fixes.",
-   "parking": "Parking souterrain sur deux niveaux (A et B), situé entre les installations {a} et {b}."
+   "parking": "Parking souterrain sur deux niveaux (A et B), situé entre les installations {a} et {b}.",
+   "parking_one": "Parking souterrain au niveau {l}, situé entre les installations {a} et {b}."
   }
  },
  "ui": {

@@ -32,7 +32,8 @@
    "emergency": "İlk yardım və təcili hallar üçün səhiyyə mərkəzi.",
    "landmark": "Peyğəmbər Məscidi ərazisində görməli yer.",
    "rawdah": "İcazə ilə Rövzəyə giriş, müəyyən saatlarda qadınlar və kişilər növbə ilə.",
-   "parking": "İki mərtəbəli (A və B) yeraltı dayanacaq, {a} və {b} obyektləri arasında."
+   "parking": "İki mərtəbəli (A və B) yeraltı dayanacaq, {a} və {b} obyektləri arasında.",
+   "parking_one": "{l} mərtəbəsindəki yeraltı dayanacaq, {a} və {b} obyektləri arasında."
   }
  },
  "ui": {

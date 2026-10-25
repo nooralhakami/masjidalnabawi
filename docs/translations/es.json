@@ -32,7 +32,8 @@
    "emergency": "Centro de salud para primeros auxilios y urgencias.",
    "landmark": "Lugar destacado en la zona de la Mezquita del Profeta.",
    "rawdah": "Entrada a la Rawdah con permiso, compartida por mujeres y hombres en horarios fijos.",
-   "parking": "Aparcamiento subterráneo de dos niveles (A y B), entre las instalaciones {a} y {b}."
+   "parking": "Aparcamiento subterráneo de dos niveles (A y B), entre las instalaciones {a} y {b}.",
+   "parking_one": "Aparcamiento subterráneo en el nivel {l}, entre las instalaciones {a} y {b}."
   }
  },
  "ui": {

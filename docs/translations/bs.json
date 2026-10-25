@@ -42,7 +42,8 @@
    "emergency": "Zdravstveni centar za prvu pomoć i hitne slučajeve.",
    "landmark": "Znamenitost u području Poslanikove džamije.",
    "rawdah": "Ulaz u Ravdu uz dozvolu, u određeno vrijeme naizmjenično za žene i muškarce.",
-   "parking": "Podzemni parking na dva nivoa (A i B), između objekata {a} i {b}."
+   "parking": "Podzemni parking na dva nivoa (A i B), između objekata {a} i {b}.",
+   "parking_one": "Podzemni parking na nivou {l}, između objekata {a} i {b}."
   }
  },
  "ui": {

@@ -1,6 +1,6 @@
 import garageJson from '../../data/garage.json';
 import type { LatLng, Poi } from '../data/types';
-import { parkingEntrances } from '../domain/parking';
+import { lotLevels, parkingEntrances } from '../domain/parking';
 import { fromM, toM, type XY } from './walk';
 
 /**
@@ -20,6 +20,7 @@ import { fromM, toM, type XY } from './walk';
  *  - The east side is cut between lots 12 and 13 (owner, 2026-10-14): lot 12 is reached from the
  *    north road, lot 13 from the south (the way in from Omar ibn al-Khattab street). There is no way
  *    back at that exit (owner: «exit only»), so the south lots and lot 13 are reached only from there.
+ *  - Lots 12 and 13 are on level B only (owner, 2026-10-25); a way asked for on A goes to B.
  *  - Each of the 13 lots (on both levels) is entered right after its first facility and left by its
  *    own exit (the arrows in the drawing). A route ends at the lot's entrance and the way out starts
  *    at its exit (owner, 2026-10-13): the visitor parks where they like inside.
@@ -313,6 +314,9 @@ export function keepRight(pts: XY[], m = 2.5): XY[] {
 
 const lotData = (lot: Poi) => GARAGE.lots.find((l) => l.id === lot.id);
 
+/** The level a lot is parked on when this one is asked for: that one if the lot is on it, else the lot's own. */
+export const lotLevel = (lot: Poi, level: Level): Level => (lotLevels(lot).includes(level) ? level : lotLevels(lot)[0]);
+
 /** The lot's area: the rectangle between its four facilities (its entrances on the plaza above). */
 export function lotRect(lot: Poi): { x0: number; x1: number; y0: number; y1: number } | null {
   const f = parkingEntrances(lot).map((p) => toM([p.lat, p.lng]));
@@ -435,7 +439,8 @@ function stepsOf(pts: XY[], tags: Stretch[], gate: XY, out: boolean): GarageStep
  * The way in: from an entrance (level B) along the one-way roads — up the yellow ramp for level A —
  * to the lot's entrance. Null if that lot is not in the drawing.
  */
-export function garageRoute(entrance: EntranceId, lot: Poi, level: Level = 'B'): GarageRoute | null {
+export function garageRoute(entrance: EntranceId, lot: Poi, asked: Level = 'B'): GarageRoute | null {
+  const level = lotLevel(lot, asked);
   const ent = ENTRANCES.find((e) => e.id === entrance);
   const l = lotData(lot);
   if (!ent || !l) return null;
@@ -448,7 +453,8 @@ export function garageRoute(entrance: EntranceId, lot: Poi, level: Level = 'B'):
  * The way out: from the lot's exit along the one-way roads — down the green ramp from level A — to
  * an exit (level B), ending where its road leaves the car park.
  */
-export function garageExit(lot: Poi, exit: EntranceId, level: Level = 'B'): GarageRoute | null {
+export function garageExit(lot: Poi, exit: EntranceId, asked: Level = 'B'): GarageRoute | null {
+  const level = lotLevel(lot, asked);
   const x = EXITS.find((e) => e.id === exit);
   const l = lotData(lot);
   if (!x || !l) return null;
@@ -521,7 +527,9 @@ export function lotsByDistance(from: LatLng, lots: Poi[]): { lot: Poi; m: number
  * 2026-10-14: «are you in lot n?»): out by the lot's own exit on its level, then along the one-way
  * roads to the other lot's entrance.
  */
-export function garageRouteFromLot(fromLot: Poi, fromLevel: Level, lot: Poi, level: Level = 'B'): GarageRoute | null {
+export function garageRouteFromLot(fromLot: Poi, fromAsked: Level, lot: Poi, asked: Level = 'B'): GarageRoute | null {
+  const fromLevel = lotLevel(fromLot, fromAsked);
+  const level = lotLevel(lot, asked);
   const a = lotData(fromLot);
   const l = lotData(lot);
   if (!a || !l) return null;
@@ -549,7 +557,8 @@ export function garageRouteFromLot(fromLot: Poi, fromLevel: Level, lot: Poi, lev
  * lot 12A went out to the streets and back in): from where it is, along the one-way roads — up the
  * yellow ramp for level A — to the lot's entrance. Null if the car is not by a road of the car park.
  */
-export function garageRouteFrom(from: LatLng, lot: Poi, level: Level = 'B', heading?: number | null, fromLevel: Level = 'B'): GarageRoute | null {
+export function garageRouteFrom(from: LatLng, lot: Poi, asked: Level = 'B', heading?: number | null, fromLevel: Level = 'B'): GarageRoute | null {
+  const level = lotLevel(lot, asked);
   const l = lotData(lot);
   if (!l) return null;
   const starts = startsNear(toM(from), fromLevel, heading);

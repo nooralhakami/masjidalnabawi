@@ -58,6 +58,8 @@ export interface Poi {
   worksBy?: number;
   rawdah?: boolean;
   access?: 'public' | 'subscribers';
+  /** Parking: the levels it is on, where not both A and B (owner, 2026-10-25: there is no 12A or 13A). */
+  levels?: ('A' | 'B')[];
   /** Source element in OpenStreetMap (n123, w123, r123), for places taken from it. */
   osm?: string;
   /** Where a place's position comes from when not OSM (e.g. a brand's own branch list). */

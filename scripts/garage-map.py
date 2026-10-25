@@ -53,6 +53,8 @@ for fid in range(201, 237):
     d.text((x - 17, y - 9), str(fid), fill='#3a2f22', font=fs)
 for lot in g['lots']:
     q = pois[lot['id']]
+    if LEVEL and LEVEL not in q.get('levels', ['A', 'B']):
+        continue  # no lot 12A or 13A (owner, 2026-10-25)
     x, y = P(*m(q['lat'], q['lng']))
     d.rounded_rectangle([x - 32, y - 16, x + 32, y + 16], radius=8, fill='#9f1239' if q.get('access') == 'subscribers' else '#1f64a8')
     d.text((x - 24, y - 11), f"P{lot['id'] - 900}", fill='white', font=f)

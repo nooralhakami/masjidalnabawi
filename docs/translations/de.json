@@ -32,7 +32,8 @@
    "emergency": "Gesundheitszentrum für Erste Hilfe und Notfälle.",
    "landmark": "Sehenswürdigkeit im Bereich der Prophetenmoschee.",
    "rawdah": "Eingang zur Rawdah mit Genehmigung, zu festen Zeiten abwechselnd für Frauen und Männer.",
-   "parking": "Tiefgarage mit zwei Ebenen (A und B), zwischen den Einrichtungen {a} und {b}."
+   "parking": "Tiefgarage mit zwei Ebenen (A und B), zwischen den Einrichtungen {a} und {b}.",
+   "parking_one": "Tiefgarage auf Ebene {l}, zwischen den Einrichtungen {a} und {b}."
   }
  },
  "ui": {

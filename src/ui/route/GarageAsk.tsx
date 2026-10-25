@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { Poi } from '../../data/types';
+import { lotLevels } from '../../domain/parking';
 import type { GarageStart } from '../../routing/plan';
 import type { Spot } from '../../routing/spot';
 import { useI18n } from '../i18n';
@@ -42,12 +43,18 @@ export function GarageAsk({ lots, spot, onAnswer }: GarageAskProps) {
   useLayoutEffect(() => box.current?.querySelector<HTMLButtonElement>('.garage-ask-opt')?.focus(), [lot]);
 
   const [first, ...others] = lots;
+  // In a lot on one level only, that level is the answer: no second question.
+  const pickLot = (l: Poi) => {
+    const levels = lotLevels(l);
+    if (levels.length === 1) done({ lot: l, level: levels[0] });
+    else setLot(l);
+  };
   const asking = lot === undefined;
   const question = asking && first ? t('gq_lot', { n: first.id - 900 }) : t('gq_level');
   const options: { label: string; primary?: boolean; pick(): void }[] = asking
     ? [
-        ...(first ? [{ label: t('gq_yes_lot', { n: first.id - 900 }), primary: true, pick: () => setLot(first) }] : []),
-        ...others.map((l) => ({ label: t('gq_in_lot', { n: l.id - 900 }), pick: () => setLot(l) })),
+        ...(first ? [{ label: t('gq_yes_lot', { n: first.id - 900 }), primary: true, pick: () => pickLot(first) }] : []),
+        ...others.map((l) => ({ label: t('gq_in_lot', { n: l.id - 900 }), pick: () => pickLot(l) })),
         { label: t('gq_road_under'), pick: () => setLot(null) },
         { label: t(OUTSIDE[spot]), pick: () => done('outside') },
       ]

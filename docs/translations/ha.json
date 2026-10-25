@@ -32,7 +32,8 @@
    "emergency": "Cibiyar lafiya don agajin gaggawa.",
    "landmark": "Wuri sananne a yankin Masallacin Annabi.",
    "rawdah": "Ƙofar Rawda da izini, mata da maza suna amfani da ita a lokuta ƙayyadaddu.",
-   "parking": "Wurin ajiye mota a ƙarƙashin ƙasa mai hawa biyu (A da B), tsakanin wurare {a} da {b}."
+   "parking": "Wurin ajiye mota a ƙarƙashin ƙasa mai hawa biyu (A da B), tsakanin wurare {a} da {b}.",
+   "parking_one": "Wurin ajiye mota a ƙarƙashin ƙasa a hawa {l}, tsakanin wurare {a} da {b}."
   }
  },
  "ui": {

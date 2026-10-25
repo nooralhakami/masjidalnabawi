@@ -32,7 +32,8 @@
    "emergency": "Pusat kesihatan untuk pertolongan cemas dan kecemasan.",
    "landmark": "Tempat tumpuan di kawasan Masjid Nabawi.",
    "rawdah": "Pintu masuk Raudhah dengan permit, dikongsi oleh wanita dan lelaki pada waktu yang ditetapkan.",
-   "parking": "Tempat letak kereta bawah tanah dua aras (A dan B), terletak antara kemudahan {a} dan {b}."
+   "parking": "Tempat letak kereta bawah tanah dua aras (A dan B), terletak antara kemudahan {a} dan {b}.",
+   "parking_one": "Tempat letak kereta bawah tanah di aras {l}, terletak antara kemudahan {a} dan {b}."
   }
  },
  "ui": {

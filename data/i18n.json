@@ -83,7 +83,8 @@
    "emergency": "Health center for first aid and emergencies.",
    "landmark": "Landmark in the Prophet's Mosque area.",
    "rawdah": "Rawdah entrance by permit, shared by women and men at set times.",
-   "parking": "Underground parking with two levels (A and B), located between facilities {a} and {b}."
+   "parking": "Underground parking with two levels (A and B), located between facilities {a} and {b}.",
+   "parking_one": "Underground parking on level {l}, located between facilities {a} and {b}."
   },
   "descs": {
    "مدخل السلام على الرسول ﷺ": "Entrance for visiting and greeting the Prophet ﷺ.",
@@ -471,7 +472,8 @@
    "emergency": "İlk yardım ve acil durumlar için sağlık merkezi.",
    "landmark": "Mescid-i Nebevi çevresinde önemli bir yer.",
    "rawdah": "Ravza girişi izinle yapılır; belirli saatlerde kadınlar ve erkekler dönüşümlü kullanır.",
-   "parking": "Meydanın altında iki katlı (A ve B) otopark; {a} ve {b} numaralı tesisler arasında yer alır."
+   "parking": "Meydanın altında iki katlı (A ve B) otopark; {a} ve {b} numaralı tesisler arasında yer alır.",
+   "parking_one": "Meydanın altında {l} katında otopark; {a} ve {b} numaralı tesisler arasında yer alır."
   },
   "descs": {
    "مدخل السلام على الرسول ﷺ": "Hz. Peygamber ﷺ'i ziyaret ve selamlama girişi.",
@@ -859,7 +861,8 @@
    "emergency": "ابتدائی طبی امداد اور ہنگامی حالات کے لیے صحت مرکز۔",
    "landmark": "مسجد نبوی کے اطراف ایک اہم مقام۔",
    "rawdah": "ریاض الجنۃ میں داخلہ اجازت نامے سے ہوتا ہے، اور مقررہ اوقات میں خواتین اور مردوں کے لیے باری باری مخصوص ہے۔",
-   "parking": "صحن کے نیچے دو منزلہ پارکنگ (A اور B)، سہولات {a} اور {b} کے درمیان واقع ہے۔"
+   "parking": "صحن کے نیچے دو منزلہ پارکنگ (A اور B)، سہولات {a} اور {b} کے درمیان واقع ہے۔",
+   "parking_one": "صحن کے نیچے منزل {l} پر پارکنگ، سہولات {a} اور {b} کے درمیان واقع ہے۔"
   },
   "descs": {
    "مدخل السلام على الرسول ﷺ": "نبی کریم ﷺ کی زیارت اور سلام پیش کرنے کا داخلہ۔",
@@ -1248,7 +1251,8 @@
    "emergency": "Pusat kesehatan untuk pertolongan pertama dan keadaan darurat.",
    "landmark": "Tempat penting di sekitar Masjid Nabawi.",
    "rawdah": "Masuk ke Raudhah dengan izin (tasreh), digunakan bergantian oleh wanita dan pria pada jam tertentu.",
-   "parking": "Parkir bawah pelataran dua lantai (A dan B), terletak di antara fasilitas {a} dan {b}."
+   "parking": "Parkir bawah pelataran dua lantai (A dan B), terletak di antara fasilitas {a} dan {b}.",
+   "parking_one": "Parkir bawah pelataran di lantai {l}, terletak di antara fasilitas {a} dan {b}."
   },
   "descs": {
    "مدخل السلام على الرسول ﷺ": "Pintu masuk untuk menziarahi dan mengucapkan salam kepada Nabi ﷺ.",
@@ -1636,7 +1640,8 @@
    "emergency": "Birinchi yordam va shoshilinch holatlar uchun tibbiyot markazi.",
    "landmark": "Masjid Nabaviy atrofidagi muhim joy.",
    "rawdah": "Ravzaga ruxsatnoma bilan kiriladi; belgilangan vaqtlarda ayollar va erkaklar navbatma-navbat foydalanadi.",
-   "parking": "Hovli ostidagi ikki qavatli (A va B) avtoturargoh; {a} va {b}-inshootlar orasida joylashgan."
+   "parking": "Hovli ostidagi ikki qavatli (A va B) avtoturargoh; {a} va {b}-inshootlar orasida joylashgan.",
+   "parking_one": "Hovli ostidagi {l} qavatdagi avtoturargoh; {a} va {b}-inshootlar orasida joylashgan."
   },
   "descs": {
    "مدخل السلام على الرسول ﷺ": "Rasululloh ﷺ ni ziyorat qilish va salom berish uchun kirish.",
@@ -2000,7 +2005,8 @@
    "emergency": "প্রাথমিক চিকিৎসা ও জরুরি সেবার স্বাস্থ্যকেন্দ্র।",
    "landmark": "মসজিদে নববী এলাকার একটি উল্লেখযোগ্য স্থান।",
    "rawdah": "অনুমতিপত্রসহ রওজায় প্রবেশ, নির্দিষ্ট সময়ে নারী ও পুরুষের জন্য পালাক্রমে।",
-   "parking": "দুই স্তরের (A ও B) ভূগর্ভস্থ পার্কিং, {a} ও {b} সুবিধার মাঝে অবস্থিত।"
+   "parking": "দুই স্তরের (A ও B) ভূগর্ভস্থ পার্কিং, {a} ও {b} সুবিধার মাঝে অবস্থিত।",
+   "parking_one": "{l} স্তরের ভূগর্ভস্থ পার্কিং, {a} ও {b} সুবিধার মাঝে অবস্থিত।"
   },
   "gi": {
    "1": "বাবুস সালাম – গেট 1",
@@ -2388,7 +2394,8 @@
    "emergency": "Centre de santé pour les premiers secours et les urgences.",
    "landmark": "Lieu remarquable dans le secteur de la Mosquée du Prophète.",
    "rawdah": "Entrée de la Rawdah sur autorisation, partagée entre femmes et hommes à des horaires fixes.",
-   "parking": "Parking souterrain sur deux niveaux (A et B), situé entre les installations {a} et {b}."
+   "parking": "Parking souterrain sur deux niveaux (A et B), situé entre les installations {a} et {b}.",
+   "parking_one": "Parking souterrain au niveau {l}, situé entre les installations {a} et {b}."
   },
   "gi": {
    "1": "Bab al-Salam – Porte 1",
@@ -2776,7 +2783,8 @@
    "emergency": "مرکز بهداشتی برای کمک‌های اولیه و فوریت‌ها.",
    "landmark": "مکانی شاخص در محدوده مسجد النبی.",
    "rawdah": "ورودی روضه با مجوز، مشترک میان بانوان و آقایان در ساعات معین.",
-   "parking": "پارکینگ زیرزمینی دو طبقه (A و B)، میان تأسیسات {a} و {b}."
+   "parking": "پارکینگ زیرزمینی دو طبقه (A و B)، میان تأسیسات {a} و {b}.",
+   "parking_one": "پارکینگ زیرزمینی در طبقه {l}، میان تأسیسات {a} و {b}."
   },
   "gi": {
    "1": "باب السلام – در 1",
@@ -3164,7 +3172,8 @@
    "emergency": "Медицинский пункт первой и неотложной помощи.",
    "landmark": "Достопримечательность в районе Мечети Пророка.",
    "rawdah": "Вход в Рауду по разрешению; женщины и мужчины посещают её в установленное время.",
-   "parking": "Подземная парковка на двух уровнях (A и B) между объектами {a} и {b}."
+   "parking": "Подземная парковка на двух уровнях (A и B) между объектами {a} и {b}.",
+   "parking_one": "Подземная парковка на уровне {l} между объектами {a} и {b}."
   },
   "gi": {
    "1": "Баб ас-Салям – ворота 1",
@@ -3552,7 +3561,8 @@
    "emergency": "Pusat kesihatan untuk pertolongan cemas dan kecemasan.",
    "landmark": "Tempat tumpuan di kawasan Masjid Nabawi.",
    "rawdah": "Pintu masuk Raudhah dengan permit, dikongsi oleh wanita dan lelaki pada waktu yang ditetapkan.",
-   "parking": "Tempat letak kereta bawah tanah dua aras (A dan B), terletak antara kemudahan {a} dan {b}."
+   "parking": "Tempat letak kereta bawah tanah dua aras (A dan B), terletak antara kemudahan {a} dan {b}.",
+   "parking_one": "Tempat letak kereta bawah tanah di aras {l}, terletak antara kemudahan {a} dan {b}."
   },
   "gi": {
    "1": "Bab al-Salam – Pintu 1",
@@ -3940,7 +3950,8 @@
    "emergency": "Cibiyar lafiya don agajin gaggawa.",
    "landmark": "Wuri sananne a yankin Masallacin Annabi.",
    "rawdah": "Ƙofar Rawda da izini, mata da maza suna amfani da ita a lokuta ƙayyadaddu.",
-   "parking": "Wurin ajiye mota a ƙarƙashin ƙasa mai hawa biyu (A da B), tsakanin wurare {a} da {b}."
+   "parking": "Wurin ajiye mota a ƙarƙashin ƙasa mai hawa biyu (A da B), tsakanin wurare {a} da {b}.",
+   "parking_one": "Wurin ajiye mota a ƙarƙashin ƙasa a hawa {l}, tsakanin wurare {a} da {b}."
   },
   "gi": {
    "1": "Bab al-Salam – Ƙofa 1",
@@ -4328,7 +4339,8 @@
    "emergency": "പ്രഥമശുശ്രൂഷയ്ക്കും അടിയന്തര സേവനങ്ങൾക്കുമുള്ള ആരോഗ്യ കേന്ദ്രം.",
    "landmark": "മസ്ജിദുന്നബവി പ്രദേശത്തെ ഒരു പ്രധാന സ്ഥലം.",
    "rawdah": "അനുമതിയോടെ റൗദയിലേക്കുള്ള പ്രവേശനം, നിശ്ചിത സമയങ്ങളിൽ സ്ത്രീകൾക്കും പുരുഷന്മാർക്കും മാറിമാറി.",
-   "parking": "രണ്ട് നിലകളുള്ള (A, B) ഭൂഗർഭ പാർക്കിംഗ്, {a}, {b} സൗകര്യങ്ങൾക്കിടയിൽ."
+   "parking": "രണ്ട് നിലകളുള്ള (A, B) ഭൂഗർഭ പാർക്കിംഗ്, {a}, {b} സൗകര്യങ്ങൾക്കിടയിൽ.",
+   "parking_one": "{l} നിലയിലുള്ള ഭൂഗർഭ പാർക്കിംഗ്, {a}, {b} സൗകര്യങ്ങൾക്കിടയിൽ."
   },
   "gi": {
    "1": "ബാബുസ്സലാം – ഗേറ്റ് 1",
@@ -4716,7 +4728,8 @@
    "emergency": "Kituo cha afya cha huduma ya kwanza na dharura.",
    "landmark": "Mahali maarufu katika eneo la Msikiti wa Mtume.",
    "rawdah": "Mlango wa Rawdah kwa kibali, hutumiwa na wanawake na wanaume kwa nyakati maalum.",
-   "parking": "Maegesho ya chini ya ardhi yenye ngazi mbili (A na B), kati ya huduma {a} na {b}."
+   "parking": "Maegesho ya chini ya ardhi yenye ngazi mbili (A na B), kati ya huduma {a} na {b}.",
+   "parking_one": "Maegesho ya chini ya ardhi katika ngazi {l}, kati ya huduma {a} na {b}."
   },
   "gi": {
    "1": "Bab al-Salam – Lango 1",
@@ -5104,7 +5117,8 @@
    "emergency": "د لومړنیو مرستو او بیړنیو حالاتو روغتیايي مرکز.",
    "landmark": "د مسجد النبي په سیمه کې نامتو ځای.",
    "rawdah": "روضې ته د اجازه‌لیک سره ننوتل، ښځې او نارینه په ټاکلو وختونو کې ترې ګټه اخلي.",
-   "parking": "دوه پوړیز ځمکلاندې پارکینګ (A او B)، د {a} او {b} اسانتیاوو ترمنځ."
+   "parking": "دوه پوړیز ځمکلاندې پارکینګ (A او B)، د {a} او {b} اسانتیاوو ترمنځ.",
+   "parking_one": "په {l} پوړ کې ځمکلاندې پارکینګ، د {a} او {b} اسانتیاوو ترمنځ."
   },
   "gi": {
    "1": "باب السلام – دروازه 1",
@@ -5492,7 +5506,8 @@
    "emergency": "Xarun caafimaad oo gargaarka degdegga ah.",
    "landmark": "Meel caan ah oo ku taal agagaarka Masjidka Nabiga.",
    "rawdah": "Albaabka Rawdah oo ogolaansho lagu galo, haweenka iyo ragga ayaa wadaaga waqtiyo go'an.",
-   "parking": "Baarkin dhulka hoostiisa ah oo laba dabaq leh (A iyo B), oo u dhexeeya adeegyada {a} iyo {b}."
+   "parking": "Baarkin dhulka hoostiisa ah oo laba dabaq leh (A iyo B), oo u dhexeeya adeegyada {a} iyo {b}.",
+   "parking_one": "Baarkin dhulka hoostiisa ah oo ku yaal dabaqa {l}, oo u dhexeeya adeegyada {a} iyo {b}."
   },
   "gi": {
    "1": "Bab al-Salam – Albaab 1",
@@ -5880,7 +5895,8 @@
    "emergency": "முதலுதவி மற்றும் அவசர சிகிச்சைக்கான சுகாதார மையம்.",
    "landmark": "மஸ்ஜிதுந் நபவி பகுதியில் உள்ள முக்கிய இடம்.",
    "rawdah": "அனுமதியுடன் ரவ்ழாவுக்குள் நுழைவு, குறிப்பிட்ட நேரங்களில் பெண்களும் ஆண்களும் மாறி மாறி.",
-   "parking": "இரண்டு தளங்கள் (A, B) கொண்ட நிலத்தடி வாகன நிறுத்தம், {a} மற்றும் {b} வசதிகளுக்கு இடையில்."
+   "parking": "இரண்டு தளங்கள் (A, B) கொண்ட நிலத்தடி வாகன நிறுத்தம், {a} மற்றும் {b} வசதிகளுக்கு இடையில்.",
+   "parking_one": "{l} தளத்தில் உள்ள நிலத்தடி வாகன நிறுத்தம், {a} மற்றும் {b} வசதிகளுக்கு இடையில்."
   },
   "gi": {
    "1": "பாபுஸ் ஸலாம் – வாயில் 1",
@@ -6268,7 +6284,8 @@
    "emergency": "प्राथमिक चिकित्सा और आपातकालीन स्वास्थ्य केंद्र।",
    "landmark": "मस्जिद-ए-नबवी क्षेत्र का प्रमुख स्थान।",
    "rawdah": "परमिट से रौज़ा में प्रवेश, निर्धारित समय पर महिलाओं और पुरुषों के लिए बारी-बारी से।",
-   "parking": "दो स्तरों (A और B) वाली भूमिगत पार्किंग, सुविधा {a} और {b} के बीच।"
+   "parking": "दो स्तरों (A और B) वाली भूमिगत पार्किंग, सुविधा {a} और {b} के बीच।",
+   "parking_one": "स्तर {l} पर भूमिगत पार्किंग, सुविधा {a} और {b} के बीच।"
   },
   "gi": {
    "1": "बाब-उस-सलाम – गेट 1",
@@ -6656,7 +6673,8 @@
    "emergency": "Zdravstveni centar za prvu pomoć i hitne slučajeve.",
    "landmark": "Znamenitost u području Poslanikove džamije.",
    "rawdah": "Ulaz u Ravdu uz dozvolu, u određeno vrijeme naizmjenično za žene i muškarce.",
-   "parking": "Podzemni parking na dva nivoa (A i B), između objekata {a} i {b}."
+   "parking": "Podzemni parking na dva nivoa (A i B), između objekata {a} i {b}.",
+   "parking_one": "Podzemni parking na nivou {l}, između objekata {a} i {b}."
   },
   "gi": {
    "1": "Babus-Selam – Kapija 1",
@@ -7044,7 +7062,8 @@
    "emergency": "Gesundheitszentrum für Erste Hilfe und Notfälle.",
    "landmark": "Sehenswürdigkeit im Bereich der Prophetenmoschee.",
    "rawdah": "Eingang zur Rawdah mit Genehmigung, zu festen Zeiten abwechselnd für Frauen und Männer.",
-   "parking": "Tiefgarage mit zwei Ebenen (A und B), zwischen den Einrichtungen {a} und {b}."
+   "parking": "Tiefgarage mit zwei Ebenen (A und B), zwischen den Einrichtungen {a} und {b}.",
+   "parking_one": "Tiefgarage auf Ebene {l}, zwischen den Einrichtungen {a} und {b}."
   },
   "gi": {
    "1": "Bab al-Salam – Tor 1",
@@ -7432,7 +7451,8 @@
    "emergency": "急救与紧急医疗中心。",
    "landmark": "先知寺地区的地标。",
    "rawdah": "凭许可进入鲁达，女性与男性在规定时段轮流进入。",
-   "parking": "两层（A和B）地下停车场，位于设施{a}与{b}之间。"
+   "parking": "两层（A和B）地下停车场，位于设施{a}与{b}之间。",
+   "parking_one": "{l}层地下停车场，位于设施{a}与{b}之间。"
   },
   "gi": {
    "1": "和平门（巴布·萨拉姆）– 1号门",
@@ -7820,7 +7840,8 @@
    "emergency": "የመጀመሪያ ርዳታና የአደጋ ጊዜ ጤና ጣቢያ።",
    "landmark": "በነቢዩ መስጊድ አካባቢ ያለ ታዋቂ ቦታ።",
    "rawdah": "በፈቃድ ወደ ረውዳ መግቢያ፣ በተወሰኑ ሰዓታት ሴቶችና ወንዶች በየተራ።",
-   "parking": "ባለ ሁለት ደረጃ (A እና B) የምድር ውስጥ የመኪና ማቆሚያ፣ በ{a} እና በ{b} መገልገያዎች መካከል።"
+   "parking": "ባለ ሁለት ደረጃ (A እና B) የምድር ውስጥ የመኪና ማቆሚያ፣ በ{a} እና በ{b} መገልገያዎች መካከል።",
+   "parking_one": "በደረጃ {l} ላይ ያለ የምድር ውስጥ የመኪና ማቆሚያ፣ በ{a} እና በ{b} መገልገያዎች መካከል።"
   },
   "gi": {
    "1": "ባቡ ሰላም – በር 1",
@@ -8208,7 +8229,8 @@
    "emergency": "Navenda tenduristiyê ya alîkariya yekem û rewşên awarte.",
    "landmark": "Cihekî navdar li herêma Mizgefta Pêxember.",
    "rawdah": "Ketina Rewdeyê bi destûrê, di demên diyarkirî de bi dor ji jin û mêran re.",
-   "parking": "Parkkirina binerdê ya du qatî (A û B), di navbera sazgehên {a} û {b} de."
+   "parking": "Parkkirina binerdê ya du qatî (A û B), di navbera sazgehên {a} û {b} de.",
+   "parking_one": "Parkkirina binerdê li qata {l}, di navbera sazgehên {a} û {b} de."
   },
   "gi": {
    "1": "Babusselam – Derî 1",
@@ -8596,7 +8618,8 @@
    "emergency": "İlk yardım və təcili hallar üçün səhiyyə mərkəzi.",
    "landmark": "Peyğəmbər Məscidi ərazisində görməli yer.",
    "rawdah": "İcazə ilə Rövzəyə giriş, müəyyən saatlarda qadınlar və kişilər növbə ilə.",
-   "parking": "İki mərtəbəli (A və B) yeraltı dayanacaq, {a} və {b} obyektləri arasında."
+   "parking": "İki mərtəbəli (A və B) yeraltı dayanacaq, {a} və {b} obyektləri arasında.",
+   "parking_one": "{l} mərtəbəsindəki yeraltı dayanacaq, {a} və {b} obyektləri arasında."
   },
   "gi": {
    "1": "Babüs-Səlam – 1 saylı qapı",
@@ -8984,7 +9007,8 @@
    "emergency": "ศูนย์สุขภาพสำหรับปฐมพยาบาลและเหตุฉุกเฉิน",
    "landmark": "สถานที่สำคัญในบริเวณมัสยิดนะบะวี",
    "rawdah": "ทางเข้าเราะฎ๊ะฮ์ด้วยใบอนุญาต สตรีและบุรุษสลับกันตามเวลาที่กำหนด",
-   "parking": "ที่จอดรถใต้ดินสองชั้น (A และ B) ระหว่างอาคาร {a} และ {b}"
+   "parking": "ที่จอดรถใต้ดินสองชั้น (A และ B) ระหว่างอาคาร {a} และ {b}",
+   "parking_one": "ที่จอดรถใต้ดินชั้น {l} ระหว่างอาคาร {a} และ {b}"
   },
   "gi": {
    "1": "บาบุสสลาม – ประตู 1",
@@ -9372,7 +9396,8 @@
    "emergency": "Centro de salud para primeros auxilios y urgencias.",
    "landmark": "Lugar destacado en la zona de la Mezquita del Profeta.",
    "rawdah": "Entrada a la Rawdah con permiso, compartida por mujeres y hombres en horarios fijos.",
-   "parking": "Aparcamiento subterráneo de dos niveles (A y B), entre las instalaciones {a} y {b}."
+   "parking": "Aparcamiento subterráneo de dos niveles (A y B), entre las instalaciones {a} y {b}.",
+   "parking_one": "Aparcamiento subterráneo en el nivel {l}, entre las instalaciones {a} y {b}."
   },
   "gi": {
    "1": "Bab al-Salam – Puerta 1",
