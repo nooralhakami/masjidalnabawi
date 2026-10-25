@@ -295,11 +295,21 @@ describe('the east side through the narrow neck (owner, 2026-10-25)', () => {
     expect(neck.some(([x, y]) => x > 226.5 && y < 100 && x < 291)).toBe(false);
   });
 
+  it('the north line runs inside the gates 364–355, never outside them (owner: «the route must be inside the gates»)', () => {
+    const ring = ROUTING.walkway_ring.map(toM);
+    const gates = [364, 362, 361, 360, 359, 358, 357, 355].map((id) => toM(at(id)));
+    const side = ring.filter(([x, y]) => x > 200 && x < 240 && y > -55 && y < 115);
+    expect(side.length).toBeGreaterThan(0);
+    for (const [x] of side) expect(x, 'west of every gate on that side').toBeLessThan(Math.min(...gates.map((g) => g[0])) - 3);
+    // And off the mosque's wall (the building is an obstacle; its east wall is at x ≈ 204 m).
+    for (const [x] of side) expect(x).toBeGreaterThan(206);
+  });
+
   it('a walk from the north-east to gate 364 goes by the new corners, not by the stepped wall', () => {
     const path = walkPath(at(349), at(364)).map(toM);
     const near = (x: number, y: number) => path.some(([px, py]) => Math.hypot(px - x, py - y) < 8);
     expect(near(292, 111)).toBe(true);
-    expect(near(216, 111)).toBe(true);
+    expect(near(210, 111)).toBe(true);
     // Never within the stepped wall's strip: x between 226 and 292 while y is between 20 and 100.
     expect(path.some(([x, y]) => x > 229 && x < 291 && y > 20 && y < 100)).toBe(false);
   });
