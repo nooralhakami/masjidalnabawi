@@ -1261,29 +1261,29 @@
  },
  {
   "id": 202,
-  "name_ar": "مجمع دورات مشترك 202",
+  "name_ar": "مجمع دورات الرجال 202",
   "category": "toilets",
-  "subCategory": "toilet_mixed",
+  "subCategory": "toilet_men",
   "lat": 24.4662422,
   "lng": 39.6125681,
   "direction": "south",
-  "description_ar": "مجمع مشترك: الدور العلوي للنساء ويُوصل إليه بالدرج العادي 🟣، والأدوار السفلية للرجال ويُوصل إليها بالسلم الكهربائي المتحرك 🔵",
+  "description_ar": "مجمع دورات مياه مخصص للرجال 🔵",
   "status": "open",
   "pairWith": 201,
-  "gender": "mixed"
+  "gender": "men"
  },
  {
   "id": 201,
-  "name_ar": "مجمع دورات الرجال 201",
+  "name_ar": "مجمع دورات مشترك 201",
   "category": "toilets",
-  "subCategory": "toilet_men",
+  "subCategory": "toilet_mixed",
   "lat": 24.4668553,
   "lng": 39.6125681,
   "direction": "east",
-  "description_ar": "مجمع دورات مياه مخصص للرجال 🔵",
+  "description_ar": "مجمع مشترك: الدور العلوي للنساء ويُوصل إليه بالدرج العادي 🟣، والأدوار السفلية للرجال ويُوصل إليها بالسلم الكهربائي المتحرك 🔵",
   "status": "open",
   "pairWith": 202,
-  "gender": "men"
+  "gender": "mixed"
  },
  {
   "id": 204,

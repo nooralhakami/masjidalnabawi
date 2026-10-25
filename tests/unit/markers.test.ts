@@ -67,7 +67,9 @@ describe('markers', () => {
 
   it('parking chip «P 13» (the letter apart from the number); mixed restrooms split in two', () => {
     expect(markerSpec(P(913), 'm', undefined, false).html).toContain('<span class="p-l">P</span><span>13</span>');
-    expect(markerSpec(P(202), 'l', 'open', false).html).toContain('mk-mixed');
+    expect(markerSpec(P(201), 'l', 'open', false).html).toContain('mk-mixed');
+    // 202 shares 201's restrooms, but the women go in by 201: no women's colour on 202 (owner, 2026-10-25).
+    expect(markerSpec(P(202), 'l', 'open', false).html).not.toContain('mk-mixed');
   });
 
   it('progressive disclosure at ≤16 hides inner gates and wheelchair zones unless filtered', () => {

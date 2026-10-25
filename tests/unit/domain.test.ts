@@ -59,7 +59,7 @@ describe('filters', () => {
         .filter((p) => p.subCategory === 'toilet_mixed')
         .map((p) => p.id)
         .sort(),
-    ).toEqual([202, 210, 221]);
+    ).toEqual([201, 210, 221]);
     expect(w.filter((p) => p.category === 'women')).toHaveLength(2);
     expect(w.filter((p) => p.subCategory === 'gate_inner')).toHaveLength(womenGates.length);
     expect(w.some((p) => p.subCategory === 'toilet_men' || p.subCategory === 'gate_outer')).toBe(false);

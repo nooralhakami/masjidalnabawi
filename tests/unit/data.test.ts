@@ -95,7 +95,8 @@ describe('pois.json', () => {
   it('toilets split by subCategory', () => {
     expect(count((p) => p.subCategory === 'toilet_men')).toBe(22);
     expect(count((p) => p.subCategory === 'toilet_women')).toBe(14);
-    expect(ids((p) => p.subCategory === 'toilet_mixed')).toEqual([202, 210, 221]);
+    // The women enter 201's upper floor, not 202's (owner, 2026-10-25).
+    expect(ids((p) => p.subCategory === 'toilet_mixed')).toEqual([201, 210, 221]);
     expect(ids((p) => p.subCategory === 'toilet_elderly')).toEqual([204]);
     expect(count((p) => p.subCategory === 'toilet_accessible')).toBe(0);
   });
