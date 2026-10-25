@@ -563,6 +563,24 @@ describe('a car already in the car park carries on from where it is (owner, 2026
     expect(plan.lot?.id).toBe(911);
   });
 
+  it('to a place whose lot cannot be reached inside (facility 201, lot 1 from the north side): another lot, never out to the streets (owner, 2026-10-25)', async () => {
+    for (const start of [
+      { lot: null, level: 'B' as const },
+      { lot: null, level: 'A' as const },
+      { lot: P(910), level: 'A' as const },
+    ]) {
+      for (const level of LEVELS) {
+        const [plan] = await planRoutes(byRamp, P(201), 'drive', { level, start });
+        const name = `from ${start.lot ? `P${start.lot.id - 900}` : 'the road'} on ${start.level}, asked ${level}`;
+        expect(
+          plan.legs.map((l) => l.kind),
+          name,
+        ).toEqual(['garage', 'walk']);
+        expect(parkingAccess(plan.lot!), name).toBe('public');
+      }
+    }
+  });
+
   it('to a place in the Haram: on to its lot, then the walk up', async () => {
     const [plan] = await planRoutes(byRamp, P(223), 'drive');
     expect(plan.legs.map((l) => l.kind)).toEqual(['garage', 'walk']);

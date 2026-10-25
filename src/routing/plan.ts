@@ -390,22 +390,33 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B', heading?: nu
   // Already in the car park (owner, 2026-10-14): on from where the car is — the lot it is in, or the
   // road, on the level the visitor said — not out to the streets and back in by an entrance.
   if (start !== 'outside' && (to.category === 'parking' || inHaram(at(to)))) {
-    const lot = lotFor(to);
-    const up = lot && walkUp(lot, to);
-    // Already in the very lot: only the walk up is left.
-    if (lot && start?.lot?.id === lot.id && lotLevel(lot, start.level) === lotLevel(lot, level)) {
-      const walkM = up ? up.m : 0;
-      const legs: Leg[] = up ? [{ kind: 'walk', path: up.path }] : [{ kind: 'walk', path: [from, at(lot)] }];
-      return [{ mode: 'drive', legs, walkM, driveM: 0, minutes: Math.max(1, Math.ceil(walkM / WALK_M_PER_MIN)), lot, level: lotLevel(lot, level) }];
-    }
-    const way = lot && (start?.lot ? garageRouteFromLot(start.lot, start.level, lot, level) : garageRouteFrom(from, lot, level, heading, start?.level ?? 'B'));
-    if (lot && way) {
+    const inside = (lot: Poi): Plan | null => {
+      const up = walkUp(lot, to);
+      // Already in the very lot: only the walk up is left.
+      if (start?.lot?.id === lot.id && lotLevel(lot, start.level) === lotLevel(lot, level)) {
+        const walkM = up ? up.m : 0;
+        const legs: Leg[] = up ? [{ kind: 'walk', path: up.path }] : [{ kind: 'walk', path: [from, at(lot)] }];
+        return { mode: 'drive', legs, walkM, driveM: 0, minutes: Math.max(1, Math.ceil(walkM / WALK_M_PER_MIN)), lot, level: lotLevel(lot, level) };
+      }
+      const way = start?.lot ? garageRouteFromLot(start.lot, start.level, lot, level) : garageRouteFrom(from, lot, level, heading, start?.level ?? 'B');
+      if (!way) return null;
       const walkM = up ? up.m : 0;
       const legs: Leg[] = [{ kind: 'garage', path: way.path, parts: way.parts, steps: way.steps }, ...(up ? [{ kind: 'walk' as const, path: up.path }] : [])];
       const minutes = Math.ceil(way.meters / DRIVE_M_PER_MIN + walkM / WALK_M_PER_MIN);
-      return [
-        { mode: 'drive', legs, walkM, driveM: way.meters, minutes: Math.max(1, minutes), lot, gate: way.gate, garageCertain: way.certain, level: way.level, ramps: way.ramps },
-      ];
+      return { mode: 'drive', legs, walkM, driveM: way.meters, minutes: Math.max(1, minutes), lot, gate: way.gate, garageCertain: way.certain, level: way.level, ramps: way.ramps };
+    };
+    const lot = lotFor(to);
+    const plan = lot && inside(lot);
+    if (plan) return [plan];
+    // That lot cannot be reached by the car park's own roads from where the car is (the one-way roads:
+    // from the north side there is no way to the south lots). Never out to the streets and back in
+    // (owner, 2026-10-25): the quickest public lot that can be reached inside, then the walk up.
+    if (to.category !== 'parking') {
+      const others = LOTS.filter((l) => l.id !== lot?.id && parkingAccess(l) === 'public')
+        .map(inside)
+        .filter((p): p is Plan => p !== null)
+        .sort((a, b) => a.minutes - b.minutes || a.walkM - b.walkM);
+      if (others.length) return [others[0]];
     }
   }
   const S = await loadStreets();
