@@ -95,7 +95,8 @@ describe('pois.json', () => {
   it('toilets split by subCategory', () => {
     expect(count((p) => p.subCategory === 'toilet_men')).toBe(22);
     expect(count((p) => p.subCategory === 'toilet_women')).toBe(14);
-    expect(ids((p) => p.subCategory === 'toilet_mixed')).toEqual([202, 210, 221]);
+    // The women enter 201's upper floor, not 202's (owner, 2026-10-25).
+    expect(ids((p) => p.subCategory === 'toilet_mixed')).toEqual([201, 210, 221]);
     expect(ids((p) => p.subCategory === 'toilet_elderly')).toEqual([204]);
     expect(count((p) => p.subCategory === 'toilet_accessible')).toBe(0);
   });
@@ -124,14 +125,17 @@ describe('pois.json', () => {
     }
   });
 
-  it('parking 1–13, each searchable by A/B level and P-number', () => {
+  it('parking 1–13, each searchable by its levels and P-number; 12 and 13 on level B only (owner, 2026-10-25)', () => {
     const parking = POIS.filter((p) => p.category === 'parking');
     expect(parking.map((p) => p.subCategory)).toEqual(Array(13).fill('parking'));
     parking.forEach((p, i) => {
       const n = i + 1;
-      expect(p.alias).toContain(`${n}A`);
+      const one = n === 12 || n === 13;
+      expect(p.levels).toEqual(one ? ['B'] : undefined);
+      expect(p.alias!.split(' ').includes(`${n}A`), `${n}A`).toBe(!one);
       expect(p.alias).toContain(`${n}B`);
       expect(p.alias).toContain(`P${n}`);
+      expect(p.description_ar.includes('بدورين'), `P${n}`).toBe(!one);
     });
   });
 

@@ -127,7 +127,10 @@ export function ds(p: Poi, l: LangCode = current): string {
   const dt = L.dt ?? {};
   if (p.category === 'parking') {
     const b = parkingBetween(p);
-    return b && dt.parking ? dt.parking.replace('{a}', b[0]).replace('{b}', b[1]) : stripEmoji(p.description_ar);
+    // A lot on one level only (12 and 13, on B; owner 2026-10-25) is not described as on two.
+    const one = p.levels?.length === 1 && dt.parking_one ? dt.parking_one.replace('{l}', p.levels[0]) : null;
+    const tpl = one ?? dt.parking;
+    return b && tpl ? tpl.replace('{a}', b[0]).replace('{b}', b[1]) : stripEmoji(p.description_ar);
   }
   if (p.rawdah && dt.rawdah) return dt.rawdah;
   if (L.descs?.[p.name_ar]) return stripEmoji(L.descs[p.name_ar]);

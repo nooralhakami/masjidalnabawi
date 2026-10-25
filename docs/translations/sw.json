@@ -42,7 +42,8 @@
    "emergency": "Kituo cha afya cha huduma ya kwanza na dharura.",
    "landmark": "Mahali maarufu katika eneo la Msikiti wa Mtume.",
    "rawdah": "Mlango wa Rawdah kwa kibali, hutumiwa na wanawake na wanaume kwa nyakati maalum.",
-   "parking": "Maegesho ya chini ya ardhi yenye ngazi mbili (A na B), kati ya huduma {a} na {b}."
+   "parking": "Maegesho ya chini ya ardhi yenye ngazi mbili (A na B), kati ya huduma {a} na {b}.",
+   "parking_one": "Maegesho ya chini ya ardhi katika ngazi {l}, kati ya huduma {a} na {b}."
   }
  },
  "ui": {

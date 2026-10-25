@@ -32,7 +32,8 @@
    "emergency": "Xarun caafimaad oo gargaarka degdegga ah.",
    "landmark": "Meel caan ah oo ku taal agagaarka Masjidka Nabiga.",
    "rawdah": "Albaabka Rawdah oo ogolaansho lagu galo, haweenka iyo ragga ayaa wadaaga waqtiyo go'an.",
-   "parking": "Baarkin dhulka hoostiisa ah oo laba dabaq leh (A iyo B), oo u dhexeeya adeegyada {a} iyo {b}."
+   "parking": "Baarkin dhulka hoostiisa ah oo laba dabaq leh (A iyo B), oo u dhexeeya adeegyada {a} iyo {b}.",
+   "parking_one": "Baarkin dhulka hoostiisa ah oo ku yaal dabaqa {l}, oo u dhexeeya adeegyada {a} iyo {b}."
   }
  },
  "ui": {

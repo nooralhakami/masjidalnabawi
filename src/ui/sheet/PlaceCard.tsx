@@ -1,6 +1,7 @@
 import type { Poi } from '../../data/types';
 import { elevatorBadge, isClosed, pairOf, type Facilities } from '../../domain/facilities';
 import { nearestOuterGate } from '../../domain/nearby';
+import { lotLevels } from '../../domain/parking';
 import { rawdahState } from '../../domain/rawdah';
 import { num } from '../../i18n';
 import { lookOf } from '../../presentation/markers';
@@ -53,6 +54,9 @@ export interface PlaceCardProps {
  */
 export function PlaceCard({ p, fac, travel, level, onTravel, onLevel, onRoute, onShare, onClose, onGo, routing, now }: PlaceCardProps) {
   const { t, nm, ds, dirName, streetName } = useI18n();
+  // A lot on one level only (12 and 13, on B): the switch shows it and cannot change.
+  const one = p.category === 'parking' ? lotLevels(p) : [];
+  const oneLevel = one.length === 1 ? one[0] : null;
   const status = fac.status(p.id);
   const closed = isClosed(status);
   const named = p.subCategory === 'gate_inner' && p.name_ar !== `باب رقم ${p.id}`;
@@ -175,7 +179,7 @@ export function PlaceCard({ p, fac, travel, level, onTravel, onLevel, onRoute, o
 
       <footer class="pc-foot">
         <TravelToggle value={travel} onChange={onTravel} />
-        {travel === 'drive' ? <FloorSwitch value={level} onChange={onLevel} /> : null}
+        {travel === 'drive' ? <FloorSwitch value={oneLevel ?? level} onChange={onLevel} disabled={!!oneLevel} /> : null}
         <div class="pc-actions">
           <Button block icon={travel === 'drive' ? 'car' : 'route'} loading={routing} onClick={onRoute}>
             {t('route')}

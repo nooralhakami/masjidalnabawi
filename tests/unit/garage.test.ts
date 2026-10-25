@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { POI_BY_ID } from '../../src/data';
 import type { LatLng } from '../../src/data';
-import { parkingAccess, parkingEntrances } from '../../src/domain/parking';
+import { lotLevels, parkingAccess, parkingEntrances } from '../../src/domain/parking';
 import { ENTRANCES, EXITS, GARAGE, LEVELS, garageExit, setEntranceOpen, garageRoute, garageRouteFrom, inGarage, lotRect, type GarageRoute } from '../../src/routing/garage';
 import { lotsToAsk, planExit, planRoute, planRoutes } from '../../src/routing/plan';
 import { fromM, insideRect, network, pathLength, toM, walkPath } from '../../src/routing/walk';
@@ -126,6 +126,8 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
     expect(toM(down.path[0])[0]).toBeGreaterThan(Math.min(x220, x222));
     expect(toM(down.path[0])[0]).toBeLessThan(Math.max(x220, x222));
     for (const lot of LOTS) {
+      // Lots 12 and 13 have no level A (owner, 2026-10-25): their ways are checked below.
+      if (!lotLevels(lot).includes('A')) continue;
       // Omar and Sultana join level B. From Omar the south lots on B (1-4) now use the south-east ramps
       // (owner, 2026-10-23): up the yellow one and down the green one, shorter than the lap round the east.
       for (const e of ENTRANCES.filter((e) => !e.level)) {
@@ -155,6 +157,47 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
     }
   });
 
+  it('the south-east corner on level A (owner, 2026-10-25): no east side; in from Qurban up beside the green ramp, then west', () => {
+    for (const id of ['east-lane', 'east-link', 'p13-in', 'p13-exit', 'se-shared', 'outer-south-east']) {
+      expect(GARAGE.lanes.find((l) => l.id === id)!.levels, id).toEqual(['B']);
+    }
+    expect(GARAGE.lanes.some((l) => l.id === 'a-qurban-to-east-up')).toBe(false);
+    for (const [name, way] of allWays())
+      for (const r of way.roads) if (r.lane === 'outer-south-east' || r.lane.startsWith('east-') || r.lane.startsWith('p13-')) expect(r.level, name).toBe('B');
+    for (const id of [901, 902, 903, 904]) {
+      expect(
+        garageRoute('qurban', P(id), 'A')!.roads.map((r) => r.lane),
+        `P${id - 900}A`,
+      ).toEqual(['qurban-road-in-A', 'a-qurban-east-up', 'a-qurban-arc', 'south-lane']);
+      // To B: down the green ramp beside which the way in climbed.
+      expect(
+        garageRoute('qurban', P(id), 'B')!.roads.map((r) => r.lane),
+        `P${id - 900}B`,
+      ).toContain('ramp-down-qurban');
+      // Out by Qurban: from road 6 by the green ramp straight down (lane 44 merged into it); no lap round the corner.
+      expect(
+        garageExit(P(id), 'qurban', 'A')!.roads.map((r) => r.lane),
+        `P${id - 900}A out`,
+      ).toEqual(['outer-south', 'qurban-road-out-A']);
+    }
+  });
+
+  it('there is no lot 12A or 13A (owner, 2026-10-25): a way asked for on level A goes to level B', async () => {
+    for (const id of [912, 913]) {
+      const lot = P(id);
+      expect(lotLevels(lot)).toEqual(['B']);
+      for (const e of ENTRANCES) {
+        const a = garageRoute(e.id, lot, 'A');
+        expect(a?.level ?? 'B', `in ${e.id} → P${id - 900}`).toBe('B');
+        expect(a, `in ${e.id} → P${id - 900}`).toEqual(garageRoute(e.id, lot, 'B'));
+      }
+      for (const x of EXITS) expect(garageExit(lot, x.id, 'A'), `out P${id - 900} → ${x.id}`).toEqual(garageExit(lot, x.id, 'B'));
+      const [plan] = await planRoutes([24.476, 39.611], lot, 'drive', { level: 'A' });
+      expect(plan.level, `P${id - 900}`).toBe('B');
+      expect(planExit(lot, 'A').every((p) => p.level === 'B')).toBe(true);
+    }
+  });
+
   it('the orange openings (to switch between the way in and the way out) are crossed either way; on the north-west corner on level B only', () => {
     const shared = GARAGE.lanes.filter((l) => l.kind === 'shared');
     expect(shared.length).toBeGreaterThan(0);
@@ -172,10 +215,9 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
       expect(Math.abs(a[1] - r.y1), `P${id - 900}A at the north edge`).toBeLessThan(0.01);
       expect(Math.abs(b[1] - r.y0), `P${id - 900}B at the south edge`).toBeLessThan(0.01);
     }
-    // The others on A: up the north-west yellow ramp (owner, 2026-10-14), then east on the inner road
-    // to lot 12, or through the opening south to the west exit road for the west and south lots.
+    // The others on A: up the north-west yellow ramp (owner, 2026-10-14), then through the opening
+    // south to the west exit road for the west and south lots.
     const lanes = (id: number) => garageRoute('sultana', P(id), 'A')!.roads.map((r) => r.lane);
-    expect(lanes(912)).toContain('ramp-up-A-nw');
     expect(lanes(905)).toEqual(expect.arrayContaining(['ramp-up-A-nw', 'a-nw-opening']));
     // The south lots on A: north beside road 13, then up the south-west yellow ramp (owner, 2026-10-15).
     expect(garageRoute('omar', P(905), 'A')!.roads.map((r) => r.lane)).toEqual(expect.arrayContaining(['sw-north', 'ramp-up-A-sw']));
@@ -202,7 +244,6 @@ describe('the car park roads from the owner’s drawing (2026-10-13)', () => {
     const end = g[g.length - 1];
     expect(Math.abs(end[0] - toM(link.path[0])[0])).toBeLessThan(1);
     expect(end[1]).toBeGreaterThan(toM(link.path[0])[1] + 10);
-    expect(garageExit(P(912), 'sultana', 'A')!.roads.map((r) => r.lane)).toEqual(['exit-north', 'ramp-down-B', 'exit-link-810', 'exit-north']);
   });
 
   it('the way out ends where the exit road leaves the car park (level B), then goes on to the streets', () => {
@@ -417,7 +458,8 @@ describe('the owner’s corrections on the east and south-west sides (2026-10-14
   it('lot 13: in from the south on its east side, out on its west side heading south', () => {
     const r = lotRect(P(913))!;
     const way = garageRoute('omar', P(913))!;
-    expect(way.roads.map((x) => x.lane)).toEqual(['omar-in', 'outer-south', 'p13-in']);
+    // Road 6 is split by the green ramp (owner, 2026-10-25): its east part is on level B only.
+    expect(way.roads.map((x) => x.lane)).toEqual(['omar-in', 'outer-south', 'outer-south-east', 'p13-in']);
     expect(Math.abs(toM(way.gate)[0] - r.x1)).toBeLessThan(0.01);
     const out = garageExit(P(913), 'omar')!;
     expect(out.roads.map((x) => x.lane).slice(0, 3)).toEqual(['p13-exit', 'east-link', 'east-lane']);
@@ -457,10 +499,17 @@ describe('the owner’s corrections on the east and south-west sides (2026-10-14
     expect(up[up.length - 1][1]).toBeLessThan(up[0][1] - 80); // heading south
     expect(nearLane(lane('ramp-up-A-sw').path.at(-1)!, 'outer-south')).toBeLessThan(1);
     expect(garageRoute('omar', P(905), 'A')!.roads.map((r) => r.lane)).toEqual(expect.arrayContaining(['sw-north', 'ramp-up-A-sw']));
-    // Level A to the green ramp: down road 13, west, north on the new road, west to the green.
-    expect(garageExit(P(901), 'omar', 'A')!.roads.map((r) => r.lane)).toEqual(
+    // Level A to the green ramp: down road 13, west, north on the new road, west to the green (here
+    // from lot 1 on B, up the south-east yellow ramp first).
+    expect(garageExit(P(901), 'omar', 'B')!.roads.map((r) => r.lane)).toEqual(
       expect.arrayContaining(['exit-south-west', 'a-sw-west', 'sw-north', 'a-sw-to-green', 'ramp-down-B-sw', 'sw-mid']),
     );
+    // From lot 1 on A, road 6 turns straight into the south-east green ramp (owner, 2026-10-25).
+    expect(
+      garageExit(P(901), 'omar', 'A')!
+        .roads.map((r) => r.lane)
+        .slice(0, 3),
+    ).toEqual(['outer-south', 'a-qurban-road6-green', 'ramp-down-qurban']);
     // The road beside 209/210 ends on the outer south road.
     const b = lane('exit-south-west').path;
     expect(nearLane(b[b.length - 1], 'outer-south')).toBeLessThan(1);
@@ -501,17 +550,58 @@ describe('a car already in the car park carries on from where it is (owner, 2026
   // On the inner north road on level B, just before the yellow ramp (where the owner was).
   const byRamp = fromM([170, 317.5]);
 
-  it('to lot 12A: up a yellow ramp inside the car park, not out to the streets and back in', async () => {
+  it('to lot 11A: up a yellow ramp inside the car park, not out to the streets and back in', async () => {
     expect(inGarage(byRamp)).toBe(true);
-    const way = garageRouteFrom(byRamp, P(912), 'A')!;
+    const way = garageRouteFrom(byRamp, P(911), 'A')!;
     const lanes = way.roads.map((r) => r.lane);
     expect(lanes[0]).toBe('north-lane');
     expect(lanes.some((l) => l.startsWith('ramp-up-A'))).toBe(true);
     expect(lanes).not.toContain('sultana-in');
     expect(d(toM(way.path[0]), toM(byRamp))).toBeLessThan(20);
-    const [plan] = await planRoutes(byRamp, P(912), 'drive', { level: 'A' });
+    const [plan] = await planRoutes(byRamp, P(911), 'drive', { level: 'A' });
     expect(plan.legs.map((l) => l.kind)).toEqual(['garage']);
-    expect(plan.lot?.id).toBe(912);
+    expect(plan.lot?.id).toBe(911);
+  });
+
+  it('to a place whose lot cannot be reached inside (facility 201, lot 1 from the north side): another lot, never out to the streets (owner, 2026-10-25)', async () => {
+    for (const start of [
+      { lot: null, level: 'B' as const },
+      { lot: null, level: 'A' as const },
+      { lot: P(910), level: 'A' as const },
+    ]) {
+      for (const level of LEVELS) {
+        const [plan] = await planRoutes(byRamp, P(201), 'drive', { level, start });
+        const name = `from ${start.lot ? `P${start.lot.id - 900}` : 'the road'} on ${start.level}, asked ${level}`;
+        expect(
+          plan.legs.map((l) => l.kind),
+          name,
+        ).toEqual(['garage', 'walk']);
+        expect(parkingAccess(plan.lot!), name).toBe('public');
+      }
+    }
+  });
+
+  it('the open area at the Omar entrance (owner, 2026-10-25): from inside, out by Omar, turn round and straight back in; not while Omar is closed, nor from the streets', async () => {
+    const turn = GARAGE.lanes.find((l) => l.id === 'omar-turn')!;
+    expect(turn.levels).toEqual(['B']);
+    expect(d(toM(turn.path[0]), toM(turn.path[1]))).toBeLessThan(15);
+    // Lot 1 (the nearest to restroom 201) from the north road: only by the turn-round.
+    const lanes = garageRouteFrom(byRamp, P(901), 'B')!.roads.map((r) => r.lane);
+    expect(lanes).toEqual(expect.arrayContaining(['exit-omar', 'omar-turn', 'omar-in']));
+    const [plan] = await planRoutes(byRamp, P(201), 'drive', { start: { lot: null, level: 'B' } });
+    expect(plan.lot?.id).toBe(901);
+    expect(plan.legs.map((l) => l.kind)).toEqual(['garage', 'walk']);
+    // From the streets the entrances are used as before: Sultana still never leads to the south lots.
+    expect(garageRoute('sultana', P(901), 'B')).toBeNull();
+    setEntranceOpen('omar', false);
+    try {
+      expect(garageRouteFrom(byRamp, P(901), 'B')).toBeNull();
+      const [closed] = await planRoutes(byRamp, P(201), 'drive', { start: { lot: null, level: 'B' } });
+      expect(closed.lot?.id).not.toBe(901);
+      expect(closed.legs.map((l) => l.kind)).toEqual(['garage', 'walk']);
+    } finally {
+      setEntranceOpen('omar', true);
+    }
   });
 
   it('to a place in the Haram: on to its lot, then the walk up', async () => {
@@ -522,7 +612,7 @@ describe('a car already in the car park carries on from where it is (owner, 2026
   it('where the way in and the way out run side by side, the car’s heading picks the road', () => {
     const between = fromM([224.2, 40]);
     for (const id of [901, 913]) {
-      expect(garageRouteFrom(between, P(id), 'B', 0)!.roads[0].lane, `P${id - 900}`).toBe('outer-south'); // heading north
+      expect(garageRouteFrom(between, P(id), 'B', 0)!.roads[0].lane, `P${id - 900}`).toBe('outer-south-east'); // heading north
       expect(garageRouteFrom(between, P(id), 'B', 180)!.roads[0].lane, `P${id - 900}`).toBe('east-lane'); // heading south
     }
   });
@@ -545,7 +635,7 @@ describe('in or by the car park, the visitor says where the car is: which lot, w
   });
 
   it('in a lot: out by its own exit on that level, then on to the other lot', async () => {
-    const [plan] = await planRoutes(byRamp, P(912), 'drive', { level: 'A', start: { lot: P(911), level: 'B' } });
+    const [plan] = await planRoutes(byRamp, P(910), 'drive', { level: 'A', start: { lot: P(911), level: 'B' } });
     const garage = plan.legs[0];
     expect(garage.kind).toBe('garage');
     expect(garage.steps![0].kind).toBe('lot_out');

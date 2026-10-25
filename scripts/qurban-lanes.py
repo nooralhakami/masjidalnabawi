@@ -4,7 +4,8 @@ Reads docs/routes/garage-qurban-draft-2026-10-23.json (pixels of two of the owne
 scripts/garage-map.py uses them), converts every confirmed lane to lat/lng, snaps each end that is
 within SNAP_M of a road to that road (so the planner joins them), and writes
 docs/routes/garage-qurban-2026-10-23.json, which scripts/garage-from-drawing.py then adds to
-data/garage.json. Lane 38 is merged into 42 and 47 (purple) is unconfirmed: neither is written.
+data/garage.json. Lane 38 is merged into 42; lanes 45 and 47 were erased by the owner (2026-10-25):
+none of them is written. Lane 48 (road 6 into the green ramp) has no pixels: it is built here.
     python3 scripts/qurban-lanes.py
 """
 import json, math
@@ -52,7 +53,7 @@ c3 = dr['crop3_control_points']
 f3x = np.polyfit([c['px'][0] for c in c3], [fm[c['id']][0] for c in c3], 1)
 f3y = np.polyfit([c['px'][1] for c in c3], [fm[c['id']][1] for c in c3], 1)
 
-SKIP = {'a-qurban-west-stub', 'purple-unconfirmed'}
+SKIP = {l['id'] for l in dr['lanes'] if l.get('merged_into') or l.get('removed') or l.get('derived')}
 # The kind and levels the planner needs (the draft only drew colours).
 SPEC = {
     'qurban-road-in-A': dict(kind='entry', levels=['A']),
@@ -64,7 +65,6 @@ SPEC = {
     'a-qurban-west-down': dict(kind='link', levels=['A']),
     'a-qurban-west-east': dict(kind='link', levels=['A']),
     'a-qurban-exit-curve': dict(kind='exit', levels=['A']),
-    'a-qurban-to-east-up': dict(kind='link', levels=['A']),
     'a-qurban-east-up': dict(kind='link', levels=['A']),
 }
 # The cyan link ends at the foot of the yellow ramp, which the planner joins itself.
@@ -123,10 +123,57 @@ def curve(a, b, n=10):
     p1, p2 = a + np.array([0.0, sgn * k]), b - np.array([0.0, sgn * k])
     return [(1 - t) ** 3 * a + 3 * (1 - t) ** 2 * t * p1 + 3 * (1 - t) * t ** 2 * p2 + t ** 3 * b for t in np.linspace(0, 1, n)]
 
-corner = lanes['qurban-road-in-A'][-1]
-lanes['qurban-road-in-A'] = curve(C + np.array([half, 0.0]), corner) + [lanes['a-qurban-east-up'][0].copy()]
-top = lanes['qurban-road-out-A'][0]
-lanes['qurban-road-out-A'] = curve(top, C - np.array([half, 0.0]))
+# The owner's drawing of the south-east corner (2026-10-25, «100% right»): the entry goes straight up into
+# the foot of lane 46 (not east to the corner), the exit straight down from road 6 by the green ramp
+# (lane 44 merged into it). Pixels of that drawing, calibrated on facilities 201-206; from the mouths,
+# a smooth curve to the bottom of each drawn line.
+c4 = dr['crop4_control_points']
+fac = {}
+for c in c4:
+    q = pois[c['id']]; o = ov.get(str(c['id']), {})
+    fac[c['id']] = m(q['lat'] + o.get('north', 0) / KY, q['lng'] + o.get('east', 0) / KX)
+f4x = np.polyfit([c['px'][0] for c in c4], [fac[c['id']][0] for c in c4], 1)
+f4y = np.polyfit([c['px'][1] for c in c4], [fac[c['id']][1] for c in c4], 1)
+drawn = {l['id']: [np.array([np.polyval(f4x, x), np.polyval(f4y, y)]) for x, y in l['px_2026_10_25']] for l in dr['lanes'] if l.get('px_2026_10_25')}
+
+def onto(pts, p):
+    best = None
+    for a, b in zip(pts, pts[1:]):
+        ab = b - a
+        q = a + ab * max(0.0, min(1.0, float(np.dot(p - a, ab) / (np.dot(ab, ab) or 1e-9))))
+        if best is None or np.hypot(*(p - q)) < np.hypot(*(p - best)):
+            best = q
+    return best
+
+up = drawn['qurban-road-in-A']
+foot46 = lanes['a-qurban-east-up'][0].copy()
+print(f'entry: drawn top {float(np.hypot(*(up[-1] - foot46))):.1f} m from the foot of 46')
+# The pen went on a little past the foot of 46: the line stops there.
+up = [p for p in up if p[1] < foot46[1] - 1.0]
+lanes['qurban-road-in-A'] = curve(C + np.array([half, 0.0]), up[0])[:-1] + up + [foot46]
+down = drawn['qurban-road-out-A']
+top = onto(existing['outer-south'], down[0])
+print(f'exit: drawn top {float(np.hypot(*(down[0] - top))):.1f} m from road 6, at x={top[0]:.1f} m')
+lanes['qurban-road-out-A'] = [top] + down[1:-1] + curve(down[-1], C - np.array([half, 0.0]))
+
+# Road 6 into the green ramp (owner, 2026-10-25): road 6 on level A ends by the ramp, and a car on it
+# turns left (north) into the ramp's foot, which is on the hook of lane 43 (where the planner joins the ramp).
+def on(pts, p):
+    best = None
+    for a, b in zip(pts, pts[1:]):
+        ab = b - a
+        q = a + ab * max(0.0, min(1.0, float(np.dot(p - a, ab) / (np.dot(ab, ab) or 1e-9))))
+        if best is None or np.hypot(*(p - q)) < np.hypot(*(p - best)):
+            best = q
+    return best
+
+foot = np.array(m(*next(l for l in g['lanes'] if l['id'] == 'ramp-down-qurban')['path'][0]))
+road6 = existing['outer-south']
+start = on(road6, foot)  # straight south of the foot: not along lane 43's hook, which runs the other way
+end = on(lanes['a-qurban-west-east'], foot)
+SPEC['a-qurban-road6-green'] = dict(kind='link', levels=['A'])
+lanes['a-qurban-road6-green'] = [start, end]
+print(f'a-qurban-road6-green: from road 6 at x={start[0]:.1f} m to the ramp foot ({float(np.hypot(*(end - foot))):.1f} m from it)')
 
 out = {
     '_note': 'Generated by scripts/qurban-lanes.py from docs/routes/garage-qurban-draft-2026-10-23.json (owner, 2026-10-23). Do not edit by hand.',
