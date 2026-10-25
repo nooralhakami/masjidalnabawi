@@ -22,7 +22,7 @@ const shown = (filter: FilterId, toiletSub: 'all' | 'open' | 'closed' = 'all') =
 describe('filters', () => {
   it('"all" shows everything except parking and the hidden wheelchair zones', () => {
     const all = shown('all');
-    expect(all).toHaveLength(324 - 13 - 8);
+    expect(all).toHaveLength(325 - 13 - 8);
     expect(all.some((p) => p.category === 'parking')).toBe(false);
   });
 
@@ -46,7 +46,7 @@ describe('filters', () => {
       ).toBe(false);
     expect(passesFilter(P(401), { filter: 'all', toiletSub: 'all', searching: true }, fac)).toBe(false);
     expect(FILTERS.some((x) => x.label === 'p_wheelchair')).toBe(false);
-    expect(shown('landmarks')).toHaveLength(38);
+    expect(shown('landmarks')).toHaveLength(39);
     expect(shown('historic')).toHaveLength(17);
   });
 

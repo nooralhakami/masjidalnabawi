@@ -62,11 +62,11 @@ describe('inner gate names and descriptions', () => {
 });
 
 describe('pois.json', () => {
-  it('has 324 POIs with unique ids (police stations at Gates 2 and 34, 523–524, removed by the owner 2026-10-10)', () => {
-    expect(POIS).toHaveLength(324);
+  it('has 325 POIs with unique ids (police stations at Gates 2 and 34, 523–524, removed by the owner 2026-10-10)', () => {
+    expect(POIS).toHaveLength(325);
     expect(POI_BY_ID.has(523)).toBe(false);
     expect(POI_BY_ID.has(524)).toBe(false);
-    expect(POI_BY_ID.size).toBe(324);
+    expect(POI_BY_ID.size).toBe(325);
     expect(POI_BY_ID.has(409)).toBe(false);
     expect(POI_BY_ID.has(410)).toBe(false);
     expect(POI_BY_ID.get(604)?.category).toBe('landmarks');
@@ -76,7 +76,7 @@ describe('pois.json', () => {
     ['gates', 112],
     ['toilets', 40],
     ['parking', 13],
-    ['landmarks', 38],
+    ['landmarks', 39],
     ['wheelchair', 8],
     ['emergency', 9],
     ['women', 2],

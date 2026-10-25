@@ -92,15 +92,15 @@ describe('parity: Rawdah schedule (R5), 16 October 2026', () => {
 });
 
 describe('parity: places and category counts (SPEC F1)', () => {
-  it('324 places, 8 hidden (wheelchair areas 401–408), 316 shown', () => {
-    expect(POIS).toHaveLength(324);
+  it('325 places (the north-east pilgrims services centre added by the owner, 2026-10-25), 8 hidden (wheelchair areas 401–408), 317 shown', () => {
+    expect(POIS).toHaveLength(325);
     expect(POIS.filter((p) => p.subCategory === 'wheelchair_zone').map((p) => p.id)).toEqual([401, 402, 403, 404, 405, 406, 407, 408]);
   });
   it('each pill counts what it shows, computed the way the live app does', () => {
     const fac = new Facilities();
     const counts = Object.fromEntries(FILTERS.map(({ id }) => [id, visiblePois(id, 'all', '', fac, undefined, id === 'parking' ? 'all' : undefined).length]));
-    expect(counts).toEqual({ all: 303, gates: 112, women: 35, toilets: 40, hotels: 43, food: 44, shopping: 15, landmarks: 38, historic: 17, parking: 13, emergency: 9 });
-    expect(counts.all + counts.parking).toBe(316);
+    expect(counts).toEqual({ all: 304, gates: 112, women: 35, toilets: 40, hotels: 43, food: 44, shopping: 15, landmarks: 39, historic: 17, parking: 13, emergency: 9 });
+    expect(counts.all + counts.parking).toBe(317);
   });
 });
 
