@@ -118,6 +118,8 @@ export interface Drawer {
  *   pair:<n>:<color>              restroom pair number
  *   name:<id>                     a named gate's label (text from labelOf)
  *   cent:<id>:<open>              a new car park vehicle entrance: car disc, name and open/closed
+ *   hint:<id>:<f|s>               a place's name over it on a route: f = faint (the one gone by),
+ *                                 s = clear (the one tapped, for two seconds)
  */
 export function createDrawer(opts: {
   palette: Palette;
@@ -340,6 +342,45 @@ export function createDrawer(opts: {
     return out();
   };
 
+  const hint = (id: number, clear: boolean): Drawn => {
+    // The name over its place on a route (owner, 2026-10-25). Faint: small, no border, a see-through
+    // ground, the ink itself at full strength (so it still reads; faint is size and weight, not contrast).
+    // Clear: larger, bold, solid, edged.
+    const size = clear ? 13 : 10.5;
+    const weight = clear ? 700 : 500;
+    const text = opts.labelOf(id);
+    ctxMeasure.font = `${weight} ${size}px ${FONT}`;
+    let label = text;
+    while (ctxMeasure.measureText(label).width > 190 && label.length > 2) label = label.slice(0, -2) + '…';
+    const pad = clear ? 9 : 6;
+    const H = clear ? 26 : 19;
+    const w = Math.ceil(ctxMeasure.measureText(label).width + pad * 2);
+    const [ctx, out] = canvas(w + 6, H + 6, ratio);
+    if (clear) {
+      ctx.save();
+      ctx.shadowColor = 'rgb(0 0 0 / 0.3)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetY = 2;
+    }
+    roundRect(ctx, 3, 3, w, H, clear ? 8 : 6);
+    ctx.fillStyle = clear ? pal.get('surface-2') : alpha(pal.get('surface-2'), 0.78);
+    ctx.fill();
+    if (clear) {
+      ctx.restore();
+      roundRect(ctx, 3.5, 3.5, w - 1, H - 1, 8);
+      ctx.strokeStyle = pal.get('line-strong');
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+    ctx.fillStyle = pal.get('ink');
+    ctx.font = `${weight} ${size}px ${FONT}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.direction = /[֐-ࣿ]/.test(label) ? 'rtl' : 'ltr';
+    ctx.fillText(label, 3 + w / 2, 3 + H / 2 + 0.5);
+    return out();
+  };
+
   const pin = (iconName: IconName, color: string, closed: boolean): Drawn => {
     // The chosen place: a 48 × 60 pin, its tip on the spot, the category's disc and icon (.mk-pin).
     const W = 48;
@@ -434,6 +475,8 @@ export function createDrawer(opts: {
           return name(Number(a));
         case 'cent':
           return entrance(a, b === '1');
+        case 'hint':
+          return hint(Number(a), b === 's');
         default:
           return null;
       }

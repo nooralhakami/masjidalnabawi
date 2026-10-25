@@ -4,17 +4,22 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
 import { POIS, RULES } from '../data';
 import type { Poi, Status } from '../data/types';
+import { isTapName } from '../domain/route-hint';
 import { FEATURED_IDS } from '../domain/visits';
 import { lookOf } from '../presentation/markers';
 import type { IconName } from '../presentation/icons';
 import { IconAtlas, createDrawer, cssPalette, type Drawer } from './images';
 import { MeMarker } from './me';
+import { addHintLayer, EMPTY_HINTS, HintLayer } from './hints';
 import { addPoiLayers } from './poi-layers';
 import { applyPoiView, entranceAt, entranceFeatures, markerImageIds, pairFeatures, placeAt, poiFeatures, popMarkers, womenAreas, type PoiView } from './pois';
 import { RouteLayer, type RouteText } from './route';
 import { LEGACY_MAX, LEGACY_MIN, fitView, haramBounds, legacyZoom, mapZoom } from './zoom';
 
 export type { PoiView } from './pois';
+
+/** The places a tap on a followed route names: every gate and every restroom block. */
+const ROUTE_NAME_IDS = POIS.filter(isTapName).map((p) => p.id);
 
 setWorkerUrl(workerUrl);
 
@@ -54,6 +59,8 @@ export class MapEngine {
   /** The trip on the map (phase 5), and the visitor's dot. */
   readonly route: RouteLayer;
   readonly me: MeMarker;
+  /** The names over the places a followed route goes by, and over a tapped one. */
+  readonly hints: HintLayer;
   private version = 1;
   private view: PoiView = { ids: [], filter: 'all', withFeatured: true, hidden: false };
   /** The place whose card is open: drawn as a pin; every other place is hidden meanwhile (as the live app). */
@@ -107,6 +114,7 @@ export class MapEngine {
           pois: { type: 'geojson', data: poiFeatures(opts.status), promoteId: 'id' },
           pairs: { type: 'geojson', data: pairFeatures() },
           carEntrances: { type: 'geojson', data: entranceFeatures({}) },
+          hints: { type: 'geojson', data: EMPTY_HINTS },
         },
         layers: [],
       },
@@ -124,6 +132,7 @@ export class MapEngine {
     this.map.addControl(new ScaleControl({ unit: 'metric', maxWidth: 90 }), 'bottom-left');
     const ratio = Math.min(3, Math.max(1, devicePixelRatio || 1));
     this.route = new RouteLayer(this.map, this.palette, opts.routeText, ratio);
+    this.hints = new HintLayer(this.map, (id) => POIS.find((p) => p.id === id));
     this.me = new MeMarker(
       this.map,
       () => opts.meLabel(),
@@ -180,6 +189,7 @@ export class MapEngine {
     m.addLayer({ id: 'esri', type: 'raster', source: 'esri' });
     m.addLayer({ id: 'light', type: 'raster', source: 'light', layout: { visibility: 'none' } });
     addPoiLayers(m, this.palette, this.version);
+    addHintLayer(m, this.version);
     // The route and the visitor's dot under the chosen place's pin.
     this.route.install('selected');
     this.me.install('selected');
@@ -243,7 +253,15 @@ export class MapEngine {
   }
 
   private applyView() {
-    applyPoiView(this.map, this.view, this.selected);
+    applyPoiView(this.map, this.view, this.selected, this.routeNames ? ROUTE_NAME_IDS : null);
+  }
+
+  /** On a followed route the gates and restroom blocks show again, to be tapped for their name (owner, 2026-10-25). */
+  private routeNames = false;
+  setRouteNames(on: boolean): void {
+    if (on === this.routeNames) return;
+    this.routeNames = on;
+    if (this.map.getLayer('facilities')) this.applyView();
   }
 
   /** Open (or, with null, close) a place's card on the map: its pin, and nothing else, shows. */
@@ -300,6 +318,7 @@ export class MapEngine {
       'inner-numbers',
       'pairs',
       'gate-names',
+      'hints',
     ])
       if (this.map.getLayer(id)) this.map.removeLayer(id);
     for (const id of this.map.listImages()) if (id.endsWith(`@${old}`) && !id.startsWith('rt')) this.map.removeImage(id);

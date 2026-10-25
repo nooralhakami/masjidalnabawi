@@ -75,6 +75,7 @@ src/
     sprites.ts     icons, number chips and Arabic labels drawn once to canvas → map.addImage
     women-areas.ts fill layer from routing.json
     route.ts       base / focus / alternatives / arrows / car-park casings / markers (as built: layers exist only while a route is shown, and only those it needs)
+    hints.ts       the names over places on a followed route (one source, one layer, at most two features): faint for the place gone by, clear for a tapped one, 2026-10-25
     me.ts          visitor dot (one DOM marker), glide, heading cone; accuracy as a GPU circle layer
     camera.ts      fly/fit with safe insets for top bar and sheet; reduced motion
   app/            map-main.tsx (entry: engine, store → map effects, ?poi=) · App.tsx (everything over the map) · trip.ts (location on demand, plans, re-route, switch, way out, car park question, live navigation)

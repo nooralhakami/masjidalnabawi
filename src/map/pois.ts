@@ -129,14 +129,18 @@ export function markerImageIds(version: number, status: (id: number) => Status |
 // ---------- what is shown ----------
 
 /** Show these places (a filter, a search, the open card): layer filters only, the data stays as it is. */
-export function applyPoiView(m: MLMap, view: PoiView, selected: number | null): void {
+export function applyPoiView(m: MLMap, view: PoiView, selected: number | null, onRoute: readonly number[] | null = null): void {
   const { ids, filter, withFeatured, hidden } = view;
   const shown = ['in', ['get', 'id'], ['literal', [...ids, ...(withFeatured ? [...FEATURED_IDS] : [])]]] as unknown as ExpressionSpecification;
   const kind = (k: string) => ['==', ['get', 'kind'], k] as ExpressionSpecification;
   const featuredDrawn = (withFeatured ? ['==', ['get', 'featured'], 1] : ['literal', false]) as ExpressionSpecification;
   // With a card open only its place shows (the live app); «hide markers» hides the rest too.
   const off = hidden || selected !== null;
-  const set = (layer: string, f: ExpressionSpecification) => m.setFilter(layer, (off ? ['literal', false] : ['all', shown, f]) as FilterSpecification);
+  // On a followed route (owner, 2026-10-25) the gates and restroom blocks stay on the map, to be tapped for their name:
+  // `onRoute` lists them; the rest stay hidden while the card is open. The destination shows as its pin only.
+  const route =
+    onRoute && selected !== null && !hidden ? (['all', ['in', ['get', 'id'], ['literal', [...onRoute]]], ['!=', ['get', 'id'], selected]] as ExpressionSpecification) : null;
+  const set = (layer: string, f: ExpressionSpecification) => m.setFilter(layer, (route ? ['all', route, f] : off ? ['literal', false] : ['all', shown, f]) as FilterSpecification);
   m.setFilter('selected', (selected === null ? ['literal', false] : ['==', ['get', 'id'], selected]) as FilterSpecification);
   set('inner-dots', kind('gate-inner'));
   set('outer-dots', kind('gate-outer'));
