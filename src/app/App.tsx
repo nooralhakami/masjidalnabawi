@@ -4,6 +4,7 @@ import { POI_BY_ID, RULES } from '../data';
 import type { Poi } from '../data/types';
 import type { Facilities } from '../domain/facilities';
 import { FILTERS, type FilterId, type ParkingSub, type ToiletSub } from '../domain/filters';
+import { isTapName } from '../domain/route-hint';
 import { visiblePois } from '../domain/visible';
 import { getLang, nm, pack, t } from '../i18n';
 import { applyLang } from '../i18n/dom';
@@ -185,7 +186,9 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
   useEffect(() => {
     const onPick = (id: number | null) => {
       const p = id !== null ? POI_BY_ID.get(id) : undefined;
-      if (p) select(p, false);
+      // On a route, a tap on a gate or a restroom block says its name for two seconds and does not open its card (owner, 2026-10-25).
+      if (p && trip.active && isTapName(p)) trip.nameTapped(p.id);
+      else if (p) select(p, false);
       // While a route is followed, a stray tap on the map must not end it (use «إنهاء المسار»).
       else if (selected.value !== null && !trip.active) deselect();
     };

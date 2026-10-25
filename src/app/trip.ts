@@ -1,5 +1,6 @@
 import { POI_BY_ID } from '../data';
 import type { LatLng, Poi } from '../data/types';
+import { HintPicker } from '../domain/route-hint';
 import { t } from '../i18n';
 import { LocationService } from '../location/LocationService';
 import { RouteTrack } from '../location/progress';
@@ -108,6 +109,8 @@ export class Trip {
     );
     this.tracker.onChange((s) => {
       nav.value = s.state === 'stopped' ? null : { ...s };
+      // The place the visitor goes by is named, faintly, over itself (owner, 2026-10-25).
+      engine.hints.setNear(s.state === 'stopped' ? null : this.hint.pick(s.position, s.accuracy, this.plans[this.chosen]?.mode ?? 'walk', Date.now()));
       engine.route.focus(s.state === 'stopped' ? null : this.tracker.ahead(AHEAD_M), this.plans[this.chosen]?.mode ?? 'walk');
     });
     // The visitor moved the map themself: stop following them (the bar's button brings it back).
@@ -117,6 +120,14 @@ export class Trip {
 
   get active(): boolean {
     return this.engine.route.active;
+  }
+
+  /** The names over the places a followed route goes by: one at a time, with a little patience. */
+  private hint = new HintPicker();
+
+  /** A gate or restroom block tapped on a route: its name, clear, for two seconds, and nothing else (owner, 2026-10-25). */
+  nameTapped(id: number): void {
+    this.engine.hints.flash(id);
   }
 
   /** «Draw the route from my location»: location is requested only now, on this tap. */
@@ -158,6 +169,9 @@ export class Trip {
     // A map turned with the route goes back to north up.
     if (this.engine.map.getBearing() !== 0) this.engine.map.easeTo({ bearing: 0, duration: reduce() ? 0 : 500 });
     this.tracker.stop();
+    this.engine.setRouteNames(false);
+    this.hint.reset();
+    this.engine.hints.clear();
     this.engine.route.clear();
     this.plans = [];
     route.value = null;
@@ -196,6 +210,7 @@ export class Trip {
     this.plans = next;
     this.chosen = i;
     const info = this.engine.route.show(next, i, { animate, onPick: (j) => this.pick(j) });
+    this.engine.setRouteNames(true);
     const { bounds: _, ...summary } = info;
     route.value = summary;
     this.tracker.routeChanged();
