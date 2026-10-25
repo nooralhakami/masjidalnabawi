@@ -968,6 +968,26 @@
    ]
   },
   {
+   "id": "omar-turn",
+   "kind": "link",
+   "certain": true,
+   "oneway": true,
+   "levels": [
+    "B"
+   ],
+   "turn": "omar",
+   "path": [
+    [
+     24.465754,
+     39.606489
+    ],
+    [
+     24.46572,
+     39.60657
+    ]
+   ]
+  },
+  {
    "id": "qurban-road-in-A",
    "kind": "entry",
    "levels": [

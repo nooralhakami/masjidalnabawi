@@ -1728,5 +1728,13 @@
    "level": "A",
    "_note": "owner 2026-10-23: the way out to the south on level A (lane 44 joins lane 36)"
   }
+ ],
+ "turnarounds": [
+  {
+   "id": "omar-turn",
+   "exit": "omar",
+   "entrance": "omar",
+   "_note": "owner 2026-10-25: the circle at the Omar entrance is not a roundabout but an open area to turn in: a car out by the Omar exit can turn there and come straight back in by the Omar entrance (level B, above ground)"
+  }
  ]
 }

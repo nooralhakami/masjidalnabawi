@@ -40,6 +40,11 @@ interface Lane {
   oneway?: boolean;
   /** The levels the road is on (both when absent): the orange openings are on level B only. */
   levels?: Level[];
+  /**
+   * A turn-round at a mouth (owner, 2026-10-25: the open area at the Omar entrance): from the exit
+   * road back to that entrance's road. Only for a car already inside, and only while that entrance is open.
+   */
+  turn?: EntranceId;
   /** Ramps only: the level the ramp leaves and the one it reaches. */
   from_level?: Level;
   to_level?: Level;
@@ -250,8 +255,17 @@ interface Start {
   lead?: { p: XY; lane: string };
 }
 
-function shortest(from: number | Start[], to: number): { pts: XY[]; lanes: string[]; levels: Level[]; tags: Stretch[] } | null {
+/** The turn-round roads (by lane id) and the entrance each belongs to. */
+const TURNS = new Map(GARAGE.lanes.filter((l) => l.turn).map((l) => [l.id, l.turn!]));
+
+/**
+ * The shortest way along the one-way roads. `turns`: whether the turn-rounds at the mouths may be used
+ * (a car already inside: out and straight back in rather than round the streets), each only while its
+ * entrance is open.
+ */
+function shortest(from: number | Start[], to: number, turns = false): { pts: XY[]; lanes: string[]; levels: Level[]; tags: Stretch[] } | null {
   const { nodes, out } = G();
+  const blocked = (lane: string) => TURNS.has(lane) && (!turns || !isEntranceOpen(TURNS.get(lane)!));
   const dist = new Array(nodes.length).fill(Infinity);
   const prev: (Edge & { from: number })[] = new Array(nodes.length);
   const done = new Array(nodes.length).fill(false);
@@ -269,6 +283,7 @@ function shortest(from: number | Start[], to: number): { pts: XY[]; lanes: strin
     if (k < 0 || k === to) break;
     done[k] = true;
     for (const e of out[k]) {
+      if (blocked(e.lane)) continue;
       if (dist[k] + e.m < dist[e.to]) {
         dist[e.to] = dist[k] + e.m;
         prev[e.to] = { ...e, from: k };
@@ -535,7 +550,7 @@ export function garageRouteFromLot(fromLot: Poi, fromAsked: Level, lot: Poi, ask
   const a = lotData(fromLot);
   const l = lotData(lot);
   if (!a || !l) return null;
-  const roads = shortest(nodeAt(toM(doors(a, fromLevel).exit), fromLevel), nodeAt(toM(doors(l, level).entry), level));
+  const roads = shortest(nodeAt(toM(doors(a, fromLevel).exit), fromLevel), nodeAt(toM(doors(l, level).entry), level), true);
   const gate = roads && lotGate(lot, roads.pts[roads.pts.length - 1]);
   const out = roads && lotGate(fromLot, roads.pts[0]);
   if (!roads || !gate || !out) return null;
@@ -565,7 +580,7 @@ export function garageRouteFrom(from: LatLng, lot: Poi, asked: Level = 'B', head
   if (!l) return null;
   const starts = startsNear(toM(from), fromLevel, heading);
   if (!starts.length) return null;
-  const roads = shortest(starts, nodeAt(toM(doors(l, level).entry), level));
+  const roads = shortest(starts, nodeAt(toM(doors(l, level).entry), level), true);
   const gate = roads && lotGate(lot, roads.pts[roads.pts.length - 1]);
   return roads && gate ? finish(roads, gate, level, l, false) : null;
 }

@@ -581,6 +581,29 @@ describe('a car already in the car park carries on from where it is (owner, 2026
     }
   });
 
+  it('the open area at the Omar entrance (owner, 2026-10-25): from inside, out by Omar, turn round and straight back in; not while Omar is closed, nor from the streets', async () => {
+    const turn = GARAGE.lanes.find((l) => l.id === 'omar-turn')!;
+    expect(turn.levels).toEqual(['B']);
+    expect(d(toM(turn.path[0]), toM(turn.path[1]))).toBeLessThan(15);
+    // Lot 1 (the nearest to restroom 201) from the north road: only by the turn-round.
+    const lanes = garageRouteFrom(byRamp, P(901), 'B')!.roads.map((r) => r.lane);
+    expect(lanes).toEqual(expect.arrayContaining(['exit-omar', 'omar-turn', 'omar-in']));
+    const [plan] = await planRoutes(byRamp, P(201), 'drive', { start: { lot: null, level: 'B' } });
+    expect(plan.lot?.id).toBe(901);
+    expect(plan.legs.map((l) => l.kind)).toEqual(['garage', 'walk']);
+    // From the streets the entrances are used as before: Sultana still never leads to the south lots.
+    expect(garageRoute('sultana', P(901), 'B')).toBeNull();
+    setEntranceOpen('omar', false);
+    try {
+      expect(garageRouteFrom(byRamp, P(901), 'B')).toBeNull();
+      const [closed] = await planRoutes(byRamp, P(201), 'drive', { start: { lot: null, level: 'B' } });
+      expect(closed.lot?.id).not.toBe(901);
+      expect(closed.legs.map((l) => l.kind)).toEqual(['garage', 'walk']);
+    } finally {
+      setEntranceOpen('omar', true);
+    }
+  });
+
   it('to a place in the Haram: on to its lot, then the walk up', async () => {
     const [plan] = await planRoutes(byRamp, P(223), 'drive');
     expect(plan.legs.map((l) => l.kind)).toEqual(['garage', 'walk']);

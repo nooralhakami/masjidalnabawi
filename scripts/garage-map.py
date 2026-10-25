@@ -69,15 +69,16 @@ lanes = [(l, [P(*m(a, b)) for a, b in l['path']]) for l in g['lanes'] if l['id']
 # A road split in two keeps one number, so the numbers the owner uses stay valid (road 6 is cut by the
 # green ramp on level A, owner 2026-10-25: its east part is on level B only).
 PART_OF = {'outer-south-east': 'outer-south'}
-numbered = [x for x in lanes if x[0]['id'] not in PART_OF]
+# The turn-round at the Omar entrance (owner, 2026-10-25) is drawn without a number, for the same reason.
+numbered = [x for x in lanes if x[0]['id'] not in PART_OF and not x[0].get('turn')]
 num = {l['id']: n for n, (l, _) in enumerate(numbered, 1)}
 num.update({k: num[v] for k, v in PART_OF.items()})
 for l, pts in lanes:
     if on_level(l.get('levels'), l['kind']):
         d.line(pts, fill=colour(l), width=7)
 for l, pts in lanes:
-    n = num[l['id']]
-    if not on_level(l.get('levels'), l['kind']):
+    n = num.get(l['id'])
+    if n is None or not on_level(l.get('levels'), l['kind']):
         continue
     i = max(range(1, len(pts)), key=lambda k: math.dist(pts[k - 1], pts[k]))
     a, b = pts[i - 1], pts[i]

@@ -136,6 +136,18 @@ for x in exits:
         start = np.array([(x['departure'][0][1] - LNG0) * KX, (x['departure'][0][0] - LAT0) * KY])
         print(f"departure from {x['id']}: starts {float(np.hypot(*(start - lane[-1]))):.1f} m from the end of the road {x['lane']}")
 
+# Turn-round areas at a mouth (owner, 2026-10-25: the open area at the Omar entrance): from where the
+# exit road leaves the car park to the entrance road, so a car out can come straight back in.
+turns = []
+for t in d.get('turnarounds', []):
+    x = next(e for e in exits if e['id'] == t['exit'])
+    e = next(e for e in entrances if e['id'] == t['entrance'])
+    a = lanes[x['lane']][-1]
+    s0 = np.array([(e['street'][1] - LNG0) * KX, (e['street'][0] - LAT0) * KY])
+    b = min(((p0 + (p1 - p0) * max(0, min(1, np.dot(s0 - p0, p1 - p0) / np.dot(p1 - p0, p1 - p0)))) for p0, p1 in zip(lanes[e['lane']], lanes[e['lane']][1:])), key=lambda q: float(np.hypot(*(q - s0))))
+    print(f"turn-round {t['id']}: {float(np.hypot(*(b - a))):.1f} m from the exit road's end to the entrance road")
+    turns.append({'id': t['id'], 'kind': 'link', 'certain': True, 'oneway': True, 'levels': ['B'], 'turn': t['entrance'], 'path': [ll(a), ll(b)]})
+
 # Lanes already in lat/lng (scripts/qurban-lanes.py: the Qurban entrance, owner 2026-10-23), their
 # entrance and exit (level A only).
 extra = json.load(open(d['extra_lanes_file']))['lanes'] if d.get('extra_lanes_file') else []
@@ -156,7 +168,7 @@ out = {
          **({'from_level': l['from_level'], 'to_level': l['to_level']} if 'from_level' in l else {}),
          'path': [ll(p) for p in lanes[l['id']]]}
         for l in d['lanes']
-    ] + extra,
+    ] + turns + extra,
     'entrances': entrances,
     'exits': exits,
     'lots': lots,
