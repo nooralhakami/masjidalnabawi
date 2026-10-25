@@ -6,7 +6,7 @@ import { FACILITY_PX, isNamedGate, markerLook } from '../../src/presentation/mar
 import { FACILITY_SIZE, gateLabelVisible, markerSpec, tierOf, zoomClass } from '../../src/presentation/markers';
 
 // The GPU map draws markers from markerLook(); the live app drew them from markerSpec() (ported
-// verbatim). For every one of the 324 places the two must agree on the kind of marker, its colour
+// verbatim). For every one of the 325 places the two must agree on the kind of marker, its colour
 // and its icon — this replaces checking the Leaflet HTML (owner's approval, SPEC §9-7).
 
 const KIND_CLASS = { 'gate-outer': 'mk-chip', 'gate-inner': 'mk-inum', parking: 'mk-park-wrap', featured: 'mk-star-wrap', facility: 'mk-dot' } as const;

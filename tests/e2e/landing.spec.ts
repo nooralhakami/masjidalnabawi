@@ -20,7 +20,7 @@ test.describe('landing', () => {
     const page = await ctx.newPage();
     await page.goto('./');
     await expect(page.locator('h1')).toHaveText('دليل زوار المسجد النبوي');
-    await expect(page.locator('.stats dd').first()).toHaveText('316');
+    await expect(page.locator('.stats dd').first()).toHaveText('317');
     await ctx.close();
   });
 

@@ -27,7 +27,7 @@ const sheet = (page: Page) => page.locator('.sheet');
 test.describe('filters', () => {
   // The live app's counts (tests/e2e/app.spec.ts there), in the order of the pills.
   const EXPECTED: [string, number][] = [
-    ['all', 303],
+    ['all', 304],
     ['gates', 112],
     ['women', 35],
     ['toilets', 40],
@@ -37,7 +37,7 @@ test.describe('filters', () => {
     ['hotels', 43],
     ['food', 44],
     ['shopping', 15],
-    ['landmarks', 38],
+    ['landmarks', 39],
     ['emergency', 9],
   ];
 
