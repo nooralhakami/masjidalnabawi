@@ -23,13 +23,21 @@ def ll(px):
     return [round(LAT0 + y / KY, 7), round(LNG0 + x / KX, 7)]
 
 r = json.load(open('data/routing.json'))
-r['walkway_ring'] = [ll(p) for p in d['ring']]
+ring_old_m = [np.array([*p, 1]) @ A for p in d['ring']]
+def m2ll(x, y):
+    return [round(LAT0 + y / KY, 7), round(LNG0 + x / KX, 7)]
+# The east side as the owner redrew it (2026-10-25): vertices a..b of the drawn ring are replaced by points in metres.
+ring_ll = [ll(p) for p in d['ring']]
+east = d.get('ring_east_2026_10_25')
+if east:
+    a, b = east['replaces']
+    new = [m2ll(x, ring_old_m[a][1] if y is None else y) for x, y in east['m']]
+    ring_ll = ring_ll[:a] + new + ring_ll[b + 1:]
+r['walkway_ring'] = ring_ll
 r['walkways'] = [{'id': w['id'], 'kind': w['kind'], 'path': [ll(p) for p in w['px']]} for w in d['walkways']]
 # Al-Baqi' (outside the Haram) as two rectangles that follow the stepped wall the owner traced:
 # the walkway runs along its west wall (x ≈ 225 m) and steps east around its north-west corner.
-def m2ll(x, y):
-    return [round(LAT0 + y / KY, 7), round(LNG0 + x / KX, 7)]
-ring_m = [np.array([*p, 1]) @ A for p in d['ring']]
+ring_m = ring_old_m  # the drawn ring: the Al-Baqi' wall follows it, whatever the walk's east side is
 # Ring vertices 6–8 trace that wall: 7→8 is the lower wall walk, 5→6 the step around the corner.
 west_x = ring_m[7][0] + 4  # 4 m: places on the wall walk (e.g. 502, gates 355–364) stay outside
 step_x = ring_m[6][0] + 4

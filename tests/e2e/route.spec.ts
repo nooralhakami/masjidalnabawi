@@ -426,14 +426,24 @@ test.describe('alternative routes', () => {
   test('walking onto another offered route switches to it, without re-planning', async ({ page, context, errors: _ }) => {
     // The best route goes round the west side; the other one up the east side of the walkway ring.
     const ring = (JSON.parse(readFileSync('data/routing.json', 'utf8')) as { walkway_ring: [number, number][] }).walkway_ring;
-    const eastLng = Math.max(...ring.map((p) => p[1]));
+    // The ring's east side at a latitude: the easternmost of its stretches there (it steps east north
+    // of the narrow neck, owner 2026-10-25, so one longitude for the whole side no longer fits).
+    const eastLngAt = (lat: number) =>
+      Math.max(
+        ...ring.flatMap((a, i) => {
+          const b = ring[(i + 1) % ring.length];
+          if (lat < Math.min(a[0], b[0]) || lat > Math.max(a[0], b[0]) || a[0] === b[0]) return [];
+          return [a[1] + ((b[1] - a[1]) * (lat - a[0])) / (b[0] - a[0])];
+        }),
+      );
     await openAndRoute(page, 21);
     const stats = card(page).locator('.route-stats');
     await expect(stats).toBeVisible({ timeout: 20_000 });
     const before = await stats.textContent();
     // Walking north up the east side, ~30 m a step.
     for (let i = 0; i < 5; i++) {
-      await context.setGeolocation({ latitude: 24.4674 + (i * 30) / 111_320, longitude: eastLng, accuracy: 8 });
+      const latitude = 24.4674 + (i * 30) / 111_320;
+      await context.setGeolocation({ latitude, longitude: eastLngAt(latitude), accuracy: 8 });
       await page.waitForTimeout(900);
     }
     await expect(page.locator('.toast')).toContainText('تحوّل المسار');
