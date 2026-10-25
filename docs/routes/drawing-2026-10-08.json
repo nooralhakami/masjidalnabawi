@@ -17,6 +17,11 @@
     [531, 286], [1472, 286], [1472, 775], [1403, 775], [1403, 804], [1386, 804], [1386, 883], [1363, 883],
     [1363, 1007], [1307, 1046], [905, 1046], [767, 962], [531, 962]
   ],
+  "ring_east_2026_10_25": {
+    "note": "owner 2026-10-25, on a screenshot of the east side: the walk through the narrow neck (gates 355-352) kept to the stepped wall and the diagonal outside the main plaza; it now runs inside the plaza in straight lines (his drawing, straightened and calibrated on gates 364-349: residual 0.3 m): north along x = 216 m (the gates 364-359 line), east along y = 111 m (gate 351's latitude), then on the old line x = 292 m (north of the neck he drew x = 277 m, but there the restroom buildings of 235/236 stand between that line and the east gates, which then could not be reached from it: +125 m, so the old line stays). Replaces ring vertices 2..8; metres in the frame of src/routing/walk.ts. The Al-Baqi' obstacles still follow the old ring vertices above.",
+    "replaces": [2, 8],
+    "m": [[292, 111], [216, 111], [216, -51.5]]
+  },
   "walkways": [
     { "id": "north-spur-west", "colour": "black", "kind": "spur", "px": [[724, 286], [724, 386]] },
     { "id": "north-west-women-link", "colour": "red", "kind": "women", "px": [[724, 386], [767, 399]] },

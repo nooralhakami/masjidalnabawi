@@ -279,3 +279,28 @@ describe('restrooms are buildings: routes pass beside them, never over them (own
     }
   });
 });
+
+describe('the east side through the narrow neck (owner, 2026-10-25)', () => {
+  it('the walkway there is in straight lines inside the plaza: north on the gates line, east at gate 351’s latitude, then north', () => {
+    const ring = ROUTING.walkway_ring.map(toM);
+    const neck = ring.filter(([x, y]) => x > 200 && y > -60 && y < 120);
+    // The two stretches after the north-east leg run along one axis each (no steps, no diagonal).
+    const from = ring.findIndex(([x, y]) => Math.abs(x - 292) < 1 && Math.abs(y - 111) < 1);
+    expect(from).toBeGreaterThan(0);
+    for (let i = from; i < from + 2; i++) {
+      const [a, b] = [ring[i], ring[i + 1]];
+      expect(Math.min(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1])), `${a} → ${b}`).toBeLessThan(0.5);
+    }
+    // None of it on the stepped wall or the diagonal of gates 355–352 (outside the plaza): the farthest north-west of the wall is x = 226 at y = 24-66.
+    expect(neck.some(([x, y]) => x > 226.5 && y < 100 && x < 291)).toBe(false);
+  });
+
+  it('a walk from the north-east to gate 364 goes by the new corners, not by the stepped wall', () => {
+    const path = walkPath(at(349), at(364)).map(toM);
+    const near = (x: number, y: number) => path.some(([px, py]) => Math.hypot(px - x, py - y) < 8);
+    expect(near(292, 111)).toBe(true);
+    expect(near(216, 111)).toBe(true);
+    // Never within the stepped wall's strip: x between 226 and 292 while y is between 20 and 100.
+    expect(path.some(([x, y]) => x > 229 && x < 291 && y > 20 && y < 100)).toBe(false);
+  });
+});
