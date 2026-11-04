@@ -70,6 +70,14 @@ src/
     setup.ts       map, Esri + light raster sources, bounds, attribution, scale, rotation, compass
     zoom.ts        legacyZoom() — the one bridge between MapLibre zoom and the app's Leaflet-era thresholds
     glb-layer.ts   the 3D view's custom WebGL2 layer: draws the files of data-next/alharamain-3d.ts, instanced per mesh
+    scene-light.ts how the 3D view is lit for a sun position (night, blue hour, golden hour, day), the sky, and which materials glow at night
+    terrain-layer.ts  the 3D view's mountains (custom WebGL2 layer), one draw call, lit and hazed like the scene
+    terrain-mesh.ts   pure geometry for it: the height grid as triangles, only where the ground rises
+    terrain-worker.ts builds that mesh off the main thread from public/models/madinah-terrain.bin (scripts/terrain-from-srtm.py)
+    plaza-layer.ts    the plazas' paving in 3D (custom WebGL2 layer): white tiles round the Mosque, granite, the western plaza's concrete, the prayer areas' carpets, with gloss; drawn in metres over navQ's plaza colours
+    polygon.ts        ear-clipping triangulation for flat outlines (the plazas)
+    sun-shadow.ts     the sun's shadow map shared by glb-layer (casts, in prerender, only when the sun moves) and plaza-layer (receives)
+    lamp-glow-layer.ts the lanterns' halos at night (custom WebGL2 layer): one additive point sprite per lantern, sized in metres
     engine.ts      as built: the MapLibre map, its sources, the base layers, select / focus / restyle, the camera, taps (setup.ts and camera.ts were folded in)
     pois.ts        as built: the places' GeoJSON (places, gate pairs, car entrances, women's areas), the layer filters a filter or search sets, the pop-in, what a tap lands on
     poi-layers.ts  as built: the places' layer definitions (dots, chips, numbers, pin, must-visit sites, car entrances), split from pois.ts on 2026-10-24
