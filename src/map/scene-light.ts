@@ -16,6 +16,8 @@ export interface SceneLight {
   /** Light from the sky on every face. */
   ambient: [number, number, number];
   sky: SkySpecification;
+  /** The haze far away (0–1 per channel), for what MapLibre's fog does not reach: the custom layers. */
+  fog: [number, number, number];
   /** The ground under the imagery, seen where no tile has loaded yet and toward the horizon. */
   ground: string;
   /** Paint of the (greyed) imagery under the models. */
@@ -137,6 +139,7 @@ export function sceneLight({ elevation, azimuth }: SunPosition): SceneLight {
       'fog-ground-blend': 0.75,
       'atmosphere-blend': 0,
     },
+    fog: mix(a.fog, b.fog, ease).map((c) => c / 255) as Rgb,
     ground: css(mix(a.fog, b.fog, ease).map((c) => c * 0.8) as Rgb),
     raster: {
       brightnessMin: lerp(a.brightnessMin, b.brightnessMin, ease),
@@ -188,7 +191,8 @@ export function materialGlow(file: string, material: string | undefined): Materi
   if (canopies) return { color: scale(COOL, name === 'umb' ? 0.85 : 0.7), tint: 1, rise: 0 };
   if (['roof', 'tile', 'deep', 'dark', 'tent', 'silver', 'steel'].includes(name)) return { color: scale(WARM, 0.35), tint: 1, rise: 0 };
   // Walls, arches, gates, cornices and the service blocks: cream stone under floodlights.
-  return { color: scale(CREAM, 0.85), tint: 0.5, rise: 1 };
+  // Mostly the light's own cream: navQ's wall materials lean pink, the stone at night reads near white.
+  return { color: scale(CREAM, 0.95), tint: 0.2, rise: 1 };
 }
 
 function scale(c: Rgb, k: number): Rgb {
