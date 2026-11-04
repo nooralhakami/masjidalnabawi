@@ -97,4 +97,14 @@ describe('materialGlow (what lights up at night)', () => {
     expect(materialGlow('./models/haram-3d.glb', '1w')!.rise).toBe(1);
     expect(materialGlow('./models/haram-service-a.glb', 'Material.005')!.rise).toBe(1);
   });
+
+  it('lights the gates and doors from inside, warm, and the domes warm white', () => {
+    for (const m of ['Gate1', 'GateR', 'Door3', 'Door5-1', 'ogdoor.001', 'arc']) {
+      const g = materialGlow('./models/haram-3d.glb', m)!;
+      expect(g.rise, m).toBe(0);
+      expect(g.color[0], m).toBeGreaterThan(1.2);
+    }
+    const dome = materialGlow('./models/haram-3d.glb', 'Domes')!;
+    expect(dome.color[0]).toBeGreaterThan(dome.color[2]);
+  });
 });

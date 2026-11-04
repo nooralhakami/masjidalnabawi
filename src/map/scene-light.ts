@@ -187,9 +187,13 @@ export function materialGlow(file: string, material: string | undefined): Materi
   if (name.startsWith('min')) return { color: [1.1, 0.9, 0.62], tint: 0.6, rise: -1 };
   if (name.includes('gold') || name.includes('goold')) return { color: scale(GOLD, 1.2), tint: 1, rise: 0 };
   if (name.includes('greendome')) return { color: [0.7, 1.05, 0.78], tint: 1, rise: 0 };
-  if (name.includes('dome')) return { color: scale(COOL, 0.75), tint: 1, rise: 0 };
+  // The roof's domes floodlit warm white, as the night photographs show them.
+  if (name.includes('dome')) return { color: [0.95, 0.9, 0.8], tint: 1, rise: 0 };
   if (canopies) return { color: scale(COOL, name === 'umb' ? 0.85 : 0.7), tint: 1, rise: 0 };
   if (['roof', 'tile', 'deep', 'dark', 'tent', 'silver', 'steel'].includes(name)) return { color: scale(WARM, 0.35), tint: 1, rise: 0 };
+  // The lit inside showing through the gates, doors and arches: warm gold, as from the prayer halls.
+  if (!canopies && /^(gate|door|ogdoor|arc$|g1$)/.test(name)) return { color: [1.3, 1.0, 0.62], tint: 0.6, rise: 0 };
+  if (!canopies && /^w[12]$/.test(name)) return { color: [1.1, 0.85, 0.55], tint: 0.5, rise: 0 };
   // Walls, arches, gates, cornices and the service blocks: cream stone under floodlights.
   return { color: scale(CREAM, 0.85), tint: 0.5, rise: 1 };
 }
