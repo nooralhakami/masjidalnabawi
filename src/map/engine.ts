@@ -10,6 +10,7 @@ import { isTapName } from '../domain/route-hint';
 import { FEATURED_IDS } from '../domain/visits';
 import { lookOf } from '../presentation/markers';
 import type { IconName } from '../presentation/icons';
+import { CityLayer } from './city-layer';
 import { HaramGlbLayer } from './glb-layer';
 import { IconAtlas, createDrawer, cssPalette, type Drawer } from './images';
 import { MeMarker } from './me';
@@ -74,6 +75,7 @@ export class MapEngine {
   private mode3d = false;
   /** The 3D models' layer while 3D is on, and the minute timer that follows the sun meanwhile. */
   private models: HaramGlbLayer | null = null;
+  private city: CityLayer | null = null;
   private lightTimer: ReturnType<typeof setInterval> | null = null;
   /** Where the canopies' lanterns stand (read from their file once). */
   private lamps: [number, number][] | null = null;
@@ -253,6 +255,11 @@ export class MapEngine {
           before,
         );
       }
+      // The hotels round the Haram and the mountains, under the Mosque's own models.
+      if (!m.getLayer('alharamain-3d-city')) {
+        this.city = new CityLayer(this.currentLight());
+        m.addLayer(this.city, before);
+      }
       if (!m.getLayer('alharamain-3d-models')) {
         this.models = new HaramGlbLayer(this.currentLight(), (lamps) => {
           this.lamps = lamps;
@@ -266,7 +273,8 @@ export class MapEngine {
       if (this.lightTimer) clearInterval(this.lightTimer);
       this.lightTimer = null;
       this.models = null;
-      for (const id of ['alharamain-3d-models', 'alharamain-3d-lamps', 'alharamain-3d-plaza', 'alharamain-3d-ground']) {
+      this.city = null;
+      for (const id of ['alharamain-3d-models', 'alharamain-3d-city', 'alharamain-3d-lamps', 'alharamain-3d-plaza', 'alharamain-3d-ground']) {
         if (m.getLayer(id)) m.removeLayer(id);
       }
       for (const id of ['esri', 'light']) {
@@ -292,6 +300,7 @@ export class MapEngine {
     if (!this.mode3d) return;
     const light = this.currentLight();
     this.models?.setLight(light);
+    this.city?.setLight(light);
     for (const id of ['esri', 'light']) {
       if (!m.getLayer(id)) continue;
       m.setPaintProperty(id, 'raster-saturation', light.raster.saturation);
@@ -413,6 +422,7 @@ export class MapEngine {
     this.map.removeLayer('selected');
     for (const id of [
       'alharamain-3d-models',
+      'alharamain-3d-city',
       'alharamain-3d-lamps',
       'alharamain-3d-plaza',
       'alharamain-3d-ground',

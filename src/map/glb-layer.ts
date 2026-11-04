@@ -216,7 +216,7 @@ function composeTrs(t: [number, number, number], r: [number, number, number, num
 }
 
 /** Multiply two 4x4 column-major matrices (`out = a * b`) in 64-bit precision. */
-function mulMat4(out: Float64Array, a: ArrayLike<number>, b: ArrayLike<number>): void {
+export function mulMat4(out: Float64Array, a: ArrayLike<number>, b: ArrayLike<number>): void {
   for (let col = 0; col < 4; col++) {
     const b0 = b[col * 4];
     const b1 = b[col * 4 + 1];
@@ -246,11 +246,18 @@ function parseGlbBuffer(buffer: ArrayBuffer): { gltf: GltfJson; bin: Uint8Array 
 }
 
 /** Metres east and south of the Mosque's anchor, the frame every glTF node is drawn in. */
-function metresFromOrigin([lng, lat]: readonly [number, number]): [number, number] {
+export function metresFromOrigin([lng, lat]: readonly [number, number]): [number, number] {
   const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
   const here = MercatorCoordinate.fromLngLat([lng, lat], 0);
   const perMetre = origin.meterInMercatorCoordinateUnits();
   return [(here.x - origin.x) / perMetre, (here.y - origin.y) / perMetre];
+}
+
+/** Map the models' metres (X=East, Y=Up, Z=South) about the Mosque's anchor to Web Mercator (X=East, Y=South, Z=Up). */
+export function frameMatrix(): Float64Array {
+  const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
+  const s = origin.meterInMercatorCoordinateUnits();
+  return new Float64Array([s, 0, 0, 0, 0, 0, s, 0, 0, s, 0, 0, origin.x, origin.y, origin.z, 1]);
 }
 
 /** Where each node of a file stands on the ground, as `[lng, lat]` (one per node and anchor). */
@@ -306,7 +313,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
   private textures: WebGLTexture[] = [];
   private fallbackTex: WebGLTexture | null = null;
   private generation = 0;
-  private mercatorMatrix = new Float64Array(16);
+  private mercatorMatrix: Float64Array;
 
   /**
    * `light`: how the scene is lit now (change it with `setLight`). `onLamps`: where the lanterns of
@@ -317,10 +324,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
     private onLamps?: (lngLats: [number, number][]) => void,
   ) {
     this.light = light;
-    const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
-    const s = origin.meterInMercatorCoordinateUnits();
-    // Map glTF metres (X=East, Y=Up, Z=South) to Web Mercator (X=East, Y=South, Z=Up).
-    this.mercatorMatrix.set([s, 0, 0, 0, 0, 0, s, 0, 0, s, 0, 0, origin.x, origin.y, origin.z, 1]);
+    this.mercatorMatrix = frameMatrix();
   }
 
   onAdd(map: MLMap, gl: WebGL2RenderingContext): void {
