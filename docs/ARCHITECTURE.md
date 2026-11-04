@@ -71,6 +71,9 @@ src/
     zoom.ts        legacyZoom() — the one bridge between MapLibre zoom and the app's Leaflet-era thresholds
     glb-layer.ts   the 3D view's custom WebGL2 layer: draws the files of data-next/alharamain-3d.ts, instanced per mesh
     scene-light.ts how the 3D view is lit for a sun position (night, blue hour, golden hour, day), the sky, and which materials glow at night
+    city-layer.ts  the 3D view's surroundings (custom WebGL2 layer): hotels with procedural windows, lit at night, and the mountains, one draw call
+    city-mesh.ts   pure geometry for it: walls, ear-clipped roofs, the terrain grid (only where the ground rises)
+    city-worker.ts builds that mesh off the main thread from public/models/madinah-city.json and madinah-terrain.bin (scripts/city-from-osm.py)
     engine.ts      as built: the MapLibre map, its sources, the base layers, select / focus / restyle, the camera, taps (setup.ts and camera.ts were folded in)
     pois.ts        as built: the places' GeoJSON (places, gate pairs, car entrances, women's areas), the layer filters a filter or search sets, the pop-in, what a tap lands on
     poi-layers.ts  as built: the places' layer definitions (dots, chips, numbers, pin, must-visit sites, car entrances), split from pois.ts on 2026-10-24
