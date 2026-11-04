@@ -79,6 +79,8 @@ interface GpuPrimitive {
   glow: [number, number, number];
   glowTint: number;
   glowRise: number;
+  /** When it is drawn: always, or only while the canopies are open (day) or folded (night). */
+  when: 'always' | 'day' | 'night';
 }
 
 /** A parsed file waiting for the next frame: WebGL state is only ours while MapLibre renders this layer. */
@@ -230,7 +232,7 @@ export function mulMat4(out: Float64Array, a: ArrayLike<number>, b: ArrayLike<nu
 }
 
 /** Parse binary `.glb` buffer into JSON descriptor and binary payload view. */
-function parseGlbBuffer(buffer: ArrayBuffer): { gltf: GltfJson; bin: Uint8Array } {
+export function parseGlbBuffer(buffer: ArrayBuffer): { gltf: GltfJson; bin: Uint8Array } {
   const view = new DataView(buffer);
   if (view.getUint32(0, true) !== GLB_MAGIC) throw new Error('Invalid GLB magic header');
   const jsonLen = view.getUint32(12, true);
@@ -258,6 +260,18 @@ export function frameMatrix(): Float64Array {
   const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
   const s = origin.meterInMercatorCoordinateUnits();
   return new Float64Array([s, 0, 0, 0, 0, 0, s, 0, 0, s, 0, 0, origin.x, origin.y, origin.z, 1]);
+}
+
+/**
+ * In a canopies file: the meshes of open canopies (named `…CanopyOpen…` and carrying the fabric,
+ * material `uMB`) and the mesh of a folded one (`…CanopyClosed…`), or null in any other file.
+ */
+export function canopyFolding(gltf: { nodes: GltfNode[]; meshes: GltfMesh[]; materials?: GltfMaterial[] }): { open: Set<number>; closed: number } | null {
+  const closed = gltf.nodes.find((n) => n.mesh !== undefined && /CanopyClosed/.test(n.name ?? ''))?.mesh;
+  if (closed === undefined) return null;
+  const hasFabric = (mesh: number) => gltf.meshes[mesh].primitives.some((p) => p.material !== undefined && gltf.materials?.[p.material]?.name === 'uMB');
+  const open = new Set(gltf.nodes.filter((n) => n.mesh !== undefined && /CanopyOpen/.test(n.name ?? '') && hasFabric(n.mesh)).map((n) => n.mesh!));
+  return open.size ? { open, closed } : null;
 }
 
 /** Where each node of a file stands on the ground, as `[lng, lat]` (one per node and anchor). */
@@ -440,17 +454,26 @@ export class HaramGlbLayer implements CustomLayerInterface {
       const [east, south] = metresFromOrigin(anchor);
       return composeTrs([east, 0, south], [0, Math.sin(half), 0, Math.cos(half)], [1, 1, 1]);
     });
-    const matricesByMesh = new Map<number, number[]>();
+    // The courtyard canopies fold at night (as the Mosque's night photographs show them): a node
+    // open in navQ's file is drawn by day as it is, and at night with the file's own folded canopy.
+    const folding = canopyFolding(gltf);
+    const groups = new Map<string, { mesh: number; when: GpuPrimitive['when']; matrices: number[] }>();
+    const add = (mesh: number, when: GpuPrimitive['when'], matrix: Float64Array) => {
+      const key = `${mesh}|${when}`;
+      const group = groups.get(key) ?? { mesh, when, matrices: [] };
+      group.matrices.push(...matrix);
+      groups.set(key, group);
+    };
     const combined = new Float64Array(16);
     for (const node of gltf.nodes) {
       if (node.mesh === undefined) continue;
       const local = node.matrix ? new Float64Array(node.matrix) : composeTrs(node.translation ?? [0, 0, 0], node.rotation ?? [0, 0, 0, 1], node.scale ?? [1, 1, 1]);
-      const list = matricesByMesh.get(node.mesh) ?? [];
+      const folds = folding !== null && folding.open.has(node.mesh);
       for (const placement of placements) {
         mulMat4(combined, placement, local);
-        list.push(...combined);
+        add(node.mesh, folds ? 'day' : 'always', combined);
+        if (folds) add(folding!.closed, 'night', combined);
       }
-      matricesByMesh.set(node.mesh, list);
     }
 
     const sliceAccessor = (accIndex: number): Uint8Array => {
@@ -476,7 +499,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
     };
 
     const materials = gltf.materials ?? [];
-    for (const [meshIndex, matrices] of matricesByMesh) {
+    for (const { mesh: meshIndex, when, matrices } of groups.values()) {
       const instanceBuf = gl.createBuffer()!;
       gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuf);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(matrices), gl.STATIC_DRAW);
@@ -534,6 +557,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
           glowTint: glow?.tint ?? 1,
           glowRise: glow?.rise ?? 0,
           instances: matrices.length / 16,
+          when,
         });
       }
     }
@@ -582,7 +606,10 @@ export class HaramGlbLayer implements CustomLayerInterface {
     gl.vertexAttrib2f(2, 0, 0);
 
     let boundTex: WebGLTexture | null = null;
+    // Folded from about sunset (the light is then half way to night) until morning.
+    const folded = light.night >= 0.5;
     for (const prim of this.prims) {
+      if ((prim.when === 'day' && folded) || (prim.when === 'night' && !folded)) continue;
       gl.uniform4fv(this.uBaseColor, prim.baseColor);
       gl.uniform3fv(this.uGlow, prim.glow);
       gl.uniform1f(this.uGlowTint, prim.glowTint);
