@@ -36,9 +36,13 @@ describe('plazaMesh (the marble)', () => {
     expect(plazas).toHaveLength(6);
     const rings = plazas.map((f) => f.geometry.coordinates[0].slice(0, -1).map((ll) => metresFromOrigin(ll as [number, number])));
     const { vertices, indices } = plazaMesh();
-    expect(vertices.length / 2).toBe(rings.reduce((n, r) => n + r.length, 0));
+    expect(vertices.length / 3).toBe(rings.reduce((n, r) => n + r.length, 0));
     const pts: [number, number][] = [];
-    for (let i = 0; i < vertices.length; i += 2) pts.push([vertices[i], vertices[i + 1]]);
+    for (let i = 0; i < vertices.length; i += 3) pts.push([vertices[i], vertices[i + 1]]);
+    // Only the western annex is marked as concrete.
+    const kinds = new Set<number>();
+    for (let i = 2; i < vertices.length; i += 3) kinds.add(vertices[i]);
+    expect([...kinds].sort()).toEqual([0, 1]);
     const total = rings.reduce((s, r) => s + ringArea(r), 0);
     expect(triArea(pts, indices)).toBeCloseTo(total, -1);
   });
