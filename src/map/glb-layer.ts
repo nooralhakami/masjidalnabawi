@@ -1,6 +1,6 @@
 import { MercatorCoordinate, type CustomLayerInterface, type CustomRenderMethodInput, type Map as MLMap } from 'maplibre-gl';
 import { ALHARAMAIN_MODELS, type AlharamainModel } from '../data-next/alharamain-3d';
-import { materialColor, materialGlow, type SceneLight } from './scene-light';
+import { materialColor, materialGlow, minaretCrown, type SceneLight } from './scene-light';
 import { createShadowTexture, SHADOW_GLSL, SHADOW_SIZE, sunMatrix, sunShadow } from './sun-shadow';
 
 /** glTF metres are measured from the Mosque's anchor (Venue 4 in `DataAPI_svc_GetVenues.json`). */
@@ -80,6 +80,8 @@ interface GpuPrimitive {
   glow: [number, number, number];
   glowTint: number;
   glowRise: number;
+  /** The green crown's height range in the mesh, or [0, 0]. */
+  crown: [number, number];
   /** When it is drawn: always, or only while the canopies are open (day) or folded (night). */
   when: 'always' | 'day' | 'night';
 }
@@ -106,8 +108,10 @@ out vec3 v_normal;
 out vec2 v_uv;
 out float v_height;
 out vec4 v_shadow;
+out float v_localY;
 
 void main() {
+  v_localY = a_pos.y;
   vec4 world = a_model * vec4(a_pos, 1.0);
   gl_Position = u_mvp * world;
   v_height = world.y;
@@ -125,8 +129,11 @@ in vec3 v_normal;
 in vec2 v_uv;
 in float v_height;
 in vec4 v_shadow;
+in float v_localY;
 
 uniform vec4 u_baseColor;
+// The minarets' green-lit crown, in the mesh's own height (x..y), or (0, 0) for none.
+uniform vec2 u_crown;
 uniform int u_hasTex;
 uniform sampler2D u_tex;
 // The scene's light (scene-light.ts): the sun, the sky, and how far into the night it is.
@@ -176,6 +183,12 @@ void main() {
   float face = u_glowTint > 0.0 ? (n.y > 0.0 ? mix(1.0, 0.3, n.y) : mix(1.0, 0.7, -n.y)) : 1.0;
   vec3 surface = mix(vec3(1.0), albedo.rgb, u_glowTint);
   vec3 glow = u_glow * surface * shape * face * 2.2 * u_night;
+
+  // The minarets' crown glows green at night, a lamp of its own over the floodlit stone.
+  if (u_crown.y > 0.0) {
+    float band = smoothstep(u_crown.x, u_crown.x + 0.4, v_localY) * (1.0 - smoothstep(u_crown.y - 0.4, u_crown.y, v_localY));
+    glow = mix(glow, vec3(0.03, 0.85, 0.24) * 1.3, band * u_night);
+  }
 
   vec3 hdr = lit + glow;
   // By day as navQ draws it; at night through the filmic curve.
@@ -358,6 +371,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
   private uLight: WebGLUniformLocation | null = null;
   private uShadowMap: WebGLUniformLocation | null = null;
   private uShadowOn: WebGLUniformLocation | null = null;
+  private uCrown: WebGLUniformLocation | null = null;
   private depthProgram: WebGLProgram | null = null;
   private uDepthLight: WebGLUniformLocation | null = null;
   private shadowFbo: WebGLFramebuffer | null = null;
@@ -450,6 +464,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
     this.uLight = gl.getUniformLocation(prog, 'u_light');
     this.uShadowMap = gl.getUniformLocation(prog, 'u_shadowMap');
     this.uShadowOn = gl.getUniformLocation(prog, 'u_shadowOn');
+    this.uCrown = gl.getUniformLocation(prog, 'u_crown');
 
     // The depth-only pass the sun's shadow map is drawn with: the same vertex arrays, position and
     // instance matrix only.
@@ -631,6 +646,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
           glow: glow?.color ?? [0, 0, 0],
           glowTint: glow?.tint ?? 1,
           glowRise: glow?.rise ?? 0,
+          crown: minaretCrown(model.url, gltf.meshes[meshIndex].name, material?.name) ?? [0, 0],
           instances: matrices.length / 16,
           when,
         });
@@ -746,6 +762,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
       gl.uniform3fv(this.uGlow, prim.glow);
       gl.uniform1f(this.uGlowTint, prim.glowTint);
       gl.uniform1f(this.uGlowRise, prim.glowRise);
+      gl.uniform2fv(this.uCrown, prim.crown);
 
       const texture = prim.hasUv && prim.textureIndex >= 0 ? this.textures[prim.textureIndex] : undefined;
       gl.uniform1i(this.uHasTex, texture ? 1 : 0);

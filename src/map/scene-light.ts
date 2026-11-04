@@ -217,3 +217,14 @@ export function materialColor(file: string, material: string | undefined): [numb
 function scale(c: Rgb, k: number): Rgb {
   return [c[0] * k, c[1] * k, c[2] * k];
 }
+
+/**
+ * The green-lit crown of the minarets at night (the owner's photographs): the short cylinder just
+ * under the finial, above the upper balcony. In navQ's minaret mesh (`Circle…`, material `MINTEX`) it
+ * spans 68–72 m of the mesh's own height, whatever each minaret's scale and base; measured from the
+ * mesh's profile (balcony 62.5–65.5 m, crown 68–72 m, cone from 72 m). Null for anything else.
+ */
+export function minaretCrown(file: string, mesh: string | undefined, material: string | undefined): [number, number] | null {
+  if (!file.includes('haram-3d') || !(mesh ?? '').startsWith('Circle') || material !== 'MINTEX') return null;
+  return [68, 72];
+}

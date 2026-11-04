@@ -1,7 +1,7 @@
 import { CalculationMethod, Coordinates, PrayerTimes } from 'adhan';
 import { describe, expect, it } from 'vitest';
 import { sunPosition } from '../../src/domain/daylight';
-import { materialColor, materialGlow, sceneLight, sceneOverride } from '../../src/map/scene-light';
+import { materialColor, materialGlow, minaretCrown, sceneLight, sceneOverride } from '../../src/map/scene-light';
 import { sunMatrix } from '../../src/map/sun-shadow';
 
 describe('sunPosition (the sun over the Mosque)', () => {
@@ -151,5 +151,15 @@ describe("sunMatrix (the sun's view for shadows)", () => {
     const ground = apply(m, [0, 0, 0])[2];
     const top = apply(m, [0, 80, 0])[2];
     expect(top).toBeLessThan(ground);
+  });
+});
+
+describe('minaretCrown (the green-lit crown at night)', () => {
+  it("lights only the minarets' crown band, between the upper balcony and the finial", () => {
+    expect(minaretCrown('./models/haram-3d.glb', 'Circle', 'MINTEX')).toEqual([68, 72]);
+    expect(minaretCrown('./models/haram-3d.glb', 'Circle.002', 'MINTEX')).toEqual([68, 72]);
+    expect(minaretCrown('./models/haram-3d.glb', 'Circle', 'column goold')).toBeNull();
+    expect(minaretCrown('./models/haram-3d.glb', 'Plane.001', 'MINTEX')).toBeNull();
+    expect(minaretCrown('./models/haram-canopies.glb', 'Circle', 'MINTEX')).toBeNull();
   });
 });
