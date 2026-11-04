@@ -1,6 +1,7 @@
 import { MercatorCoordinate, type CustomLayerInterface, type CustomRenderMethodInput, type Map as MLMap } from 'maplibre-gl';
 import { ALHARAMAIN_MODELS, type AlharamainModel } from '../data-next/alharamain-3d';
-import { materialGlow, type SceneLight } from './scene-light';
+import { materialColor, materialGlow, type SceneLight } from './scene-light';
+import { createShadowTexture, SHADOW_GLSL, SHADOW_SIZE, sunMatrix, sunShadow } from './sun-shadow';
 
 /** glTF metres are measured from the Mosque's anchor (Venue 4 in `DataAPI_svc_GetVenues.json`). */
 const ORIGIN = ALHARAMAIN_MODELS[0].anchors[0] as [number, number];
@@ -99,15 +100,18 @@ layout(location = 2) in vec2 a_uv;
 layout(location = 3) in mat4 a_model; // One per instance; takes locations 3 to 6.
 
 uniform mat4 u_mvp;
+uniform mat4 u_light;
 
 out vec3 v_normal;
 out vec2 v_uv;
 out float v_height;
+out vec4 v_shadow;
 
 void main() {
   vec4 world = a_model * vec4(a_pos, 1.0);
   gl_Position = u_mvp * world;
   v_height = world.y;
+  v_shadow = u_light * world;
   // Some nodes are scaled unevenly or mirrored, so a plain rotation would bend their normals.
   v_normal = transpose(inverse(mat3(a_model))) * a_normal;
   v_uv = a_uv;
@@ -120,6 +124,7 @@ precision highp float;
 in vec3 v_normal;
 in vec2 v_uv;
 in float v_height;
+in vec4 v_shadow;
 
 uniform vec4 u_baseColor;
 uniform int u_hasTex;
@@ -133,8 +138,15 @@ uniform float u_night;
 uniform vec3 u_glow;
 uniform float u_glowTint;
 uniform float u_glowRise;
+uniform highp sampler2DShadow u_shadowMap;
+uniform float u_shadowOn;
 
 out vec4 fragColor;
+${SHADOW_GLSL}
+// Filmic roll-off (ACES fit): strong light goes to white, as a camera sees it, never to orange.
+vec3 filmic(vec3 x) {
+  return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
+}
 
 void main() {
   // As navQ draws them: textures darkened toward linear, material colours as stored, no gamma at the end.
@@ -148,20 +160,45 @@ void main() {
   // Two-sided, because mirrored nodes turn their faces inside out.
   if (!gl_FrontFacing) n = -n;
 
-  // Sky light, a little stronger on faces turned up, and the sun on the faces turned to it.
+  // Sky light, a little stronger on faces turned up, and the sun on the faces turned to it, unless
+  // something stands between them (the shadow map).
   float sky = 0.85 + 0.15 * n.y;
-  float direct = max(dot(n, u_sunDir), 0.0);
+  float facing = dot(n, u_sunDir);
+  float direct = max(facing, 0.0);
+  if (u_shadowOn > 0.5 && facing > 0.0) direct *= sunLit(v_shadow, 0.0006 + 0.0015 * (1.0 - facing));
   vec3 lit = albedo.rgb * (u_ambient * sky + u_sun * direct);
 
-  // At night: floodlit walls brightest near the ground, minarets brightest near the top.
+  // At night, floodlights from the ground: walls lit most, roofs least, the undersides of arches
+  // in between; walls brighter low down, minarets brighter toward the top. Lamps (tint 0) glow evenly.
   float low = 1.0 - smoothstep(2.0, 18.0, v_height);
   float high = smoothstep(12.0, 70.0, v_height);
-  float shape = u_glowRise > 0.0 ? mix(0.7, 1.15, low) : (u_glowRise < 0.0 ? mix(0.8, 1.2, high) : 1.0);
-  vec3 surface = mix(vec3(1.0), albedo.rgb * 1.8, u_glowTint);
-  vec3 glow = u_glow * surface * shape * u_night;
+  float shape = u_glowRise > 0.0 ? mix(0.75, 1.1, low) : (u_glowRise < 0.0 ? mix(0.8, 1.15, high) : 1.0);
+  float face = u_glowTint > 0.0 ? (n.y > 0.0 ? mix(1.0, 0.3, n.y) : mix(1.0, 0.7, -n.y)) : 1.0;
+  vec3 surface = mix(vec3(1.0), albedo.rgb, u_glowTint);
+  vec3 glow = u_glow * surface * shape * face * 2.2 * u_night;
 
-  fragColor = vec4(clamp(lit + glow, 0.0, 1.0), albedo.a);
+  vec3 hdr = lit + glow;
+  // By day as navQ draws it; at night through the filmic curve.
+  fragColor = vec4(mix(clamp(hdr, 0.0, 1.0), filmic(hdr * 1.4), u_night), albedo.a);
 }
+`;
+
+/** The sun's shadow map: depth only, as the sun sees the models. */
+const DEPTH_VERT_SRC = `#version 300 es
+precision highp float;
+layout(location = 0) in vec3 a_pos;
+layout(location = 3) in mat4 a_model;
+
+uniform mat4 u_light;
+
+void main() {
+  gl_Position = u_light * a_model * vec4(a_pos, 1.0);
+}
+`;
+
+const DEPTH_FRAG_SRC = `#version 300 es
+precision highp float;
+void main() {}
 `;
 
 const COMPONENT_BYTES: Record<number, number> = {
@@ -318,6 +355,15 @@ export class HaramGlbLayer implements CustomLayerInterface {
   private uGlow: WebGLUniformLocation | null = null;
   private uGlowTint: WebGLUniformLocation | null = null;
   private uGlowRise: WebGLUniformLocation | null = null;
+  private uLight: WebGLUniformLocation | null = null;
+  private uShadowMap: WebGLUniformLocation | null = null;
+  private uShadowOn: WebGLUniformLocation | null = null;
+  private depthProgram: WebGLProgram | null = null;
+  private uDepthLight: WebGLUniformLocation | null = null;
+  private shadowFbo: WebGLFramebuffer | null = null;
+  /** The shadow map must be drawn again (the sun moved, a file arrived, the canopies folded). */
+  private shadowDirty = true;
+  private shadowFolded: boolean | null = null;
   private light: SceneLight;
 
   private pending: PendingAsset[] = [];
@@ -356,6 +402,13 @@ export class HaramGlbLayer implements CustomLayerInterface {
     for (const asset of this.pending) for (const bmp of asset.images) bmp?.close();
     if (this.fallbackTex) gl.deleteTexture(this.fallbackTex);
     if (this.program) gl.deleteProgram(this.program);
+    if (this.depthProgram) gl.deleteProgram(this.depthProgram);
+    if (this.shadowFbo) gl.deleteFramebuffer(this.shadowFbo);
+    if (sunShadow.texture) gl.deleteTexture(sunShadow.texture);
+    sunShadow.texture = null;
+    sunShadow.strength = 0;
+    this.depthProgram = null;
+    this.shadowFbo = null;
     this.pending = [];
     this.prims = [];
     this.buffers = [];
@@ -394,6 +447,28 @@ export class HaramGlbLayer implements CustomLayerInterface {
     this.uGlow = gl.getUniformLocation(prog, 'u_glow');
     this.uGlowTint = gl.getUniformLocation(prog, 'u_glowTint');
     this.uGlowRise = gl.getUniformLocation(prog, 'u_glowRise');
+    this.uLight = gl.getUniformLocation(prog, 'u_light');
+    this.uShadowMap = gl.getUniformLocation(prog, 'u_shadowMap');
+    this.uShadowOn = gl.getUniformLocation(prog, 'u_shadowOn');
+
+    // The depth-only pass the sun's shadow map is drawn with: the same vertex arrays, position and
+    // instance matrix only.
+    const dvs = compile(gl.VERTEX_SHADER, DEPTH_VERT_SRC);
+    const dfs = compile(gl.FRAGMENT_SHADER, DEPTH_FRAG_SRC);
+    const dprog = gl.createProgram()!;
+    gl.attachShader(dprog, dvs);
+    gl.attachShader(dprog, dfs);
+    gl.linkProgram(dprog);
+    gl.deleteShader(dvs);
+    gl.deleteShader(dfs);
+    this.depthProgram = dprog;
+    this.uDepthLight = gl.getUniformLocation(dprog, 'u_light');
+    sunShadow.texture = createShadowTexture(gl, SHADOW_SIZE);
+    this.shadowFbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowFbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, sunShadow.texture, 0);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    this.shadowDirty = true;
 
     const fb = gl.createTexture()!;
     gl.bindTexture(gl.TEXTURE_2D, fb);
@@ -540,7 +615,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
         const material = prim.material !== undefined ? materials[prim.material] : undefined;
         const pbr = material?.pbrMetallicRoughness;
         const glow = materialGlow(model.url, material?.name);
-        const bcf = pbr?.baseColorFactor ?? [0.85, 0.82, 0.78, 1.0];
+        const bcf = materialColor(model.url, material?.name) ?? pbr?.baseColorFactor ?? [0.85, 0.82, 0.78, 1.0];
         const texIdx = pbr?.baseColorTexture?.index ?? -1;
         const baseColor: [number, number, number, number] = [bcf[0], bcf[1], bcf[2], bcf[3]];
 
@@ -565,7 +640,56 @@ export class HaramGlbLayer implements CustomLayerInterface {
 
   /** The sun moved or a preview asked for another moment: the next frame uses this light. */
   setLight(light: SceneLight): void {
+    const moved = light.sunDir.some((v, i) => Math.abs(v - this.light.sunDir[i]) > 1e-4);
     this.light = light;
+    if (moved) this.shadowDirty = true;
+    this.map?.triggerRepaint();
+  }
+
+  /** Before the frame (MapLibre's offscreen pass): draw the sun's shadow map if anything changed. */
+  prerender(gl: WebGL2RenderingContext): void {
+    if (this.pending.length) {
+      for (const asset of this.pending) this.upload(gl, asset);
+      this.pending = [];
+      this.shadowDirty = true;
+    }
+    const light = this.light;
+    // No sun, no shadows: from the golden hour down to night they fade out.
+    // Long shadows of a sun near the horizon streak across the plazas; they fade in as it climbs.
+    const climb = Math.max(0, Math.min(1, (light.sunDir[1] - 0.12) / 0.22));
+    sunShadow.strength = Math.max(0, Math.min(1, (light.sun[0] + light.sun[1] + light.sun[2]) / 0.9)) * (1 - light.night) * climb;
+    const folded = light.night >= 0.5;
+    if (folded !== this.shadowFolded) this.shadowDirty = true;
+    if (!this.shadowDirty || !this.depthProgram || !this.shadowFbo || !this.prims.length || sunShadow.strength <= 0) return;
+    this.shadowDirty = false;
+    this.shadowFolded = folded;
+
+    sunShadow.matrix.set(sunMatrix(light.sunDir));
+    const viewport = gl.getParameter(gl.VIEWPORT) as Int32Array;
+    const previous = gl.getParameter(gl.FRAMEBUFFER_BINDING) as WebGLFramebuffer | null;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowFbo);
+    gl.viewport(0, 0, SHADOW_SIZE, SHADOW_SIZE);
+    gl.depthMask(true);
+    gl.clearDepth(1);
+    gl.clear(gl.DEPTH_BUFFER_BIT);
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LESS);
+    gl.disable(gl.BLEND);
+    gl.disable(gl.CULL_FACE);
+    gl.enable(gl.POLYGON_OFFSET_FILL);
+    gl.polygonOffset(2, 4);
+    gl.useProgram(this.depthProgram);
+    gl.uniformMatrix4fv(this.uDepthLight, false, sunShadow.matrix);
+    for (const prim of this.prims) {
+      if ((prim.when === 'day' && folded) || (prim.when === 'night' && !folded)) continue;
+      gl.bindVertexArray(prim.vao);
+      if (prim.hasIndices) gl.drawElementsInstanced(prim.mode, prim.count, prim.indexType, 0, prim.instances);
+      else gl.drawArraysInstanced(prim.mode, 0, prim.count, prim.instances);
+    }
+    gl.bindVertexArray(null);
+    gl.disable(gl.POLYGON_OFFSET_FILL);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, previous);
+    gl.viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
     this.map?.triggerRepaint();
   }
 
@@ -578,6 +702,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
     if (this.pending.length) {
       for (const asset of this.pending) this.upload(gl, asset);
       this.pending = [];
+      this.shadowDirty = true;
     }
     if (!this.prims.length) return;
 
@@ -604,6 +729,13 @@ export class HaramGlbLayer implements CustomLayerInterface {
     gl.uniform1f(this.uNight, light.night);
     gl.vertexAttrib3f(1, 0, 1, 0);
     gl.vertexAttrib2f(2, 0, 0);
+    // The sun's shadow map on unit 1 (drawn in prerender).
+    gl.uniformMatrix4fv(this.uLight, false, sunShadow.matrix);
+    gl.uniform1f(this.uShadowOn, sunShadow.strength > 0 && !this.shadowDirty ? 1 : 0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, sunShadow.texture);
+    gl.uniform1i(this.uShadowMap, 1);
+    gl.activeTexture(gl.TEXTURE0);
 
     let boundTex: WebGLTexture | null = null;
     // Folded from about sunset (the light is then half way to night) until morning.

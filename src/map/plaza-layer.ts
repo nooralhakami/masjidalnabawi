@@ -3,6 +3,7 @@ import { ALHARAMAIN_MODELS, alharamainPlaza } from '../data-next/alharamain-3d';
 import { frameMatrix, metresFromOrigin, mulMat4 } from './glb-layer';
 import { triangulate } from './polygon';
 import type { SceneLight } from './scene-light';
+import { createShadowTexture, SHADOW_GLSL, sunShadow } from './sun-shadow';
 
 const VERT_SRC = `#version 300 es
 precision highp float;
@@ -37,9 +38,13 @@ uniform vec4 u_south;
 // The camera, in the models' metres (x east, y up, z south), and the sky the floor reflects.
 uniform vec3 u_eye;
 uniform vec3 u_sheen;
+// The sun's shadow map (sun-shadow.ts) and how strong the sun is now.
+uniform highp sampler2DShadow u_shadowMap;
+uniform mat4 u_light;
+uniform float u_shadow;
 
 out vec4 fragColor;
-
+${SHADOW_GLSL}
 float hash(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
 }
@@ -132,8 +137,14 @@ void main() {
     alpha = mix(alpha, 0.7, strip);
   }
 
-  // At night the stone takes the lamps' warm-white light.
-  color *= mix(vec3(1.0), vec3(0.62, 0.6, 0.57), u_night);
+  // In the shadow of the Mosque, its minarets and the canopies, the floor keeps only the sky's light.
+  if (u_shadow > 0.0) {
+    float shade = (1.0 - sunLit(u_light * vec4(v_pos.x, 0.0, v_pos.y, 1.0), 0.0008)) * u_shadow;
+    color *= mix(1.0, 0.6, shade);
+    alpha = mix(alpha, max(alpha, 0.8), shade);
+  }
+  // At night the stone takes the lamps' near-white light.
+  color *= mix(vec3(1.0), vec3(0.6, 0.6, 0.58), u_night);
   // Polished floor: it mirrors the sky (or the lit night) more as the eye looks across it.
   vec3 view = normalize(u_eye - vec3(v_pos.x, 0.0, v_pos.y));
   float fresnel = pow(1.0 - clamp(view.y, 0.0, 1.0), 4.0);
@@ -165,6 +176,8 @@ export class PlazaMarbleLayer implements CustomLayerInterface {
   private buffers: WebGLBuffer[] = [];
   private count = 0;
   private frame = frameMatrix();
+  /** Bound in place of the shadow map until the models' layer has made it (a shadow sampler needs a depth texture). */
+  private noShadow: WebGLTexture | null = null;
 
   constructor(private light: SceneLight) {}
 
@@ -185,7 +198,8 @@ export class PlazaMarbleLayer implements CustomLayerInterface {
     gl.deleteShader(vs);
     gl.deleteShader(fs);
     this.program = prog;
-    for (const name of ['u_mvp', 'u_turn', 'u_night', 'u_grid', 'u_main', 'u_south', 'u_eye', 'u_sheen']) this.uniforms[name] = gl.getUniformLocation(prog, name);
+    for (const name of ['u_mvp', 'u_turn', 'u_night', 'u_grid', 'u_main', 'u_south', 'u_eye', 'u_sheen', 'u_shadowMap', 'u_light', 'u_shadow'])
+      this.uniforms[name] = gl.getUniformLocation(prog, name);
 
     const { vertices, indices } = plazaMesh();
     const vao = gl.createVertexArray()!;
@@ -206,12 +220,15 @@ export class PlazaMarbleLayer implements CustomLayerInterface {
     this.vao = vao;
     this.buffers = [vbo, ibo];
     this.count = indices.length;
+    this.noShadow = createShadowTexture(gl, 1);
   }
 
   onRemove(_map: MLMap, gl: WebGL2RenderingContext): void {
     if (this.vao) gl.deleteVertexArray(this.vao);
     for (const b of this.buffers) gl.deleteBuffer(b);
     if (this.program) gl.deleteProgram(this.program);
+    if (this.noShadow) gl.deleteTexture(this.noShadow);
+    this.noShadow = null;
     this.vao = null;
     this.buffers = [];
     this.program = null;
@@ -250,7 +267,13 @@ export class PlazaMarbleLayer implements CustomLayerInterface {
     // By day it mirrors the sky's haze; at night the warm glow of the lit plazas.
     const sky = this.light.fog;
     const n = this.light.night;
-    gl.uniform3f(this.uniforms.u_sheen, sky[0] * (1 - n) + 0.95 * n, sky[1] * (1 - n) + 0.86 * n, sky[2] * (1 - n) + 0.7 * n);
+    gl.uniform3f(this.uniforms.u_sheen, sky[0] * (1 - n) + 0.9 * n, sky[1] * (1 - n) + 0.88 * n, sky[2] * (1 - n) + 0.82 * n);
+    gl.uniformMatrix4fv(this.uniforms.u_light, false, sunShadow.matrix);
+    gl.uniform1f(this.uniforms.u_shadow, sunShadow.texture ? sunShadow.strength : 0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, sunShadow.texture ?? this.noShadow);
+    gl.uniform1i(this.uniforms.u_shadowMap, 1);
+    gl.activeTexture(gl.TEXTURE0);
     gl.bindVertexArray(this.vao);
     gl.drawElements(gl.TRIANGLES, this.count, gl.UNSIGNED_SHORT, 0);
     gl.bindVertexArray(null);

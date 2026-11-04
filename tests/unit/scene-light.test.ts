@@ -1,7 +1,8 @@
 import { CalculationMethod, Coordinates, PrayerTimes } from 'adhan';
 import { describe, expect, it } from 'vitest';
 import { sunPosition } from '../../src/domain/daylight';
-import { materialGlow, sceneLight, sceneOverride } from '../../src/map/scene-light';
+import { materialColor, materialGlow, sceneLight, sceneOverride } from '../../src/map/scene-light';
+import { sunMatrix } from '../../src/map/sun-shadow';
 
 describe('sunPosition (the sun over the Mosque)', () => {
   const pt = new PrayerTimes(new Coordinates(24.4672, 39.6111), new Date(2026, 10, 4, 12), CalculationMethod.UmmAlQura());
@@ -85,12 +86,32 @@ describe('materialGlow (what lights up at night)', () => {
     }
   });
 
-  it('lights the canopy lanterns cold white and the Mosque windows warm', () => {
+  it('lights the canopy lanterns near white and the Mosque windows warm', () => {
     const lantern = materialGlow('./models/haram-canopies.glb', 'glass1')!;
     const window = materialGlow('./models/haram-3d.glb', 'glass1')!;
     expect(lantern.tint).toBe(0);
-    expect(lantern.color[2]).toBeGreaterThan(lantern.color[0]);
+    // Near white: no channel far from the others (owner, 2026-11-04: no cyan, no orange).
+    expect(Math.max(...lantern.color) / Math.min(...lantern.color)).toBeLessThan(1.1);
     expect(window.color[0]).toBeGreaterThan(window.color[2]);
+  });
+
+  it('never floodlights in a saturated colour: every lamp but the lit halls is near white', () => {
+    for (const m of ['1w', 'MINTEX', 'cornice', 'Domes', 'column goold', 'roof', 'steel.001', 'uMB']) {
+      for (const file of ['./models/haram-3d.glb', './models/haram-canopies.glb']) {
+        const g = materialGlow(file, m)!;
+        expect(Math.max(...g.color) / Math.min(...g.color), `${file} ${m}`).toBeLessThan(1.2);
+      }
+    }
+  });
+
+  it("gives the folded canopies beige fabric and bronze housings instead of the file's blue and green", () => {
+    const fabric = materialColor('./models/haram-canopies.glb', 'steel.001')!;
+    expect(fabric[0]).toBeGreaterThan(fabric[2]);
+    const housing = materialColor('./models/haram-canopies.glb', 'GREENDOME2')!;
+    expect(housing[0]).toBeGreaterThan(housing[1]);
+    // The Mosque keeps its own colours.
+    expect(materialColor('./models/haram-3d.glb', 'GREENDOME2')).toBeNull();
+    expect(materialColor('./models/haram-canopies.glb', 'red2')).toBeNull();
   });
 
   it('floodlights the walls from below', () => {
@@ -102,9 +123,33 @@ describe('materialGlow (what lights up at night)', () => {
     for (const m of ['Gate1', 'GateR', 'Door3', 'Door5-1', 'ogdoor.001', 'arc']) {
       const g = materialGlow('./models/haram-3d.glb', m)!;
       expect(g.rise, m).toBe(0);
-      expect(g.color[0], m).toBeGreaterThan(1.2);
+      expect(g.color[0], m).toBeGreaterThan(1);
     }
     const dome = materialGlow('./models/haram-3d.glb', 'Domes')!;
     expect(dome.color[0]).toBeGreaterThan(dome.color[2]);
+  });
+});
+
+describe("sunMatrix (the sun's view for shadows)", () => {
+  const apply = (m: Float64Array, [x, y, z]: number[]) => [0, 1, 2].map((r) => m[r] * x + m[4 + r] * y + m[8 + r] * z + m[12 + r]);
+
+  it('frames the Haram and its plazas inside the map', () => {
+    const m = sunMatrix(sceneLight({ elevation: 50, azimuth: 180 }).sunDir);
+    // The Mosque's anchor, and the far corners of the plazas (west annex, east sector).
+    for (const p of [
+      [0, 0, 0],
+      [-740, 0, -480],
+      [260, 0, 180],
+    ]) {
+      for (const c of apply(m, p)) expect(Math.abs(c)).toBeLessThan(1);
+    }
+  });
+
+  it('puts what is nearer the sun nearer in depth', () => {
+    const dir = sceneLight({ elevation: 30, azimuth: 90 }).sunDir;
+    const m = sunMatrix(dir);
+    const ground = apply(m, [0, 0, 0])[2];
+    const top = apply(m, [0, 80, 0])[2];
+    expect(top).toBeLessThan(ground);
   });
 });

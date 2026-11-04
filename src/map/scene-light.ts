@@ -170,32 +170,48 @@ export interface MaterialGlow {
   rise: number;
 }
 
-const WARM: Rgb = [1, 0.86, 0.66];
-/** Cream stone under floodlights, as the night photographs show the walls: near white, a touch warm. */
-const CREAM: Rgb = [1, 0.93, 0.82];
-const GOLD: Rgb = [1, 0.74, 0.4];
-const COOL: Rgb = [0.82, 0.92, 1];
+/**
+ * Floodlight colours, close to white as the night photographs show them: the camera sees the stone's
+ * own colour under a slightly warm light, never orange (owner, 2026-11-04). The shader tone-maps the
+ * result, so a strong light rolls off to white instead of burning to yellow.
+ */
+const FLOOD: Rgb = [1, 0.95, 0.87];
+const INSIDE: Rgb = [1, 0.86, 0.66];
+const LANTERN: Rgb = [1, 0.99, 0.95];
 
 /** The glow of a material of `file` (the file's base name), or null if it stays dark at night. */
 export function materialGlow(file: string, material: string | undefined): MaterialGlow | null {
   const name = (material ?? '').toLowerCase();
   const canopies = file.includes('canopies');
   if (name.startsWith('glass')) {
-    // The lanterns on the canopy columns, cold white; the Mosque's windows, warm from inside.
-    return canopies ? { color: [1.5, 1.65, 1.8], tint: 0, rise: 0 } : { color: [0.95, 0.68, 0.36], tint: 0, rise: 0 };
+    // The lanterns on the canopy columns, near white; the Mosque's windows, warm from inside.
+    return canopies ? { color: scale(LANTERN, 2.2), tint: 0, rise: 0 } : { color: scale(INSIDE, 0.9), tint: 0, rise: 0 };
   }
-  if (name.startsWith('min')) return { color: [1.1, 0.9, 0.62], tint: 0.6, rise: -1 };
-  if (name.includes('gold') || name.includes('goold')) return { color: scale(GOLD, 1.2), tint: 1, rise: 0 };
-  if (name.includes('greendome')) return { color: [0.7, 1.05, 0.78], tint: 1, rise: 0 };
-  // The roof's domes floodlit warm white, as the night photographs show them.
-  if (name.includes('dome')) return { color: [0.95, 0.9, 0.8], tint: 1, rise: 0 };
-  if (canopies) return { color: scale(COOL, name === 'umb' ? 0.85 : 0.7), tint: 1, rise: 0 };
-  if (['roof', 'tile', 'deep', 'dark', 'tent', 'silver', 'steel'].includes(name)) return { color: scale(WARM, 0.35), tint: 1, rise: 0 };
-  // The lit inside showing through the gates, doors and arches: warm gold, as from the prayer halls.
-  if (!canopies && /^(gate|door|ogdoor|arc$|g1$)/.test(name)) return { color: [1.3, 1.0, 0.62], tint: 0.6, rise: 0 };
-  if (!canopies && /^w[12]$/.test(name)) return { color: [1.1, 0.85, 0.55], tint: 0.5, rise: 0 };
-  // Walls, arches, gates, cornices and the service blocks: cream stone under floodlights.
-  return { color: scale(CREAM, 0.85), tint: 0.5, rise: 1 };
+  // Canopies: lit only from their lanterns, softly; the fabric keeps its own colour.
+  if (canopies) return { color: scale(FLOOD, name === 'umb' || name === 'steel.001' ? 0.55 : 0.35), tint: 1, rise: 0 };
+  // Minarets: floodlit cream, brightest toward the top.
+  if (name.startsWith('min')) return { color: scale(FLOOD, 1.1), tint: 1, rise: -1 };
+  // Gold finials and bands only reflect the light round them.
+  if (name.includes('gold') || name.includes('goold')) return { color: scale(FLOOD, 0.8), tint: 1, rise: 0 };
+  if (name.includes('dome')) return { color: scale(FLOOD, 0.9), tint: 1, rise: 0 };
+  if (['roof', 'tile', 'deep', 'dark', 'tent', 'silver', 'steel'].includes(name)) return { color: scale(FLOOD, 0.3), tint: 1, rise: 0 };
+  // The lit halls showing through the gates, doors and arches.
+  if (/^(gate|door|ogdoor|arc$|g1$)/.test(name)) return { color: scale(INSIDE, 1.1), tint: 0.6, rise: 0 };
+  if (/^w[12]$/.test(name)) return { color: scale(INSIDE, 0.9), tint: 0.5, rise: 0 };
+  // Walls, cornices and the service blocks: stone under floodlights from the ground.
+  return { color: scale(FLOOD, 0.85), tint: 1, rise: 1 };
+}
+
+/**
+ * Colours that replace a material's own in navQ's canopies file. Its folded fabric is a pale blue
+ * and the lantern housing a green-grey, which read as cyan and green on screen; the photographs show
+ * beige fabric and bronze housings (owner, 2026-11-04, overriding the file for these two only).
+ */
+export function materialColor(file: string, material: string | undefined): [number, number, number, number] | null {
+  if (!file.includes('canopies')) return null;
+  if (material === 'steel.001') return [0.78, 0.74, 0.66, 1];
+  if (material === 'GREENDOME2') return [0.4, 0.34, 0.25, 1];
+  return null;
 }
 
 function scale(c: Rgb, k: number): Rgb {
