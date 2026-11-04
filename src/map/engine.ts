@@ -1,9 +1,10 @@
-import { AttributionControl, Map as MLMap, ScaleControl, setWorkerUrl, type GeoJSONSource } from 'maplibre-gl';
+import { AttributionControl, Map as MLMap, ScaleControl, setWorkerUrl, type GeoJSONSource, type SkySpecification } from 'maplibre-gl';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
 import { POIS, RULES } from '../data';
 import { alharamainPlaza } from '../data-next/alharamain-3d';
+import { sunPosition } from '../domain/daylight';
 import type { Poi, Status } from '../data/types';
 import { isTapName } from '../domain/route-hint';
 import { FEATURED_IDS } from '../domain/visits';
@@ -16,6 +17,7 @@ import { addHintLayer, EMPTY_HINTS, HintLayer } from './hints';
 import { addPoiLayers } from './poi-layers';
 import { applyPoiView, entranceAt, entranceFeatures, markerImageIds, pairFeatures, placeAt, poiFeatures, popMarkers, womenAreas, type PoiView } from './pois';
 import { RouteLayer, type RouteText } from './route';
+import { sceneLight, sceneOverride, type SceneLight } from './scene-light';
 import { LEGACY_MAX, LEGACY_MIN, fitView, haramBounds, legacyZoom, mapZoom } from './zoom';
 
 export type { PoiView } from './pois';
@@ -70,6 +72,11 @@ export class MapEngine {
   private touched = false;
   private base: BaseLayer = 'satellite';
   private mode3d = false;
+  /** The 3D models' layer while 3D is on, and the minute timer that follows the sun meanwhile. */
+  private models: HaramGlbLayer | null = null;
+  private lightTimer: ReturnType<typeof setInterval> | null = null;
+  /** Where the canopies' lanterns stand (read from their file once). */
+  private lamps: [number, number][] | null = null;
   private palette = cssPalette();
   private icons = new IconAtlas();
   private drawer!: Drawer;
@@ -202,20 +209,18 @@ export class MapEngine {
   }
 
   /**
-   * Dress the map as the Al-Haramain 3D view: pale imagery, the plaza's coloured areas and the 3D
-   * files. All of it comes off in 2D, so panning, zooming and rotating pay nothing (PERF.md).
+   * Dress the map as the Al-Haramain 3D view: the plaza's coloured areas, the 3D files, and the light
+   * of this moment in Madinah (scene-light.ts): a sky with a horizon, the imagery dimmed as the sun
+   * goes down, and the lamps of the plaza and the Mosque lit at night. All of it comes off in 2D, so
+   * panning, zooming and rotating pay nothing (PERF.md).
    */
   private sync3DLayer(): void {
     const m = this.map;
     const before = m.getLayer('inner-dots') ? 'inner-dots' : undefined;
     const on = this.mode3d;
-    for (const id of ['esri', 'light']) {
-      if (!m.getLayer(id)) continue;
-      m.setPaintProperty(id, 'raster-saturation', on ? -1 : 0);
-      m.setPaintProperty(id, 'raster-contrast', on ? -0.55 : 0);
-      m.setPaintProperty(id, 'raster-brightness-min', on ? 0.76 : 0);
-    }
     if (on) {
+      // Under everything: the ground's colour of the hour, where no imagery has loaded yet.
+      if (!m.getLayer('alharamain-3d-ground')) m.addLayer({ id: 'alharamain-3d-ground', type: 'background' }, m.getLayer('esri') ? 'esri' : undefined);
       if (!m.getSource('alharamain-plaza')) m.addSource('alharamain-plaza', { type: 'geojson', data: alharamainPlaza() });
       if (!m.getLayer('alharamain-3d-plaza')) {
         m.addLayer(
@@ -228,12 +233,77 @@ export class MapEngine {
           before,
         );
       }
-      if (!m.getLayer('alharamain-3d-models')) m.addLayer(new HaramGlbLayer(), before);
+      if (!m.getSource('alharamain-lamps')) m.addSource('alharamain-lamps', { type: 'geojson', data: lampFeatures(this.lamps ?? []) });
+      if (!m.getLayer('alharamain-3d-lamps')) {
+        m.addLayer(
+          {
+            id: 'alharamain-3d-lamps',
+            type: 'circle',
+            source: 'alharamain-lamps',
+            paint: {
+              // A pool of light about 12 m across under each lantern, lying on the ground.
+              'circle-radius': ['interpolate', ['exponential', 2], ['zoom'], 14, 2.8, 22, 707],
+              'circle-color': '#e4f3ff',
+              'circle-blur': 1,
+              'circle-opacity': 0,
+              'circle-pitch-alignment': 'map',
+              'circle-pitch-scale': 'map',
+            },
+          },
+          before,
+        );
+      }
+      if (!m.getLayer('alharamain-3d-models')) {
+        this.models = new HaramGlbLayer(this.currentLight(), (lamps) => {
+          this.lamps = lamps;
+          (m.getSource('alharamain-lamps') as GeoJSONSource | undefined)?.setData(lampFeatures(lamps));
+        });
+        m.addLayer(this.models, before);
+      }
+      this.applyLight();
+      if (!this.lightTimer) this.lightTimer = setInterval(() => this.applyLight(), 60_000);
     } else {
-      for (const id of ['alharamain-3d-models', 'alharamain-3d-plaza']) {
+      if (this.lightTimer) clearInterval(this.lightTimer);
+      this.lightTimer = null;
+      this.models = null;
+      for (const id of ['alharamain-3d-models', 'alharamain-3d-lamps', 'alharamain-3d-plaza', 'alharamain-3d-ground']) {
         if (m.getLayer(id)) m.removeLayer(id);
       }
+      for (const id of ['esri', 'light']) {
+        if (!m.getLayer(id)) continue;
+        m.setPaintProperty(id, 'raster-saturation', 0);
+        m.setPaintProperty(id, 'raster-contrast', 0);
+        m.setPaintProperty(id, 'raster-brightness-min', 0);
+        m.setPaintProperty(id, 'raster-brightness-max', 1);
+      }
+      // No sky in 2D (MapLibre accepts no value to remove it, though its type asks for one).
+      m.setSky(undefined as unknown as SkySpecification);
     }
+  }
+
+  /** The light now: the sun over Madinah, or the moment a preview link names (`?scene=night`). */
+  private currentLight(): SceneLight {
+    return sceneLight(sceneOverride(location.search) ?? sunPosition(new Date()));
+  }
+
+  /** Light the 3D scene as it is now (called on entering 3D, then once a minute). */
+  private applyLight(): void {
+    const m = this.map;
+    if (!this.mode3d) return;
+    const light = this.currentLight();
+    this.models?.setLight(light);
+    for (const id of ['esri', 'light']) {
+      if (!m.getLayer(id)) continue;
+      m.setPaintProperty(id, 'raster-saturation', light.raster.saturation);
+      m.setPaintProperty(id, 'raster-contrast', light.raster.contrast);
+      m.setPaintProperty(id, 'raster-brightness-min', light.raster.brightnessMin);
+      m.setPaintProperty(id, 'raster-brightness-max', light.raster.brightnessMax);
+    }
+    // Lit plazas stand out of the dark city: their areas grow brighter as night falls.
+    if (m.getLayer('alharamain-3d-plaza')) m.setPaintProperty('alharamain-3d-plaza', 'fill-opacity', ['min', 0.9, ['*', ['get', 'opacity'], 1 + 0.35 * light.night]]);
+    if (m.getLayer('alharamain-3d-ground')) m.setPaintProperty('alharamain-3d-ground', 'background-color', light.ground);
+    if (m.getLayer('alharamain-3d-lamps')) m.setPaintProperty('alharamain-3d-lamps', 'circle-opacity', 0.7 * light.night);
+    m.setSky(light.sky);
   }
 
   /**
@@ -343,7 +413,9 @@ export class MapEngine {
     this.map.removeLayer('selected');
     for (const id of [
       'alharamain-3d-models',
+      'alharamain-3d-lamps',
       'alharamain-3d-plaza',
+      'alharamain-3d-ground',
       'car-entrances',
       'esri',
       'light',
@@ -461,3 +533,8 @@ export class MapEngine {
 }
 
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** The canopies' lanterns as points, for the pools of light under them. */
+function lampFeatures(lngLats: [number, number][]): GeoJSON.FeatureCollection<GeoJSON.Point> {
+  return { type: 'FeatureCollection', features: lngLats.map((coordinates) => ({ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates } })) };
+}

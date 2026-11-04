@@ -1,5 +1,6 @@
 import { MercatorCoordinate, type CustomLayerInterface, type CustomRenderMethodInput, type Map as MLMap } from 'maplibre-gl';
 import { ALHARAMAIN_MODELS, type AlharamainModel } from '../data-next/alharamain-3d';
+import { materialGlow, type SceneLight } from './scene-light';
 
 /** glTF metres are measured from the Mosque's anchor (Venue 4 in `DataAPI_svc_GetVenues.json`). */
 const ORIGIN = ALHARAMAIN_MODELS[0].anchors[0] as [number, number];
@@ -74,6 +75,10 @@ interface GpuPrimitive {
   baseColor: [number, number, number, number];
   textureIndex: number;
   hasUv: boolean;
+  /** Its own light at full night (`materialGlow`): colour, how much it takes the surface's colour, and where it is brightest. */
+  glow: [number, number, number];
+  glowTint: number;
+  glowRise: number;
 }
 
 /** A parsed file waiting for the next frame: WebGL state is only ours while MapLibre renders this layer. */
@@ -95,10 +100,12 @@ uniform mat4 u_mvp;
 
 out vec3 v_normal;
 out vec2 v_uv;
+out float v_height;
 
 void main() {
   vec4 world = a_model * vec4(a_pos, 1.0);
   gl_Position = u_mvp * world;
+  v_height = world.y;
   // Some nodes are scaled unevenly or mirrored, so a plain rotation would bend their normals.
   v_normal = transpose(inverse(mat3(a_model))) * a_normal;
   v_uv = a_uv;
@@ -110,10 +117,20 @@ precision highp float;
 
 in vec3 v_normal;
 in vec2 v_uv;
+in float v_height;
 
 uniform vec4 u_baseColor;
 uniform int u_hasTex;
 uniform sampler2D u_tex;
+// The scene's light (scene-light.ts): the sun, the sky, and how far into the night it is.
+uniform vec3 u_sunDir;
+uniform vec3 u_sun;
+uniform vec3 u_ambient;
+uniform float u_night;
+// This material's own light once the lamps are on.
+uniform vec3 u_glow;
+uniform float u_glowTint;
+uniform float u_glowRise;
 
 out vec4 fragColor;
 
@@ -129,12 +146,19 @@ void main() {
   // Two-sided, because mirrored nodes turn their faces inside out.
   if (!gl_FrontFacing) n = -n;
 
-  // A bright white ambient with two soft directional lights, like Threebox's default set.
-  float front = max(dot(n, normalize(vec3(0.3, 1.0, 1.0))), 0.0);
-  float back = max(dot(n, normalize(vec3(-0.3, 1.0, -1.0))), 0.0);
-  vec3 color = albedo.rgb * (0.94 + 0.3 * front + 0.3 * back);
+  // Sky light, a little stronger on faces turned up, and the sun on the faces turned to it.
+  float sky = 0.85 + 0.15 * n.y;
+  float direct = max(dot(n, u_sunDir), 0.0);
+  vec3 lit = albedo.rgb * (u_ambient * sky + u_sun * direct);
 
-  fragColor = vec4(clamp(color, 0.0, 1.0), albedo.a);
+  // At night: floodlit walls brightest near the ground, minarets brightest near the top.
+  float low = 1.0 - smoothstep(2.0, 18.0, v_height);
+  float high = smoothstep(12.0, 70.0, v_height);
+  float shape = u_glowRise > 0.0 ? mix(0.7, 1.15, low) : (u_glowRise < 0.0 ? mix(0.8, 1.2, high) : 1.0);
+  vec3 surface = mix(vec3(1.0), albedo.rgb * 1.8, u_glowTint);
+  vec3 glow = u_glow * surface * shape * u_night;
+
+  fragColor = vec4(clamp(lit + glow, 0.0, 1.0), albedo.a);
 }
 `;
 
@@ -229,6 +253,27 @@ function metresFromOrigin([lng, lat]: readonly [number, number]): [number, numbe
   return [(here.x - origin.x) / perMetre, (here.y - origin.y) / perMetre];
 }
 
+/** Where each node of a file stands on the ground, as `[lng, lat]` (one per node and anchor). */
+function nodePositions(model: AlharamainModel, gltf: GltfJson): [number, number][] {
+  const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
+  const perMetre = origin.meterInMercatorCoordinateUnits();
+  const turn = (model.rotation * Math.PI) / 180;
+  const out: [number, number][] = [];
+  for (const anchor of model.anchors) {
+    const [east0, south0] = metresFromOrigin(anchor);
+    for (const node of gltf.nodes) {
+      if (node.mesh === undefined) continue;
+      const [x, , z] = node.matrix ? [node.matrix[12], node.matrix[13], node.matrix[14]] : (node.translation ?? [0, 0, 0]);
+      // The same clockwise turn (seen from above) as the drawn file: east/south rotate together.
+      const east = east0 + x * Math.cos(turn) - z * Math.sin(turn);
+      const south = south0 + x * Math.sin(turn) + z * Math.cos(turn);
+      const ll = new MercatorCoordinate(origin.x + east * perMetre, origin.y + south * perMetre, 0).toLngLat();
+      out.push([ll.lng, ll.lat]);
+    }
+  }
+  return out;
+}
+
 /**
  * Draws the Al-Haramain 3D files (`ALHARAMAIN_MODELS`) on MapLibre with WebGL2: the Mosque, the
  * courtyard canopies and the service blocks, at the anchors navQ gives them. Nodes sharing a mesh
@@ -245,6 +290,14 @@ export class HaramGlbLayer implements CustomLayerInterface {
   private uBaseColor: WebGLUniformLocation | null = null;
   private uHasTex: WebGLUniformLocation | null = null;
   private uTex: WebGLUniformLocation | null = null;
+  private uSunDir: WebGLUniformLocation | null = null;
+  private uSun: WebGLUniformLocation | null = null;
+  private uAmbient: WebGLUniformLocation | null = null;
+  private uNight: WebGLUniformLocation | null = null;
+  private uGlow: WebGLUniformLocation | null = null;
+  private uGlowTint: WebGLUniformLocation | null = null;
+  private uGlowRise: WebGLUniformLocation | null = null;
+  private light: SceneLight;
 
   private pending: PendingAsset[] = [];
   private prims: (GpuPrimitive & { instances: number })[] = [];
@@ -255,7 +308,15 @@ export class HaramGlbLayer implements CustomLayerInterface {
   private generation = 0;
   private mercatorMatrix = new Float64Array(16);
 
-  constructor() {
+  /**
+   * `light`: how the scene is lit now (change it with `setLight`). `onLamps`: where the lanterns of
+   * the courtyard canopies stand, once their file is read, to light the plaza under them.
+   */
+  constructor(
+    light: SceneLight,
+    private onLamps?: (lngLats: [number, number][]) => void,
+  ) {
+    this.light = light;
     const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
     const s = origin.meterInMercatorCoordinateUnits();
     // Map glTF metres (X=East, Y=Up, Z=South) to Web Mercator (X=East, Y=South, Z=Up).
@@ -308,6 +369,13 @@ export class HaramGlbLayer implements CustomLayerInterface {
     this.uBaseColor = gl.getUniformLocation(prog, 'u_baseColor');
     this.uHasTex = gl.getUniformLocation(prog, 'u_hasTex');
     this.uTex = gl.getUniformLocation(prog, 'u_tex');
+    this.uSunDir = gl.getUniformLocation(prog, 'u_sunDir');
+    this.uSun = gl.getUniformLocation(prog, 'u_sun');
+    this.uAmbient = gl.getUniformLocation(prog, 'u_ambient');
+    this.uNight = gl.getUniformLocation(prog, 'u_night');
+    this.uGlow = gl.getUniformLocation(prog, 'u_glow');
+    this.uGlowTint = gl.getUniformLocation(prog, 'u_glowTint');
+    this.uGlowRise = gl.getUniformLocation(prog, 'u_glowRise');
 
     const fb = gl.createTexture()!;
     gl.bindTexture(gl.TEXTURE_2D, fb);
@@ -334,6 +402,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
         return;
       }
       this.pending.push({ model, gltf, bin, images });
+      if (this.onLamps && model.url.includes('canopies')) this.onLamps(nodePositions(model, gltf));
       this.map?.triggerRepaint();
     } catch {
       // Offline, or a test environment without fetch: 3D simply stays without this file.
@@ -441,7 +510,9 @@ export class HaramGlbLayer implements CustomLayerInterface {
         }
         gl.bindVertexArray(null);
 
-        const pbr = prim.material !== undefined ? materials[prim.material]?.pbrMetallicRoughness : undefined;
+        const material = prim.material !== undefined ? materials[prim.material] : undefined;
+        const pbr = material?.pbrMetallicRoughness;
+        const glow = materialGlow(model.url, material?.name);
         const bcf = pbr?.baseColorFactor ?? [0.85, 0.82, 0.78, 1.0];
         const texIdx = pbr?.baseColorTexture?.index ?? -1;
         const baseColor: [number, number, number, number] = [bcf[0], bcf[1], bcf[2], bcf[3]];
@@ -455,10 +526,19 @@ export class HaramGlbLayer implements CustomLayerInterface {
           baseColor,
           textureIndex: texIdx >= 0 ? texIdx + texOffset : -1,
           hasUv,
+          glow: glow?.color ?? [0, 0, 0],
+          glowTint: glow?.tint ?? 1,
+          glowRise: glow?.rise ?? 0,
           instances: matrices.length / 16,
         });
       }
     }
+  }
+
+  /** The sun moved or a preview asked for another moment: the next frame uses this light. */
+  setLight(light: SceneLight): void {
+    this.light = light;
+    this.map?.triggerRepaint();
   }
 
   render(gl: WebGL2RenderingContext, options: CustomRenderMethodInput): void {
@@ -489,12 +569,20 @@ export class HaramGlbLayer implements CustomLayerInterface {
     gl.activeTexture(gl.TEXTURE0);
     gl.uniform1i(this.uTex, 0);
     gl.uniformMatrix4fv(this.uMvp, false, new Float32Array(mvp64));
+    const light = this.light;
+    gl.uniform3fv(this.uSunDir, light.sunDir);
+    gl.uniform3fv(this.uSun, light.sun);
+    gl.uniform3fv(this.uAmbient, light.ambient);
+    gl.uniform1f(this.uNight, light.night);
     gl.vertexAttrib3f(1, 0, 1, 0);
     gl.vertexAttrib2f(2, 0, 0);
 
     let boundTex: WebGLTexture | null = null;
     for (const prim of this.prims) {
       gl.uniform4fv(this.uBaseColor, prim.baseColor);
+      gl.uniform3fv(this.uGlow, prim.glow);
+      gl.uniform1f(this.uGlowTint, prim.glowTint);
+      gl.uniform1f(this.uGlowRise, prim.glowRise);
 
       const texture = prim.hasUv && prim.textureIndex >= 0 ? this.textures[prim.textureIndex] : undefined;
       gl.uniform1i(this.uHasTex, texture ? 1 : 0);
