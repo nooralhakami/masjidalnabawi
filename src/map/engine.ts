@@ -6,11 +6,11 @@ import { POIS, RULES } from '../data';
 import { alharamainPlaza } from '../data-next/alharamain-3d';
 import { sunPosition } from '../domain/daylight';
 import type { Poi, Status } from '../data/types';
+import { isHidden } from '../domain/filters';
 import { isTapName } from '../domain/route-hint';
 import { FEATURED_IDS } from '../domain/visits';
 import { lookOf } from '../presentation/markers';
 import type { IconName } from '../presentation/icons';
-import { CityLayer } from './city-layer';
 import { HaramGlbLayer } from './glb-layer';
 import { IconAtlas, createDrawer, cssPalette, type Drawer } from './images';
 import { MeMarker } from './me';
@@ -19,6 +19,7 @@ import { addPoiLayers } from './poi-layers';
 import { applyPoiView, entranceAt, entranceFeatures, markerImageIds, pairFeatures, placeAt, poiFeatures, popMarkers, womenAreas, type PoiView } from './pois';
 import { RouteLayer, type RouteText } from './route';
 import { sceneLight, sceneOverride, type SceneLight } from './scene-light';
+import { TerrainLayer } from './terrain-layer';
 import { LEGACY_MAX, LEGACY_MIN, fitView, haramBounds, legacyZoom, mapZoom } from './zoom';
 
 export type { PoiView } from './pois';
@@ -75,7 +76,7 @@ export class MapEngine {
   private mode3d = false;
   /** The 3D models' layer while 3D is on, and the minute timer that follows the sun meanwhile. */
   private models: HaramGlbLayer | null = null;
-  private city: CityLayer | null = null;
+  private terrain: TerrainLayer | null = null;
   private lightTimer: ReturnType<typeof setInterval> | null = null;
   /** Where the canopies' lanterns stand (read from their file once). */
   private lamps: [number, number][] | null = null;
@@ -255,10 +256,10 @@ export class MapEngine {
           before,
         );
       }
-      // The hotels round the Haram and the mountains, under the Mosque's own models.
-      if (!m.getLayer('alharamain-3d-city')) {
-        this.city = new CityLayer(this.currentLight());
-        m.addLayer(this.city, before);
+      // The mountains of Madinah on the horizon, under the Mosque's own models.
+      if (!m.getLayer('alharamain-3d-terrain')) {
+        this.terrain = new TerrainLayer(this.currentLight());
+        m.addLayer(this.terrain, before);
       }
       if (!m.getLayer('alharamain-3d-models')) {
         this.models = new HaramGlbLayer(this.currentLight(), (lamps) => {
@@ -273,8 +274,8 @@ export class MapEngine {
       if (this.lightTimer) clearInterval(this.lightTimer);
       this.lightTimer = null;
       this.models = null;
-      this.city = null;
-      for (const id of ['alharamain-3d-models', 'alharamain-3d-city', 'alharamain-3d-lamps', 'alharamain-3d-plaza', 'alharamain-3d-ground']) {
+      this.terrain = null;
+      for (const id of ['alharamain-3d-models', 'alharamain-3d-terrain', 'alharamain-3d-lamps', 'alharamain-3d-plaza', 'alharamain-3d-ground']) {
         if (m.getLayer(id)) m.removeLayer(id);
       }
       for (const id of ['esri', 'light']) {
@@ -300,7 +301,7 @@ export class MapEngine {
     if (!this.mode3d) return;
     const light = this.currentLight();
     this.models?.setLight(light);
-    this.city?.setLight(light);
+    this.terrain?.setLight(light);
     for (const id of ['esri', 'light']) {
       if (!m.getLayer(id)) continue;
       m.setPaintProperty(id, 'raster-saturation', light.raster.saturation);
@@ -344,9 +345,9 @@ export class MapEngine {
     return this.view.hidden ? [] : [...new Set([...this.view.ids, ...(this.view.withFeatured ? FEATURED_IDS : [])])];
   }
 
-  /** Every place a visitor can find (the hidden wheelchair areas aside). */
+  /** Every place a visitor can find (hidden sub-categories aside: data/hidden.ts). */
   get allIds(): number[] {
-    return POIS.filter((p) => p.subCategory !== 'wheelchair_zone').map((p) => p.id);
+    return POIS.filter((p) => !isHidden(p)).map((p) => p.id);
   }
 
   poi(id: number): Poi | undefined {
@@ -422,7 +423,7 @@ export class MapEngine {
     this.map.removeLayer('selected');
     for (const id of [
       'alharamain-3d-models',
-      'alharamain-3d-city',
+      'alharamain-3d-terrain',
       'alharamain-3d-lamps',
       'alharamain-3d-plaza',
       'alharamain-3d-ground',

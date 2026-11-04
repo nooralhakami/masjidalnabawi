@@ -1,33 +1,25 @@
-"""Build the surroundings of the 3D view: the buildings round the Haram and the mountains of Madinah.
+"""Build the mountains of Madinah for the 3D view.
 
-  python3 scripts/city-from-osm.py docs/routes/osm/buildings-2026-10-08.json
+  python3 scripts/terrain-from-srtm.py
 
 Writes, in the metres frame of the 3D models (east and south of the Mosque's anchor, see
 src/data-next/alharamain-3d.ts):
 
-  public/models/madinah-city.json     {"buildings": [[height, seed, x0, z0, x1, z1, ...], ...]}
-                                      one ring per building (not closed), metres to 0.1 m;
-                                      height in metres; seed 0-99 varies its look.
   public/models/madinah-terrain.bin   little-endian: uint16 cols, uint16 rows, float32 x0, z0, step;
                                       then cols*rows uint16 heights in decimetres above the Haram's
                                       ground, row by row from the north-west corner going south.
 
-Sources:
-- Buildings: OpenStreetMap (© OpenStreetMap contributors, ODbL), the extract saved for the routes.
-  Only 21 of them carry a height or a number of floors; every other height is an ESTIMATE for the
-  picture only (by the building's kind, its footprint and its distance from the Mosque), never
-  shown as a fact anywhere.
-- Mountains: SRTM elevations through the AWS Terrain Tiles (Terrarium PNG, zoom 12, public
-  domain). Only ground standing over 25 m above the Haram is kept, so the city stays flat on the
-  imagery and only Uhud, Ayr and the other hills rise.
+Source: SRTM elevations through the AWS Terrain Tiles (Terrarium PNG, zoom 12, public domain). Only
+ground standing over 25 m above the Haram is kept, so the city stays flat on the imagery and only
+Uhud, Ayr and the other hills rise.
+
+(The buildings round the Haram that this script once drew are gone: owner, 2026-11-04, until they
+are added with exact positions.)
 """
-import json, math, struct, sys, urllib.request, zlib, hashlib
+import math, struct, urllib.request, zlib
 
 ANCHOR = (39.611752, 24.466806)  # Venue 4: the origin of the models' frame (alharamain-3d.ts)
 MOSQUE = (39.6107, 24.4683)
-# Everything within these bounds is the Haram (the Mosque and its plazas): drawn by navQ's models.
-HARAM = (39.6043, 24.4650, 39.6147, 24.4714)  # west, south, east, north
-SKIP = {'roof', 'construction', 'ruins'}
 
 EARTH = 6378137.0
 
@@ -42,87 +34,10 @@ AX, AY = merc(*ANCHOR)
 SCALE = 1 / math.cos(math.radians(ANCHOR[1]))
 
 
-def local(lng, lat):
-    """Metres east and south of the anchor, as glb-layer.ts places things."""
-    x, y = merc(lng, lat)
-    return (x - AX) / SCALE, -(y - AY) / SCALE
-
-
 def lnglat(east, south):
     x = AX + east * SCALE
     y = AY - south * SCALE
     return math.degrees(x / EARTH), math.degrees(2 * math.atan(math.exp(y / EARTH)) - math.pi / 2)
-
-
-def seed_of(osm_id):
-    return int(hashlib.md5(str(osm_id).encode()).hexdigest()[:8], 16)
-
-
-def area(ring):
-    return abs(sum(ring[i][0] * ring[i - 1][1] - ring[i - 1][0] * ring[i][1] for i in range(len(ring)))) / 2
-
-
-def parse_height(tags):
-    h = tags.get('height', '').replace('m', '').strip()
-    try:
-        if h:
-            return float(h)
-    except ValueError:
-        pass
-    lv = tags.get('building:levels', '').strip()
-    try:
-        if lv:
-            return float(lv) * 3.4 + 2
-    except ValueError:
-        pass
-    return None
-
-
-def estimate(tags, ring, dist, seed):
-    """A believable height for a building OSM gives none (the picture only, see the docstring)."""
-    r = (seed % 1000) / 1000
-    a = area(ring)
-    if a < 120:
-        return 6 + 6 * r
-    if dist < 750:  # the hotel towers round the Haram
-        h = 38 + 24 * r
-    elif dist < 1500:
-        h = 24 + 20 * r
-    else:
-        h = 9 + 15 * r
-    if tags.get('building') in ('mosque', 'school', 'hospital', 'parking'):
-        h = min(h, 18)
-    if a < 400:
-        h = min(h, 24)
-    return h
-
-
-def buildings(src):
-    els = json.load(open(src))['elements']
-    out = []
-    mx, mz = local(*MOSQUE)
-    for e in els:
-        tags = e.get('tags', {})
-        geom = e.get('geometry') or []
-        if tags.get('building') in SKIP or len(geom) < 4:
-            continue
-        lngs = [g['lon'] for g in geom]
-        lats = [g['lat'] for g in geom]
-        cx, cy = sum(lngs) / len(lngs), sum(lats) / len(lats)
-        if HARAM[0] <= cx <= HARAM[2] and HARAM[1] <= cy <= HARAM[3]:
-            continue
-        ring = [local(g['lon'], g['lat']) for g in geom]
-        if ring[0] == ring[-1]:
-            ring = ring[:-1]
-        if len(ring) < 3 or area(ring) < 20:
-            continue
-        x, z = local(cx, cy)
-        dist = math.hypot(x - mx, z - mz)
-        seed = seed_of(e['id'])
-        h = parse_height(tags) or estimate(tags, ring, dist, seed)
-        flat = [round(v, 1) for p in ring for v in p]
-        out.append([round(h, 1), seed % 100, *flat])
-    return out
 
 
 # ---------- terrain ----------
@@ -217,11 +132,6 @@ def terrain():
 
 
 def main():
-    src = sys.argv[1]
-    city = buildings(src)
-    with open('public/models/madinah-city.json', 'w') as f:
-        json.dump({'buildings': city}, f, separators=(',', ':'))
-    print(f'{len(city)} buildings')
     data, base, top = terrain()
     with open('public/models/madinah-terrain.bin', 'wb') as f:
         f.write(data)
