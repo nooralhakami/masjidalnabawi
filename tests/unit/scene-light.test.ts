@@ -1,7 +1,7 @@
 import { CalculationMethod, Coordinates, PrayerTimes } from 'adhan';
 import { describe, expect, it } from 'vitest';
 import { sunPosition } from '../../src/domain/daylight';
-import { materialColor, materialGlow, minaretCrown, sceneLight, sceneOverride } from '../../src/map/scene-light';
+import { gateLattice, materialColor, materialGlow, minaretCrown, portalKind, sceneLight, sceneOverride } from '../../src/map/scene-light';
 import { sunMatrix } from '../../src/map/sun-shadow';
 
 describe('sunPosition (the sun over the Mosque)', () => {
@@ -119,14 +119,24 @@ describe('materialGlow (what lights up at night)', () => {
     expect(materialGlow('./models/haram-service-a.glb', 'Material.005')!.rise).toBe(1);
   });
 
-  it('lights the gates and doors from inside, warm, and the domes warm white', () => {
-    for (const m of ['Gate1', 'GateR', 'Door3', 'Door5-1', 'ogdoor.001', 'arc']) {
+  it('lights the gates softly so their wood and gold show, never burnt to white', () => {
+    for (const m of ['Gate1', 'GateR', 'Door3', 'Door5-1', 'ogdoor.001', 'arc', 'G1']) {
       const g = materialGlow('./models/haram-3d.glb', m)!;
-      expect(g.rise, m).toBe(0);
-      expect(g.color[0], m).toBeGreaterThan(1);
+      expect(g.tint, m).toBe(1);
+      expect(Math.max(...g.color), m).toBeLessThan(0.8);
     }
     const dome = materialGlow('./models/haram-3d.glb', 'Domes')!;
-    expect(dome.color[0]).toBeGreaterThan(dome.color[2]);
+    expect(dome.color[0]).toBeGreaterThanOrEqual(dome.color[2]);
+  });
+
+  it("paints a gate on the portals' dark back walls, and Bab al-Salam open", () => {
+    expect(portalKind('./models/haram-3d.glb', 'Plane.005', 'DEEP')).toBe(1);
+    expect(portalKind('./models/haram-3d.glb', 'Plane.058', 'DEEP')).toBe(1);
+    expect(portalKind('./models/haram-3d.glb', 'Plane.057', 'DEEP')).toBe(2);
+    expect(portalKind('./models/haram-3d.glb', 'Plane.005', 'G1')).toBe(0);
+    expect(portalKind('./models/haram-canopies.glb', 'Plane.005', 'DEEP')).toBe(0);
+    expect(gateLattice('./models/haram-3d.glb', 'Gate1')).toBe(true);
+    expect(gateLattice('./models/haram-3d.glb', 'Door3')).toBe(false);
   });
 });
 

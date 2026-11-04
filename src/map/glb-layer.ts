@@ -1,6 +1,6 @@
 import { MercatorCoordinate, type CustomLayerInterface, type CustomRenderMethodInput, type Map as MLMap } from 'maplibre-gl';
 import { ALHARAMAIN_MODELS, type AlharamainModel } from '../data-next/alharamain-3d';
-import { materialColor, materialGlow, minaretCrown, type SceneLight } from './scene-light';
+import { gateLattice, materialColor, materialGlow, minaretCrown, portalKind, type SceneLight } from './scene-light';
 import { createShadowTexture, SHADOW_GLSL, SHADOW_SIZE, sunMatrix, sunShadow } from './sun-shadow';
 
 /** glTF metres are measured from the Mosque's anchor (Venue 4 in `DataAPI_svc_GetVenues.json`). */
@@ -82,6 +82,11 @@ interface GpuPrimitive {
   glowRise: number;
   /** The green crown's height range in the mesh, or [0, 0]. */
   crown: [number, number];
+  /** A portal's back wall to paint, its UV rectangle and size in metres; a lattice that glows. */
+  portal: number;
+  portalRect: [number, number, number, number];
+  portalSize: [number, number];
+  lattice: boolean;
   /** When it is drawn: always, or only while the canopies are open (day) or folded (night). */
   when: 'always' | 'day' | 'night';
 }
@@ -134,6 +139,12 @@ in float v_localY;
 uniform vec4 u_baseColor;
 // The minarets' green-lit crown, in the mesh's own height (x..y), or (0, 0) for none.
 uniform vec2 u_crown;
+// A portal's back wall to paint (scene-light.ts portalKind): 0 none, 1 closed gate, 2 open (Bab
+// al-Salam); its UV rectangle and its size in metres. And whether a gate's lattice glows from behind.
+uniform int u_portal;
+uniform vec4 u_portalRect;
+uniform vec2 u_portalSize;
+uniform float u_lattice;
 uniform int u_hasTex;
 uniform sampler2D u_tex;
 // The scene's light (scene-light.ts): the sun, the sky, and how far into the night it is.
@@ -150,6 +161,79 @@ uniform float u_shadowOn;
 
 out vec4 fragColor;
 ${SHADOW_GLSL}
+// A closed gate as the owner's photographs show it, in metres from the wall's bottom centre: carved
+// wood with a gold lattice, studs and medallion in a gold frame; a transom of small lit arches; in a
+// tall portal a calligraphy panel, a blue-grey band and an arched window with a hanging lantern.
+// An open gate (kind 2) shows the lit hall inside and its great chandelier. Returns the light it gives.
+vec3 portal(vec2 m, vec2 size, int kind, inout vec3 col) {
+  vec3 stone = vec3(0.8, 0.74, 0.64);
+  vec3 gold = vec3(0.74, 0.57, 0.22);
+  vec3 wood = vec3(0.3, 0.15, 0.07);
+  vec3 emit = vec3(0.0);
+  col = stone;
+  float W = size.x;
+  float H = size.y;
+  if (kind == 2) {
+    float w = W * 0.4;
+    float h = min(H * 0.9, 4.2);
+    float inside = step(abs(m.x), w) * step(m.y, h);
+    if (inside > 0.5) {
+      // Arches of the hall receding inside, cream and gold, lit from within.
+      float bands = 0.5 + 0.5 * cos(m.x / w * 9.0);
+      // Dark enough that the floodlights outside do not wash it out; the hall's own lamps light it.
+      col = mix(vec3(0.3, 0.22, 0.13), vec3(0.5, 0.42, 0.3), bands) * mix(1.0, 0.8, m.y / h);
+      vec2 c = (m - vec2(0.0, h * 0.7)) * vec2(1.3, 1.9);
+      float chandelier = exp(-dot(c, c) * 3.0);
+      float bulbs = 1.0 - smoothstep(0.03, 0.09, abs(length(c * vec2(1.0, 1.6)) - w * 0.7));
+      emit = vec3(1.0, 0.9, 0.74) * (0.3 * bands + 2.4 * chandelier + 1.2 * bulbs * step(abs(c.y), 0.35));
+    }
+    float frame = max(step(abs(abs(m.x) - w), 0.1) * step(m.y, h), step(abs(m.y - h), 0.1) * step(abs(m.x), w));
+    col = mix(col, gold, frame);
+    return emit;
+  }
+  bool tall = H > 9.0;
+  float dw = tall ? 1.7 : W * 0.38;
+  float dh = tall ? 5.6 : H * 0.8;
+  if (abs(m.x) < dw && m.y < dh) {
+    vec2 q = vec2(m.x + m.y, m.x - m.y) / 0.42;
+    vec2 fr = abs(fract(q) - 0.5);
+    float lattice = smoothstep(0.455, 0.49, max(fr.x, fr.y));
+    col = mix(wood, gold, lattice);
+    float stud = 1.0 - smoothstep(0.06, 0.1, length(fract(q) - 0.5));
+    col = mix(col, gold, stud * 0.9);
+    float r = length(m - vec2(0.0, dh * 0.42));
+    col = mix(col, gold * 1.1, 1.0 - smoothstep(dw * 0.5, dw * 0.53, r));
+    col = mix(col, gold * 0.75, (1.0 - smoothstep(dw * 0.3, dw * 0.33, r)) * 0.6);
+    float edge = min(dw - abs(m.x), dh - m.y);
+    col = mix(col, gold, 1.0 - smoothstep(0.12, 0.16, edge));
+    col = mix(col, gold * 0.9, step(dh * 0.84, m.y) * step(m.y, dh - 0.16));
+    col = mix(col, wood * 0.6, 1.0 - smoothstep(0.015, 0.035, abs(m.x)));
+  } else if (abs(m.x) < dw && m.y < dh + 0.9) {
+    col = wood;
+    float a = fract((m.x + dw) / (2.0 * dw) * 6.0);
+    float hole = step(abs(a - 0.5), 0.3) * step(dh + 0.15, m.y) * step(m.y, dh + 0.78);
+    col = mix(col, vec3(0.9, 0.8, 0.6), hole);
+    emit = vec3(1.0, 0.86, 0.62) * hole * 1.3;
+  }
+  if (tall) {
+    if (abs(m.x) < 2.1 && m.y > dh + 1.1 && m.y < dh + 1.9) col = vec3(0.88, 0.84, 0.76) * (0.92 + 0.08 * sin(m.x * 31.0) * sin(m.y * 47.0));
+    if (abs(m.x) < 2.1 && m.y > dh + 1.9 && m.y < dh + 2.7) col = mix(vec3(0.3, 0.34, 0.42), gold, step(0.62, fract(m.x * 1.1)) * 0.7);
+    vec2 w = vec2(m.x, m.y - (dh + 3.5));
+    bool win = (abs(w.x) < 1.0 && w.y > 0.0 && w.y < 2.3) || (length(vec2(w.x, w.y - 2.3)) < 1.0 && w.y >= 2.3);
+    if (win) {
+      col = vec3(0.6, 0.48, 0.3);
+      emit = vec3(1.0, 0.88, 0.68) * 0.8;
+      vec2 l = vec2(m.x, m.y - (dh + 3.9));
+      if (abs(l.x) < 0.38 && l.y > 0.0 && l.y < 1.1) {
+        col = vec3(0.78, 0.62, 0.3);
+        emit = vec3(1.0, 0.95, 0.85) * (l.y < 0.35 ? 3.0 : 1.2);
+      }
+      if (abs(m.x) < 0.03 && l.y >= 1.1) col = gold;
+    }
+  }
+  return emit;
+}
+
 // Filmic roll-off (ACES fit): strong light goes to white, as a camera sees it, never to orange.
 vec3 filmic(vec3 x) {
   return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
@@ -161,6 +245,23 @@ void main() {
   if (u_hasTex == 1) {
     vec4 texel = texture(u_tex, v_uv);
     albedo *= vec4(pow(texel.rgb, vec3(1.6)), texel.a);
+  }
+
+  vec3 emit = vec3(0.0);
+  if (u_portal > 0) {
+    vec2 r = (v_uv - u_portalRect.xy) / max(u_portalRect.zw - u_portalRect.xy, vec2(1e-4));
+    // UV v runs down the wall in navQ's files, so up is 1 − v.
+    vec2 m = vec2((r.x - 0.5) * u_portalSize.x, (1.0 - r.y) * u_portalSize.y);
+    vec3 painted = albedo.rgb;
+    emit = portal(m, u_portalSize, u_portal, painted);
+    albedo.rgb = painted;
+  }
+  if (u_lattice > 0.5) {
+    // The lattice lunette in the upper part of the gate's photograph glows warm through its holes.
+    float v = fract(v_uv.y);
+    float band = smoothstep(0.1, 0.16, v) * (1.0 - smoothstep(0.42, 0.48, v));
+    float holes = 1.0 - smoothstep(0.08, 0.3, dot(albedo.rgb, vec3(0.33)));
+    emit = vec3(1.0, 0.85, 0.6) * band * holes * 1.2;
   }
 
   vec3 n = length(v_normal) > 0.0001 ? normalize(v_normal) : vec3(0.0, 1.0, 0.0);
@@ -190,7 +291,8 @@ void main() {
     glow = mix(glow, vec3(0.03, 0.85, 0.24) * 1.3, band * u_night);
   }
 
-  vec3 hdr = lit + glow;
+  // Lamps inside the gates are on by day too, only less striking in the sunlight.
+  vec3 hdr = lit + glow + emit * mix(0.25, 1.0, u_night);
   // By day as navQ draws it; at night through the filmic curve.
   fragColor = vec4(mix(clamp(hdr, 0.0, 1.0), filmic(hdr * 1.4), u_night), albedo.a);
 }
@@ -324,6 +426,39 @@ export function canopyFolding(gltf: { nodes: GltfNode[]; meshes: GltfMesh[]; mat
   return open.size ? { open, closed } : null;
 }
 
+/** A portal's back wall: what to paint, its UV rectangle, and its width and height in metres. */
+function portalOf(
+  gltf: GltfJson,
+  bin: Uint8Array,
+  prim: GltfPrimitive,
+  kind: number,
+): { portal: number; portalRect: [number, number, number, number]; portalSize: [number, number] } {
+  const none = { portal: 0, portalRect: [0, 0, 1, 1] as [number, number, number, number], portalSize: [1, 1] as [number, number] };
+  const uvIndex = prim.attributes.TEXCOORD_0;
+  if (!kind || uvIndex === undefined) return none;
+  // navQ's files give no bounds for texture coordinates (glTF only requires them for positions).
+  const bounds = (index: number, size: number): { min: number[]; max: number[] } => {
+    const acc = gltf.accessors[index];
+    const bv = gltf.bufferViews[acc.bufferView];
+    const stride = bv.byteStride ?? size * 4;
+    const view = new DataView(bin.buffer, bin.byteOffset + (bv.byteOffset ?? 0) + (acc.byteOffset ?? 0));
+    const min = Array(size).fill(Infinity);
+    const max = Array(size).fill(-Infinity);
+    for (let i = 0; i < acc.count; i++) {
+      for (let c = 0; c < size; c++) {
+        const v = view.getFloat32(i * stride + c * 4, true);
+        min[c] = Math.min(min[c], v);
+        max[c] = Math.max(max[c], v);
+      }
+    }
+    return { min, max };
+  };
+  const uv = bounds(uvIndex, 2);
+  const pos = bounds(prim.attributes.POSITION, 3);
+  const width = Math.max(pos.max[0] - pos.min[0], pos.max[2] - pos.min[2]);
+  return { portal: kind, portalRect: [uv.min[0], uv.min[1], uv.max[0], uv.max[1]], portalSize: [width, pos.max[1] - pos.min[1]] };
+}
+
 /** Where each node of a file stands on the ground, as `[lng, lat]` (one per node and anchor). */
 function nodePositions(model: AlharamainModel, gltf: GltfJson): [number, number][] {
   const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
@@ -372,6 +507,10 @@ export class HaramGlbLayer implements CustomLayerInterface {
   private uShadowMap: WebGLUniformLocation | null = null;
   private uShadowOn: WebGLUniformLocation | null = null;
   private uCrown: WebGLUniformLocation | null = null;
+  private uPortal: WebGLUniformLocation | null = null;
+  private uPortalRect: WebGLUniformLocation | null = null;
+  private uPortalSize: WebGLUniformLocation | null = null;
+  private uLattice: WebGLUniformLocation | null = null;
   private depthProgram: WebGLProgram | null = null;
   private uDepthLight: WebGLUniformLocation | null = null;
   private shadowFbo: WebGLFramebuffer | null = null;
@@ -465,6 +604,10 @@ export class HaramGlbLayer implements CustomLayerInterface {
     this.uShadowMap = gl.getUniformLocation(prog, 'u_shadowMap');
     this.uShadowOn = gl.getUniformLocation(prog, 'u_shadowOn');
     this.uCrown = gl.getUniformLocation(prog, 'u_crown');
+    this.uPortal = gl.getUniformLocation(prog, 'u_portal');
+    this.uPortalRect = gl.getUniformLocation(prog, 'u_portalRect');
+    this.uPortalSize = gl.getUniformLocation(prog, 'u_portalSize');
+    this.uLattice = gl.getUniformLocation(prog, 'u_lattice');
 
     // The depth-only pass the sun's shadow map is drawn with: the same vertex arrays, position and
     // instance matrix only.
@@ -647,6 +790,8 @@ export class HaramGlbLayer implements CustomLayerInterface {
           glowTint: glow?.tint ?? 1,
           glowRise: glow?.rise ?? 0,
           crown: minaretCrown(model.url, gltf.meshes[meshIndex].name, material?.name) ?? [0, 0],
+          ...portalOf(gltf, bin, prim, portalKind(model.url, gltf.meshes[meshIndex].name, material?.name)),
+          lattice: gateLattice(model.url, material?.name),
           instances: matrices.length / 16,
           when,
         });
@@ -763,6 +908,10 @@ export class HaramGlbLayer implements CustomLayerInterface {
       gl.uniform1f(this.uGlowTint, prim.glowTint);
       gl.uniform1f(this.uGlowRise, prim.glowRise);
       gl.uniform2fv(this.uCrown, prim.crown);
+      gl.uniform1i(this.uPortal, prim.portal);
+      gl.uniform4fv(this.uPortalRect, prim.portalRect);
+      gl.uniform2fv(this.uPortalSize, prim.portalSize);
+      gl.uniform1f(this.uLattice, prim.lattice ? 1 : 0);
 
       const texture = prim.hasUv && prim.textureIndex >= 0 ? this.textures[prim.textureIndex] : undefined;
       gl.uniform1i(this.uHasTex, texture ? 1 : 0);

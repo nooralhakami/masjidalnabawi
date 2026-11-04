@@ -194,10 +194,13 @@ export function materialGlow(file: string, material: string | undefined): Materi
   // Gold finials and bands only reflect the light round them.
   if (name.includes('gold') || name.includes('goold')) return { color: scale(FLOOD, 0.8), tint: 1, rise: 0 };
   if (name.includes('dome')) return { color: scale(FLOOD, 0.9), tint: 1, rise: 0 };
+  // The portals' back walls, painted with a door, a window and a lantern (portalKind): lit like stone.
+  if (name === 'deep' && !canopies) return { color: scale(FLOOD, 0.65), tint: 1, rise: 0 };
   if (['roof', 'tile', 'deep', 'dark', 'tent', 'silver', 'steel'].includes(name)) return { color: scale(FLOOD, 0.3), tint: 1, rise: 0 };
-  // The lit halls showing through the gates, doors and arches.
-  if (/^(gate|door|ogdoor|arc$|g1$)/.test(name)) return { color: scale(INSIDE, 1.1), tint: 0.6, rise: 0 };
-  if (/^w[12]$/.test(name)) return { color: scale(INSIDE, 0.9), tint: 0.5, rise: 0 };
+  // The gates and doors are photographs of the real ones: lit softly so their wood and gold show,
+  // never burnt to white (owner, 2026-11-04). Their lattices glow from behind (gateLattice).
+  if (/^(gate|door|ogdoor|arc$|g1$)/.test(name)) return { color: scale(FLOOD, 0.7), tint: 1, rise: 0 };
+  if (/^w[12]$/.test(name)) return { color: scale(FLOOD, 0.6), tint: 1, rise: 0 };
   // Walls, cornices and the service blocks: stone under floodlights from the ground.
   return { color: scale(FLOOD, 0.85), tint: 1, rise: 1 };
 }
@@ -227,4 +230,21 @@ function scale(c: Rgb, k: number): Rgb {
 export function minaretCrown(file: string, mesh: string | undefined, material: string | undefined): [number, number] | null {
   if (!file.includes('haram-3d') || !(mesh ?? '').startsWith('Circle') || material !== 'MINTEX') return null;
   return [68, 72];
+}
+
+/**
+ * What the shader paints on a portal's back wall (navQ's `DEEP`, a flat dark plane in 16 arched
+ * portals): 1, a closed gate as the owner's photographs show it (wood with a gold lattice and
+ * medallion, a lit transom, and in the tall portals a calligraphy panel and an arched window with a
+ * hanging lantern); 2, Bab al-Salam open, the lit hall and its great chandelier inside (its portal is
+ * the mesh `Plane.057`, at gate 1, under the gold muqarnas and green band). 0 for anything else.
+ */
+export function portalKind(file: string, mesh: string | undefined, material: string | undefined): 0 | 1 | 2 {
+  if (!file.includes('haram-3d') || material !== 'DEEP') return 0;
+  return mesh === 'Plane.057' ? 2 : 1;
+}
+
+/** The gates whose photograph has a lattice lunette above the door, lit from behind at night. */
+export function gateLattice(file: string, material: string | undefined): boolean {
+  return file.includes('haram-3d') && (material === 'Gate1' || material === 'GateR');
 }
