@@ -132,7 +132,8 @@ test.describe('search and card', () => {
     await openMap(page, 'tr');
     await search(page, '1A');
     await expect(page.locator('#search-results .search-row').first()).toContainText('1');
-    await search(page, 'Al Baik');
+    // An English name from a Turkish screen (restaurants such as Al Baik are hidden since 2026-11-04).
+    await search(page, 'Hejaz Railway');
     await expect(page.locator('#search-results .search-row')).toHaveCount(1);
     await search(page, 'zzqxw');
     await expect(page.locator('.search-empty')).toBeVisible();
