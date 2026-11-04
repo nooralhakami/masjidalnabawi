@@ -34,6 +34,9 @@ uniform vec2 u_grid;
 // boxes (centre x, z, half width, half depth) in the models' frame.
 uniform vec4 u_main;
 uniform vec4 u_south;
+// The camera, in the models' metres (x east, y up, z south), and the sky the floor reflects.
+uniform vec3 u_eye;
+uniform vec3 u_sheen;
 
 out vec4 fragColor;
 
@@ -72,28 +75,44 @@ void main() {
 
   vec3 color;
   float alpha;
+  // How glossy: polished stone shines more than concrete; carpet not at all.
+  float gloss;
 
-  if (v_kind > 0.5) {
-    // The western plaza: whitish polished concrete, no inlays, only long lines both ways with wide
-    // squares between them, set square to the qibla (owner, 2026-11-04).
-    color = vec3(0.9, 0.89, 0.86);
-    alpha = 0.5;
-    float grid = joints(p, vec2(8.0), 0.08);
-    color = mix(color, vec3(0.5, 0.5, 0.51), grid);
-    alpha = mix(alpha, 0.6, grid);
+  if (v_kind > 1.5) {
+    // The prayer areas: the Mosque's green carpets, rugs in rows facing the qibla (south), each with
+    // a dark navy border and a medallion (the owner's photographs).
+    vec2 rug = vec2(4.0, 1.3);
+    vec2 r = (fract(p / rug) - 0.5) * rug;
+    vec2 edge = rug * 0.5 - abs(r);
+    float fwR = max(fwidth(r.x), fwidth(r.y));
+    float detail = 1.0 - smoothstep(0.08, 0.25, fwR);
+    float border = (1.0 - smoothstep(0.14, 0.14 + fwR, min(edge.x, edge.y))) * detail;
+    float seam = 1.0 - smoothstep(0.015, 0.015 + fwR, min(edge.x, edge.y));
+    float medal = (1.0 - smoothstep(0.32, 0.32 + fwR, length(r * vec2(0.55, 1.0)))) * detail;
+    float weave = hash(floor(p * 30.0)) * (1.0 - smoothstep(0.003, 0.015, fwP));
+    color = vec3(0.4, 0.44, 0.31) * (0.94 + 0.12 * weave);
+    color = mix(color, vec3(0.13, 0.16, 0.27), max(border, medal * 0.8));
+    color = mix(color, vec3(0.3, 0.32, 0.22), seam);
+    alpha = 0.92;
+    gloss = 0.0;
+  } else if (v_kind > 0.5) {
+    // The western plaza: polished concrete in large white squares, nothing else (owner, 2026-11-04).
+    color = vec3(0.92, 0.91, 0.88);
+    alpha = 0.72;
+    float grid = joints(p, vec2(48.0), 0.1);
+    color = mix(color, vec3(0.62, 0.62, 0.61), grid);
+    gloss = 0.5;
   } else {
-    // How far from the Mosque's walls (negative inside).
-    float wall = min(box(v_pos, u_main), box(v_pos, u_south));
-    if (wall < 10.0) {
-      // Along the walls: small white rectangles side by side, rows staggered (owner's photographs).
-      vec2 q = vec2(p.x + 0.6 * floor(p.y / 0.6), p.y);
-      color = vec3(0.94, 0.93, 0.9);
-      alpha = 0.6;
-      float j = joints(q, vec2(1.2, 0.6), 0.012);
-      color = mix(color, vec3(0.62, 0.62, 0.6), j);
+    // Round the Mosque, inside the line the owner drew: white square tiles.
+    float near = min(box(v_pos, u_main) - 35.0, box(v_pos, u_south) - 3.0);
+    if (near < 0.0) {
+      color = vec3(0.95, 0.94, 0.91);
+      alpha = 0.78;
+      float j = joints(p, vec2(1.2), 0.01);
+      color = mix(color, vec3(0.7, 0.7, 0.68), j);
+      gloss = 1.0;
     } else {
-      // Grey speckled granite in square slabs, panels between four canopies framed by a double
-      // dark band (the owner's photographs).
+      // Further out: grey speckled granite slabs, panels framed by a thin dark band.
       float speck = hash(floor(p * 24.0)) * (1.0 - smoothstep(0.004, 0.02, fwP));
       color = vec3(0.6, 0.6, 0.59) * (0.9 + 0.2 * speck);
       alpha = 0.45;
@@ -101,31 +120,38 @@ void main() {
       color = mix(color, vec3(0.42, 0.42, 0.42), j);
       const float P = 24.1;
       vec2 lp = (fract(p / P) - 0.5) * P;
-      float edge = P * 0.5 - max(abs(lp.x), abs(lp.y));
-      float fwE = fwidth(edge);
-      float band = line(edge - 0.4, 0.3, fwE);
+      float edgeP = P * 0.5 - max(abs(lp.x), abs(lp.y));
+      float band = line(edgeP - 0.4, 0.3, fwidth(edgeP));
       color = mix(color, vec3(0.3, 0.3, 0.31), band);
       alpha = mix(alpha, 0.5, band);
+      gloss = 0.7;
     }
-    // A dark granite strip where the white band meets the granite.
-    float strip = line(wall - 10.6, 0.6, fwidth(wall));
+    // A dark granite strip where the white tiles meet the granite.
+    float strip = line(near - 0.6, 0.6, fwidth(near));
     color = mix(color, vec3(0.2, 0.2, 0.21), strip);
-    alpha = mix(alpha, 0.68, strip);
+    alpha = mix(alpha, 0.7, strip);
   }
 
-  // At night the stone is lit by the lamps and the pools of light lie over it.
-  color *= mix(1.0, 0.6, u_night);
+  // At night the stone takes the lamps' warm-white light.
+  color *= mix(vec3(1.0), vec3(0.62, 0.6, 0.57), u_night);
+  // Polished floor: it mirrors the sky (or the lit night) more as the eye looks across it.
+  vec3 view = normalize(u_eye - vec3(v_pos.x, 0.0, v_pos.y));
+  float fresnel = pow(1.0 - clamp(view.y, 0.0, 1.0), 4.0);
+  color = mix(color, u_sheen, clamp(fresnel * gloss * 0.55, 0.0, 0.6));
+  // Toward the horizon MapLibre's fog hides the ground, but not this layer: fade it there the same way.
+  vec3 toEye = u_eye - vec3(v_pos.x, 0.0, v_pos.y);
+  float depression = toEye.y / max(length(toEye.xz), 1.0);
+  alpha *= smoothstep(0.03, 0.12, depression);
   fragColor = vec4(color, alpha);
 }
 `;
 
 /**
- * The paving of the plazas round the Mosque in the 3D view, after the owner's description and
- * photographs (2026-11-04): white rectangles along the Mosque's walls edged by a dark granite strip,
- * grey speckled granite slabs framed by dark bands between the canopies, and in the western plaza
- * whitish polished concrete with wide lines square to the qibla. Drawn by the shader in real metres
- * (so it keeps its size as the visitor zooms), part see-through over navQ's official plaza colours
- * (`alharamain-3d-plaza`), which still tint it. A look, not a survey of the actual paving.
+ * The paving of the plazas round the Mosque in the 3D view, as the owner set it (2026-11-04): white
+ * square tiles round the Mosque out to the line he drew, edged by a dark granite strip; grey granite
+ * slabs beyond; the western plaza in large squares of polished white concrete; and its prayer areas
+ * in the Mosque's green carpets. Polished floors mirror the sky, or the lit night, at low angles.
+ * Drawn by the shader in real metres over navQ's plaza colours. A look, not a survey of the paving.
  */
 export class PlazaMarbleLayer implements CustomLayerInterface {
   readonly id = 'alharamain-3d-marble';
@@ -159,7 +185,7 @@ export class PlazaMarbleLayer implements CustomLayerInterface {
     gl.deleteShader(vs);
     gl.deleteShader(fs);
     this.program = prog;
-    for (const name of ['u_mvp', 'u_turn', 'u_night', 'u_grid', 'u_main', 'u_south']) this.uniforms[name] = gl.getUniformLocation(prog, name);
+    for (const name of ['u_mvp', 'u_turn', 'u_night', 'u_grid', 'u_main', 'u_south', 'u_eye', 'u_sheen']) this.uniforms[name] = gl.getUniformLocation(prog, name);
 
     const { vertices, indices } = plazaMesh();
     const vao = gl.createVertexArray()!;
@@ -218,11 +244,34 @@ export class PlazaMarbleLayer implements CustomLayerInterface {
     gl.uniform2fv(this.uniforms.u_grid, CANOPY_GRID);
     gl.uniform4fv(this.uniforms.u_main, MOSQUE_MAIN);
     gl.uniform4fv(this.uniforms.u_south, MOSQUE_SOUTH);
+    // The camera in the models' metres, for the floor's gloss.
+    const eye = this.map ? cameraEye(this.map) : ([0, 1000, 0] as const);
+    gl.uniform3f(this.uniforms.u_eye, eye[0], eye[1], eye[2]);
+    // By day it mirrors the sky's haze; at night the warm glow of the lit plazas.
+    const sky = this.light.fog;
+    const n = this.light.night;
+    gl.uniform3f(this.uniforms.u_sheen, sky[0] * (1 - n) + 0.95 * n, sky[1] * (1 - n) + 0.86 * n, sky[2] * (1 - n) + 0.7 * n);
     gl.bindVertexArray(this.vao);
     gl.drawElements(gl.TRIANGLES, this.count, gl.UNSIGNED_SHORT, 0);
     gl.bindVertexArray(null);
     gl.depthMask(true);
   }
+}
+
+/**
+ * Where the camera stands, in the models' metres (x east, y up, z south), from the map's public
+ * camera: it looks at the centre from `distance` away, tilted by the pitch, turned by the bearing.
+ */
+function cameraEye(map: MLMap): [number, number, number] {
+  const c = map.getCenter();
+  const [cx, cz] = metresFromOrigin([c.lng, c.lat]);
+  const metresPerPixel = (40_075_016.686 * Math.cos((c.lat * Math.PI) / 180)) / (512 * 2 ** map.getZoom());
+  const fov = (map.getVerticalFieldOfView() * Math.PI) / 180;
+  const distance = (map.getContainer().clientHeight / 2 / Math.tan(fov / 2)) * metresPerPixel;
+  const pitch = (map.getPitch() * Math.PI) / 180;
+  const bearing = (map.getBearing() * Math.PI) / 180;
+  const back = distance * Math.sin(pitch);
+  return [cx - Math.sin(bearing) * back, distance * Math.cos(pitch), cz + Math.cos(bearing) * back];
 }
 
 /**
@@ -248,15 +297,18 @@ const CANOPY_GRID: [number, number] = (() => {
 const MOSQUE_MAIN: [number, number, number, number] = [(-263.4 + 143.5) / 2, (-353.3 + -110.6) / 2, (143.5 + 263.4) / 2, (353.3 - 110.6) / 2];
 const MOSQUE_SOUTH: [number, number, number, number] = [(-109.6 + -11.4) / 2, (-110.6 + -57.0) / 2, (109.6 - 11.4) / 2, (110.6 - 57.0) / 2];
 
-/** The outdoor plazas (the five sectors and the western annex) as triangles, in the models' metres: x, z, kind (0 sector, 1 annex). */
+/**
+ * The outdoor plazas as triangles, in the models' metres: x, z, kind (0 the five sectors, 1 the
+ * western annex, 2 its prayer areas, men's and women's, laid after it so their carpet lies on top).
+ */
 export function plazaMesh(): { vertices: Float32Array; indices: Uint16Array } {
   const v: number[] = [];
   const ix: number[] = [];
   for (const f of alharamainPlaza().features) {
-    if (f.properties.kind !== 'sector' && f.properties.kind !== 'annex') continue;
+    const kinds = { sector: 0, annex: 1, men: 2, women: 2 } as const;
     const ring = f.geometry.coordinates[0].slice(0, -1).map((ll) => metresFromOrigin(ll as [number, number]));
     const base = v.length / 3;
-    const kind = f.properties.kind === 'annex' ? 1 : 0;
+    const kind = kinds[f.properties.kind];
     for (const [x, z] of ring) v.push(x, z, kind);
     for (const i of triangulate(ring)) ix.push(base + i);
   }

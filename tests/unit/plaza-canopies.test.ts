@@ -31,18 +31,18 @@ describe('triangulate', () => {
 });
 
 describe('plazaMesh (the marble)', () => {
-  it('covers each outdoor plaza exactly, and only those', () => {
-    const plazas = alharamainPlaza().features.filter((f) => f.properties.kind === 'sector' || f.properties.kind === 'annex');
-    expect(plazas).toHaveLength(6);
+  it('covers every plaza area exactly (sectors, annex, prayer areas)', () => {
+    const plazas = alharamainPlaza().features;
+    expect(plazas).toHaveLength(18);
     const rings = plazas.map((f) => f.geometry.coordinates[0].slice(0, -1).map((ll) => metresFromOrigin(ll as [number, number])));
     const { vertices, indices } = plazaMesh();
     expect(vertices.length / 3).toBe(rings.reduce((n, r) => n + r.length, 0));
     const pts: [number, number][] = [];
     for (let i = 0; i < vertices.length; i += 3) pts.push([vertices[i], vertices[i + 1]]);
-    // Only the western annex is marked as concrete.
+    // Granite sectors, the concrete western annex, and its carpeted prayer areas.
     const kinds = new Set<number>();
     for (let i = 2; i < vertices.length; i += 3) kinds.add(vertices[i]);
-    expect([...kinds].sort()).toEqual([0, 1]);
+    expect([...kinds].sort()).toEqual([0, 1, 2]);
     const total = rings.reduce((s, r) => s + ringArea(r), 0);
     expect(triArea(pts, indices)).toBeCloseTo(total, -1);
   });
