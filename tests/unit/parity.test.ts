@@ -99,8 +99,10 @@ describe('parity: places and category counts (SPEC F1)', () => {
   it('each pill counts what it shows, computed the way the live app does', () => {
     const fac = new Facilities();
     const counts = Object.fromEntries(FILTERS.map(({ id }) => [id, visiblePois(id, 'all', '', fac, undefined, id === 'parking' ? 'all' : undefined).length]));
-    expect(counts).toEqual({ all: 304, gates: 112, women: 35, toilets: 40, hotels: 43, food: 44, shopping: 15, landmarks: 39, historic: 17, parking: 13, emergency: 9 });
-    expect(counts.all + counts.parking).toBe(317);
+    // Owner, 2026-11-04 (docs/DECISIONS.md): hotels (43) and restaurants (44) are hidden until they are
+    // added again with exact positions; the live app had all: 304, hotels: 43, food: 44.
+    expect(counts).toEqual({ all: 217, gates: 112, women: 35, toilets: 40, hotels: 0, food: 0, shopping: 15, landmarks: 39, historic: 17, parking: 13, emergency: 9 });
+    expect(counts.all + counts.parking).toBe(230);
   });
 });
 

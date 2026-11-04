@@ -20,10 +20,13 @@ beforeEach(() => {
 const shown = (filter: FilterId, toiletSub: 'all' | 'open' | 'closed' = 'all') => POIS.filter((p) => passesFilter(p, { filter, toiletSub, searching: false }, fac));
 
 describe('filters', () => {
-  it('"all" shows everything except parking and the hidden wheelchair zones', () => {
+  it('"all" shows everything except parking and the hidden places (wheelchair zones, hotels, restaurants)', () => {
     const all = shown('all');
-    expect(all).toHaveLength(325 - 13 - 8);
+    // 325 places, less 13 car parks, 8 wheelchair zones, and the 43 hotels and 44 restaurants hidden
+    // until the owner adds them again with exact positions (2026-11-04).
+    expect(all).toHaveLength(325 - 13 - 8 - 43 - 44);
     expect(all.some((p) => p.category === 'parking')).toBe(false);
+    expect(all.some((p) => p.category === 'hotels' || p.category === 'food')).toBe(false);
   });
 
   it('parking appears only with its pill or while searching', () => {
@@ -81,8 +84,9 @@ describe('filters', () => {
 
   it('category pills match their category', () => {
     expect(shown('gates')).toHaveLength(112);
-    expect(shown('hotels')).toHaveLength(43);
-    expect(shown('food')).toHaveLength(44);
+    // Hidden (owner, 2026-11-04): their pills show nothing and are left out of the row.
+    expect(shown('hotels')).toHaveLength(0);
+    expect(shown('food')).toHaveLength(0);
     expect(shown('shopping')).toHaveLength(15);
     expect(shown('emergency')).toHaveLength(9);
   });

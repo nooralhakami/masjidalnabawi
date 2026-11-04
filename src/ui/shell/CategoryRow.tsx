@@ -69,7 +69,8 @@ export function CategoryRow({
   return (
     <div class="cat-wrap">
       <nav class="cat-row" aria-label={t('filters')}>
-        {PILLS.map(({ id, label }) => (
+        {/* A pill whose places are all hidden (data/hidden.ts) would show nothing: it is left out. */}
+        {PILLS.filter(({ id }) => counts[id] !== 0 || id === filter).map(({ id, label }) => (
           <CategoryButton key={id} id={id} label={t(label)} count={counts[id]} selected={id === filter} onPick={onFilter} />
         ))}
         <button

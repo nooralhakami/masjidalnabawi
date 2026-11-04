@@ -20,7 +20,8 @@ test.describe('landing', () => {
     const page = await ctx.newPage();
     await page.goto('./');
     await expect(page.locator('h1')).toHaveText('دليل زوار المسجد النبوي');
-    await expect(page.locator('.stats dd').first()).toHaveText('317');
+    // 230: hotels and restaurants are hidden until the owner adds them again (2026-11-04); it was 317.
+    await expect(page.locator('.stats dd').first()).toHaveText('230');
     await ctx.close();
   });
 
