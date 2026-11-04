@@ -11,6 +11,12 @@ export interface RouteSummary {
   minutes: number;
   /** Walking to a car park: the number of its nearest entrance. */
   nearestEntrance?: number;
+  /** Step-free accessible route metadata (elevator or escalator node from vertical_nodes.geojson). */
+  accessible?: {
+    kind: 'elevator' | 'escalator';
+    meters: number;
+    nodeId: number;
+  };
   /** By car: the drive, the lot, and the walk from it. */
   drive?: {
     meters: number;
@@ -34,6 +40,7 @@ export function routeSummary(plans: readonly Plan[], chosen: number): RouteSumma
     meters: plan.walkM + plan.driveM,
     minutes: plan.minutes,
     ...(plan.entrances && plan.nearest ? { nearestEntrance: plan.nearest.id } : {}),
+    ...(plan.accessible && plan.accessibleNode ? { accessible: { kind: plan.accessibleNode.kind, meters: plan.accessibleNode.meters, nodeId: plan.accessibleNode.id } } : {}),
     ...(plan.mode === 'drive'
       ? {
           drive: {

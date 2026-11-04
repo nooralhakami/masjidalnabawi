@@ -10,7 +10,7 @@ import { NavigationTracker, type NavigationHost } from '../navigation/tracker';
 import { lotsToAsk, planExit, planRoutes, type GarageStart, type Plan } from '../routing/plan';
 import { spotOf } from '../routing/spot';
 import { bearing } from '../presentation/route-view';
-import { garageQ, headingUp, level, nav, notify, route, selected, setHeadingUp, sheet, travel } from '../state/store';
+import { accessibleRoute, garageQ, headingUp, level, nav, notify, route, selected, setHeadingUp, sheet, travel } from '../state/store';
 
 /** Within this distance of the car park leg, the visitor is in the car park: no re-planning from the streets. */
 const IN_CAR_PARK_M = 60;
@@ -137,7 +137,7 @@ export class Trip {
     const mode = travel.value;
     const start = mode === 'drive' ? await this.garageStartFor(fix.lat, fix.lng) : undefined;
     if (start === null || selected.value !== p.id) return;
-    const next = await this.planner([fix.lat, fix.lng], p, mode, { level: level.value, start });
+    const next = await this.planner([fix.lat, fix.lng], p, mode, { level: level.value, start, accessible: accessibleRoute.value });
     if (selected.value !== p.id) return;
     if (!next.length) {
       // Said, not silent: the button stops spinning and nothing is drawn.
@@ -166,8 +166,8 @@ export class Trip {
 
   /** «إنهاء المسار», a new destination, or closing the card: the trip ends entirely (GPS watch, wake lock, bar). */
   end(): void {
-    // A map turned with the route goes back to north up.
-    if (this.engine.map.getBearing() !== 0) this.engine.map.easeTo({ bearing: 0, duration: reduce() ? 0 : 500 });
+    // A map turned with the route goes back to north up (unless 3D mode is active).
+    if (this.engine.map.getBearing() !== 0 && !this.engine.is3D) this.engine.map.easeTo({ bearing: 0, duration: reduce() ? 0 : 500 });
     this.tracker.stop();
     this.engine.setRouteNames(false);
     this.hint.reset();
@@ -239,7 +239,7 @@ export class Trip {
     // The car has moved since the visitor said which lot it was in: on from the road, same level.
     const said = this.recentAnswer(from[0], from[1], true);
     const start: GarageStart | undefined = said === 'outside' ? 'outside' : said ? { lot: null, level: said.level } : undefined;
-    void planRoutes(from, dest, travel.value, { heading, level: level.value, start }).then((next) => {
+    void planRoutes(from, dest, travel.value, { heading, level: level.value, start, accessible: accessibleRoute.value }).then((next) => {
       if (selected.value !== dest.id || !this.engine.route.active || !next.length) return;
       this.showPlans(next, 0, false);
       notify(t('rerouted'));

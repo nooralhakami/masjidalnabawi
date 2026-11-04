@@ -21,6 +21,9 @@ import {
   type Stretch,
 } from './garage';
 import { fromM, insideRect, network, openTogether, pathLength, restroomDoor, ringPath, segmentHits, toM, walkPath, walkPaths, type XY } from './walk';
+import { ACCESSIBLE_WALK_M_PER_MIN, accessibleNodeForPoi, pickAccessibleEntrance, type AccessibleNodeInfo } from './accessible';
+
+export { ACCESSIBLE_WALK_M_PER_MIN, accessibleNodeForPoi, nearestVerticalNode, pickAccessibleEntrance, type AccessibleNodeInfo } from './accessible';
 
 /**
  * Plans a trip as legs:
@@ -63,6 +66,9 @@ export interface Plan {
   /** Walking to a lot: its four entrances and the nearest one. */
   entrances?: Poi[];
   nearest?: Poi;
+  /** Step-free accessible route for seniors and visitors with disabilities (SPEC-3D.md §2-a). */
+  accessible?: boolean;
+  accessibleNode?: AccessibleNodeInfo;
 }
 
 export const WALK_M_PER_MIN = 80;
@@ -321,20 +327,38 @@ function approach(to: Poi): { end: LatLng; tail: LatLng[] } {
   return { end: restroomDoor(to) ?? at(to), tail: [] };
 }
 
-async function planWalks(from: LatLng, to: Poi, heading?: number | null): Promise<Plan[]> {
+async function planWalks(from: LatLng, to: Poi, heading?: number | null, accessible = false): Promise<Plan[]> {
   let target = to;
   let extra: Partial<Plan> = {};
   if (to.category === 'parking') {
-    const n = nearestEntrance(from, to);
-    target = n.entrance;
-    extra = { entrances: parkingEntrances(to), nearest: n.entrance };
+    const ents = parkingEntrances(to);
+    const accEnt = accessible ? pickAccessibleEntrance(from, ents, (a, b) => len(walkPath(a, b))) : null;
+    if (accEnt) {
+      target = accEnt.entrance;
+      extra = { entrances: ents, nearest: accEnt.entrance, accessible: true, ...(accEnt.node ? { accessibleNode: accEnt.node } : {}) };
+    } else {
+      const n = nearestEntrance(from, to);
+      target = n.entrance;
+      extra = { entrances: ents, nearest: n.entrance };
+    }
+  } else if (accessible) {
+    const acc = accessibleNodeForPoi(target);
+    extra = { accessible: true, ...(acc ? { accessibleNode: acc.node } : {}) };
   }
   const { end, tail } = approach(target);
-  const options = (await walkOptions(from, end)).map((path) => [...path, ...tail]);
-  const paths = pickRoutes((options.length ? options : [[...walkPath(from, end), ...tail]]).map((path) => ({ path, item: path, penalty: turnPenalty(path, heading) })));
+  const accVia = accessible && to.category !== 'parking' ? accessibleNodeForPoi(target)?.via : undefined;
+  const rawOptions = (await walkOptions(from, end)).map((path) => {
+    if (accVia) {
+      const withVia = [...path.slice(0, -1), accVia, end, ...tail];
+      if (!crossesObstacle(withVia)) return withVia;
+    }
+    return [...path, ...tail];
+  });
+  const paths = pickRoutes((rawOptions.length ? rawOptions : [[...walkPath(from, end), ...tail]]).map((path) => ({ path, item: path, penalty: turnPenalty(path, heading) })));
+  const speed = accessible ? ACCESSIBLE_WALK_M_PER_MIN : WALK_M_PER_MIN;
   return paths.map((path) => {
     const walkM = len(path);
-    return { mode: 'walk', legs: [{ kind: 'walk', path }], walkM, driveM: 0, minutes: Math.max(1, Math.ceil(walkM / WALK_M_PER_MIN)), ...extra };
+    return { mode: 'walk', legs: [{ kind: 'walk', path }], walkM, driveM: 0, minutes: Math.max(1, Math.ceil(walkM / speed)), ...extra };
   });
 }
 
@@ -559,12 +583,17 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B', heading?: nu
  * Driving falls back to walking when no car route is found. `heading` (degrees, on a re-route)
  * favours routes that carry on ahead of the visitor.
  */
-export async function planRoutes(from: LatLng, to: Poi, mode: Mode = 'walk', opts: { heading?: number | null; level?: Level; start?: GarageStart } = {}): Promise<Plan[]> {
+export async function planRoutes(
+  from: LatLng,
+  to: Poi,
+  mode: Mode = 'walk',
+  opts: { heading?: number | null; level?: Level; start?: GarageStart; accessible?: boolean } = {},
+): Promise<Plan[]> {
   if (mode === 'drive') {
     const p = await planDrive(from, to, opts.level ?? 'B', opts.heading, opts.start);
     if (p.length) return p;
   }
-  return planWalks(from, to, opts.heading);
+  return planWalks(from, to, opts.heading, opts.accessible);
 }
 
 /**

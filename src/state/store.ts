@@ -37,8 +37,13 @@ export const sheet = signal<Detent>('closed');
 
 export const travel = signal<Travel>(load('travel') === 'drive' ? 'drive' : 'walk');
 export const level = signal<Level>(load('level') === 'A' ? 'A' : 'B');
+/** Step-free accessible walking route for seniors and people with disabilities (SPEC-3D.md §2-a). */
+export const accessibleRoute = signal<boolean>(load('accessible-route') === '1');
+/** 3D camera and building extrusion mode (SPEC-3D.md §1). */
+export const view3d = signal<boolean>(false);
 effect(() => save('travel', travel.value));
 effect(() => save('level', level.value));
+effect(() => save('accessible-route', accessibleRoute.value ? '1' : null));
 
 /** A short notice above the sheet. */
 export const toast = signal<{ text: string; tone: 'info' | 'ok' | 'error'; id: number } | null>(null);

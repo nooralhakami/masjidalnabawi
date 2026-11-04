@@ -3,11 +3,13 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
 import { POIS, RULES } from '../data';
+import { alharamainPlaza } from '../data-next/alharamain-3d';
 import type { Poi, Status } from '../data/types';
 import { isTapName } from '../domain/route-hint';
 import { FEATURED_IDS } from '../domain/visits';
 import { lookOf } from '../presentation/markers';
 import type { IconName } from '../presentation/icons';
+import { HaramGlbLayer } from './glb-layer';
 import { IconAtlas, createDrawer, cssPalette, type Drawer } from './images';
 import { MeMarker } from './me';
 import { addHintLayer, EMPTY_HINTS, HintLayer } from './hints';
@@ -67,6 +69,7 @@ export class MapEngine {
   private selected: number | null = null;
   private touched = false;
   private base: BaseLayer = 'satellite';
+  private mode3d = false;
   private palette = cssPalette();
   private icons = new IconAtlas();
   private drawer!: Drawer;
@@ -89,7 +92,7 @@ export class MapEngine {
       zoom: at(fit.legacyZoom),
       minZoom: at(LEGACY_MIN),
       maxZoom: at(LEGACY_MAX),
-      // Rotation yes, tilt no (SPEC §9-6): the imagery is flat and tilted routes read badly.
+      // Flat by default (SPEC §9-6); 3D mode unlocks pitch up to 85° (SPEC-3D.md §1).
       maxPitch: 0,
       pitchWithRotate: false,
       dragRotate: true,
@@ -189,12 +192,48 @@ export class MapEngine {
     m.addLayer({ id: 'esri', type: 'raster', source: 'esri' });
     m.addLayer({ id: 'light', type: 'raster', source: 'light', layout: { visibility: 'none' } });
     addPoiLayers(m, this.palette, this.version);
+    if (this.mode3d) this.sync3DLayer();
     addHintLayer(m, this.version);
     // The route and the visitor's dot under the chosen place's pin.
     this.route.install('selected');
     this.me.install('selected');
     this.applyView();
     this.prewarm();
+  }
+
+  /**
+   * Dress the map as the Al-Haramain 3D view: pale imagery, the plaza's coloured areas and the 3D
+   * files. All of it comes off in 2D, so panning, zooming and rotating pay nothing (PERF.md).
+   */
+  private sync3DLayer(): void {
+    const m = this.map;
+    const before = m.getLayer('inner-dots') ? 'inner-dots' : undefined;
+    const on = this.mode3d;
+    for (const id of ['esri', 'light']) {
+      if (!m.getLayer(id)) continue;
+      m.setPaintProperty(id, 'raster-saturation', on ? -1 : 0);
+      m.setPaintProperty(id, 'raster-contrast', on ? -0.55 : 0);
+      m.setPaintProperty(id, 'raster-brightness-min', on ? 0.76 : 0);
+    }
+    if (on) {
+      if (!m.getSource('alharamain-plaza')) m.addSource('alharamain-plaza', { type: 'geojson', data: alharamainPlaza() });
+      if (!m.getLayer('alharamain-3d-plaza')) {
+        m.addLayer(
+          {
+            id: 'alharamain-3d-plaza',
+            type: 'fill',
+            source: 'alharamain-plaza',
+            paint: { 'fill-color': ['get', 'color'], 'fill-opacity': ['get', 'opacity'] },
+          },
+          before,
+        );
+      }
+      if (!m.getLayer('alharamain-3d-models')) m.addLayer(new HaramGlbLayer(), before);
+    } else {
+      for (const id of ['alharamain-3d-models', 'alharamain-3d-plaza']) {
+        if (m.getLayer(id)) m.removeLayer(id);
+      }
+    }
   }
 
   /**
@@ -303,6 +342,8 @@ export class MapEngine {
     this.map.removeLayer('featured');
     this.map.removeLayer('selected');
     for (const id of [
+      'alharamain-3d-models',
+      'alharamain-3d-plaza',
       'car-entrances',
       'esri',
       'light',
@@ -327,7 +368,7 @@ export class MapEngine {
     this.setBase(this.base);
   }
 
-  // ---------- base map, camera ----------
+  // ---------- base map, camera, 3D mode ----------
 
   setBase(kind: BaseLayer): void {
     this.base = kind;
@@ -338,6 +379,36 @@ export class MapEngine {
 
   get baseLayer(): BaseLayer {
     return this.base;
+  }
+
+  /**
+   * Toggle 3D mode (SPEC-3D.md §1): tilts to pitch 45° and bearing 22° over 1000 ms (or 0 ms with
+   * reduced motion) and shows the 3D fill-extrusion layer; returns to flat pitch 0° / bearing 0°
+   * over 800 ms when turned off.
+   */
+  toggle3DMode(enabled = !this.mode3d): boolean {
+    this.mode3d = enabled;
+    const instant = reduce();
+    if (enabled) {
+      this.map.setMaxPitch(85);
+      this.map.touchPitch.enable();
+      this.sync3DLayer();
+      this.map.easeTo({ pitch: 45, bearing: 22, duration: instant ? 0 : 1000 });
+    } else {
+      this.map.touchPitch.disable();
+      this.sync3DLayer();
+      this.map.easeTo({ pitch: 0, bearing: 0, duration: instant ? 0 : 800 });
+      const lockFlat = () => {
+        if (!this.mode3d) this.map.setMaxPitch(0);
+      };
+      if (instant) lockFlat();
+      else this.map.once('moveend', lockFlat);
+    }
+    return this.mode3d;
+  }
+
+  get is3D(): boolean {
+    return this.mode3d;
   }
 
   /** The visitor's turn of the map, as the live app's buttons: +15° turns the map clockwise. */

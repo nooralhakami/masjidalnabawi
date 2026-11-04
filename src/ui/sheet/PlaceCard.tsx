@@ -35,8 +35,10 @@ export interface PlaceCardProps {
   fac: Facilities;
   travel: Travel;
   level: Level;
+  accessible?: boolean;
   onTravel(t: Travel): void;
   onLevel(l: Level): void;
+  onAccessible?(a: boolean): void;
   onRoute(): void;
   onShare(): void;
   onClose(): void;
@@ -50,9 +52,9 @@ export interface PlaceCardProps {
  * A place's card in the sheet (SPEC N5), with the live app's content and rules (ui/sheet.ts):
  * category, name, description or the story of a gate's name; side, status, number, access and lift
  * chips; why it is closed and the nearest open alternative; the Rawdah schedule; nearest gate and
- * street; then walking/driving, the car park level, «route from my location» and share.
+ * street; then walking/driving, the step-free accessible toggle, the car park level, «route from my location» and share.
  */
-export function PlaceCard({ p, fac, travel, level, onTravel, onLevel, onRoute, onShare, onClose, onGo, routing, now }: PlaceCardProps) {
+export function PlaceCard({ p, fac, travel, level, accessible = false, onTravel, onLevel, onAccessible, onRoute, onShare, onClose, onGo, routing, now }: PlaceCardProps) {
   const { t, nm, ds, dirName, streetName } = useI18n();
   // A lot on one level only (12 and 13, on B): the switch shows it and cannot change.
   const one = p.category === 'parking' ? lotLevels(p) : [];
@@ -179,6 +181,12 @@ export function PlaceCard({ p, fac, travel, level, onTravel, onLevel, onRoute, o
 
       <footer class="pc-foot">
         <TravelToggle value={travel} onChange={onTravel} />
+        {travel === 'walk' && onAccessible ? (
+          <button type="button" class="pc-acc-btn" aria-pressed={accessible} onClick={() => onAccessible(!accessible)}>
+            <Icon name="accessible" size={18} />
+            <span>{t('route_acc_toggle')}</span>
+          </button>
+        ) : null}
         {travel === 'drive' ? <FloorSwitch value={oneLevel ?? level} onChange={onLevel} disabled={!!oneLevel} /> : null}
         <div class="pc-actions">
           <Button block icon={travel === 'drive' ? 'car' : 'route'} loading={routing} onClick={onRoute}>

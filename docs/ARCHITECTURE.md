@@ -69,6 +69,7 @@ src/
   map/
     setup.ts       map, Esri + light raster sources, bounds, attribution, scale, rotation, compass
     zoom.ts        legacyZoom() — the one bridge between MapLibre zoom and the app's Leaflet-era thresholds
+    glb-layer.ts   the 3D view's custom WebGL2 layer: draws the files of data-next/alharamain-3d.ts, instanced per mesh
     engine.ts      as built: the MapLibre map, its sources, the base layers, select / focus / restyle, the camera, taps (setup.ts and camera.ts were folded in)
     pois.ts        as built: the places' GeoJSON (places, gate pairs, car entrances, women's areas), the layer filters a filter or search sets, the pop-in, what a tap lands on
     poi-layers.ts  as built: the places' layer definitions (dots, chips, numbers, pin, must-visit sites, car entrances), split from pois.ts on 2026-10-24

@@ -59,6 +59,12 @@ export function RouteCard({ p, r, closed = false, onClose, onEnd, onWayOut, onWa
           </span>
         </div>
         {r.nearestEntrance ? <div class="route-nearest">{t('park_nearest', { n: r.nearestEntrance })}</div> : null}
+        {r.accessible ? (
+          <div class="route-nearest route-acc-info">
+            <Icon name={r.accessible.kind === 'elevator' ? 'elevator' : 'accessible'} size={16} />
+            <span>{t(r.accessible.kind === 'elevator' ? 'route_acc_elev' : 'route_acc_esc', { m: num(r.accessible.meters) })}</span>
+          </div>
+        ) : null}
         {d ? (
           <div class="route-legs">
             {d.meters > 5 ? (
