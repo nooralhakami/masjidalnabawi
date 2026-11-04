@@ -1,11 +1,8 @@
 import { MercatorCoordinate, type CustomLayerInterface, type CustomRenderMethodInput, type Map as MLMap } from 'maplibre-gl';
+import { ALHARAMAIN_MODELS, type AlharamainModel } from '../data-next/alharamain-3d';
 
-/**
- * Geolocation anchor of `Venue_3DModel_tebud_MadinaProd2.glb` (Venue ID 4 in
- * `DataAPI_svc_GetVenues.json`): `centerLongitude: 39.611752, centerLatitude: 24.466806`.
- */
-const HARAM_ORIGIN_LNG = 39.611752;
-const HARAM_ORIGIN_LAT = 24.466806;
+/** glTF metres are measured from the Mosque's anchor (Venue 4 in `DataAPI_svc_GetVenues.json`). */
+const ORIGIN = ALHARAMAIN_MODELS[0].anchors[0] as [number, number];
 
 const GLB_MAGIC = 0x46546c67;
 const CHUNK_JSON = 0x4e4f534a;
@@ -70,22 +67,21 @@ interface GltfJson {
 
 interface GpuPrimitive {
   vao: WebGLVertexArrayObject;
-  buffers: WebGLBuffer[];
   count: number;
   indexType: number;
   hasIndices: boolean;
   mode: number;
   baseColor: [number, number, number, number];
-  metallic: number;
-  roughness: number;
   textureIndex: number;
   hasUv: boolean;
 }
 
-interface DrawItem {
-  meshIndex: number;
-  worldMatrix: Float64Array;
-  normalMatrix: Float32Array;
+/** A parsed file waiting for the next frame: WebGL state is only ours while MapLibre renders this layer. */
+interface PendingAsset {
+  model: AlharamainModel;
+  gltf: GltfJson;
+  bin: Uint8Array;
+  images: (ImageBitmap | null)[];
 }
 
 const VERT_SRC = `#version 300 es
@@ -93,19 +89,19 @@ precision highp float;
 layout(location = 0) in vec3 a_pos;
 layout(location = 1) in vec3 a_normal;
 layout(location = 2) in vec2 a_uv;
+layout(location = 3) in mat4 a_model; // One per instance; takes locations 3 to 6.
 
 uniform mat4 u_mvp;
-uniform mat3 u_normalMat;
 
 out vec3 v_normal;
 out vec2 v_uv;
-out float v_height;
 
 void main() {
-  gl_Position = u_mvp * vec4(a_pos, 1.0);
-  v_normal = u_normalMat * a_normal;
+  vec4 world = a_model * vec4(a_pos, 1.0);
+  gl_Position = u_mvp * world;
+  // Some nodes are scaled unevenly or mirrored, so a plain rotation would bend their normals.
+  v_normal = transpose(inverse(mat3(a_model))) * a_normal;
   v_uv = a_uv;
-  v_height = a_pos.y;
 }
 `;
 
@@ -114,48 +110,30 @@ precision highp float;
 
 in vec3 v_normal;
 in vec2 v_uv;
-in float v_height;
 
 uniform vec4 u_baseColor;
-uniform vec2 u_pbr; // x: metallic, y: roughness
 uniform int u_hasTex;
 uniform sampler2D u_tex;
 
 out vec4 fragColor;
 
 void main() {
+  // As navQ draws them: textures darkened toward linear, material colours as stored, no gamma at the end.
   vec4 albedo = u_baseColor;
   if (u_hasTex == 1) {
     vec4 texel = texture(u_tex, v_uv);
-    albedo *= texel;
+    albedo *= vec4(pow(texel.rgb, vec3(1.6)), texel.a);
   }
 
   vec3 n = length(v_normal) > 0.0001 ? normalize(v_normal) : vec3(0.0, 1.0, 0.0);
-  // Two-sided normal handling because mirrored Blender nodes in haram-3d.glb use scale [-1, -1, -1].
+  // Two-sided, because mirrored nodes turn their faces inside out.
   if (!gl_FrontFacing) n = -n;
 
-  // Primary warm sunlight from South-West-Up + soft fill light from North-East + sky hemisphere.
-  vec3 sunDir = normalize(vec3(-0.42, 0.78, 0.46));
-  vec3 fillDir = normalize(vec3(0.55, 0.48, -0.68));
-  vec3 viewDir = normalize(vec3(0.18, 0.72, 0.67));
+  // A bright white ambient with two soft directional lights, like Threebox's default set.
+  float front = max(dot(n, normalize(vec3(0.3, 1.0, 1.0))), 0.0);
+  float back = max(dot(n, normalize(vec3(-0.3, 1.0, -1.0))), 0.0);
+  vec3 color = albedo.rgb * (0.94 + 0.3 * front + 0.3 * back);
 
-  float ndl = max(dot(n, sunDir), 0.0);
-  float fill = max(dot(n, fillDir), 0.0);
-  float hemi = 0.5 + 0.5 * n.y;
-
-  // Ambient occlusion hint near ground level, brighter on domes and minarets.
-  float ao = clamp(0.84 + 0.16 * clamp(v_height / 18.0, 0.0, 1.0), 0.82, 1.04);
-
-  vec3 ambient = mix(vec3(0.46, 0.44, 0.42), vec3(0.72, 0.75, 0.80), hemi);
-  vec3 direct = vec3(1.02, 0.98, 0.91) * (ndl * 0.62) + vec3(0.82, 0.87, 0.95) * (fill * 0.20);
-
-  // Subtle specular highlight for domes, golden finials, and marble columns.
-  vec3 halfVec = normalize(sunDir + viewDir);
-  float shininess = mix(48.0, 12.0, clamp(u_pbr.y, 0.05, 1.0));
-  float spec = pow(max(dot(n, halfVec), 0.0), shininess) * mix(0.14, 0.45, u_pbr.x + (1.0 - u_pbr.y) * 0.5);
-  vec3 specColor = mix(vec3(1.0, 0.97, 0.90), albedo.rgb, u_pbr.x);
-
-  vec3 color = (albedo.rgb * (ambient + direct) + specColor * spec) * ao;
   fragColor = vec4(clamp(color, 0.0, 1.0), albedo.a);
 }
 `;
@@ -175,11 +153,6 @@ const TYPE_COMPONENTS: Record<string, number> = {
   VEC3: 3,
   VEC4: 4,
 };
-
-/** Convert linear glTF material factor to perceptual sRGB so untextured materials match textured ones. */
-function linearToSrgb(c: number): number {
-  return Math.min(1, Math.max(0, Math.pow(c, 1 / 2.2)));
-}
 
 /** Build a 4x4 column-major matrix from translation, quaternion rotation, and scale. */
 function composeTrs(t: [number, number, number], r: [number, number, number, number], s: [number, number, number]): Float64Array {
@@ -232,38 +205,6 @@ function mulMat4(out: Float64Array, a: ArrayLike<number>, b: ArrayLike<number>):
   }
 }
 
-/** Extract upper-left 3x3 normal matrix (inverse-transpose of upper 3x3) from a 4x4 world matrix. */
-function normalMat3(m: Float64Array): Float32Array {
-  const a00 = m[0];
-  const a01 = m[1];
-  const a02 = m[2];
-  const a10 = m[4];
-  const a11 = m[5];
-  const a12 = m[6];
-  const a20 = m[8];
-  const a21 = m[9];
-  const a22 = m[10];
-
-  const b01 = a22 * a11 - a12 * a21;
-  const b11 = -a22 * a10 + a12 * a20;
-  const b21 = a21 * a10 - a11 * a20;
-  const det = a00 * b01 + a01 * b11 + a02 * b21;
-  if (Math.abs(det) < 1e-10) return new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
-  const invDet = 1 / det;
-
-  return new Float32Array([
-    b01 * invDet,
-    b11 * invDet,
-    b21 * invDet,
-    (-a22 * a01 + a02 * a21) * invDet,
-    (a22 * a00 - a02 * a20) * invDet,
-    (-a21 * a00 + a01 * a20) * invDet,
-    (a12 * a01 - a02 * a11) * invDet,
-    (-a12 * a00 + a02 * a10) * invDet,
-    (a11 * a00 - a01 * a10) * invDet,
-  ]);
-}
-
 /** Parse binary `.glb` buffer into JSON descriptor and binary payload view. */
 function parseGlbBuffer(buffer: ArrayBuffer): { gltf: GltfJson; bin: Uint8Array } {
   const view = new DataView(buffer);
@@ -280,115 +221,18 @@ function parseGlbBuffer(buffer: ArrayBuffer): { gltf: GltfJson; bin: Uint8Array 
   return { gltf, bin };
 }
 
-/** Build a procedural octagonal marble column + golden capital/base mesh to support umbrellas and light pillars. */
-function createPillarPrimitives(gl: WebGL2RenderingContext): GpuPrimitive[] {
-  const sides = 8;
-  const buildCylinder = (rBot: number, rTop: number, y0: number, y1: number, color: [number, number, number, number], metal: number, rough: number): GpuPrimitive => {
-    const pos: number[] = [];
-    const norm: number[] = [];
-    const idx: number[] = [];
-    for (let i = 0; i <= sides; i++) {
-      const a = (i / sides) * Math.PI * 2;
-      const c = Math.cos(a);
-      const s = Math.sin(a);
-      pos.push(c * rBot, y0, s * rBot, c * rTop, y1, s * rTop);
-      norm.push(c, 0, s, c, 0, s);
-    }
-    for (let i = 0; i < sides; i++) {
-      const k = i * 2;
-      idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2);
-    }
-    const vao = gl.createVertexArray()!;
-    gl.bindVertexArray(vao);
-    const posBuf = gl.createBuffer()!;
-    gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pos), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(0);
-    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-
-    const normBuf = gl.createBuffer()!;
-    gl.bindBuffer(gl.ARRAY_BUFFER, normBuf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(norm), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(1);
-    gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
-
-    const idxBuf = gl.createBuffer()!;
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, idxBuf);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(idx), gl.STATIC_DRAW);
-    gl.bindVertexArray(null);
-
-    return {
-      vao,
-      buffers: [posBuf, normBuf, idxBuf],
-      count: idx.length,
-      indexType: gl.UNSIGNED_SHORT,
-      hasIndices: true,
-      mode: gl.TRIANGLES,
-      baseColor: color,
-      metallic: metal,
-      roughness: rough,
-      textureIndex: -1,
-      hasUv: false,
-    };
-  };
-
-  return [
-    // White marble column shaft
-    buildCylinder(0.58, 0.52, 0.0, 12.1, [0.93, 0.91, 0.87, 1.0], 0.05, 0.35),
-    // Golden base pedestal & upper capital ring
-    buildCylinder(0.76, 0.64, 0.0, 1.35, [0.76, 0.63, 0.36, 1.0], 0.55, 0.22),
-    buildCylinder(0.62, 0.88, 10.2, 12.2, [0.78, 0.65, 0.38, 1.0], 0.6, 0.2),
-  ];
+/** Metres east and south of the Mosque's anchor, the frame every glTF node is drawn in. */
+function metresFromOrigin([lng, lat]: readonly [number, number]): [number, number] {
+  const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
+  const here = MercatorCoordinate.fromLngLat([lng, lat], 0);
+  const perMetre = origin.meterInMercatorCoordinateUnits();
+  return [(here.x - origin.x) / perMetre, (here.y - origin.y) / perMetre];
 }
 
 /**
- * Outer courtyard umbrella coordinates `(x, z)` in glTF meters relative to `HARAM_ORIGIN`.
- * Surrounds the Mosque (`X: [-263.4, +143.5]`, `Z: [-353.3, -128.8]`, old south section `X: [-125.3, +5.5], Z: [-128.8, -57.0]`)
- * matching the official Al-Haramain 3D courtyard canopy grid.
- */
-function outerUmbrellaPositions(): [number, number][] {
-  const pts: [number, number][] = [];
-  // 1. Northern Courtyard (3 rows north of the Mosque wall Z = -353.3, from X = -255 to +135)
-  for (const z of [-370, -390, -410, -430]) {
-    for (let x = -252; x <= 132; x += 24) pts.push([x, z]);
-  }
-  // 2. Western Courtyard (west of X = -263.4, from Z = -135 to -390)
-  for (const x of [-282, -304, -326, -348]) {
-    for (let z = -138; z >= -390; z -= 24) pts.push([x, z]);
-  }
-  // 3. Eastern Courtyard (east of X = +143.5, from Z = -150 to -390)
-  for (const x of [162, 184, 206]) {
-    for (let z = -156; z >= -390; z -= 24) pts.push([x, z]);
-  }
-  // 4. South-West Courtyard (south of main expansion Z = -128.8, west of old Mosque X = -125.3)
-  for (const z of [-110, -88]) {
-    for (let x = -146; x >= -326; x -= 24) pts.push([x, z]);
-  }
-  // 5. South-East Courtyard (south of main expansion Z = -128.8, east of old Mosque X = +5.5)
-  for (const z of [-110, -88]) {
-    for (let x = 26; x <= 122; x += 24) pts.push([x, z]);
-  }
-  return pts;
-}
-
-/** Outer courtyard walkway light pillars `(x, z)` in glTF meters. */
-function outerLightPillarPositions(): [number, number][] {
-  const pts: [number, number][] = [];
-  for (let x = -340; x <= 200; x += 36) {
-    pts.push([x, -448]);
-    pts.push([x, -52]);
-  }
-  for (let z = -430; z <= -70; z += 36) {
-    pts.push([-372, z]);
-    pts.push([230, z]);
-  }
-  return pts;
-}
-
-/**
- * Custom WebGL2 3D layer for MapLibre GL 6.11.0 that renders the official Al-Haramain 3D Blender
- * model (`public/models/haram-3d.glb`: Green Dome, 10 minarets, 27 sliding domes, ornate golden doors,
- * walls, and inner courtyards) plus instanced 3D courtyard umbrellas, marble/gold columns, and light pillars.
+ * Draws the Al-Haramain 3D files (`ALHARAMAIN_MODELS`) on MapLibre with WebGL2: the Mosque, the
+ * courtyard canopies and the service blocks, at the anchors navQ gives them. Nodes sharing a mesh
+ * are one instanced draw, so 599 nodes cost one draw call per mesh material, not one per node.
  */
 export class HaramGlbLayer implements CustomLayerInterface {
   readonly id = 'alharamain-3d-models';
@@ -398,53 +242,48 @@ export class HaramGlbLayer implements CustomLayerInterface {
   private map: MLMap | null = null;
   private program: WebGLProgram | null = null;
   private uMvp: WebGLUniformLocation | null = null;
-  private uNormalMat: WebGLUniformLocation | null = null;
   private uBaseColor: WebGLUniformLocation | null = null;
-  private uPbr: WebGLUniformLocation | null = null;
   private uHasTex: WebGLUniformLocation | null = null;
   private uTex: WebGLUniformLocation | null = null;
 
-  private meshes: GpuPrimitive[][] = [];
-  private drawItems: DrawItem[] = [];
+  private pending: PendingAsset[] = [];
+  private prims: (GpuPrimitive & { instances: number })[] = [];
+  private buffers: WebGLBuffer[] = [];
+  private vaos: WebGLVertexArrayObject[] = [];
   private textures: WebGLTexture[] = [];
   private fallbackTex: WebGLTexture | null = null;
-  private ready = false;
-  private loading = false;
+  private generation = 0;
   private mercatorMatrix = new Float64Array(16);
 
   constructor() {
-    const origin = MercatorCoordinate.fromLngLat([HARAM_ORIGIN_LNG, HARAM_ORIGIN_LAT], 0);
+    const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
     const s = origin.meterInMercatorCoordinateUnits();
-    // Map glTF meters (X=East, Y=Up, Z=South) to Web Mercator (X=East, Y=South, Z=Up)
+    // Map glTF metres (X=East, Y=Up, Z=South) to Web Mercator (X=East, Y=South, Z=Up).
     this.mercatorMatrix.set([s, 0, 0, 0, 0, 0, s, 0, 0, s, 0, 0, origin.x, origin.y, origin.z, 1]);
   }
 
   onAdd(map: MLMap, gl: WebGL2RenderingContext): void {
     this.map = map;
     this.initShader(gl);
-    if (!this.ready && !this.loading) {
-      this.loading = true;
-      void this.loadModel(gl);
-    }
+    const generation = ++this.generation;
+    for (const model of ALHARAMAIN_MODELS) void this.loadAsset(model, generation);
   }
 
   onRemove(_map: MLMap, gl: WebGL2RenderingContext): void {
-    for (const prims of this.meshes) {
-      for (const p of prims) {
-        gl.deleteVertexArray(p.vao);
-        for (const b of p.buffers) gl.deleteBuffer(b);
-      }
-    }
+    this.generation++;
+    for (const vao of this.vaos) gl.deleteVertexArray(vao);
+    for (const b of this.buffers) gl.deleteBuffer(b);
     for (const t of this.textures) gl.deleteTexture(t);
+    for (const asset of this.pending) for (const bmp of asset.images) bmp?.close();
     if (this.fallbackTex) gl.deleteTexture(this.fallbackTex);
     if (this.program) gl.deleteProgram(this.program);
-    this.meshes = [];
-    this.drawItems = [];
+    this.pending = [];
+    this.prims = [];
+    this.buffers = [];
+    this.vaos = [];
     this.textures = [];
     this.fallbackTex = null;
     this.program = null;
-    this.ready = false;
-    this.loading = false;
     this.map = null;
   }
 
@@ -466,9 +305,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
 
     this.program = prog;
     this.uMvp = gl.getUniformLocation(prog, 'u_mvp');
-    this.uNormalMat = gl.getUniformLocation(prog, 'u_normalMat');
     this.uBaseColor = gl.getUniformLocation(prog, 'u_baseColor');
-    this.uPbr = gl.getUniformLocation(prog, 'u_pbr');
     this.uHasTex = gl.getUniformLocation(prog, 'u_hasTex');
     this.uTex = gl.getUniformLocation(prog, 'u_tex');
 
@@ -478,37 +315,38 @@ export class HaramGlbLayer implements CustomLayerInterface {
     this.fallbackTex = fb;
   }
 
-  private async loadModel(gl: WebGL2RenderingContext): Promise<void> {
+  /** Each file loads on its own: a missing one leaves the others standing and the map unharmed. */
+  private async loadAsset(model: AlharamainModel, generation: number): Promise<void> {
     try {
-      const res = await fetch('./models/haram-3d.glb');
+      const res = await fetch(model.url);
       if (!res.ok) return;
-      const buf = await res.arrayBuffer();
-      if (!this.program) return; // Layer removed while fetching
-      const { gltf, bin } = parseGlbBuffer(buf);
-      await this.uploadTextures(gl, gltf, bin);
-      if (!this.program) return;
-      this.uploadMeshes(gl, gltf, bin);
-      this.ready = true;
+      const { gltf, bin } = parseGlbBuffer(await res.arrayBuffer());
+      const images = await Promise.all(
+        (gltf.images ?? []).map(async (img) => {
+          const bv = gltf.bufferViews[img.bufferView];
+          const start = bv.byteOffset ?? 0;
+          const blob = new Blob([bin.subarray(start, start + bv.byteLength) as unknown as BlobPart], { type: img.mimeType });
+          return createImageBitmap(blob).catch(() => null);
+        }),
+      );
+      if (generation !== this.generation) {
+        for (const bmp of images) bmp?.close();
+        return;
+      }
+      this.pending.push({ model, gltf, bin, images });
       this.map?.triggerRepaint();
     } catch {
-      // Offline or test environment without fetch: fail silently without breaking the map.
-    } finally {
-      this.loading = false;
+      // Offline, or a test environment without fetch: 3D simply stays without this file.
     }
   }
 
-  private async uploadTextures(gl: WebGL2RenderingContext, gltf: GltfJson, bin: Uint8Array): Promise<void> {
-    const images = gltf.images ?? [];
-    const imageTexs: WebGLTexture[] = [];
-    for (const img of images) {
-      const bv = gltf.bufferViews[img.bufferView];
-      const slice = bin.subarray(bv.byteOffset ?? 0, (bv.byteOffset ?? 0) + bv.byteLength);
+  private upload(gl: WebGL2RenderingContext, asset: PendingAsset): void {
+    const { model, gltf, bin, images } = asset;
+    const texOffset = this.textures.length;
+    const imageTexs = images.map((bmp) => {
       const tex = gl.createTexture()!;
       gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([230, 225, 215, 255]));
-      try {
-        const bmp = await createImageBitmap(new Blob([slice as unknown as BlobPart], { type: img.mimeType }));
-        gl.bindTexture(gl.TEXTURE_2D, tex);
+      if (bmp) {
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bmp);
         gl.generateMipmap(gl.TEXTURE_2D);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
@@ -516,234 +354,160 @@ export class HaramGlbLayer implements CustomLayerInterface {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
         bmp.close();
-      } catch {
-        // Keep 1x1 fallback texel if ImageBitmap decoding is unsupported.
+      } else {
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([230, 225, 215, 255]));
       }
-      imageTexs.push(tex);
-    }
-    this.textures = (gltf.textures ?? []).map((t) => imageTexs[t.source] ?? this.fallbackTex!);
-  }
+      return tex;
+    });
+    for (const t of gltf.textures ?? []) this.textures.push(imageTexs[t.source] ?? this.fallbackTex!);
 
-  private uploadMeshes(gl: WebGL2RenderingContext, gltf: GltfJson, bin: Uint8Array): void {
-    const materials = gltf.materials ?? [];
+    // Every world matrix per mesh: each anchor of this file times each node using that mesh.
+    const half = (-model.rotation * Math.PI) / 360; // Clockwise from above is negative about glTF's Y.
+    const placements = model.anchors.map((anchor) => {
+      const [east, south] = metresFromOrigin(anchor);
+      return composeTrs([east, 0, south], [0, Math.sin(half), 0, Math.cos(half)], [1, 1, 1]);
+    });
+    const matricesByMesh = new Map<number, number[]>();
+    const combined = new Float64Array(16);
+    for (const node of gltf.nodes) {
+      if (node.mesh === undefined) continue;
+      const local = node.matrix ? new Float64Array(node.matrix) : composeTrs(node.translation ?? [0, 0, 0], node.rotation ?? [0, 0, 0, 1], node.scale ?? [1, 1, 1]);
+      const list = matricesByMesh.get(node.mesh) ?? [];
+      for (const placement of placements) {
+        mulMat4(combined, placement, local);
+        list.push(...combined);
+      }
+      matricesByMesh.set(node.mesh, list);
+    }
+
     const sliceAccessor = (accIndex: number): Uint8Array => {
       const acc = gltf.accessors[accIndex];
       const bv = gltf.bufferViews[acc.bufferView];
       const offset = (bv.byteOffset ?? 0) + (acc.byteOffset ?? 0);
-      const comps = TYPE_COMPONENTS[acc.type] ?? 1;
-      const elemBytes = comps * (COMPONENT_BYTES[acc.componentType] ?? 4);
+      const elemBytes = (TYPE_COMPONENTS[acc.type] ?? 1) * (COMPONENT_BYTES[acc.componentType] ?? 4);
       const stride = bv.byteStride ?? elemBytes;
-      if (stride === elemBytes) {
-        return bin.subarray(offset, offset + acc.count * elemBytes);
-      }
+      if (stride === elemBytes) return bin.subarray(offset, offset + acc.count * elemBytes);
       const packed = new Uint8Array(acc.count * elemBytes);
       for (let i = 0; i < acc.count; i++) {
         packed.set(bin.subarray(offset + i * stride, offset + i * stride + elemBytes), i * elemBytes);
       }
       return packed;
     };
+    const bindAttribute = (location: number, accIndex: number, size: number): void => {
+      const buf = gl.createBuffer()!;
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, sliceAccessor(accIndex), gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(location);
+      gl.vertexAttribPointer(location, size, gltf.accessors[accIndex].componentType, false, 0, 0);
+      this.buffers.push(buf);
+    };
 
-    for (const mesh of gltf.meshes) {
-      const gpuPrims: GpuPrimitive[] = [];
-      for (const prim of mesh.primitives) {
+    const materials = gltf.materials ?? [];
+    for (const [meshIndex, matrices] of matricesByMesh) {
+      const instanceBuf = gl.createBuffer()!;
+      gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(matrices), gl.STATIC_DRAW);
+      this.buffers.push(instanceBuf);
+
+      for (const prim of gltf.meshes[meshIndex].primitives) {
         const vao = gl.createVertexArray()!;
         gl.bindVertexArray(vao);
-        const buffers: WebGLBuffer[] = [];
+        this.vaos.push(vao);
 
-        // POSITION (location 0)
-        const posAcc = gltf.accessors[prim.attributes.POSITION];
-        const posBuf = gl.createBuffer()!;
-        gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
-        gl.bufferData(gl.ARRAY_BUFFER, sliceAccessor(prim.attributes.POSITION), gl.STATIC_DRAW);
-        gl.enableVertexAttribArray(0);
-        gl.vertexAttribPointer(0, 3, posAcc.componentType, false, 0, 0);
-        buffers.push(posBuf);
-
-        // NORMAL (location 1)
-        if (prim.attributes.NORMAL !== undefined) {
-          const normAcc = gltf.accessors[prim.attributes.NORMAL];
-          const normBuf = gl.createBuffer()!;
-          gl.bindBuffer(gl.ARRAY_BUFFER, normBuf);
-          gl.bufferData(gl.ARRAY_BUFFER, sliceAccessor(prim.attributes.NORMAL), gl.STATIC_DRAW);
-          gl.enableVertexAttribArray(1);
-          gl.vertexAttribPointer(1, 3, normAcc.componentType, false, 0, 0);
-          buffers.push(normBuf);
-        } else {
-          gl.disableVertexAttribArray(1);
-        }
-
-        // TEXCOORD_0 (location 2)
+        bindAttribute(0, prim.attributes.POSITION, 3);
+        if (prim.attributes.NORMAL !== undefined) bindAttribute(1, prim.attributes.NORMAL, 3);
+        else gl.disableVertexAttribArray(1);
         const hasUv = prim.attributes.TEXCOORD_0 !== undefined;
-        if (hasUv) {
-          const uvAcc = gltf.accessors[prim.attributes.TEXCOORD_0!];
-          const uvBuf = gl.createBuffer()!;
-          gl.bindBuffer(gl.ARRAY_BUFFER, uvBuf);
-          gl.bufferData(gl.ARRAY_BUFFER, sliceAccessor(prim.attributes.TEXCOORD_0!), gl.STATIC_DRAW);
-          gl.enableVertexAttribArray(2);
-          gl.vertexAttribPointer(2, 2, uvAcc.componentType, false, 0, 0);
-          buffers.push(uvBuf);
-        } else {
-          gl.disableVertexAttribArray(2);
+        if (hasUv) bindAttribute(2, prim.attributes.TEXCOORD_0!, 2);
+        else gl.disableVertexAttribArray(2);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuf);
+        for (let column = 0; column < 4; column++) {
+          gl.enableVertexAttribArray(3 + column);
+          gl.vertexAttribPointer(3 + column, 4, gl.FLOAT, false, 64, column * 16);
+          gl.vertexAttribDivisor(3 + column, 1);
         }
 
-        // INDICES
-        let count = posAcc.count;
+        let count = gltf.accessors[prim.attributes.POSITION].count;
         let indexType: number = gl.UNSIGNED_SHORT;
         const hasIndices = prim.indices !== undefined;
         if (hasIndices) {
-          const idxAcc = gltf.accessors[prim.indices!];
           const idxBuf = gl.createBuffer()!;
           gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, idxBuf);
           gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, sliceAccessor(prim.indices!), gl.STATIC_DRAW);
-          buffers.push(idxBuf);
-          count = idxAcc.count;
-          indexType = idxAcc.componentType;
+          this.buffers.push(idxBuf);
+          count = gltf.accessors[prim.indices!].count;
+          indexType = gltf.accessors[prim.indices!].componentType;
         }
         gl.bindVertexArray(null);
 
-        const mat = prim.material !== undefined ? materials[prim.material] : undefined;
-        const pbr = mat?.pbrMetallicRoughness;
+        const pbr = prim.material !== undefined ? materials[prim.material]?.pbrMetallicRoughness : undefined;
         const bcf = pbr?.baseColorFactor ?? [0.85, 0.82, 0.78, 1.0];
         const texIdx = pbr?.baseColorTexture?.index ?? -1;
-        // Untextured materials in Blender GLB have linear RGB factors; convert to sRGB for faithful brightness.
-        const baseColor: [number, number, number, number] =
-          texIdx >= 0 ? [bcf[0], bcf[1], bcf[2], bcf[3]] : [linearToSrgb(bcf[0]), linearToSrgb(bcf[1]), linearToSrgb(bcf[2]), bcf[3]];
+        const baseColor: [number, number, number, number] = [bcf[0], bcf[1], bcf[2], bcf[3]];
 
-        gpuPrims.push({
+        this.prims.push({
           vao,
-          buffers,
           count,
           indexType,
           hasIndices,
           mode: prim.mode ?? gl.TRIANGLES,
           baseColor,
-          metallic: pbr?.metallicFactor ?? 0,
-          roughness: pbr?.roughnessFactor ?? 0.5,
-          textureIndex: texIdx,
+          textureIndex: texIdx >= 0 ? texIdx + texOffset : -1,
           hasUv,
+          instances: matrices.length / 16,
         });
       }
-      this.meshes.push(gpuPrims);
-    }
-
-    // Add procedural marble-and-gold pillar mesh as the last mesh entry.
-    const pillarMeshIndex = this.meshes.length;
-    this.meshes.push(createPillarPrimitives(gl));
-
-    // Build draw items from all 281 GLB nodes.
-    let umbrellaMeshIndex = -1;
-    for (const node of gltf.nodes) {
-      if (node.mesh === undefined) continue;
-      const worldMatrix = node.matrix ? new Float64Array(node.matrix) : composeTrs(node.translation ?? [0, 0, 0], node.rotation ?? [0, 0, 0, 1], node.scale ?? [1, 1, 1]);
-      this.drawItems.push({
-        meshIndex: node.mesh,
-        worldMatrix,
-        normalMatrix: normalMat3(worldMatrix),
-      });
-
-      // Identify the courtyard umbrella canopy mesh (`Plane.038`, mesh 33) and add support pillars under inner umbrellas.
-      if (gltf.meshes[node.mesh]?.name === 'Plane.038') {
-        umbrellaMeshIndex = node.mesh;
-        const t = node.translation ?? [0, 0, 0];
-        const pillarMat = composeTrs([t[0], 0, t[2]], [0, 0, 0, 1], [1, 1, 1]);
-        this.drawItems.push({
-          meshIndex: pillarMeshIndex,
-          worldMatrix: pillarMat,
-          normalMatrix: normalMat3(pillarMat),
-        });
-      }
-    }
-
-    // Instance outer courtyard umbrellas (`Mesh 33` canopy + marble/gold support column) around the Haram plaza.
-    if (umbrellaMeshIndex >= 0) {
-      const canopyRot: [number, number, number, number] = [0, -1, 0, 0];
-      const canopyScale: [number, number, number] = [-2.55, -2.55, -2.55];
-      for (const [x, z] of outerUmbrellaPositions()) {
-        const canopyMat = composeTrs([x, 12.5, z], canopyRot, canopyScale);
-        this.drawItems.push({
-          meshIndex: umbrellaMeshIndex,
-          worldMatrix: canopyMat,
-          normalMatrix: normalMat3(canopyMat),
-        });
-        const pillarMat = composeTrs([x, 0, z], [0, 0, 0, 1], [1, 1, 1]);
-        this.drawItems.push({
-          meshIndex: pillarMeshIndex,
-          worldMatrix: pillarMat,
-          normalMatrix: normalMat3(pillarMat),
-        });
-      }
-    }
-
-    // Add outer courtyard light pillars along the perimeter walkways.
-    for (const [x, z] of outerLightPillarPositions()) {
-      const lightMat = composeTrs([x, 0, z], [0, 0, 0, 1], [0.65, 1.15, 0.65]);
-      this.drawItems.push({
-        meshIndex: pillarMeshIndex,
-        worldMatrix: lightMat,
-        normalMatrix: normalMat3(lightMat),
-      });
     }
   }
 
   render(gl: WebGL2RenderingContext, options: CustomRenderMethodInput): void {
-    if (!this.ready || !this.program) return;
+    if (!this.program) return;
 
     const projMatrix = options.defaultProjectionData?.mainMatrix ?? options.modelViewProjectionMatrix;
     if (!projMatrix) return;
 
-    // Multiply projMatrix * mercatorMatrix once per frame in 64-bit precision.
-    const baseMvp = new Float64Array(16);
-    mulMat4(baseMvp, projMatrix as unknown as ArrayLike<number>, this.mercatorMatrix);
-    const nodeMvp64 = new Float64Array(16);
-    const nodeMvp32 = new Float32Array(16);
+    if (this.pending.length) {
+      for (const asset of this.pending) this.upload(gl, asset);
+      this.pending = [];
+    }
+    if (!this.prims.length) return;
+
+    // Multiply in 64-bit once per frame, so the model does not shake at high zoom.
+    const mvp64 = new Float64Array(16);
+    mulMat4(mvp64, projMatrix as unknown as ArrayLike<number>, this.mercatorMatrix);
 
     gl.useProgram(this.program);
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.depthMask(true);
-    // Mirrored nodes in haram-3d.glb have negative determinant (`scale: [-1, -1, -1]`), so disable face culling.
+    // Mirrored nodes have a negative determinant, so faces cannot be culled.
     gl.disable(gl.CULL_FACE);
     gl.enable(gl.BLEND);
     gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.uniform1i(this.uTex, 0);
+    gl.uniformMatrix4fv(this.uMvp, false, new Float32Array(mvp64));
     gl.vertexAttrib3f(1, 0, 1, 0);
     gl.vertexAttrib2f(2, 0, 0);
 
     let boundTex: WebGLTexture | null = null;
+    for (const prim of this.prims) {
+      gl.uniform4fv(this.uBaseColor, prim.baseColor);
 
-    for (const item of this.drawItems) {
-      const prims = this.meshes[item.meshIndex];
-      if (!prims) continue;
-
-      mulMat4(nodeMvp64, baseMvp, item.worldMatrix);
-      for (let i = 0; i < 16; i++) nodeMvp32[i] = nodeMvp64[i];
-
-      gl.uniformMatrix4fv(this.uMvp, false, nodeMvp32);
-      gl.uniformMatrix3fv(this.uNormalMat, false, item.normalMatrix);
-
-      for (const prim of prims) {
-        gl.uniform4fv(this.uBaseColor, prim.baseColor);
-        gl.uniform2f(this.uPbr, prim.metallic, prim.roughness);
-
-        const useTex = prim.hasUv && prim.textureIndex >= 0 && this.textures[prim.textureIndex] !== undefined;
-        gl.uniform1i(this.uHasTex, useTex ? 1 : 0);
-        const targetTex = useTex ? this.textures[prim.textureIndex] : this.fallbackTex;
-        if (targetTex && targetTex !== boundTex) {
-          gl.bindTexture(gl.TEXTURE_2D, targetTex);
-          boundTex = targetTex;
-        }
-
-        gl.bindVertexArray(prim.vao);
-        if (prim.hasIndices) {
-          gl.drawElements(prim.mode, prim.count, prim.indexType, 0);
-        } else {
-          gl.drawArrays(prim.mode, 0, prim.count);
-        }
+      const texture = prim.hasUv && prim.textureIndex >= 0 ? this.textures[prim.textureIndex] : undefined;
+      gl.uniform1i(this.uHasTex, texture ? 1 : 0);
+      const target = texture ?? this.fallbackTex;
+      if (target && target !== boundTex) {
+        gl.bindTexture(gl.TEXTURE_2D, target);
+        boundTex = target;
       }
-    }
 
+      gl.bindVertexArray(prim.vao);
+      if (prim.hasIndices) gl.drawElementsInstanced(prim.mode, prim.count, prim.indexType, 0, prim.instances);
+      else gl.drawArraysInstanced(prim.mode, 0, prim.count, prim.instances);
+    }
     gl.bindVertexArray(null);
   }
 }

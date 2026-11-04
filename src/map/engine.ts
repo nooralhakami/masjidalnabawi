@@ -3,7 +3,7 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
 import { POIS, RULES } from '../data';
-import { alharamainPlaza, alharamainZones } from '../data-next/alharamain-3d';
+import { alharamainPlaza } from '../data-next/alharamain-3d';
 import type { Poi, Status } from '../data/types';
 import { isTapName } from '../domain/route-hint';
 import { FEATURED_IDS } from '../domain/visits';
@@ -202,52 +202,35 @@ export class MapEngine {
   }
 
   /**
-   * Mount or unmount the 3D Blender GLB layer (`alharamain-3d-models`), courtyard marble/carpet
-   * ground (`alharamain-3d-plaza`), and perimeter facility extrusions (`alharamain-3d-buildings`).
-   * Kept off the map in 2D mode so normal panning, zooming and rotation pay zero extra cost (PERF.md).
+   * Dress the map as the Al-Haramain 3D view: pale imagery, the plaza's coloured areas and the 3D
+   * files. All of it comes off in 2D, so panning, zooming and rotating pay nothing (PERF.md).
    */
   private sync3DLayer(): void {
     const m = this.map;
     const before = m.getLayer('inner-dots') ? 'inner-dots' : undefined;
-    if (this.mode3d) {
+    const on = this.mode3d;
+    for (const id of ['esri', 'light']) {
+      if (!m.getLayer(id)) continue;
+      m.setPaintProperty(id, 'raster-saturation', on ? -1 : 0);
+      m.setPaintProperty(id, 'raster-contrast', on ? -0.55 : 0);
+      m.setPaintProperty(id, 'raster-brightness-min', on ? 0.76 : 0);
+    }
+    if (on) {
       if (!m.getSource('alharamain-plaza')) m.addSource('alharamain-plaza', { type: 'geojson', data: alharamainPlaza() });
-      if (!m.getSource('alharamain-zones')) m.addSource('alharamain-zones', { type: 'geojson', data: alharamainZones() });
       if (!m.getLayer('alharamain-3d-plaza')) {
         m.addLayer(
           {
             id: 'alharamain-3d-plaza',
             type: 'fill',
             source: 'alharamain-plaza',
-            paint: {
-              'fill-color': ['get', 'color'],
-              'fill-opacity': ['match', ['get', 'kind'], 'plaza', 0.94, 0.88],
-            },
+            paint: { 'fill-color': ['get', 'color'], 'fill-opacity': ['get', 'opacity'] },
           },
           before,
         );
       }
-      if (!m.getLayer('alharamain-3d-buildings')) {
-        m.addLayer(
-          {
-            id: 'alharamain-3d-buildings',
-            type: 'fill-extrusion',
-            source: 'alharamain-zones',
-            filter: ['!=', ['get', 'venue_id'], 4],
-            paint: {
-              'fill-extrusion-color': ['coalesce', ['get', 'category_color'], '#007155'],
-              'fill-extrusion-height': ['min', ['coalesce', ['get', 'extrusion_height'], 4], 4.5],
-              'fill-extrusion-base': ['coalesce', ['get', 'extrusion_base'], 0],
-              'fill-extrusion-opacity': 0.88,
-            },
-          },
-          before,
-        );
-      }
-      if (!m.getLayer('alharamain-3d-models')) {
-        m.addLayer(new HaramGlbLayer(), before);
-      }
+      if (!m.getLayer('alharamain-3d-models')) m.addLayer(new HaramGlbLayer(), before);
     } else {
-      for (const id of ['alharamain-3d-models', 'alharamain-3d-buildings', 'alharamain-3d-plaza']) {
+      for (const id of ['alharamain-3d-models', 'alharamain-3d-plaza']) {
         if (m.getLayer(id)) m.removeLayer(id);
       }
     }
@@ -360,7 +343,6 @@ export class MapEngine {
     this.map.removeLayer('selected');
     for (const id of [
       'alharamain-3d-models',
-      'alharamain-3d-buildings',
       'alharamain-3d-plaza',
       'car-entrances',
       'esri',
