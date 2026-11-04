@@ -12,6 +12,7 @@ import { loadLang } from '../i18n/load';
 import type { MapEngine } from '../map/engine';
 import { isClosed } from '../domain/facilities';
 import {
+  accessibleRoute,
   filter,
   garageQ,
   headingUp,
@@ -303,8 +304,10 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
             fac={fac}
             travel={travel.value}
             level={level.value}
+            accessible={accessibleRoute.value}
             onTravel={(v) => (travel.value = v)}
             onLevel={(v) => (level.value = v)}
+            onAccessible={(v) => (accessibleRoute.value = v)}
             onRoute={() => void runRoute(place)}
             routing={routing}
             onShare={() => {

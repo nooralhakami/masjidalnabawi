@@ -19,7 +19,7 @@ import { loadLang } from '../i18n/load';
 import { CAR_ENTRANCES } from '../data-next/car-entrances';
 import { entranceOpen } from '../state/entrances';
 import { MapEngine, type BaseLayer } from '../map/engine';
-import { filter, headingUp, markersHidden, nav, notify, route, parkingSub, query, rawdahH, searching, selected, sheetH, toiletSub, weather } from '../state/store';
+import { filter, headingUp, markersHidden, nav, notify, route, parkingSub, query, rawdahH, searching, selected, sheetH, toiletSub, view3d, weather } from '../state/store';
 import { LangContext } from '../ui/i18n';
 import { MapControls, MapTools } from '../ui/shell/MapControls';
 import { WeatherChip } from '../ui/shell/WeatherChip';
@@ -134,6 +134,7 @@ async function main() {
 
   function Tools() {
     const [base, setBase] = useState<BaseLayer>(engine.baseLayer);
+    const [mode3d, setMode3d] = useState<boolean>(engine.is3D);
     return (
       <MapTools
         weather={<WeatherChip w={weather.value} />}
@@ -145,6 +146,12 @@ async function main() {
           const next = base === 'satellite' ? 'light' : 'satellite';
           engine.setBase(next);
           setBase(next);
+        }}
+        is3D={mode3d}
+        onToggle3D={() => {
+          const next = engine.toggle3DMode();
+          view3d.value = next;
+          setMode3d(next);
         }}
       />
     );

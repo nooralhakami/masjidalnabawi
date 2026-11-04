@@ -50,17 +50,26 @@ export function MapControls({ onZoom, onTurn, onNorth, watchNorth }: Omit<MapCon
 }
 
 /**
- * The left column, as the live app's: the landmark stories, the library, the base map and «my
- * location», with the weather chip above them.
+ * The left column, as the live app's: the landmark stories, the library, the base map, the 3D view
+ * toggle and «my location», with the weather chip above them.
  */
 export function MapTools({
   base,
   onBase,
+  is3D = false,
+  onToggle3D,
   onLocate,
   onStories,
   onLibrary,
   weather,
-}: Pick<MapControlsProps, 'base' | 'onBase'> & { onLocate?(): void; onStories?(): void; onLibrary?(): void; weather?: ComponentChildren }) {
+}: Pick<MapControlsProps, 'base' | 'onBase'> & {
+  is3D?: boolean;
+  onToggle3D?(): void;
+  onLocate?(): void;
+  onStories?(): void;
+  onLibrary?(): void;
+  weather?: ComponentChildren;
+}) {
   const { t } = useI18n();
   return (
     <div class="map-controls">
@@ -68,6 +77,7 @@ export function MapTools({
       {onStories ? <IconButton icon="landmark" floating class="mc-stories" label={t('st_open')} onClick={onStories} /> : null}
       {onLibrary ? <IconButton icon="book" floating class="mc-library" label={t('lib_title')} onClick={onLibrary} /> : null}
       <IconButton icon="layers" floating class="mc-layers" label={t(base === 'satellite' ? 'layer_map' : 'layer_sat')} pressed={base === 'light'} onClick={onBase} />
+      {onToggle3D ? <IconButton icon="cube" floating class="mc-3d" label={t(is3D ? 'view_2d' : 'view_3d')} pressed={is3D} onClick={onToggle3D} /> : null}
       {/* Location is asked for only on this tap (or «route from my location»), never before. */}
       {onLocate ? <IconButton icon="locate" floating class="mc-locate" label={t('gps')} onClick={onLocate} /> : null}
     </div>
