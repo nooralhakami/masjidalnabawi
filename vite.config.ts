@@ -157,8 +157,8 @@ export default defineConfig({
         // App shell, its lazy parts, the map's worker and the fonts (Arabic and Latin subsets only).
         // The 24 translation files too, so a language chosen offline (after one visit) still has its texts.
         globPatterns: ['**/*.{html,js,mjs,css,jpg,webp}', 'i18n/*.json', 'icons/icon.svg', 'icons/apple-touch-icon.png', 'assets/*-{arabic,latin}-*.woff2'],
-        // Landmark photos (public/visits/) load on demand; the design gallery is not part of the app.
-        globIgnores: ['visits/**', 'design.html', '**/*-cyrillic*', '**/*-greek*', '**/*-vietnamese*', '**/*-math-*', '**/*-symbols-*'],
+        // Landmark photos (public/visits/) and 3D GLB models (public/models/) load on demand; the design gallery is not part of the app.
+        globIgnores: ['visits/**', 'models/**', 'design.html', '**/*-cyrillic*', '**/*-greek*', '**/*-vietnamese*', '**/*-math-*', '**/*-symbols-*'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         // Map tiles (Esri / OpenStreetMap) are cross-origin and deliberately never cached (CLAUDE.md).
         runtimeCaching: [],

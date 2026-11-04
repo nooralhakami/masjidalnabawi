@@ -3,12 +3,13 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
 import { POIS, RULES } from '../data';
-import { alharamainZones } from '../data-next/alharamain-3d';
+import { alharamainPlaza, alharamainZones } from '../data-next/alharamain-3d';
 import type { Poi, Status } from '../data/types';
 import { isTapName } from '../domain/route-hint';
 import { FEATURED_IDS } from '../domain/visits';
 import { lookOf } from '../presentation/markers';
 import type { IconName } from '../presentation/icons';
+import { HaramGlbLayer } from './glb-layer';
 import { IconAtlas, createDrawer, cssPalette, type Drawer } from './images';
 import { MeMarker } from './me';
 import { addHintLayer, EMPTY_HINTS, HintLayer } from './hints';
@@ -201,30 +202,54 @@ export class MapEngine {
   }
 
   /**
-   * Mount or unmount the 3D fill-extrusion layer (`alharamain-3d-buildings`). Kept off the map in
-   * 2D mode so normal panning, zooming and rotation pay zero extra per-frame layer cost (PERF.md).
+   * Mount or unmount the 3D Blender GLB layer (`alharamain-3d-models`), courtyard marble/carpet
+   * ground (`alharamain-3d-plaza`), and perimeter facility extrusions (`alharamain-3d-buildings`).
+   * Kept off the map in 2D mode so normal panning, zooming and rotation pay zero extra cost (PERF.md).
    */
   private sync3DLayer(): void {
     const m = this.map;
+    const before = m.getLayer('inner-dots') ? 'inner-dots' : undefined;
     if (this.mode3d) {
+      if (!m.getSource('alharamain-plaza')) m.addSource('alharamain-plaza', { type: 'geojson', data: alharamainPlaza() });
       if (!m.getSource('alharamain-zones')) m.addSource('alharamain-zones', { type: 'geojson', data: alharamainZones() });
-      if (m.getLayer('alharamain-3d-buildings')) return;
-      m.addLayer(
-        {
-          id: 'alharamain-3d-buildings',
-          type: 'fill-extrusion',
-          source: 'alharamain-zones',
-          paint: {
-            'fill-extrusion-color': ['coalesce', ['get', 'category_color'], '#007155'],
-            'fill-extrusion-height': ['coalesce', ['get', 'extrusion_height'], 10],
-            'fill-extrusion-base': ['coalesce', ['get', 'extrusion_base'], 0],
-            'fill-extrusion-opacity': 0.85,
+      if (!m.getLayer('alharamain-3d-plaza')) {
+        m.addLayer(
+          {
+            id: 'alharamain-3d-plaza',
+            type: 'fill',
+            source: 'alharamain-plaza',
+            paint: {
+              'fill-color': ['get', 'color'],
+              'fill-opacity': ['match', ['get', 'kind'], 'plaza', 0.94, 0.88],
+            },
           },
-        },
-        m.getLayer('inner-dots') ? 'inner-dots' : undefined,
-      );
-    } else if (m.getLayer('alharamain-3d-buildings')) {
-      m.removeLayer('alharamain-3d-buildings');
+          before,
+        );
+      }
+      if (!m.getLayer('alharamain-3d-buildings')) {
+        m.addLayer(
+          {
+            id: 'alharamain-3d-buildings',
+            type: 'fill-extrusion',
+            source: 'alharamain-zones',
+            filter: ['!=', ['get', 'venue_id'], 4],
+            paint: {
+              'fill-extrusion-color': ['coalesce', ['get', 'category_color'], '#007155'],
+              'fill-extrusion-height': ['min', ['coalesce', ['get', 'extrusion_height'], 4], 4.5],
+              'fill-extrusion-base': ['coalesce', ['get', 'extrusion_base'], 0],
+              'fill-extrusion-opacity': 0.88,
+            },
+          },
+          before,
+        );
+      }
+      if (!m.getLayer('alharamain-3d-models')) {
+        m.addLayer(new HaramGlbLayer(), before);
+      }
+    } else {
+      for (const id of ['alharamain-3d-models', 'alharamain-3d-buildings', 'alharamain-3d-plaza']) {
+        if (m.getLayer(id)) m.removeLayer(id);
+      }
     }
   }
 
@@ -334,7 +359,9 @@ export class MapEngine {
     this.map.removeLayer('featured');
     this.map.removeLayer('selected');
     for (const id of [
+      'alharamain-3d-models',
       'alharamain-3d-buildings',
+      'alharamain-3d-plaza',
       'car-entrances',
       'esri',
       'light',

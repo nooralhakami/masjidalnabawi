@@ -1,18 +1,36 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { POI_BY_ID } from '../../src/data';
-import { alharamainZones } from '../../src/data-next/alharamain-3d';
+import { alharamainPlaza, alharamainZones } from '../../src/data-next/alharamain-3d';
 import { VERTICAL_NODES, verticalNodesGeoJson } from '../../src/data-next/vertical-nodes';
 import { routeSummary } from '../../src/presentation/route-view';
 import { ACCESSIBLE_WALK_M_PER_MIN, nearestVerticalNode, planRoutes } from '../../src/routing/plan';
 
 const P = (id: number) => POI_BY_ID.get(id)!;
 
-describe('3D extrusion zones (alharamain-zones)', () => {
+describe('3D extrusion zones, courtyard plaza & Blender GLB model', () => {
   const fc = alharamainZones();
+  const plaza = alharamainPlaza();
 
   it('includes the Mosque 3D wings plus all 174 navQ polygons (176 total)', () => {
     expect(fc.type).toBe('FeatureCollection');
     expect(fc.features).toHaveLength(176);
+  });
+
+  it('includes the Haram marble courtyard plaza + 81 courtyard prayer carpets (82 total)', () => {
+    expect(plaza.type).toBe('FeatureCollection');
+    expect(plaza.features).toHaveLength(82);
+    expect(plaza.features[0].properties.kind).toBe('plaza');
+    expect(plaza.features.filter((f) => f.properties.kind === 'men').length).toBeGreaterThan(20);
+    expect(plaza.features.filter((f) => f.properties.kind === 'women').length).toBeGreaterThan(40);
+  });
+
+  it('bundles a valid glTF 2.0 binary model at public/models/haram-3d.glb', () => {
+    const glb = readFileSync(resolve(__dirname, '../../public/models/haram-3d.glb'));
+    expect(glb.byteLength).toBeGreaterThan(2_000_000);
+    expect(glb.readUInt32LE(0)).toBe(0x46546c67); // 'glTF'
+    expect(glb.readUInt32LE(4)).toBe(2); // version 2
   });
 
   it('every polygon ring is closed, lies in the Haram area, and has colour + positive extrusion_height', () => {
