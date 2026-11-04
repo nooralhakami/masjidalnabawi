@@ -13,6 +13,7 @@ import { lookOf } from '../presentation/markers';
 import type { IconName } from '../presentation/icons';
 import { HaramGlbLayer } from './glb-layer';
 import { IconAtlas, createDrawer, cssPalette, type Drawer } from './images';
+import { LampGlowLayer } from './lamp-glow-layer';
 import { MeMarker } from './me';
 import { PlazaMarbleLayer } from './plaza-layer';
 import { addHintLayer, EMPTY_HINTS, HintLayer } from './hints';
@@ -79,6 +80,7 @@ export class MapEngine {
   private models: HaramGlbLayer | null = null;
   private terrain: TerrainLayer | null = null;
   private marble: PlazaMarbleLayer | null = null;
+  private glow: LampGlowLayer | null = null;
   private lightTimer: ReturnType<typeof setInterval> | null = null;
   /** Where the canopies' lanterns stand (read from their file once). */
   private lamps: [number, number][] | null = null;
@@ -272,8 +274,15 @@ export class MapEngine {
         this.models = new HaramGlbLayer(this.currentLight(), (lamps) => {
           this.lamps = lamps;
           (m.getSource('alharamain-lamps') as GeoJSONSource | undefined)?.setData(lampFeatures(lamps));
+          this.glow?.setLamps(lamps);
         });
         m.addLayer(this.models, before);
+      }
+      // The lanterns' glow, after the models so the Mosque hides those behind it.
+      if (!m.getLayer('alharamain-3d-glow')) {
+        this.glow = new LampGlowLayer(this.currentLight());
+        if (this.lamps) this.glow.setLamps(this.lamps);
+        m.addLayer(this.glow, before);
       }
       this.applyLight();
       if (!this.lightTimer) this.lightTimer = setInterval(() => this.applyLight(), 60_000);
@@ -283,7 +292,16 @@ export class MapEngine {
       this.models = null;
       this.terrain = null;
       this.marble = null;
-      for (const id of ['alharamain-3d-models', 'alharamain-3d-terrain', 'alharamain-3d-lamps', 'alharamain-3d-marble', 'alharamain-3d-plaza', 'alharamain-3d-ground']) {
+      this.glow = null;
+      for (const id of [
+        'alharamain-3d-models',
+        'alharamain-3d-glow',
+        'alharamain-3d-terrain',
+        'alharamain-3d-lamps',
+        'alharamain-3d-marble',
+        'alharamain-3d-plaza',
+        'alharamain-3d-ground',
+      ]) {
         if (m.getLayer(id)) m.removeLayer(id);
       }
       for (const id of ['esri', 'light']) {
@@ -311,6 +329,7 @@ export class MapEngine {
     this.models?.setLight(light);
     this.terrain?.setLight(light);
     this.marble?.setLight(light);
+    this.glow?.setLight(light);
     for (const id of ['esri', 'light']) {
       if (!m.getLayer(id)) continue;
       m.setPaintProperty(id, 'raster-saturation', light.raster.saturation);
@@ -431,6 +450,7 @@ export class MapEngine {
     this.map.removeLayer('featured');
     this.map.removeLayer('selected');
     for (const id of [
+      'alharamain-3d-glow',
       'alharamain-3d-models',
       'alharamain-3d-terrain',
       'alharamain-3d-lamps',
