@@ -191,8 +191,7 @@ export function materialGlow(file: string, material: string | undefined): Materi
   if (canopies) return { color: scale(COOL, name === 'umb' ? 0.85 : 0.7), tint: 1, rise: 0 };
   if (['roof', 'tile', 'deep', 'dark', 'tent', 'silver', 'steel'].includes(name)) return { color: scale(WARM, 0.35), tint: 1, rise: 0 };
   // Walls, arches, gates, cornices and the service blocks: cream stone under floodlights.
-  // Mostly the light's own cream: navQ's wall materials lean pink, the stone at night reads near white.
-  return { color: scale(CREAM, 0.95), tint: 0.2, rise: 1 };
+  return { color: scale(CREAM, 0.85), tint: 0.5, rise: 1 };
 }
 
 function scale(c: Rgb, k: number): Rgb {
