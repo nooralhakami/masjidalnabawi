@@ -250,7 +250,7 @@ export class MapEngine {
             paint: {
               // A pool of light about 12 m across under each lantern, lying on the ground.
               'circle-radius': ['interpolate', ['exponential', 2], ['zoom'], 14, 2.8, 22, 707],
-              'circle-color': '#e4f3ff',
+              'circle-color': '#fff7ea',
               'circle-blur': 1,
               'circle-opacity': 0,
               'circle-pitch-alignment': 'map',

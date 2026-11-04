@@ -35,7 +35,7 @@ void main() {
   // A bright core and a soft falloff, as a camera sees a lamp at night.
   float core = 1.0 - smoothstep(0.0, 0.18, r);
   float halo = pow(max(0.0, 1.0 - r), 2.2);
-  vec3 color = vec3(1.0, 0.97, 0.9) * core + vec3(0.85, 0.9, 1.0) * halo * 0.55;
+  vec3 color = vec3(1.0, 0.98, 0.94) * core + vec3(0.95, 0.94, 0.9) * halo * 0.45;
   fragColor = vec4(color * u_night, 1.0);
 }
 `;
