@@ -1,0 +1,63 @@
+/* The owner's canopy editor (canopies.html): a full-screen satellite map with a header and a toolbar. */
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #111;
+  color: #fff;
+  font: 15px/1.4 system-ui, sans-serif;
+}
+#map {
+  position: fixed;
+  inset: 0;
+}
+#bar {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  padding: 10px 14px;
+  background: rgb(0 0 0 / 0.78);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 2;
+}
+#hint {
+  color: #ffd54f;
+  font-size: 13px;
+}
+#tools {
+  position: fixed;
+  inset-block-end: 0;
+  inset-inline: 0;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  background: rgb(0 0 0 / 0.82);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  z-index: 2;
+}
+#tools button {
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid #555;
+  background: #222;
+  color: #fff;
+  font: inherit;
+}
+#tools button[aria-pressed='true'] {
+  background: #1b7f5a;
+  border-color: #3fd19a;
+}
+#tools button.send {
+  background: #0d47a1;
+  border-color: #64b5f6;
+}
+#tools button.danger {
+  color: #ff8a80;
+}
+.maplibregl-ctrl-bottom-left {
+  margin-block-end: 120px;
+}

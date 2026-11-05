@@ -158,7 +158,18 @@ export default defineConfig({
         // The 24 translation files too, so a language chosen offline (after one visit) still has its texts.
         globPatterns: ['**/*.{html,js,mjs,css,jpg,webp}', 'i18n/*.json', 'icons/icon.svg', 'icons/apple-touch-icon.png', 'assets/*-{arabic,latin}-*.woff2'],
         // Landmark photos (public/visits/) and 3D GLB models (public/models/) load on demand; the design gallery is not part of the app.
-        globIgnores: ['visits/**', 'models/**', 'design.html', '**/*-cyrillic*', '**/*-greek*', '**/*-vietnamese*', '**/*-math-*', '**/*-symbols-*'],
+        globIgnores: [
+          'visits/**',
+          'models/**',
+          'design.html',
+          'canopies.html',
+          'assets/tool-*',
+          '**/*-cyrillic*',
+          '**/*-greek*',
+          '**/*-vietnamese*',
+          '**/*-math-*',
+          '**/*-symbols-*',
+        ],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         // Map tiles (Esri / OpenStreetMap) are cross-origin and deliberately never cached (CLAUDE.md).
         runtimeCaching: [],
@@ -175,7 +186,17 @@ export default defineConfig({
   build: {
     target: 'es2020',
     rollupOptions: {
-      input: { index: resolve(import.meta.dirname, 'index.html'), map: resolve(import.meta.dirname, 'map.html') },
+      input: {
+        index: resolve(import.meta.dirname, 'index.html'),
+        map: resolve(import.meta.dirname, 'map.html'),
+        // The owner's canopy editor (src/tools/canopy-editor.ts): built, never precached or linked.
+        canopies: resolve(import.meta.dirname, 'canopies.html'),
+      },
+      output: {
+        // The editor's own files carry a "tool-" prefix, so the service worker can leave them out.
+        entryFileNames: (chunk) => (chunk.name === 'canopies' ? 'assets/tool-[name]-[hash].js' : 'assets/[name]-[hash].js'),
+        assetFileNames: (asset) => (asset.names.some((n) => n.startsWith('canopies')) ? 'assets/tool-[name]-[hash][extname]' : 'assets/[name]-[hash][extname]'),
+      },
     },
   },
   test: {
