@@ -459,6 +459,20 @@ function portalOf(
   return { portal: kind, portalRect: [uv.min[0], uv.min[1], uv.max[0], uv.max[1]], portalSize: [width, pos.max[1] - pos.min[1]] };
 }
 
+/**
+ * The three canopy shapes of navQ's file, each with its node's own turn and scale (its position
+ * left out): the open canopy, the folded one, and the short lamp post (the mesh without fabric).
+ */
+export function canopyMeshes(gltf: GltfJson, folding: { open: Set<number>; closed: number }): Record<'open' | 'closed' | 'lamp', { mesh: number; shape: Float64Array }> {
+  const first = (test: (mesh: number) => boolean) => gltf.nodes.find((n) => n.mesh !== undefined && test(n.mesh))!;
+  const shape = (node: GltfNode) => ({ mesh: node.mesh!, shape: composeTrs([0, 0, 0], node.rotation ?? [0, 0, 0, 1], node.scale ?? [1, 1, 1]) });
+  return {
+    open: shape(first((m) => folding.open.has(m))),
+    closed: shape(first((m) => m === folding.closed)),
+    lamp: shape(first((m) => !folding.open.has(m) && m !== folding.closed)),
+  };
+}
+
 /** Where each node of a file stands on the ground, as `[lng, lat]` (one per node and anchor). */
 function nodePositions(model: AlharamainModel, gltf: GltfJson): [number, number][] {
   const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
@@ -653,7 +667,9 @@ export class HaramGlbLayer implements CustomLayerInterface {
         return;
       }
       this.pending.push({ model, gltf, bin, images });
-      if (this.onLamps && model.url.includes('canopies')) this.onLamps(nodePositions(model, gltf));
+      if (this.onLamps && model.url.includes('canopies')) {
+        this.onLamps(model.points ? [...model.points.umbrellas, ...model.points.lamps].map(([lng, lat]) => [lng, lat] as [number, number]) : nodePositions(model, gltf));
+      }
       this.map?.triggerRepaint();
     } catch {
       // Offline, or a test environment without fetch: 3D simply stays without this file.
@@ -698,7 +714,25 @@ export class HaramGlbLayer implements CustomLayerInterface {
       groups.set(key, group);
     };
     const combined = new Float64Array(16);
-    for (const node of gltf.nodes) {
+    if (folding && model.points) {
+      // The canopies stand where data/canopies.json puts them; the file gives only their shapes.
+      const meshes = canopyMeshes(gltf, folding);
+      const turn = composeTrs([0, 0, 0], [0, Math.sin(half), 0, Math.cos(half)], [1, 1, 1]);
+      const place = (ll: readonly [number, number], shape: Float64Array) => {
+        const [east, south] = metresFromOrigin(ll);
+        const at = composeTrs([east, 0, south], [0, 0, 0, 1], [1, 1, 1]);
+        const turned = new Float64Array(16);
+        mulMat4(turned, at, turn);
+        mulMat4(combined, turned, shape);
+        return combined;
+      };
+      for (const ll of model.points.umbrellas) {
+        add(meshes.open.mesh, 'day', place(ll, meshes.open.shape));
+        add(meshes.closed.mesh, 'night', place(ll, meshes.closed.shape));
+      }
+      for (const ll of model.points.lamps) add(meshes.lamp.mesh, 'always', place(ll, meshes.lamp.shape));
+    }
+    for (const node of folding && model.points ? [] : gltf.nodes) {
       if (node.mesh === undefined) continue;
       const local = node.matrix ? new Float64Array(node.matrix) : composeTrs(node.translation ?? [0, 0, 0], node.rotation ?? [0, 0, 0, 1], node.scale ?? [1, 1, 1]);
       const folds = folding !== null && folding.open.has(node.mesh);

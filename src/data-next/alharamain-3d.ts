@@ -1,4 +1,5 @@
 import type { Feature, FeatureCollection, Polygon } from 'geojson';
+import canopiesJson from '../../data/canopies.json';
 
 /**
  * What the Al-Haramain map (navQ) draws around the 3D Mosque, read from its live Mapbox style and
@@ -89,12 +90,25 @@ export interface AlharamainModel {
   anchors: readonly (readonly [number, number])[];
   /** Turned clockwise about its anchor, in degrees (`threeDRotation`). */
   rotation: number;
+  /**
+   * For the canopies file only: where each canopy and lamp post stands, overriding the file's own
+   * node positions (data/canopies.json, placed by the owner on the imagery with canopies.html).
+   */
+  points?: CanopyPoints;
 }
+
+/** Each courtyard canopy (opens by day, folds at night) and short lamp post, as `[lng, lat]`. */
+export interface CanopyPoints {
+  umbrellas: readonly (readonly [number, number])[];
+  lamps: readonly (readonly [number, number])[];
+}
+
+export const CANOPIES: CanopyPoints = canopiesJson as unknown as CanopyPoints;
 
 /** Venue 4 and the campus POIs carrying a `threeDModel`: 41 placements of 4 distinct files. */
 export const ALHARAMAIN_MODELS: readonly AlharamainModel[] = [
   { url: './models/haram-3d.glb', anchors: [[39.611752, 24.466806]], rotation: 0 },
-  { url: './models/haram-canopies.glb', anchors: [[39.611732, 24.4668]], rotation: 1 },
+  { url: './models/haram-canopies.glb', anchors: [[39.611732, 24.4668]], rotation: 1, points: CANOPIES },
   {
     url: './models/haram-service-a.glb',
     rotation: 1,
