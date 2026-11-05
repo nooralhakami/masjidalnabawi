@@ -77,6 +77,9 @@ src/
     plaza-layer.ts    the plazas' paving in 3D (custom WebGL2 layer): white tiles round the Mosque, granite, the western plaza's concrete, the prayer areas' carpets, with gloss; drawn in metres over navQ's plaza colours
     polygon.ts        ear-clipping triangulation for flat outlines (the plazas)
     sun-shadow.ts     the sun's shadow map shared by glb-layer (casts, in prerender, only when the sun moves) and plaza-layer (receives)
+  tools/
+    canopy-editor.ts  the owner's canopy editor (canopies.html, Arabic only, not linked): dots on the satellite imagery for each canopy and lamp post, saved as data/canopies.json
+    canopy-points.ts  its pure parts (a row of evenly spaced canopies, the file format)
     lamp-glow-layer.ts the lanterns' halos at night (custom WebGL2 layer): one additive point sprite per lantern, sized in metres
     engine.ts      as built: the MapLibre map, its sources, the base layers, select / focus / restyle, the camera, taps (setup.ts and camera.ts were folded in)
     pois.ts        as built: the places' GeoJSON (places, gate pairs, car entrances, women's areas), the layer filters a filter or search sets, the pop-in, what a tap lands on
