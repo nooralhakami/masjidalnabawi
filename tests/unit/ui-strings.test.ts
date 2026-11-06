@@ -28,6 +28,10 @@ const DYNAMIC = [
   'view_3d',
   'view_2d',
   'layer_map',
+  // The tilt buttons' titles join two keys in a template (MapControls.tsx).
+  'tilt_up',
+  'tilt_down',
+  'gestures_desktop',
   'g_step_n',
   'g_step_e',
   'g_step_s',
