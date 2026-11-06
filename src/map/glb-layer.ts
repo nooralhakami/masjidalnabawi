@@ -459,6 +459,19 @@ function portalOf(
   return { portal: kind, portalRect: [uv.min[0], uv.min[1], uv.max[0], uv.max[1]], portalSize: [width, pos.max[1] - pos.min[1]] };
 }
 
+/**
+ * How far a node standing at `[east, south]` metres from the origin is moved by its file's `shifts`,
+ * as `[east, south]` metres; `[0, 0]` outside them.
+ */
+export function nodeShift(model: AlharamainModel, east: number, south: number): [number, number] {
+  for (const s of model.shifts ?? []) {
+    const [w, n] = metresFromOrigin([s.within[0][0], s.within[1][1]]);
+    const [e, so] = metresFromOrigin([s.within[1][0], s.within[0][1]]);
+    if (east >= w && east <= e && south >= n && south <= so) return [s.east, -s.north];
+  }
+  return [0, 0];
+}
+
 /** Where each node of a file stands on the ground, as `[lng, lat]` (one per node and anchor). */
 function nodePositions(model: AlharamainModel, gltf: GltfJson): [number, number][] {
   const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
@@ -471,8 +484,11 @@ function nodePositions(model: AlharamainModel, gltf: GltfJson): [number, number]
       if (node.mesh === undefined) continue;
       const [x, , z] = node.matrix ? [node.matrix[12], node.matrix[13], node.matrix[14]] : (node.translation ?? [0, 0, 0]);
       // The same clockwise turn (seen from above) as the drawn file: east/south rotate together.
-      const east = east0 + x * Math.cos(turn) - z * Math.sin(turn);
-      const south = south0 + x * Math.sin(turn) + z * Math.cos(turn);
+      const east0n = east0 + x * Math.cos(turn) - z * Math.sin(turn);
+      const south0n = south0 + x * Math.sin(turn) + z * Math.cos(turn);
+      const [dEast, dSouth] = nodeShift(model, east0n, south0n);
+      const east = east0n + dEast;
+      const south = south0n + dSouth;
       const ll = new MercatorCoordinate(origin.x + east * perMetre, origin.y + south * perMetre, 0).toLngLat();
       out.push([ll.lng, ll.lat]);
     }
@@ -704,6 +720,9 @@ export class HaramGlbLayer implements CustomLayerInterface {
       const folds = folding !== null && folding.open.has(node.mesh);
       for (const placement of placements) {
         mulMat4(combined, placement, local);
+        const [dEast, dSouth] = nodeShift(model, combined[12], combined[14]);
+        combined[12] += dEast;
+        combined[14] += dSouth;
         add(node.mesh, folds ? 'day' : 'always', combined);
         if (folds) add(folding!.closed, 'night', combined);
       }
