@@ -1,5 +1,6 @@
 import type { CustomLayerInterface, CustomRenderMethodInput, Map as MLMap } from 'maplibre-gl';
 import { ALHARAMAIN_MODELS, alharamainPlaza } from '../data-next/alharamain-3d';
+import { ALHARAMAIN_PRAYERS } from '../data-next/alharamain-prayers';
 import { frameMatrix, metresFromOrigin, mulMat4 } from './glb-layer';
 import { triangulate } from './polygon';
 import type { SceneLight } from './scene-light';
@@ -9,16 +10,19 @@ const VERT_SRC = `#version 300 es
 precision highp float;
 layout(location = 0) in vec2 a_pos;
 layout(location = 1) in float a_kind;
+layout(location = 2) in vec2 a_origin;
 
 uniform mat4 u_mvp;
 
 out vec2 v_pos;
 out float v_kind;
+out vec2 v_origin;
 
 void main() {
   gl_Position = u_mvp * vec4(a_pos.x, 0.0, a_pos.y, 1.0);
   v_pos = a_pos;
   v_kind = a_kind;
+  v_origin = a_origin;
 }
 `;
 
@@ -27,6 +31,7 @@ precision highp float;
 
 in vec2 v_pos;
 in float v_kind;
+in vec2 v_origin;
 
 uniform float u_turn;
 uniform float u_night;
@@ -84,22 +89,36 @@ void main() {
   float gloss;
 
   if (v_kind > 1.5) {
-    // The prayer areas: the Mosque's green carpets, rugs in rows facing the qibla (south), each with
-    // a dark navy border and a medallion (the owner's photographs).
-    vec2 rug = vec2(4.0, 1.3);
-    vec2 r = (fract(p / rug) - 0.5) * rug;
+    // The prayer areas (owner, 2026-11-06): the Mosque's green carpets, each 5 m across (east to
+    // west) and 1 m deep toward the qibla (south), laid from the area's north-west corner in groups
+    // of three rows with 80 cm of floor between the groups; a navy border, a gold line and a
+    // medallion on each, as in the photographs.
+    vec2 o = vec2(c * v_origin.x - s * v_origin.y, s * v_origin.x + c * v_origin.y) - u_grid;
+    vec2 q = p - o - vec2(0.0, 0.5);
+    float inRow = mod(q.y, 3.8);
+    float gap = step(3.0, inRow) + step(q.y, 0.0);
+    vec2 rug = vec2(5.0, 1.0);
+    vec2 r = vec2(mod(q.x, 5.0) - 2.5, fract(inRow) - 0.5);
     vec2 edge = rug * 0.5 - abs(r);
-    float fwR = max(fwidth(r.x), fwidth(r.y));
-    float detail = 1.0 - smoothstep(0.08, 0.25, fwR);
-    float border = (1.0 - smoothstep(0.14, 0.14 + fwR, min(edge.x, edge.y))) * detail;
-    float seam = 1.0 - smoothstep(0.015, 0.015 + fwR, min(edge.x, edge.y));
-    float medal = (1.0 - smoothstep(0.32, 0.32 + fwR, length(r * vec2(0.55, 1.0)))) * detail;
-    float weave = hash(floor(p * 30.0)) * (1.0 - smoothstep(0.003, 0.015, fwP));
-    color = vec3(0.4, 0.44, 0.31) * (0.94 + 0.12 * weave);
+    float fwR = max(fwidth(q.x), fwidth(q.y));
+    float detail = 1.0 - smoothstep(0.05, 0.2, fwR);
+    float border = (1.0 - smoothstep(0.11, 0.11 + fwR, min(edge.x, edge.y))) * detail;
+    float gold = line(min(edge.x, edge.y) - 0.15, 0.012, fwR) * detail;
+    float seam = 1.0 - smoothstep(0.012, 0.012 + fwR, min(edge.x, edge.y));
+    float medal = (1.0 - smoothstep(0.26, 0.26 + fwR, length(r * vec2(0.42, 1.0)))) * detail;
+    float flower = hash(floor(q * 9.0)) * (1.0 - smoothstep(0.01, 0.05, fwR));
+    color = vec3(0.42, 0.47, 0.32) * (0.9 + 0.2 * flower);
     color = mix(color, vec3(0.13, 0.16, 0.27), max(border, medal * 0.8));
-    color = mix(color, vec3(0.3, 0.32, 0.22), seam);
-    alpha = 0.92;
+    color = mix(color, vec3(0.72, 0.62, 0.36), gold * 0.8);
+    color = mix(color, vec3(0.3, 0.33, 0.22), seam);
+    alpha = 0.95;
     gloss = 0.0;
+    // Between the groups, the polished floor shows.
+    if (gap > 0.5) {
+      color = vec3(0.86, 0.86, 0.85);
+      alpha = 0.6;
+      gloss = 1.0;
+    }
   } else if (v_kind > 0.5) {
     // The western plaza: polished concrete in large white squares, nothing else (owner, 2026-11-04).
     color = vec3(0.92, 0.91, 0.88);
@@ -185,8 +204,8 @@ void main() {
 /**
  * The paving of the plazas round the Mosque in the 3D view, as the owner set it (2026-11-04): white
  * square tiles round the Mosque out to the line he drew, edged by a dark granite strip; grey granite
- * beyond in the plazas' pattern (the owner's photographs, 2026-11-06); the western plaza in large squares of polished white concrete; and its prayer areas
- * in the Mosque's green carpets. Polished floors mirror the sky, or the lit night, at low angles.
+ * beyond in the plazas' pattern (the owner's photographs, 2026-11-06); the western plaza in large squares of polished white concrete; and the prayer areas,
+ * the western plaza's and the courtyards' (2026-11-06), in the Mosque's green carpets. Polished floors mirror the sky, or the lit night, at low angles.
  * Drawn by the shader in real metres over navQ's plaza colours. A look, not a survey of the paving.
  */
 export class PlazaMarbleLayer implements CustomLayerInterface {
@@ -233,11 +252,14 @@ export class PlazaMarbleLayer implements CustomLayerInterface {
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
     gl.enableVertexAttribArray(0);
-    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 12, 0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 20, 0);
     gl.vertexAttribDivisor(0, 0);
     gl.enableVertexAttribArray(1);
-    gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 12, 8);
+    gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 20, 8);
     gl.vertexAttribDivisor(1, 0);
+    gl.enableVertexAttribArray(2);
+    gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 20, 12);
+    gl.vertexAttribDivisor(2, 0);
     const ibo = gl.createBuffer()!;
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
@@ -346,19 +368,24 @@ const MOSQUE_MAIN: [number, number, number, number] = [(-263.4 + 143.5) / 2, (-3
 const MOSQUE_SOUTH: [number, number, number, number] = [(-109.6 + -11.4) / 2, (-110.6 + -57.0) / 2, (109.6 - 11.4) / 2, (110.6 - 57.0) / 2];
 
 /**
- * The outdoor plazas as triangles, in the models' metres: x, z, kind (0 the five sectors, 1 the
- * western annex, 2 its prayer areas, men's and women's, laid after it so their carpet lies on top).
+ * The outdoor plazas as triangles, in the models' metres: x, z, kind, and the area's north-west
+ * corner (x, z) its carpets start from. Kinds: 0 the five sectors, 1 the western annex, 2 its
+ * prayer areas, men's and women's, 3 the courtyards' prayer areas (`ALHARAMAIN_PRAYERS`); each laid
+ * after the one it lies on, so the carpets are on top.
  */
 export function plazaMesh(): { vertices: Float32Array; indices: Uint16Array } {
   const v: number[] = [];
   const ix: number[] = [];
-  for (const f of alharamainPlaza().features) {
-    const kinds = { sector: 0, annex: 1, men: 2, women: 2 } as const;
-    const ring = f.geometry.coordinates[0].slice(0, -1).map((ll) => metresFromOrigin(ll as [number, number]));
-    const base = v.length / 3;
-    const kind = kinds[f.properties.kind];
-    for (const [x, z] of ring) v.push(x, z, kind);
+  const kinds = { sector: 0, annex: 1, men: 2, women: 2 } as const;
+  const add = (lngLats: readonly (readonly [number, number])[], kind: number) => {
+    const ring = lngLats.map((ll) => metresFromOrigin(ll as [number, number]));
+    const west = Math.min(...ring.map(([x]) => x));
+    const north = Math.min(...ring.map(([, z]) => z));
+    const base = v.length / 5;
+    for (const [x, z] of ring) v.push(x, z, kind, west, north);
     for (const i of triangulate(ring)) ix.push(base + i);
-  }
+  };
+  for (const f of alharamainPlaza().features) add(f.geometry.coordinates[0].slice(0, -1) as [number, number][], kinds[f.properties.kind]);
+  for (const ring of ALHARAMAIN_PRAYERS) add(ring, 3);
   return { vertices: new Float32Array(v), indices: new Uint16Array(ix) };
 }

@@ -4,6 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
 import { POIS, RULES } from '../data';
 import { alharamainPlaza } from '../data-next/alharamain-3d';
+import { prayerBarriers } from '../data-next/alharamain-prayers';
 import { sunPosition } from '../domain/daylight';
 import type { Poi, Status } from '../data/types';
 import { isHidden } from '../domain/filters';
@@ -265,6 +266,20 @@ export class MapEngine {
         this.marble = new PlazaMarbleLayer(this.currentLight());
         m.addLayer(this.marble, 'alharamain-3d-lamps');
       }
+      // The green barriers round the courtyards' prayer areas (owner, 2026-11-06), about a metre high.
+      if (!m.getSource('alharamain-barriers')) m.addSource('alharamain-barriers', { type: 'geojson', data: prayerBarriers() });
+      if (!m.getLayer('alharamain-3d-barriers')) {
+        m.addLayer(
+          {
+            id: 'alharamain-3d-barriers',
+            type: 'fill-extrusion',
+            source: 'alharamain-barriers',
+            minzoom: 16,
+            paint: { 'fill-extrusion-color': '#1f9a72', 'fill-extrusion-height': ['get', 'height'], 'fill-extrusion-opacity': 0.95 },
+          },
+          before,
+        );
+      }
       // The mountains of Madinah on the horizon, under the Mosque's own models.
       if (!m.getLayer('alharamain-3d-terrain')) {
         this.terrain = new TerrainLayer(this.currentLight());
@@ -295,6 +310,7 @@ export class MapEngine {
       this.glow = null;
       for (const id of [
         'alharamain-3d-models',
+        'alharamain-3d-barriers',
         'alharamain-3d-glow',
         'alharamain-3d-terrain',
         'alharamain-3d-lamps',
