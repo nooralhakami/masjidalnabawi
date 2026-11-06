@@ -459,6 +459,14 @@ export function metresFromOrigin([lng, lat]: readonly [number, number]): [number
   return [(here.x - origin.x) / perMetre, (here.y - origin.y) / perMetre];
 }
 
+/** `metresFromOrigin` the other way: `[east, south]` metres from the Mosque's anchor to `[lng, lat]`. */
+export function lngLatFromMetres([east, south]: readonly [number, number]): [number, number] {
+  const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
+  const perMetre = origin.meterInMercatorCoordinateUnits();
+  const ll = new MercatorCoordinate(origin.x + east * perMetre, origin.y + south * perMetre, 0).toLngLat();
+  return [ll.lng, ll.lat];
+}
+
 /** Map the models' metres (X=East, Y=Up, Z=South) about the Mosque's anchor to Web Mercator (X=East, Y=South, Z=Up). */
 export function frameMatrix(): Float64Array {
   const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);

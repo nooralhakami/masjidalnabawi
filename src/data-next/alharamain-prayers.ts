@@ -1,5 +1,3 @@
-import type { Feature, FeatureCollection, Polygon } from 'geojson';
-
 /**
  * The prayer areas of the courtyards inside the Haram (owner, 2026-11-06): the 55 outlines navQ keeps
  * in its `madina_prayers` tiles as FF 88 (it does not draw them; its 64 points «مصلى رجال/نساء - الساحات
@@ -72,47 +70,3 @@ export const ALHARAMAIN_PRAYERS: readonly (readonly [number, number])[][] = RAW_
     return [lng, lat] as const;
   }),
 );
-
-const M_PER_DEG = 111_320;
-
-/**
- * The green barriers round the courtyards' prayer areas, as the owner describes them: 2 m sections
- * with a hand's gap between them, 0.3 m outside each edge, 12 cm thick, as polygons to extrude.
- */
-export function prayerBarriers(): FeatureCollection<Polygon, { height: number }> {
-  const features: Feature<Polygon, { height: number }>[] = [];
-  for (const ring of ALHARAMAIN_PRAYERS) {
-    const lat0 = ring[0][1];
-    const k = M_PER_DEG * Math.cos((lat0 * Math.PI) / 180);
-    const xy = ring.map(([lng, lat]) => [(lng - ring[0][0]) * k, (lat - lat0) * M_PER_DEG] as const);
-    let twice = 0;
-    for (let i = 0; i < xy.length; i++) {
-      const [ax, ay] = xy[i];
-      const [bx, by] = xy[(i + 1) % xy.length];
-      twice += ax * by - bx * ay;
-    }
-    const outward = twice > 0 ? 1 : -1; // counter-clockwise: outside is to the right of each edge; navQ's run clockwise
-    const back = ([x, y]: readonly [number, number]): [number, number] => [ring[0][0] + x / k, lat0 + y / M_PER_DEG];
-    for (let i = 0; i < xy.length; i++) {
-      const [ax, ay] = xy[i];
-      const [bx, by] = xy[(i + 1) % xy.length];
-      const len = Math.hypot(bx - ax, by - ay);
-      if (len < 0.5) continue;
-      const ux = (bx - ax) / len;
-      const uy = (by - ay) / len;
-      // The right-hand normal (uy, -ux) points outside a counter-clockwise ring.
-      const nx = uy * outward;
-      const ny = -ux * outward;
-      const n = Math.max(1, Math.round(len / 2.1));
-      const step = len / n;
-      for (let s = 0; s < n; s++) {
-        const t0 = s * step + 0.05;
-        const t1 = (s + 1) * step - 0.05;
-        const at = (t: number, off: number): readonly [number, number] => [ax + ux * t + nx * off, ay + uy * t + ny * off];
-        const corners = [at(t0, 0.3), at(t1, 0.3), at(t1, 0.42), at(t0, 0.42)].map(back);
-        features.push({ type: 'Feature', properties: { height: 1.05 }, geometry: { type: 'Polygon', coordinates: [[...corners, corners[0]]] } });
-      }
-    }
-  }
-  return { type: 'FeatureCollection', features };
-}

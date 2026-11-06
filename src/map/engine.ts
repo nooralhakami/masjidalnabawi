@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
 import { POIS, RULES } from '../data';
 import { alharamainPlaza } from '../data-next/alharamain-3d';
-import { prayerBarriers } from '../data-next/alharamain-prayers';
+import { prayerBarriers } from './prayer-layout';
 import { sunPosition } from '../domain/daylight';
 import type { Poi, Status } from '../data/types';
 import { isHidden } from '../domain/filters';

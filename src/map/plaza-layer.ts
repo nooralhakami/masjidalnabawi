@@ -4,6 +4,7 @@ import { ALHARAMAIN_PRAYERS } from '../data-next/alharamain-prayers';
 import { frameMatrix, metresFromOrigin, mulMat4 } from './glb-layer';
 import { triangulate } from './polygon';
 import type { SceneLight } from './scene-light';
+import { MOSQUE_MAIN, MOSQUE_SOUTH, restroomWalkways } from './prayer-layout';
 import { createShadowTexture, SHADOW_GLSL, sunShadow } from './sun-shadow';
 
 const VERT_SRC = `#version 300 es
@@ -39,6 +40,9 @@ uniform vec2 u_grid;
 // The Mosque's footprint (from its own model): the main block and the narrower southern block, as
 // boxes (centre x, z, half width, half depth) in the models' frame.
 uniform vec4 u_main;
+// The restrooms' walkways toward the Haram, kept clear of carpets: x0, y0, x1, y1 in the turned frame.
+uniform vec4 u_walk[48];
+uniform int u_walkCount;
 uniform vec4 u_south;
 // The camera, in the models' metres (x east, y up, z south), and the sky the floor reflects.
 uniform vec3 u_eye;
@@ -93,6 +97,13 @@ void main() {
     // west) and 1 m deep toward the qibla (south), laid from the area's north-west corner in groups
     // of three rows with 80 cm of floor between the groups; a navy border, a gold line and a
     // medallion on each, as in the photographs.
+    // A restroom's walkway: no carpet, the plaza's own floor shows (owner, 2026-11-06).
+    vec2 pt = p + u_grid;
+    for (int i = 0; i < 48; i++) {
+      if (i >= u_walkCount) break;
+      vec4 w = u_walk[i];
+      if (pt.x > w.x && pt.x < w.z && pt.y > w.y && pt.y < w.w) discard;
+    }
     vec2 o = vec2(c * v_origin.x - s * v_origin.y, s * v_origin.x + c * v_origin.y) - u_grid;
     vec2 q = p - o - vec2(0.0, 0.5);
     float inRow = mod(q.y, 3.8);
@@ -242,7 +253,7 @@ export class PlazaMarbleLayer implements CustomLayerInterface {
     gl.deleteShader(vs);
     gl.deleteShader(fs);
     this.program = prog;
-    for (const name of ['u_mvp', 'u_turn', 'u_night', 'u_grid', 'u_main', 'u_south', 'u_eye', 'u_sheen', 'u_shadowMap', 'u_light', 'u_shadow'])
+    for (const name of ['u_mvp', 'u_turn', 'u_night', 'u_grid', 'u_main', 'u_south', 'u_eye', 'u_sheen', 'u_shadowMap', 'u_light', 'u_shadow', 'u_walk', 'u_walkCount'])
       this.uniforms[name] = gl.getUniformLocation(prog, name);
 
     const { vertices, indices } = plazaMesh();
@@ -308,6 +319,8 @@ export class PlazaMarbleLayer implements CustomLayerInterface {
     gl.uniform2fv(this.uniforms.u_grid, CANOPY_GRID);
     gl.uniform4fv(this.uniforms.u_main, MOSQUE_MAIN);
     gl.uniform4fv(this.uniforms.u_south, MOSQUE_SOUTH);
+    gl.uniform4fv(this.uniforms.u_walk, WALKS);
+    gl.uniform1i(this.uniforms.u_walkCount, WALKS.length / 4);
     // The camera in the models' metres, for the floor's gloss.
     const eye = this.map ? cameraEye(this.map) : ([0, 1000, 0] as const);
     gl.uniform3f(this.uniforms.u_eye, eye[0], eye[1], eye[2]);
@@ -360,12 +373,19 @@ const CANOPY_GRID: [number, number] = (() => {
 })();
 
 /**
- * The Mosque's footprint, measured from `haram-3d.glb` (its walls between 4 and 30 m high, in the
- * models' frame): the main block x −263.4…143.5, z −353.3…−110.6, and the southern block (the old
- * Mosque) x −109.6…−11.4, z −110.6…−57.0. As boxes: centre x, z, half width, half depth.
+ * The restrooms' walkways as rectangles in the frame the shader turns the plaza to (the blocks
+ * stand turned with the canopies, so they are square to it): x0, y0, x1, y1 each.
  */
-const MOSQUE_MAIN: [number, number, number, number] = [(-263.4 + 143.5) / 2, (-353.3 + -110.6) / 2, (143.5 + 263.4) / 2, (353.3 - 110.6) / 2];
-const MOSQUE_SOUTH: [number, number, number, number] = [(-109.6 + -11.4) / 2, (-110.6 + -57.0) / 2, (109.6 - 11.4) / 2, (110.6 - 57.0) / 2];
+const WALKS: Float32Array = (() => {
+  const t = (ALHARAMAIN_MODELS[1].rotation * Math.PI) / 180;
+  const walks = restroomWalkways().slice(0, 48);
+  const out = new Float32Array(walks.length * 4);
+  walks.forEach((w, i) => {
+    const turned = w.map(([x, z]) => [Math.cos(t) * x - Math.sin(t) * z, Math.sin(t) * x + Math.cos(t) * z]);
+    out.set([Math.min(...turned.map((q) => q[0])), Math.min(...turned.map((q) => q[1])), Math.max(...turned.map((q) => q[0])), Math.max(...turned.map((q) => q[1]))], i * 4);
+  });
+  return out;
+})();
 
 /**
  * The outdoor plazas as triangles, in the models' metres: x, z, kind, and the area's north-west
