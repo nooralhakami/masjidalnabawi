@@ -92,7 +92,7 @@ export interface AlharamainModel {
 }
 
 /**
- * Venue 4 and the campus POIs carrying a `threeDModel`: 41 placements of 4 distinct files. The
+ * Venue 4 and the campus POIs carrying a `threeDModel`: 42 placements of 4 distinct files (41 from navQ, one added). The
  * restroom blocks stand where navQ puts its plain service boxes, drawn instead with a model made
  * from the owner's photographs (`scripts/restroom-model.mjs`, 2026-11-06).
  */
@@ -129,6 +129,8 @@ export const ALHARAMAIN_MODELS: readonly AlharamainModel[] = [
       [39.612644, 24.465472],
       [39.613632, 24.469562],
       [39.612668, 24.470105],
+      // Under restroom 229, opposite 230: navQ left this block out; added at the owner's request (2026-11-06).
+      [39.612668, 24.469562],
       [39.614195, 24.469562],
       [39.608676, 24.469562],
       [39.611593, 24.470105],

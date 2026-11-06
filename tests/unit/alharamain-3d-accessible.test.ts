@@ -42,9 +42,9 @@ describe('the Al-Haramain 3D view: plaza areas and 3D files', () => {
     }
   });
 
-  it('every listed 3D file exists as glTF 2.0, stands at 41 places, and the Mosque comes first', () => {
+  it('every listed 3D file exists as glTF 2.0, stands at 42 places, and the Mosque comes first', () => {
     expect(ALHARAMAIN_MODELS[0].url).toContain('haram-3d.glb');
-    expect(ALHARAMAIN_MODELS.reduce((n, m) => n + m.anchors.length, 0)).toBe(41);
+    expect(ALHARAMAIN_MODELS.reduce((n, m) => n + m.anchors.length, 0)).toBe(42);
     for (const model of ALHARAMAIN_MODELS) {
       const glb = readFileSync(resolve(__dirname, '../../public', model.url));
       expect(glb.readUInt32LE(0)).toBe(0x46546c67); // 'glTF'
