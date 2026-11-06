@@ -142,10 +142,10 @@ export const ALHARAMAIN_MODELS: readonly AlharamainModel[] = [
       [39.614195, 24.468454], // restroom 234
       [39.613613, 24.467806], // restroom 235
       [39.614195, 24.467806], // restroom 236
-      [39.604948, 24.467751], // restroom 252/251; west extension, entrance side not yet given by the owner
-      [39.604948, 24.468399], // restroom 253/254; west extension, entrance side not yet given by the owner
-      [39.604948, 24.469768], // no marker; west extension, entrance side not yet given by the owner
-      [39.604948, 24.469096], // no marker; west extension, entrance side not yet given by the owner
+      [39.604948, 24.467751], // restroom 252/251; west extension, opens north (owner, 2026-11-06)
+      [39.604948, 24.468399], // restroom 253/254; west extension, opens north (owner, 2026-11-06)
+      [39.604948, 24.469768], // no marker; west extension, opens north (owner, 2026-11-06)
+      [39.604948, 24.469096], // no marker; west extension, opens north (owner, 2026-11-06)
     ],
   },
   {
