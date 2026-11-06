@@ -117,18 +117,43 @@ void main() {
       color = mix(color, vec3(0.7, 0.7, 0.68), j);
       gloss = 1.0;
     } else {
-      // Further out: grey speckled granite slabs, panels framed by a thin dark band.
+      // Further out: grey granite in the plazas' pattern (the owner's photographs, 2026-11-06). Each
+      // canopy cell (24.1 m, a column at each corner) is framed by a dark double band; inside, a fine
+      // lattice of eight-pointed stars, and a large eight-pointed star in the middle; terracotta
+      // diamonds where the bands cross and squares near the middle of each band.
       float speck = hash(floor(p * 24.0)) * (1.0 - smoothstep(0.004, 0.02, fwP));
-      color = vec3(0.6, 0.6, 0.59) * (0.9 + 0.2 * speck);
-      alpha = 0.45;
-      float j = joints(p, vec2(1.2), 0.012);
-      color = mix(color, vec3(0.42, 0.42, 0.42), j);
+      color = vec3(0.6, 0.6, 0.6) * (0.9 + 0.2 * speck);
+      alpha = 0.55;
       const float P = 24.1;
       vec2 lp = (fract(p / P) - 0.5) * P;
-      float edgeP = P * 0.5 - max(abs(lp.x), abs(lp.y));
-      float band = line(edgeP - 0.4, 0.3, fwidth(edgeP));
-      color = mix(color, vec3(0.3, 0.3, 0.31), band);
-      alpha = mix(alpha, 0.5, band);
+      vec2 a = abs(lp);
+      float fwL = max(fwidth(lp.x), fwidth(lp.y));
+      // The fine lattice: a star in every 2.41 m square (a tenth of the cell), fading out from afar.
+      vec2 t = (fract(lp / 2.41 + 0.5) - 0.5) * 2.41;
+      vec2 ta = abs(t);
+      float star = min(abs(max(ta.x, ta.y) - 0.62), abs((ta.x + ta.y) * 0.7071 - 0.62));
+      float fine = line(star, 0.03, fwL) * (1.0 - smoothstep(0.07, 0.2, fwL));
+      color = mix(color, vec3(0.42, 0.43, 0.45), fine * 0.85);
+      // The large star in the middle (a square and the same square turned 45°, joined): lighter
+      // inside, outlined in dark grey, with a second star inside it.
+      float big = min(max(a.x, a.y), (a.x + a.y) * 0.7071);
+      color = mix(color, vec3(0.7, 0.7, 0.69), (1.0 - smoothstep(6.6, 6.6 + fwL, big)) * 0.55);
+      color = mix(color, vec3(0.32, 0.33, 0.35), line(big - 6.6, 0.12, fwL));
+      color = mix(color, vec3(0.32, 0.33, 0.35), line(big - 4.4, 0.07, fwL) * (1.0 - smoothstep(0.1, 0.3, fwL)));
+      color = mix(color, vec3(0.62, 0.34, 0.25), (1.0 - smoothstep(1.1, 1.1 + fwL, big)) * 0.85);
+      // The dark double band round the cell, the column at its crossing.
+      float edgeP = P * 0.5 - max(a.x, a.y);
+      float band = max(line(edgeP - 0.25, 0.18, fwL), line(edgeP - 0.95, 0.18, fwL));
+      color = mix(color, vec3(0.22, 0.22, 0.24), band);
+      alpha = mix(alpha, 0.72, band);
+      // Terracotta: a diamond where the bands cross, a square near the middle of each band.
+      vec2 corner = P * 0.5 - a;
+      float diamond = 1.0 - smoothstep(2.3, 2.3 + fwL, corner.x + corner.y);
+      vec2 mid = vec2(min(a.x, a.y), P * 0.5 - 2.2 - max(a.x, a.y));
+      float square = 1.0 - smoothstep(0.7, 0.7 + fwL, max(abs(mid.x), abs(mid.y)));
+      float terra = max(diamond * step(0.5, edgeP), square);
+      color = mix(color, vec3(0.62, 0.34, 0.25), terra);
+      alpha = mix(alpha, 0.75, terra);
       gloss = 0.7;
     }
     // A dark granite strip where the white tiles meet the granite.
@@ -160,7 +185,7 @@ void main() {
 /**
  * The paving of the plazas round the Mosque in the 3D view, as the owner set it (2026-11-04): white
  * square tiles round the Mosque out to the line he drew, edged by a dark granite strip; grey granite
- * slabs beyond; the western plaza in large squares of polished white concrete; and its prayer areas
+ * beyond in the plazas' pattern (the owner's photographs, 2026-11-06); the western plaza in large squares of polished white concrete; and its prayer areas
  * in the Mosque's green carpets. Polished floors mirror the sky, or the lit night, at low angles.
  * Drawn by the shader in real metres over navQ's plaza colours. A look, not a survey of the paving.
  */
