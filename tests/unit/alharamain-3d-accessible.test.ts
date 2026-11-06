@@ -73,25 +73,48 @@ describe('the Al-Haramain 3D view: plaza areas and 3D files', () => {
       }
       return { min, max };
     };
-    expect(ALHARAMAIN_MODELS.map((m) => m.url)).toEqual(expect.arrayContaining(['./models/haram-restroom-a.glb', './models/haram-restroom-b.glb']));
-    // navQ's boxes: a spans x -13.9..9.1, z -48.9..-34.9; b spans x -9.4..4.6, z -94.5..-71.3.
-    const a = bounds('haram-restroom-a.glb');
-    const b = bounds('haram-restroom-b.glb');
-    for (const [got, want] of [
-      [a.min[0], -13.9],
-      [a.max[0], 9.1],
-      [a.min[2], -48.9],
-      [a.max[2], -34.9],
-      [b.min[0], -9.4],
-      [b.max[0], 4.6],
-      [b.min[2], -94.5],
-      [b.max[2], -71.3],
-    ]) {
-      expect(Math.abs(got - want)).toBeLessThan(0.6);
+    // One file per way the entrance faces (owner, 2026-11-06), each on navQ's box: a spans
+    // x -13.9..9.1, z -48.9..-34.9; b spans x -9.4..4.6, z -94.5..-71.3.
+    const files = { 'a-east': 'a', 'a-west': 'a', 'b-north': 'b', 'b-south': 'b' } as const;
+    const boxes = { a: [-13.9, 9.1, -48.9, -34.9], b: [-9.4, 4.6, -94.5, -71.3] };
+    const urls = ALHARAMAIN_MODELS.map((m) => m.url);
+    for (const [name, kind] of Object.entries(files)) {
+      expect(urls).toContain(`./models/haram-restroom-${name}.glb`);
+      const g = bounds(`haram-restroom-${name}.glb`);
+      const [x0, x1, z0, z1] = boxes[kind];
+      for (const [got, want] of [
+        [g.min[0], x0],
+        [g.max[0], x1],
+        [g.min[2], z0],
+        [g.max[2], z1],
+      ]) {
+        expect(Math.abs(got - want), name).toBeLessThan(0.6);
+      }
+      expect(g.min[1]).toBeLessThanOrEqual(0);
+      expect(g.max[1]).toBeGreaterThan(8);
+      expect(g.max[1]).toBeLessThan(9);
     }
-    expect(a.min[1]).toBeLessThanOrEqual(0);
-    expect(a.max[1]).toBeGreaterThan(8);
-    expect(a.max[1]).toBeLessThan(9);
+  });
+
+  it('the restroom entrances face the Mosque from the inner rows and the outer gates from the outer rows; east 233-236 north, 231-232 south (owner, 2026-11-06)', () => {
+    const of = (lng: number, lat: number) =>
+      ALHARAMAIN_MODELS.find((m) => m.url.includes('restroom') && m.anchors.some(([x, y]) => x === lng && y === lat))!.url.match(/restroom-(\w+-\w+)/)![1];
+    expect(of(39.612668, 24.469562)).toBe('b-south'); // 229, inner north row
+    expect(of(39.612668, 24.470105)).toBe('b-north'); // 230, outer north row
+    expect(of(39.611669, 24.46608)).toBe('b-north'); // 203, inner south row
+    expect(of(39.611666, 24.4655)).toBe('b-south'); // 204, outer south row
+    expect(of(39.608676, 24.467703)).toBe('a-east'); // 213, inner west column
+    expect(of(39.608028, 24.467703)).toBe('a-west'); // 214, outer west column
+    for (const [lng, lat] of [
+      [39.613613, 24.468454],
+      [39.614195, 24.468454],
+      [39.613613, 24.467806],
+      [39.614195, 24.467806],
+    ]) {
+      expect(of(lng, lat)).toBe('b-north'); // 233-236
+    }
+    expect(of(39.613632, 24.469562)).toBe('b-south'); // 231
+    expect(of(39.614195, 24.469562)).toBe('b-south'); // 232
   });
 
   it('the canopies file carries all 318 canopies of the courtyards', () => {

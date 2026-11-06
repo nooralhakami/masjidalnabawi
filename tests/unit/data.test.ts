@@ -216,7 +216,7 @@ describe('overrides', () => {
     // block. 251–254 stay at the two ends of their west blocks.
     const R = 111_320;
     const centres = ALHARAMAIN_MODELS.filter((m) => m.url.includes('restroom')).flatMap((m) => {
-      const [x, z] = m.url.endsWith('-a.glb') ? [-2.415, -41.918] : [-2.355, -82.929];
+      const [x, z] = m.url.includes('restroom-a-') ? [-2.415, -41.918] : [-2.355, -82.929];
       const t = (m.rotation * Math.PI) / 180;
       const east = x * Math.cos(t) - z * Math.sin(t);
       const south = x * Math.sin(t) + z * Math.cos(t);

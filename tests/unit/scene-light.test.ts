@@ -120,7 +120,8 @@ describe('materialGlow (what lights up at night)', () => {
   });
 
   it("lights the restroom blocks' lattice windows from inside, warmer and brighter than their marble", () => {
-    const file = './models/haram-restroom-a.glb';
+    const file = './models/haram-restroom-a-east.glb';
+    for (const lit of ['stairs', 'escalator', 'gate', 'sign']) expect(materialGlow(file, lit), lit).toEqual(materialGlow(file, 'window'));
     const window = materialGlow(file, 'window')!;
     const marble = materialGlow(file, 'marble')!;
     expect(window.color[0]).toBeGreaterThan(marble.color[0] * 2);
