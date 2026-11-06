@@ -106,7 +106,7 @@ export class MapEngine {
       zoom: at(fit.legacyZoom),
       minZoom: at(LEGACY_MIN),
       maxZoom: at(LEGACY_MAX),
-      // Flat by default (SPEC §9-6); 3D mode unlocks pitch up to 85° (SPEC-3D.md §1).
+      // Flat until 3D mode unlocks pitch up to 85° (SPEC-3D.md §1); map-main opens in 3D (owner, 2026-11-06).
       maxPitch: 0,
       pitchWithRotate: false,
       dragRotate: true,
@@ -499,9 +499,9 @@ export class MapEngine {
    * reduced motion) and shows the 3D fill-extrusion layer; returns to flat pitch 0° / bearing 0°
    * over 800 ms when turned off.
    */
-  toggle3DMode(enabled = !this.mode3d): boolean {
+  toggle3DMode(enabled = !this.mode3d, opts: { instant?: boolean } = {}): boolean {
     this.mode3d = enabled;
-    const instant = reduce();
+    const instant = opts.instant || reduce();
     if (enabled) {
       this.map.setMaxPitch(85);
       this.map.touchPitch.enable();

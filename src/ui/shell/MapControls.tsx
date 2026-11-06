@@ -8,8 +8,6 @@ export interface MapControlsProps {
   /** Turn the map clockwise (+) or anticlockwise (−) by 15°, as the live app's buttons. */
   onTurn(deg: 15 | -15): void;
   onNorth(): void;
-  base: 'satellite' | 'light';
-  onBase(): void;
   /** Subscribe to where true north points on screen (deg clockwise); returns an unsubscribe. */
   watchNorth(fn: (deg: number) => void): () => void;
 }
@@ -17,9 +15,9 @@ export interface MapControlsProps {
 /**
  * The map's own buttons, in one column on the inline-end side: zoom, turn and the compass (its
  * needle follows true north on screen, the Kaaba mark at its other end points to the qibla, as in
- * the live app), then the base map. The needle is turned by writing one transform, never a render.
+ * the live app). The needle is turned by writing one transform, never a render.
  */
-export function MapControls({ onZoom, onTurn, onNorth, watchNorth }: Omit<MapControlsProps, 'base' | 'onBase'>) {
+export function MapControls({ onZoom, onTurn, onNorth, watchNorth }: MapControlsProps) {
   const { t } = useI18n();
   const compass = useRef<HTMLSpanElement>(null);
   useEffect(
@@ -49,22 +47,27 @@ export function MapControls({ onZoom, onTurn, onNorth, watchNorth }: Omit<MapCon
   );
 }
 
+/** The map's three views, in the order the layers button steps through them (owner, 2026-11-06). */
+export type MapView = '3d' | 'satellite' | 'light';
+export const NEXT_VIEW: Record<MapView, MapView> = { '3d': 'satellite', satellite: 'light', light: '3d' };
+/** The button names the view it leads to. */
+const VIEW_LABEL: Record<MapView, string> = { '3d': 'view_3d', satellite: 'view_2d', light: 'layer_map' };
+
 /**
- * The left column, as the live app's: the landmark stories, the library, the base map, the 3D view
- * toggle and «my location», with the weather chip above them.
+ * The left column, as the live app's: the landmark stories, the library, the layers button and «my
+ * location», with the weather chip above them. The layers button steps through the 3D view (the
+ * first), the plain satellite map and the light map (owner, 2026-11-06).
  */
 export function MapTools({
-  base,
-  onBase,
-  is3D = false,
-  onToggle3D,
+  view,
+  onView,
   onLocate,
   onStories,
   onLibrary,
   weather,
-}: Pick<MapControlsProps, 'base' | 'onBase'> & {
-  is3D?: boolean;
-  onToggle3D?(): void;
+}: {
+  view: MapView;
+  onView(): void;
   onLocate?(): void;
   onStories?(): void;
   onLibrary?(): void;
@@ -76,8 +79,7 @@ export function MapTools({
       {weather}
       {onStories ? <IconButton icon="landmark" floating class="mc-stories" label={t('st_open')} onClick={onStories} /> : null}
       {onLibrary ? <IconButton icon="book" floating class="mc-library" label={t('lib_title')} onClick={onLibrary} /> : null}
-      <IconButton icon="layers" floating class="mc-layers" label={t(base === 'satellite' ? 'layer_map' : 'layer_sat')} pressed={base === 'light'} onClick={onBase} />
-      {onToggle3D ? <IconButton icon="cube" floating class="mc-3d" label={t(is3D ? 'view_2d' : 'view_3d')} pressed={is3D} onClick={onToggle3D} /> : null}
+      <IconButton icon="layers" floating class="mc-layers" data-view={view} label={t(VIEW_LABEL[NEXT_VIEW[view]])} onClick={onView} />
       {/* Location is asked for only on this tap (or «route from my location»), never before. */}
       {onLocate ? <IconButton icon="locate" floating class="mc-locate" label={t('gps')} onClick={onLocate} /> : null}
     </div>

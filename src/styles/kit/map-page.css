@@ -35,11 +35,6 @@
 .mc-compass:not(.is-rotated) .icon-btn {
   color: var(--muted);
 }
-.mc-3d[aria-pressed='true'] {
-  background: var(--accent);
-  color: var(--accent-ink);
-  border-color: var(--accent);
-}
 
 /* ---------- The map page ---------- */
 .map-page {
