@@ -178,6 +178,15 @@ describe('a canopy opens and closes at a tap (owner, 2026-11-06)', () => {
     const slope = (p: readonly number[]) => Math.atan2(p[1] - axis[2], r(p));
     const half = 0.5;
     expect(slope(foldCanopyVertex(root, half, axis)) - slope(root)).toBeLessThan(slope(foldCanopyVertex(tip, half, axis)) - slope(tip));
+    // It opens from the bottom up (owner, 2026-11-06): half way, the part of the arm near the column
+    // lies open while the part beyond still stands upright above it.
+    const near: [number, number, number] = [5, 11, 0];
+    const far: [number, number, number] = [11, 14, 0];
+    const mid = 0.35;
+    expect(foldCanopyVertex(near, mid, axis)[1]).toBeCloseTo(near[1], 0);
+    const f = foldCanopyVertex(far, mid, axis);
+    expect(f[1]).toBeGreaterThan(far[1] + 1.5);
+    expect(r(f)).toBeLessThan(r(far) - 3);
     // The column and its lantern stay where they are.
     for (const p of [
       [-0.72, 4, -0.72],
