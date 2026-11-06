@@ -105,10 +105,11 @@ interface PendingAsset {
 }
 
 /**
- * A canopy opening or closing (owner, 2026-11-06), as the Madinah canopies move: each arm turns
- * about the hinge at the top of the column, from upright in the folded bundle to the open slope,
- * and the fabric gathered in pleats between the arms spreads as it goes. The arm tips trail the
- * roots, so the fabric unfurls from the column outwards, and it billows a little mid-way.
+ * A canopy opening or closing (owner, 2026-11-06), as the Madinah canopies move: it opens from the
+ * bottom up (owner's correction, the same day). A bend travels along each arm from the hinge at the
+ * top of the column to the tip: below it the arm lies at the open slope, above it the rest of the
+ * folded bundle still stands upright, riding outwards on the bend. The fabric gathered in pleats
+ * between the arms spreads as the bend passes, and billows a little there.
  * `u_canopy`: the column's axis (x, z) and hinge height in the mesh, and 1 when this draw folds.
  * `a_fold`: 0 folded, 1 open. `a_hide`: 1 hides the instance (the canopy is drawn by the anim group).
  * Mirrored in TypeScript by `foldCanopyVertex` (tests).
@@ -128,16 +129,21 @@ vec3 canopyFold(vec3 p, inout vec3 n) {
   vec2 dir = d / r;
   float len = length(vec2(r, h));
   float b0 = atan(h, r);
-  float q = clamp(a_fold * 1.35 - 0.35 * clamp(len / 16.0, 0.0, 1.0), 0.0, 1.0);
-  float s = q * q * (3.0 - 2.0 * q);
-  float b = mix(1.48, b0, s);
+  // The bend: open below \`front - 1.5\`, upright (gathered to 0.62 of its length) above \`front + 1.5\`.
+  float front = a_fold * 24.0 - 1.5;
+  float a1 = clamp(front - 1.5, 0.0, len);
+  float a2 = clamp(front + 1.5, 0.0, len) - a1;
+  float a3 = len - a1 - a2;
+  float bm = 0.5 * (b0 + 1.48);
+  vec2 rh = a1 * vec2(cos(b0), sin(b0)) + a2 * 0.81 * vec2(cos(bm), sin(bm)) + a3 * 0.62 * vec2(cos(1.48), sin(1.48));
+  float s = (a1 + 0.5 * a2) / max(len, 1e-3);
+  float b = mix(b0, 1.48, smoothstep(front - 1.5, front + 1.5, len));
   float az = atan(d.y, d.x);
   float rib = 0.5 + 0.5 * cos(az * 16.0);
   float pleat = 1.0 - (1.0 - s) * 0.35 * (1.0 - rib);
   float billow = 0.35 * sin(3.14159 * s) * (1.0 - rib) * clamp(len / 14.0, 0.0, 1.0);
-  float l = len * mix(0.62, 1.0, s);
-  float rr = l * cos(b) * pleat + billow;
-  float hh = l * sin(b);
+  float rr = rh.x * pleat + billow;
+  float hh = rh.y;
   float db = (b - b0) * w;
   float nr = dot(n.xz, dir);
   vec2 rot = vec2(nr * cos(db) - n.y * sin(db), nr * sin(db) + n.y * cos(db));
@@ -506,15 +512,20 @@ export function foldCanopyVertex(p: readonly [number, number, number], f: number
   if (w <= 0) return [p[0], p[1], p[2]];
   const len = Math.hypot(r, h);
   const b0 = Math.atan2(h, r);
-  const q = Math.max(0, Math.min(1, f * 1.35 - 0.35 * Math.min(1, len / 16)));
-  const st = q * q * (3 - 2 * q);
-  const b = 1.48 + (b0 - 1.48) * st;
+  const clamp = (v: number) => Math.max(0, Math.min(len, v));
+  const front = f * 24 - 1.5;
+  const a1 = clamp(front - 1.5);
+  const a2 = clamp(front + 1.5) - a1;
+  const a3 = len - a1 - a2;
+  const bm = 0.5 * (b0 + 1.48);
+  const rx = a1 * Math.cos(b0) + a2 * 0.81 * Math.cos(bm) + a3 * 0.62 * Math.cos(1.48);
+  const hy = a1 * Math.sin(b0) + a2 * 0.81 * Math.sin(bm) + a3 * 0.62 * Math.sin(1.48);
+  const st = (a1 + 0.5 * a2) / Math.max(len, 1e-3);
   const rib = 0.5 + 0.5 * Math.cos(Math.atan2(dz, dx) * 16);
   const pleat = 1 - (1 - st) * 0.35 * (1 - rib);
   const billow = 0.35 * Math.sin(Math.PI * st) * (1 - rib) * Math.min(1, len / 14);
-  const l = len * (0.62 + 0.38 * st);
-  const rr = l * Math.cos(b) * pleat + billow;
-  const folded: [number, number, number] = [axis[0] + (dx / r) * rr, axis[2] + l * Math.sin(b), axis[1] + (dz / r) * rr];
+  const rr = rx * pleat + billow;
+  const folded: [number, number, number] = [axis[0] + (dx / r) * rr, axis[2] + hy, axis[1] + (dz / r) * rr];
   return [p[0] + (folded[0] - p[0]) * w, p[1] + (folded[1] - p[1]) * w, p[2] + (folded[2] - p[2]) * w];
 }
 
