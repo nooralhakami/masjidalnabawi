@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ALHARAMAIN_MODELS, alharamainPlaza } from '../../src/data-next/alharamain-3d';
-import { canopyFolding, metresFromOrigin, nodeShift, parseGlbBuffer } from '../../src/map/glb-layer';
+import { CANOPY_MOVE_MS, canopyFoldAt, canopyFolding, foldCanopyVertex, metresFromOrigin, nodeShift, parseGlbBuffer } from '../../src/map/glb-layer';
 import { plazaMesh } from '../../src/map/plaza-layer';
 import { triangulate } from '../../src/map/polygon';
 
@@ -89,5 +89,59 @@ describe('the west canopies by restrooms 213-218 (owner, 2026-11-06)', () => {
     const lines = (v: number[]) => v.sort((p, q) => p - q).filter((x, i, a) => i === 0 || x - a[i - 1] > 5).length;
     expect(lines(moved.map(([e]) => e))).toBe(5);
     expect(lines(moved.map(([, s]) => s))).toBe(9);
+  });
+});
+
+describe('a canopy opens and closes at a tap (owner, 2026-11-06)', () => {
+  const file = readFileSync(resolve(__dirname, '../../public/models/haram-canopies.glb'));
+  const { gltf } = parseGlbBuffer(file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength) as ArrayBuffer);
+
+  it('the 243 canopies with fabric can be tapped; the 75 lamp columns of the south courtyard cannot', () => {
+    const folding = canopyFolding(gltf)!;
+    const nodes = gltf.nodes.filter((n) => n.mesh !== undefined);
+    const tappable = nodes.filter((n) => folding.open.has(n.mesh!) || n.mesh === folding.closed);
+    expect(tappable).toHaveLength(243);
+    const lamps = nodes.filter((n) => !folding.open.has(n.mesh!) && n.mesh !== folding.closed);
+    expect(lamps).toHaveLength(75);
+    expect(lamps.every((n) => /CanopyOpen/.test(n.name ?? ''))).toBe(true);
+  });
+
+  it('moves like a motor: starts gently, ends in place, never past it, in six seconds', () => {
+    expect(canopyFoldAt(0, 1, 0)).toBe(0);
+    expect(canopyFoldAt(0, 1, CANOPY_MOVE_MS)).toBe(1);
+    expect(canopyFoldAt(0, 1, CANOPY_MOVE_MS * 0.1)).toBeLessThan(0.02);
+    expect(canopyFoldAt(0, 1, CANOPY_MOVE_MS / 2)).toBeCloseTo(0.5, 5);
+    let last = 0;
+    for (let ms = 0; ms <= CANOPY_MOVE_MS; ms += 100) {
+      const f = canopyFoldAt(0, 1, ms);
+      expect(f).toBeGreaterThanOrEqual(last);
+      expect(f).toBeLessThanOrEqual(1);
+      last = f;
+    }
+    // Closing from half way takes half the time.
+    expect(canopyFoldAt(0.5, 0, CANOPY_MOVE_MS / 2)).toBe(0);
+  });
+
+  it('folds each arm upright about the column top: open as drawn, folded into a tall narrow bundle, the column itself never moves', () => {
+    const axis = [-0.72, -0.72, 9.16] as const;
+    const tip: [number, number, number] = [12, 15.5, 0];
+    expect(foldCanopyVertex(tip, 1, axis)).toEqual(tip);
+    const folded = foldCanopyVertex(tip, 0, axis);
+    const r = (p: readonly number[]) => Math.hypot(p[0] - axis[0], p[2] - axis[1]);
+    expect(r(folded)).toBeLessThan(2);
+    expect(folded[1]).toBeGreaterThan(17);
+    expect(folded[1]).toBeLessThan(20.5);
+    // Half way the root has opened further than the tip: the fabric unfurls outwards.
+    const root: [number, number, number] = [3, 10, 0];
+    const slope = (p: readonly number[]) => Math.atan2(p[1] - axis[2], r(p));
+    const half = 0.5;
+    expect(slope(foldCanopyVertex(root, half, axis)) - slope(root)).toBeLessThan(slope(foldCanopyVertex(tip, half, axis)) - slope(tip));
+    // The column and its lantern stay where they are.
+    for (const p of [
+      [-0.72, 4, -0.72],
+      [0.2, 8, -0.5],
+    ] as [number, number, number][]) {
+      expect(foldCanopyVertex(p, 0, axis)).toEqual(p);
+    }
   });
 });

@@ -16,6 +16,8 @@ interface GltfAccessor {
   componentType: number;
   count: number;
   type: 'SCALAR' | 'VEC2' | 'VEC3' | 'VEC4';
+  min?: number[];
+  max?: number[];
 }
 
 interface GltfBufferView {
@@ -87,8 +89,11 @@ interface GpuPrimitive {
   portalRect: [number, number, number, number];
   portalSize: [number, number];
   lattice: boolean;
-  /** When it is drawn: always, or only while the canopies are open (day) or folded (night). */
-  when: 'always' | 'day' | 'night';
+  /**
+   * When it is drawn: always, only while the canopies are open (day) or folded (night), or `anim`:
+   * the canopies a visitor opened or closed with a tap, folded in the vertex shader.
+   */
+  when: 'always' | 'day' | 'night' | 'anim';
 }
 
 /** A parsed file waiting for the next frame: WebGL state is only ours while MapLibre renders this layer. */
@@ -99,13 +104,56 @@ interface PendingAsset {
   images: (ImageBitmap | null)[];
 }
 
+/**
+ * A canopy opening or closing (owner, 2026-11-06), as the Madinah canopies move: each arm turns
+ * about the hinge at the top of the column, from upright in the folded bundle to the open slope,
+ * and the fabric gathered in pleats between the arms spreads as it goes. The arm tips trail the
+ * roots, so the fabric unfurls from the column outwards, and it billows a little mid-way.
+ * `u_canopy`: the column's axis (x, z) and hinge height in the mesh, and 1 when this draw folds.
+ * `a_fold`: 0 folded, 1 open. `a_hide`: 1 hides the instance (the canopy is drawn by the anim group).
+ * Mirrored in TypeScript by `foldCanopyVertex` (tests).
+ */
+const CANOPY_GLSL = `
+layout(location = 7) in float a_hide;
+layout(location = 8) in float a_fold;
+uniform vec4 u_canopy;
+
+vec3 canopyFold(vec3 p, inout vec3 n) {
+  if (u_canopy.w < 0.5 || a_fold >= 0.999) return p;
+  vec2 d = vec2(p.x - u_canopy.x, p.z - u_canopy.y);
+  float h = p.y - u_canopy.z;
+  float r = length(d);
+  float w = smoothstep(1.6, 2.6, r) * step(-0.6, h);
+  if (w <= 0.0) return p;
+  vec2 dir = d / r;
+  float len = length(vec2(r, h));
+  float b0 = atan(h, r);
+  float q = clamp(a_fold * 1.35 - 0.35 * clamp(len / 16.0, 0.0, 1.0), 0.0, 1.0);
+  float s = q * q * (3.0 - 2.0 * q);
+  float b = mix(1.48, b0, s);
+  float az = atan(d.y, d.x);
+  float rib = 0.5 + 0.5 * cos(az * 16.0);
+  float pleat = 1.0 - (1.0 - s) * 0.35 * (1.0 - rib);
+  float billow = 0.35 * sin(3.14159 * s) * (1.0 - rib) * clamp(len / 14.0, 0.0, 1.0);
+  float l = len * mix(0.62, 1.0, s);
+  float rr = l * cos(b) * pleat + billow;
+  float hh = l * sin(b);
+  float db = (b - b0) * w;
+  float nr = dot(n.xz, dir);
+  vec2 rot = vec2(nr * cos(db) - n.y * sin(db), nr * sin(db) + n.y * cos(db));
+  n = vec3(n.x + dir.x * (rot.x - nr), rot.y, n.z + dir.y * (rot.x - nr));
+  vec3 folded = vec3(u_canopy.x + dir.x * rr, u_canopy.z + hh, u_canopy.y + dir.y * rr);
+  return mix(p, folded, w);
+}
+`;
+
 const VERT_SRC = `#version 300 es
 precision highp float;
 layout(location = 0) in vec3 a_pos;
 layout(location = 1) in vec3 a_normal;
 layout(location = 2) in vec2 a_uv;
 layout(location = 3) in mat4 a_model; // One per instance; takes locations 3 to 6.
-
+${CANOPY_GLSL}
 uniform mat4 u_mvp;
 uniform mat4 u_light;
 
@@ -116,13 +164,15 @@ out vec4 v_shadow;
 out float v_localY;
 
 void main() {
-  v_localY = a_pos.y;
-  vec4 world = a_model * vec4(a_pos, 1.0);
-  gl_Position = u_mvp * world;
+  vec3 nrm = a_normal;
+  vec3 pos = canopyFold(a_pos, nrm);
+  v_localY = pos.y;
+  vec4 world = a_model * vec4(pos, 1.0);
+  gl_Position = a_hide > 0.5 ? vec4(0.0, 0.0, 2.0, 1.0) : u_mvp * world;
   v_height = world.y;
   v_shadow = u_light * world;
   // Some nodes are scaled unevenly or mirrored, so a plain rotation would bend their normals.
-  v_normal = transpose(inverse(mat3(a_model))) * a_normal;
+  v_normal = transpose(inverse(mat3(a_model))) * nrm;
   v_uv = a_uv;
 }
 `;
@@ -303,11 +353,13 @@ const DEPTH_VERT_SRC = `#version 300 es
 precision highp float;
 layout(location = 0) in vec3 a_pos;
 layout(location = 3) in mat4 a_model;
-
+${CANOPY_GLSL}
 uniform mat4 u_light;
 
 void main() {
-  gl_Position = u_light * a_model * vec4(a_pos, 1.0);
+  vec3 nrm = vec3(0.0, 1.0, 0.0);
+  vec3 pos = canopyFold(a_pos, nrm);
+  gl_Position = a_hide > 0.5 ? vec4(0.0, 0.0, 2.0, 1.0) : u_light * a_model * vec4(pos, 1.0);
 }
 `;
 
@@ -424,6 +476,62 @@ export function canopyFolding(gltf: { nodes: GltfNode[]; meshes: GltfMesh[]; mat
   const hasFabric = (mesh: number) => gltf.meshes[mesh].primitives.some((p) => p.material !== undefined && gltf.materials?.[p.material]?.name === 'uMB');
   const open = new Set(gltf.nodes.filter((n) => n.mesh !== undefined && /CanopyOpen/.test(n.name ?? '') && hasFabric(n.mesh)).map((n) => n.mesh!));
   return open.size ? { open, closed } : null;
+}
+
+/** How long a canopy takes to open or close all the way (the real ones take minutes). */
+export const CANOPY_MOVE_MS = 6000;
+
+/**
+ * How open a canopy is at `ms` into a move from `from` to `to` (0 folded, 1 open): driven like a
+ * motor, it starts gently, runs, and slows into place.
+ */
+export function canopyFoldAt(from: number, to: number, ms: number, duration = CANOPY_MOVE_MS * Math.abs(to - from)): number {
+  const u = duration <= 0 ? 1 : Math.max(0, Math.min(1, ms / duration));
+  const e = u * u * u * (u * (u * 6 - 15) + 10);
+  return from + (to - from) * e;
+}
+
+/** `CANOPY_GLSL`'s fold in TypeScript, for the tests: a vertex of the open canopy at fold `f`. */
+export function foldCanopyVertex(p: readonly [number, number, number], f: number, axis: readonly [number, number, number]): [number, number, number] {
+  if (f >= 0.999) return [p[0], p[1], p[2]];
+  const dx = p[0] - axis[0];
+  const dz = p[2] - axis[1];
+  const h = p[1] - axis[2];
+  const r = Math.hypot(dx, dz);
+  const sm = (a: number, b: number, x: number) => {
+    const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+    return t * t * (3 - 2 * t);
+  };
+  const w = sm(1.6, 2.6, r) * (h >= -0.6 ? 1 : 0);
+  if (w <= 0) return [p[0], p[1], p[2]];
+  const len = Math.hypot(r, h);
+  const b0 = Math.atan2(h, r);
+  const q = Math.max(0, Math.min(1, f * 1.35 - 0.35 * Math.min(1, len / 16)));
+  const st = q * q * (3 - 2 * q);
+  const b = 1.48 + (b0 - 1.48) * st;
+  const rib = 0.5 + 0.5 * Math.cos(Math.atan2(dz, dx) * 16);
+  const pleat = 1 - (1 - st) * 0.35 * (1 - rib);
+  const billow = 0.35 * Math.sin(Math.PI * st) * (1 - rib) * Math.min(1, len / 14);
+  const l = len * (0.62 + 0.38 * st);
+  const rr = l * Math.cos(b) * pleat + billow;
+  const folded: [number, number, number] = [axis[0] + (dx / r) * rr, axis[2] + l * Math.sin(b), axis[1] + (dz / r) * rr];
+  return [p[0] + (folded[0] - p[0]) * w, p[1] + (folded[1] - p[1]) * w, p[2] + (folded[2] - p[2]) * w];
+}
+
+/** One canopy a visitor can open or close with a tap: where it stands, and its instances to hide. */
+interface Canopy {
+  matrix: Float32Array;
+  /** Open by day in navQ (it folds at night); the others stay folded. */
+  foldable: boolean;
+  refs: { buf: WebGLBuffer; data: Float32Array; i: number }[];
+}
+
+/** A canopy moving, or held where a visitor left it. */
+interface CanopyMove {
+  from: number;
+  to: number;
+  start: number;
+  f: number;
 }
 
 /** A portal's back wall: what to paint, its UV rectangle, and its width and height in metres. */
@@ -543,6 +651,18 @@ export class HaramGlbLayer implements CustomLayerInterface {
   private fallbackTex: WebGLTexture | null = null;
   private generation = 0;
   private mercatorMatrix: Float64Array;
+  private uCanopy: WebGLUniformLocation | null = null;
+  private uDepthCanopy: WebGLUniformLocation | null = null;
+  /** The canopies of the canopies file, the moves under way, and the group that draws them. */
+  private canopies: Canopy[] = [];
+  private moves = new Map<number, CanopyMove>();
+  private canopyAxis: [number, number, number, number] = [0, 0, 0, 0];
+  private animMatrices: WebGLBuffer | null = null;
+  private animFolds: WebGLBuffer | null = null;
+  private animCount = 0;
+  private folded = false;
+  /** The last frame's projection (metres to clip space), to find the canopy under a tap. */
+  private lastMvp: Float64Array | null = null;
 
   /**
    * `light`: how the scene is lit now (change it with `setLight`). `onLamps`: where the lanterns of
@@ -580,6 +700,11 @@ export class HaramGlbLayer implements CustomLayerInterface {
     this.shadowFbo = null;
     this.pending = [];
     this.prims = [];
+    this.canopies = [];
+    this.moves.clear();
+    this.animMatrices = this.animFolds = null;
+    this.animCount = 0;
+    this.lastMvp = null;
     this.buffers = [];
     this.vaos = [];
     this.textures = [];
@@ -624,6 +749,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
     this.uPortalRect = gl.getUniformLocation(prog, 'u_portalRect');
     this.uPortalSize = gl.getUniformLocation(prog, 'u_portalSize');
     this.uLattice = gl.getUniformLocation(prog, 'u_lattice');
+    this.uCanopy = gl.getUniformLocation(prog, 'u_canopy');
 
     // The depth-only pass the sun's shadow map is drawn with: the same vertex arrays, position and
     // instance matrix only.
@@ -637,6 +763,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
     gl.deleteShader(dfs);
     this.depthProgram = dprog;
     this.uDepthLight = gl.getUniformLocation(dprog, 'u_light');
+    this.uDepthCanopy = gl.getUniformLocation(dprog, 'u_canopy');
     sunShadow.texture = createShadowTexture(gl, SHADOW_SIZE);
     this.shadowFbo = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowFbo);
@@ -706,11 +833,15 @@ export class HaramGlbLayer implements CustomLayerInterface {
     // The courtyard canopies fold at night (as the Mosque's night photographs show them): a node
     // open in navQ's file is drawn by day as it is, and at night with the file's own folded canopy.
     const folding = canopyFolding(gltf);
-    const groups = new Map<string, { mesh: number; when: GpuPrimitive['when']; matrices: number[] }>();
-    const add = (mesh: number, when: GpuPrimitive['when'], matrix: Float64Array) => {
+    // A canopy with fabric (open by day, or always folded) opens and closes at a tap; the lamp
+    // columns of the south courtyard, with no canopy, never do (owner, 2026-11-06).
+    const firstCanopy = this.canopies.length;
+    const groups = new Map<string, { mesh: number; when: GpuPrimitive['when']; matrices: number[]; canopy: number[] }>();
+    const add = (mesh: number, when: GpuPrimitive['when'], matrix: Float64Array, canopy: number) => {
       const key = `${mesh}|${when}`;
-      const group = groups.get(key) ?? { mesh, when, matrices: [] };
+      const group = groups.get(key) ?? { mesh, when, matrices: [], canopy: [] };
       group.matrices.push(...matrix);
+      group.canopy.push(canopy);
       groups.set(key, group);
     };
     const combined = new Float64Array(16);
@@ -718,14 +849,25 @@ export class HaramGlbLayer implements CustomLayerInterface {
       if (node.mesh === undefined) continue;
       const local = node.matrix ? new Float64Array(node.matrix) : composeTrs(node.translation ?? [0, 0, 0], node.rotation ?? [0, 0, 0, 1], node.scale ?? [1, 1, 1]);
       const folds = folding !== null && folding.open.has(node.mesh);
+      const tappable = folding !== null && (folds || node.mesh === folding.closed);
       for (const placement of placements) {
         mulMat4(combined, placement, local);
         const [dEast, dSouth] = nodeShift(model, combined[12], combined[14]);
         combined[12] += dEast;
         combined[14] += dSouth;
-        add(node.mesh, folds ? 'day' : 'always', combined);
-        if (folds) add(folding!.closed, 'night', combined);
+        const canopy = tappable ? this.canopies.push({ matrix: new Float32Array(combined), foldable: folds, refs: [] }) - 1 : -1;
+        add(node.mesh, folds ? 'day' : 'always', combined, canopy);
+        if (folds) add(folding!.closed, 'night', combined, canopy);
       }
+    }
+    if (folding && this.canopies.length > firstCanopy) {
+      // The canopies a visitor moves are drawn from the open canopy's mesh, folded in the shader.
+      const openMesh = [...folding.open][0];
+      groups.set('anim', { mesh: openMesh, when: 'anim', matrices: [], canopy: [] });
+      const column = gltf.accessors[gltf.meshes[openMesh].primitives[0].attributes.POSITION];
+      const lo = column.min ?? [0, 0, 0];
+      const hi = column.max ?? [0, 0, 0];
+      this.canopyAxis = [(lo[0] + hi[0]) / 2, (lo[2] + hi[2]) / 2, hi[1], 1];
     }
 
     const sliceAccessor = (accIndex: number): Uint8Array => {
@@ -751,11 +893,31 @@ export class HaramGlbLayer implements CustomLayerInterface {
     };
 
     const materials = gltf.materials ?? [];
-    for (const { mesh: meshIndex, when, matrices } of groups.values()) {
+    for (const { mesh: meshIndex, when, matrices, canopy } of groups.values()) {
+      const anim = when === 'anim';
       const instanceBuf = gl.createBuffer()!;
       gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuf);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(matrices), gl.STATIC_DRAW);
+      if (anim) gl.bufferData(gl.ARRAY_BUFFER, (this.canopies.length - firstCanopy) * 64, gl.DYNAMIC_DRAW);
+      else gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(matrices), gl.STATIC_DRAW);
       this.buffers.push(instanceBuf);
+      // Per instance: hidden while a visitor's move draws it (the canopies' groups only), and how
+      // open it is (the anim group only).
+      let hideBuf: WebGLBuffer | null = null;
+      if (!anim && canopy.some((k) => k >= 0)) {
+        hideBuf = gl.createBuffer()!;
+        const data = new Float32Array(canopy.length);
+        gl.bindBuffer(gl.ARRAY_BUFFER, hideBuf);
+        gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+        this.buffers.push(hideBuf);
+        canopy.forEach((k, i) => k >= 0 && this.canopies[k].refs.push({ buf: hideBuf!, data, i }));
+      }
+      if (anim) {
+        this.animMatrices = instanceBuf;
+        this.animFolds = gl.createBuffer()!;
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.animFolds);
+        gl.bufferData(gl.ARRAY_BUFFER, (this.canopies.length - firstCanopy) * 4, gl.DYNAMIC_DRAW);
+        this.buffers.push(this.animFolds);
+      }
 
       for (const prim of gltf.meshes[meshIndex].primitives) {
         const vao = gl.createVertexArray()!;
@@ -774,6 +936,19 @@ export class HaramGlbLayer implements CustomLayerInterface {
           gl.enableVertexAttribArray(3 + column);
           gl.vertexAttribPointer(3 + column, 4, gl.FLOAT, false, 64, column * 16);
           gl.vertexAttribDivisor(3 + column, 1);
+        }
+        for (const [location, buf] of [
+          [7, hideBuf],
+          [8, anim ? this.animFolds : null],
+        ] as const) {
+          if (!buf) {
+            gl.disableVertexAttribArray(location);
+            continue;
+          }
+          gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+          gl.enableVertexAttribArray(location);
+          gl.vertexAttribPointer(location, 1, gl.FLOAT, false, 4, 0);
+          gl.vertexAttribDivisor(location, 1);
         }
 
         let count = gltf.accessors[prim.attributes.POSITION].count;
@@ -818,6 +993,118 @@ export class HaramGlbLayer implements CustomLayerInterface {
     }
   }
 
+  /**
+   * A tap at `[x, y]` (CSS pixels): the canopy whose column or folded bundle is under it opens, or
+   * closes if open. False when no canopy is there (the tap is then the map's).
+   */
+  toggleCanopyAt(x: number, y: number): boolean {
+    const k = this.canopyAt(x, y);
+    if (k === null) return false;
+    const now = performance.now();
+    const move = this.moves.get(k);
+    const f = move?.f ?? (this.canopies[k].foldable && !this.folded ? 1 : 0);
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const to = f > 0.5 ? 0 : 1;
+    this.moves.set(k, { from: reduce ? to : f, to, start: now, f });
+    this.setHidden(k, true);
+    this.map?.triggerRepaint();
+    return true;
+  }
+
+  /** The nearest canopy to a tap, by its column from the ground to the top, within 24 px. */
+  private canopyAt(x: number, y: number): number | null {
+    const mvp = this.lastMvp;
+    const canvas = this.map?.getCanvas();
+    if (!mvp || !canvas || !this.canopies.length) return null;
+    const W = canvas.clientWidth;
+    const H = canvas.clientHeight;
+    const [cx, cz] = this.canopyAxis;
+    const project = (m: Float32Array, h: number): [number, number, number] | null => {
+      const wx = m[0] * cx + m[4] * h + m[8] * cz + m[12];
+      const wy = m[1] * cx + m[5] * h + m[9] * cz + m[13];
+      const wz = m[2] * cx + m[6] * h + m[10] * cz + m[14];
+      const cw = mvp[3] * wx + mvp[7] * wy + mvp[11] * wz + mvp[15];
+      if (cw <= 0) return null;
+      const nx = (mvp[0] * wx + mvp[4] * wy + mvp[8] * wz + mvp[12]) / cw;
+      const ny = (mvp[1] * wx + mvp[5] * wy + mvp[9] * wz + mvp[13]) / cw;
+      return [((nx + 1) / 2) * W, ((1 - ny) / 2) * H, cw];
+    };
+    let best: number | null = null;
+    let bestScore = Number.POSITIVE_INFINITY;
+    this.canopies.forEach((c, k) => {
+      const a = project(c.matrix, 0);
+      const b = project(c.matrix, 18);
+      if (!a || !b) return;
+      const vx = b[0] - a[0];
+      const vy = b[1] - a[1];
+      const t = Math.max(0, Math.min(1, ((x - a[0]) * vx + (y - a[1]) * vy) / (vx * vx + vy * vy || 1)));
+      const d = Math.hypot(x - a[0] - vx * t, y - a[1] - vy * t);
+      // Within reach, the nearest to the eye wins: a column in front hides the ones behind it.
+      if (d <= 24 && a[2] < bestScore) {
+        best = k;
+        bestScore = a[2];
+      }
+    });
+    return best;
+  }
+
+  private setHidden(k: number, hidden: boolean): void {
+    for (const ref of this.canopies[k].refs) ref.data[ref.i] = hidden ? 1 : 0;
+    this.hideDirty = true;
+  }
+
+  private hideDirty = false;
+
+  /** Advance the moves to `now`, and write the anim group's instances and the hidden flags. */
+  private stepCanopies(gl: WebGL2RenderingContext, now: number): boolean {
+    if (this.hideDirty) {
+      const seen = new Set<WebGLBuffer>();
+      for (const c of this.canopies) {
+        for (const ref of c.refs) {
+          if (seen.has(ref.buf)) continue;
+          seen.add(ref.buf);
+          gl.bindBuffer(gl.ARRAY_BUFFER, ref.buf);
+          gl.bufferSubData(gl.ARRAY_BUFFER, 0, ref.data);
+        }
+      }
+      this.hideDirty = false;
+    }
+    if (!this.moves.size || !this.animMatrices || !this.animFolds) {
+      this.animCount = 0;
+      return false;
+    }
+    let moving = false;
+    const matrices = new Float32Array(this.moves.size * 16);
+    const folds = new Float32Array(this.moves.size);
+    let n = 0;
+    for (const [k, m] of this.moves) {
+      m.f = canopyFoldAt(m.from, m.to, now - m.start);
+      const done = m.f === m.to;
+      if (!done) moving = true;
+      // Folded back where navQ has it folded: the file's own canopy again.
+      if (done && m.to === 0 && !(this.canopies[k].foldable && !this.folded)) {
+        this.moves.delete(k);
+        this.setHidden(k, false);
+        continue;
+      }
+      if (done && m.to === 1 && this.canopies[k].foldable && !this.folded) {
+        this.moves.delete(k);
+        this.setHidden(k, false);
+        continue;
+      }
+      matrices.set(this.canopies[k].matrix, n * 16);
+      folds[n] = m.f;
+      n++;
+    }
+    this.animCount = n;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.animMatrices);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, matrices.subarray(0, n * 16));
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.animFolds);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, folds.subarray(0, n));
+    if (this.hideDirty) return this.stepCanopies(gl, now) || moving;
+    return moving;
+  }
+
   /** The sun moved or a preview asked for another moment: the next frame uses this light. */
   setLight(light: SceneLight): void {
     const moved = light.sunDir.some((v, i) => Math.abs(v - this.light.sunDir[i]) > 1e-4);
@@ -839,6 +1126,8 @@ export class HaramGlbLayer implements CustomLayerInterface {
     const climb = Math.max(0, Math.min(1, (light.sunDir[1] - 0.12) / 0.22));
     sunShadow.strength = Math.max(0, Math.min(1, (light.sun[0] + light.sun[1] + light.sun[2]) / 0.9)) * (1 - light.night) * climb;
     const folded = light.night >= 0.5;
+    this.folded = folded;
+    if (this.stepCanopies(gl, performance.now()) || this.moves.size) this.shadowDirty = true;
     if (folded !== this.shadowFolded) this.shadowDirty = true;
     if (!this.shadowDirty || !this.depthProgram || !this.shadowFbo || !this.prims.length || sunShadow.strength <= 0) return;
     this.shadowDirty = false;
@@ -860,11 +1149,16 @@ export class HaramGlbLayer implements CustomLayerInterface {
     gl.polygonOffset(2, 4);
     gl.useProgram(this.depthProgram);
     gl.uniformMatrix4fv(this.uDepthLight, false, sunShadow.matrix);
+    gl.vertexAttrib1f(7, 0);
+    gl.vertexAttrib1f(8, 1);
     for (const prim of this.prims) {
       if ((prim.when === 'day' && folded) || (prim.when === 'night' && !folded)) continue;
+      const instances = prim.when === 'anim' ? this.animCount : prim.instances;
+      if (!instances) continue;
+      gl.uniform4fv(this.uDepthCanopy, prim.when === 'anim' ? this.canopyAxis : [0, 0, 0, 0]);
       gl.bindVertexArray(prim.vao);
-      if (prim.hasIndices) gl.drawElementsInstanced(prim.mode, prim.count, prim.indexType, 0, prim.instances);
-      else gl.drawArraysInstanced(prim.mode, 0, prim.count, prim.instances);
+      if (prim.hasIndices) gl.drawElementsInstanced(prim.mode, prim.count, prim.indexType, 0, instances);
+      else gl.drawArraysInstanced(prim.mode, 0, prim.count, instances);
     }
     gl.bindVertexArray(null);
     gl.disable(gl.POLYGON_OFFSET_FILL);
@@ -889,6 +1183,13 @@ export class HaramGlbLayer implements CustomLayerInterface {
     // Multiply in 64-bit once per frame, so the model does not shake at high zoom.
     const mvp64 = new Float64Array(16);
     mulMat4(mvp64, projMatrix as unknown as ArrayLike<number>, this.mercatorMatrix);
+    this.lastMvp = mvp64;
+    this.folded = this.light.night >= 0.5;
+    // A canopy still moving asks for the next frame (its shadow follows in prerender).
+    if (this.stepCanopies(gl, performance.now())) {
+      this.shadowDirty = true;
+      this.map?.triggerRepaint();
+    }
 
     gl.useProgram(this.program);
     gl.enable(gl.DEPTH_TEST);
@@ -909,6 +1210,8 @@ export class HaramGlbLayer implements CustomLayerInterface {
     gl.uniform1f(this.uNight, light.night);
     gl.vertexAttrib3f(1, 0, 1, 0);
     gl.vertexAttrib2f(2, 0, 0);
+    gl.vertexAttrib1f(7, 0);
+    gl.vertexAttrib1f(8, 1);
     // The sun's shadow map on unit 1 (drawn in prerender).
     gl.uniformMatrix4fv(this.uLight, false, sunShadow.matrix);
     gl.uniform1f(this.uShadowOn, sunShadow.strength > 0 && !this.shadowDirty ? 1 : 0);
@@ -922,6 +1225,9 @@ export class HaramGlbLayer implements CustomLayerInterface {
     const folded = light.night >= 0.5;
     for (const prim of this.prims) {
       if ((prim.when === 'day' && folded) || (prim.when === 'night' && !folded)) continue;
+      const instances = prim.when === 'anim' ? this.animCount : prim.instances;
+      if (!instances) continue;
+      gl.uniform4fv(this.uCanopy, prim.when === 'anim' ? this.canopyAxis : [0, 0, 0, 0]);
       gl.uniform4fv(this.uBaseColor, prim.baseColor);
       gl.uniform3fv(this.uGlow, prim.glow);
       gl.uniform1f(this.uGlowTint, prim.glowTint);
@@ -941,8 +1247,8 @@ export class HaramGlbLayer implements CustomLayerInterface {
       }
 
       gl.bindVertexArray(prim.vao);
-      if (prim.hasIndices) gl.drawElementsInstanced(prim.mode, prim.count, prim.indexType, 0, prim.instances);
-      else gl.drawArraysInstanced(prim.mode, 0, prim.count, prim.instances);
+      if (prim.hasIndices) gl.drawElementsInstanced(prim.mode, prim.count, prim.indexType, 0, instances);
+      else gl.drawArraysInstanced(prim.mode, 0, prim.count, instances);
     }
     gl.bindVertexArray(null);
   }

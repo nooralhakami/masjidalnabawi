@@ -569,7 +569,10 @@ export class MapEngine {
       this.opts.onEntrance?.(ent);
       return;
     }
-    this.opts.onPick?.(placeAt(this.map, x, y));
+    const place = placeAt(this.map, x, y);
+    // In 3D, a tap on no place but on a canopy opens or closes it (owner, 2026-11-06).
+    if (place === null && this.mode3d && this.models?.toggleCanopyAt(x, y)) return;
+    this.opts.onPick?.(place);
   }
 }
 
