@@ -1,6 +1,6 @@
 import { POIS } from '../data';
 import { alharamainPlaza } from '../data-next/alharamain-3d';
-import { ALHARAMAIN_PRAYERS } from '../data-next/alharamain-prayers';
+import { ALHARAMAIN_PRAYERS, PRAYER_CLEARINGS } from '../data-next/alharamain-prayers';
 import type { CrowdInput, XY } from './crowd-sim';
 import { metresFromOrigin } from './glb-layer';
 import { MOSQUE_MAIN, MOSQUE_SOUTH, restroomFootprints, restroomWalkways } from './prayer-layout';
@@ -32,7 +32,7 @@ export function crowdInput(columns: readonly (readonly [number, number])[]): Cro
       box(MOSQUE_SOUTH, 0.5),
       ...restroomFootprints(0.5),
     ],
-    open: restroomWalkways(),
+    open: [...restroomWalkways(), ...PRAYER_CLEARINGS.map((r) => r.map(m))],
     columns: columns.map(m),
     goals: POIS.filter((p) => p.category === 'gates').map((p) => m([p.lng, p.lat])),
   };

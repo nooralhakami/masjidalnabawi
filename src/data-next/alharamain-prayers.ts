@@ -91,5 +91,45 @@ function northRowExtended(rings: (readonly [number, number])[][]): (readonly [nu
   });
 }
 
-/** Each prayer area's outline, `[lng, lat]`, unclosed: navQ's, with the owner's north correction. */
-export const ALHARAMAIN_PRAYERS: readonly (readonly [number, number])[][] = northRowExtended(NAVQ);
+/**
+ * The owner's marks on the numbered top view of the prayer areas (2026-11-07), read off his drawing
+ * by the number badges (about a metre): as `[west, north, east, south]`.
+ * - Cleared (his yellow): no prayer areas there, a corridor or open floor. No carpet is laid in
+ *   them, the barriers leave them open, and people may walk through.
+ * - Added (his blue): prayer areas the drawing lacked.
+ */
+const OWNER_CLEARED: readonly (readonly [number, number, number, number])[] = [
+  [39.6080954, 24.4707635, 39.6139043, 24.4706561],
+  [39.6081264, 24.4707635, 39.6082443, 24.4673212],
+  [39.6085546, 24.4707635, 39.6086353, 24.4703905],
+  [39.6087408, 24.470187, 39.6093862, 24.4700965],
+  [39.6087408, 24.470187, 39.6089332, 24.4699891],
+  [39.6088339, 24.470187, 39.6089332, 24.4689434],
+  [39.6104661, 24.4707522, 39.6105281, 24.4702774],
+  [39.6097524, 24.470317, 39.6105778, 24.4702718],
+  [39.6116825, 24.4701813, 39.6137305, 24.4701022],
+  [39.6116949, 24.4701078, 39.6131099, 24.4698591],
+  [39.613414, 24.4701248, 39.6136746, 24.4693052],
+  [39.6131781, 24.4697178, 39.6137305, 24.4695313],
+  [39.613867, 24.4706674, 39.6140346, 24.4686382],
+  [39.6081884, 24.4689152, 39.608778, 24.4688021],
+  [39.6088339, 24.4678525, 39.6089332, 24.467553],
+  [39.6071955, 24.4704696, 39.6076733, 24.4701135],
+];
+const OWNER_ADDED: readonly (readonly [number, number, number, number])[] = [
+  [39.6090821, 24.4707522, 39.6092, 24.4703791],
+  [39.6082629, 24.4686721, 39.6087718, 24.4685026],
+];
+
+const box = ([w, n, e, s]: readonly [number, number, number, number]): (readonly [number, number])[] => [
+  [w, n],
+  [e, n],
+  [e, s],
+  [w, s],
+];
+
+/** Each prayer area's outline, `[lng, lat]`, unclosed: navQ's, with the owner's north correction and his additions. */
+export const ALHARAMAIN_PRAYERS: readonly (readonly [number, number])[][] = [...northRowExtended(NAVQ), ...OWNER_ADDED.map(box)];
+
+/** Where the owner cleared the prayer areas (2026-11-07), as outlines `[lng, lat]`. */
+export const PRAYER_CLEARINGS: readonly (readonly [number, number])[][] = OWNER_CLEARED.map(box);

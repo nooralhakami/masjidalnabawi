@@ -1,6 +1,6 @@
 import type { CustomLayerInterface, CustomRenderMethodInput, Map as MLMap } from 'maplibre-gl';
 import { ALHARAMAIN_MODELS, alharamainPlaza } from '../data-next/alharamain-3d';
-import { ALHARAMAIN_PRAYERS } from '../data-next/alharamain-prayers';
+import { ALHARAMAIN_PRAYERS, PRAYER_CLEARINGS } from '../data-next/alharamain-prayers';
 import { frameMatrix, metresFromOrigin, mulMat4 } from './glb-layer';
 import { triangulate } from './polygon';
 import type { SceneLight } from './scene-light';
@@ -43,6 +43,9 @@ uniform vec4 u_main;
 // The restrooms' walkways toward the Haram, kept clear of carpets: x0, y0, x1, y1 in the turned frame.
 uniform vec4 u_walk[48];
 uniform int u_walkCount;
+// The corridors the owner cleared of carpets (2026-11-07): x0, z0, x1, z1 in the models' frame.
+uniform vec4 u_clear[32];
+uniform int u_clearCount;
 uniform vec4 u_south;
 // The camera, in the models' metres (x east, y up, z south), and the sky the floor reflects.
 uniform vec3 u_eye;
@@ -103,6 +106,11 @@ void main() {
       if (i >= u_walkCount) break;
       vec4 w = u_walk[i];
       if (pt.x > w.x && pt.x < w.z && pt.y > w.y && pt.y < w.w) discard;
+    }
+    for (int i = 0; i < 32; i++) {
+      if (i >= u_clearCount) break;
+      vec4 w = u_clear[i];
+      if (v_pos.x > w.x && v_pos.x < w.z && v_pos.y > w.y && v_pos.y < w.w) discard;
     }
     vec2 o = vec2(c * v_origin.x - s * v_origin.y, s * v_origin.x + c * v_origin.y) - u_grid;
     vec2 q = p - o - vec2(0.0, 0.5);
@@ -253,7 +261,7 @@ export class PlazaMarbleLayer implements CustomLayerInterface {
     gl.deleteShader(vs);
     gl.deleteShader(fs);
     this.program = prog;
-    for (const name of ['u_mvp', 'u_turn', 'u_night', 'u_grid', 'u_main', 'u_south', 'u_eye', 'u_sheen', 'u_shadowMap', 'u_light', 'u_shadow', 'u_walk', 'u_walkCount'])
+    for (const name of ['u_mvp', 'u_turn', 'u_night', 'u_grid', 'u_main', 'u_south', 'u_eye', 'u_sheen', 'u_shadowMap', 'u_light', 'u_shadow', 'u_walk', 'u_walkCount', 'u_clear', 'u_clearCount'])
       this.uniforms[name] = gl.getUniformLocation(prog, name);
 
     const { vertices, indices } = plazaMesh();
@@ -321,6 +329,8 @@ export class PlazaMarbleLayer implements CustomLayerInterface {
     gl.uniform4fv(this.uniforms.u_south, MOSQUE_SOUTH);
     gl.uniform4fv(this.uniforms.u_walk, WALKS);
     gl.uniform1i(this.uniforms.u_walkCount, WALKS.length / 4);
+    gl.uniform4fv(this.uniforms.u_clear, CLEARS);
+    gl.uniform1i(this.uniforms.u_clearCount, CLEARS.length / 4);
     // The camera in the models' metres, for the floor's gloss.
     const eye = this.map ? cameraEye(this.map) : ([0, 1000, 0] as const);
     gl.uniform3f(this.uniforms.u_eye, eye[0], eye[1], eye[2]);
@@ -386,6 +396,14 @@ const WALKS: Float32Array = (() => {
   });
   return out;
 })();
+
+/** The owner's cleared corridors, square to the map (as he drew them): x0, z0, x1, z1 each. */
+const CLEARS: Float32Array = new Float32Array(
+  PRAYER_CLEARINGS.slice(0, 32).flatMap((r) => {
+    const pts = r.map((ll) => metresFromOrigin(ll as [number, number]));
+    return [Math.min(...pts.map((q) => q[0])), Math.min(...pts.map((q) => q[1])), Math.max(...pts.map((q) => q[0])), Math.max(...pts.map((q) => q[1]))];
+  }),
+);
 
 /**
  * The outdoor plazas as triangles, in the models' metres: x, z, kind, and the area's north-west

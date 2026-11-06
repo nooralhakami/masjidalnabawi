@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ALHARAMAIN_MODELS, alharamainPlaza } from '../../src/data-next/alharamain-3d';
-import { ALHARAMAIN_PRAYERS } from '../../src/data-next/alharamain-prayers';
+import { ALHARAMAIN_PRAYERS, PRAYER_CLEARINGS } from '../../src/data-next/alharamain-prayers';
 import { prayerBarriers, restroomWalkways } from '../../src/map/prayer-layout';
 import { CANOPY_MOVE_MS, canopyFoldAt, canopyFolding, foldCanopyVertex, metresFromOrigin, nodeShift, parseGlbBuffer } from '../../src/map/glb-layer';
 import { plazaMesh } from '../../src/map/plaza-layer';
@@ -36,7 +36,7 @@ describe('plazaMesh (the marble)', () => {
   it("covers every plaza area exactly (sectors, annex, its prayer areas, the courtyards' prayer areas)", () => {
     const plazas = alharamainPlaza().features;
     expect(plazas).toHaveLength(18);
-    expect(ALHARAMAIN_PRAYERS).toHaveLength(55);
+    expect(ALHARAMAIN_PRAYERS).toHaveLength(57); // navQ's 55 and the 2 the owner added (2026-11-07)
     const rings = [
       ...plazas.map((f) => f.geometry.coordinates[0].slice(0, -1).map((ll) => metresFromOrigin(ll as [number, number]))),
       ...ALHARAMAIN_PRAYERS.map((r) => r.map((ll) => metresFromOrigin(ll as [number, number]))),
@@ -258,5 +258,30 @@ describe('the north corridor starts at the back of the restrooms (owner, 2026-11
       expect(south).toBeLessThan(24.4708);
       expect(south).toBeGreaterThan(24.47076);
     }
+  });
+});
+
+describe("the owner's marks on the top view of the prayer areas (2026-11-07)", () => {
+  it('16 corridors cleared of carpets, with no barrier across them; 2 prayer areas added', () => {
+    expect(PRAYER_CLEARINGS).toHaveLength(16);
+    const walks = PRAYER_CLEARINGS.map((r) => r.map((ll) => metresFromOrigin(ll as [number, number])));
+    const inside = (x: number, z: number, r: readonly (readonly [number, number])[]) => {
+      let c = false;
+      for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+        if (r[i][1] > z !== r[j][1] > z && x < ((r[j][0] - r[i][0]) * (z - r[i][1])) / (r[j][1] - r[i][1]) + r[i][0]) c = !c;
+      }
+      return c;
+    };
+    for (const f of prayerBarriers().features) {
+      const [a, , c] = f.geometry.coordinates[0];
+      const [x, z] = metresFromOrigin([(a[0] + c[0]) / 2, (a[1] + c[1]) / 2]);
+      expect(walks.some((w) => inside(x, z, w))).toBe(false);
+    }
+    // The long corridor across the north, about 590 m by 12 m.
+    const [w, n] = metresFromOrigin(PRAYER_CLEARINGS[0][0] as [number, number]);
+    const [e, s] = metresFromOrigin(PRAYER_CLEARINGS[0][2] as [number, number]);
+    expect(e - w).toBeGreaterThan(560);
+    expect(s - n).toBeGreaterThan(10);
+    expect(s - n).toBeLessThan(15);
   });
 });

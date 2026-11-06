@@ -1,6 +1,6 @@
 import type { Feature, FeatureCollection, Polygon } from 'geojson';
 import { ALHARAMAIN_MODELS } from '../data-next/alharamain-3d';
-import { ALHARAMAIN_PRAYERS } from '../data-next/alharamain-prayers';
+import { ALHARAMAIN_PRAYERS, PRAYER_CLEARINGS } from '../data-next/alharamain-prayers';
 import { lngLatFromMetres, metresFromOrigin } from './glb-layer';
 
 type XY = readonly [number, number];
@@ -94,11 +94,13 @@ function inside([x, y]: XY, ring: readonly XY[]): boolean {
 /**
  * The green barriers round the courtyards' prayer areas, as the owner describes them: 2 m sections
  * with a hand's gap between them, 0.3 m outside each edge, 12 cm thick, as polygons to extrude.
- * Where a restroom's walkway cuts an area, the barrier leaves the walkway open and runs along it.
+ * Where a restroom's walkway or a corridor the owner cleared cuts an area, the barrier leaves it open
+ * and runs along it; between two areas that touch there is none.
  */
 export function prayerBarriers(): FeatureCollection<Polygon, { height: number }> {
   const areas = ALHARAMAIN_PRAYERS.map((r) => r.map((ll) => metresFromOrigin(ll as [number, number]) as XY));
-  const walks = restroomWalkways();
+  // Kept open: the restrooms' walkways and the owner's cleared corridors (2026-11-07).
+  const walks = [...restroomWalkways(), ...PRAYER_CLEARINGS.map((r) => r.map((ll) => metresFromOrigin(ll as [number, number]) as XY))];
   const inWalk = (p: XY) => walks.some((w) => inside(p, w));
   const inArea = (p: XY) => areas.some((a) => inside(p, a));
   const features: Feature<Polygon, { height: number }>[] = [];
@@ -123,7 +125,8 @@ export function prayerBarriers(): FeatureCollection<Polygon, { height: number }>
   for (const ring of areas) {
     // Outside the area, whichever way navQ wound it: the side away from its interior.
     const side = area2(ring) > 0 ? -1 : 1;
-    for (let i = 0; i < ring.length; i++) run(ring[i], ring[(i + 1) % ring.length], side, (m) => !inWalk(m));
+    // No barrier between two areas that touch: the carpet runs on.
+    for (let i = 0; i < ring.length; i++) run(ring[i], ring[(i + 1) % ring.length], side, (m) => !inWalk(m) && !inArea(m));
   }
   for (const w of walks) {
     const side = area2(w) > 0 ? -1 : 1;
