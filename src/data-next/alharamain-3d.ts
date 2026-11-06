@@ -89,6 +89,8 @@ export interface AlharamainModel {
   anchors: readonly (readonly [number, number])[];
   /** Turned clockwise about its anchor, in degrees (`threeDRotation`). */
   rotation: number;
+  /** Nodes standing inside `within` (`[[west, south], [east, north]]`) moved by whole metres. */
+  shifts?: readonly { within: readonly [readonly [number, number], readonly [number, number]]; north: number; east: number }[];
 }
 
 /**
@@ -101,7 +103,23 @@ export interface AlharamainModel {
  */
 export const ALHARAMAIN_MODELS: readonly AlharamainModel[] = [
   { url: './models/haram-3d.glb', anchors: [[39.611752, 24.466806]], rotation: 0 },
-  { url: './models/haram-canopies.glb', anchors: [[39.611732, 24.4668]], rotation: 1 },
+  {
+    url: './models/haram-canopies.glb',
+    anchors: [[39.611732, 24.4668]],
+    rotation: 1,
+    // The 44 canopies of the west courtyard by restrooms 213-218 (5 columns by 9 rows) stand 7 m
+    // south of navQ's places, clear of the restroom blocks (owner, 2026-11-06).
+    shifts: [
+      {
+        within: [
+          [39.607952, 24.467956],
+          [39.609166, 24.470004],
+        ],
+        north: -7,
+        east: 0,
+      },
+    ],
+  },
   {
     url: './models/haram-restroom-a-east.glb',
     rotation: 1,

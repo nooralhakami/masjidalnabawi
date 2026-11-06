@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { alharamainPlaza } from '../../src/data-next/alharamain-3d';
-import { canopyFolding, metresFromOrigin, parseGlbBuffer } from '../../src/map/glb-layer';
+import { ALHARAMAIN_MODELS, alharamainPlaza } from '../../src/data-next/alharamain-3d';
+import { canopyFolding, metresFromOrigin, nodeShift, parseGlbBuffer } from '../../src/map/glb-layer';
 import { plazaMesh } from '../../src/map/plaza-layer';
 import { triangulate } from '../../src/map/polygon';
 
@@ -63,5 +63,31 @@ describe('canopyFolding (canopies fold at night)', () => {
   it('leaves the Mosque and the service blocks alone', () => {
     const mosque = readFileSync(resolve(__dirname, '../../public/models/haram-3d.glb'));
     expect(canopyFolding(parseGlbBuffer(mosque.buffer.slice(mosque.byteOffset, mosque.byteOffset + mosque.byteLength)).gltf)).toBeNull();
+  });
+});
+
+describe('the west canopies by restrooms 213-218 (owner, 2026-11-06)', () => {
+  it('stand 7 m south of navQ, clear of the restroom blocks: 44 of them, 5 columns by 9 rows, and no other moves', () => {
+    const model = ALHARAMAIN_MODELS.find((m) => m.url.includes('canopies'))!;
+    const file = readFileSync(resolve(__dirname, '../../public/models/haram-canopies.glb'));
+    const { gltf } = parseGlbBuffer(file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength) as ArrayBuffer);
+    const [east0, south0] = metresFromOrigin(model.anchors[0]);
+    const turn = (model.rotation * Math.PI) / 180;
+    const moved: [number, number][] = [];
+    for (const node of gltf.nodes) {
+      if (node.mesh === undefined) continue;
+      const [x, , z] = node.matrix ? [node.matrix[12], node.matrix[13], node.matrix[14]] : (node.translation ?? [0, 0, 0]);
+      const east = east0 + x * Math.cos(turn) - z * Math.sin(turn);
+      const south = south0 + x * Math.sin(turn) + z * Math.cos(turn);
+      const d = nodeShift(model, east, south);
+      if (d[0] === 0 && d[1] === 0) continue;
+      expect(d).toEqual([0, 7]);
+      moved.push([east, south]);
+    }
+    expect(moved).toHaveLength(44);
+    // Columns and rows 24 m apart; navQ's places wander a metre or two.
+    const lines = (v: number[]) => v.sort((p, q) => p - q).filter((x, i, a) => i === 0 || x - a[i - 1] > 5).length;
+    expect(lines(moved.map(([e]) => e))).toBe(5);
+    expect(lines(moved.map(([, s]) => s))).toBe(9);
   });
 });

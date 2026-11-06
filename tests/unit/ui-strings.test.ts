@@ -24,6 +24,10 @@ const KEYS = [
 ];
 // Keys built from a variable part, as the live app does (g_step_n, ro_women, p_gates …).
 const DYNAMIC = [
+  // The layers button names the view it leads to (MapControls.tsx, VIEW_LABEL).
+  'view_3d',
+  'view_2d',
+  'layer_map',
   'g_step_n',
   'g_step_e',
   'g_step_s',

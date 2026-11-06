@@ -18,10 +18,10 @@ import { applyLang, initialLang, onLangChange } from '../i18n/dom';
 import { loadLang } from '../i18n/load';
 import { CAR_ENTRANCES } from '../data-next/car-entrances';
 import { entranceOpen } from '../state/entrances';
-import { MapEngine, type BaseLayer } from '../map/engine';
+import { MapEngine } from '../map/engine';
 import { filter, headingUp, markersHidden, nav, notify, route, parkingSub, query, rawdahH, searching, selected, sheetH, toiletSub, view3d, weather } from '../state/store';
 import { LangContext } from '../ui/i18n';
-import { MapControls, MapTools } from '../ui/shell/MapControls';
+import { MapControls, MapTools, NEXT_VIEW, type MapView } from '../ui/shell/MapControls';
 import { WeatherChip } from '../ui/shell/WeatherChip';
 import { MapError } from '../ui/shell/MapError';
 import { applyContrast, applyTheme, savedContrast, savedTheme } from '../ui/theme';
@@ -78,6 +78,10 @@ async function main() {
     return;
   }
 
+  // The map opens in 3D, the first of the layers button's views (owner, 2026-11-06); ?view=2d
+  // opens it flat (a plain link, and the browser tests that tap the flat map).
+  if (new URLSearchParams(location.search).get('view') !== '2d') view3d.value = engine.toggle3DMode(true, { instant: true });
+
   const trip = new Trip(engine, {
     // With a route, the top bar steps aside (trip mode): only the safe area is left above.
     top: () => (route.value ? 16 : (document.querySelector('.app-top')?.getBoundingClientRect().bottom ?? 0)),
@@ -133,25 +137,20 @@ async function main() {
   setInterval(() => void loadWeather(), WEATHER_TTL_MS);
 
   function Tools() {
-    const [base, setBase] = useState<BaseLayer>(engine.baseLayer);
-    const [mode3d, setMode3d] = useState<boolean>(engine.is3D);
+    const [view, setView] = useState<MapView>(engine.is3D ? '3d' : engine.baseLayer);
     return (
       <MapTools
         weather={<WeatherChip w={weather.value} />}
         onStories={() => emit('stories-request', 0)}
         onLibrary={() => emit('library-request', undefined)}
         onLocate={() => void trip.locate()}
-        base={base}
-        onBase={() => {
-          const next = base === 'satellite' ? 'light' : 'satellite';
-          engine.setBase(next);
-          setBase(next);
-        }}
-        is3D={mode3d}
-        onToggle3D={() => {
-          const next = engine.toggle3DMode();
-          view3d.value = next;
-          setMode3d(next);
+        view={view}
+        onView={() => {
+          const next = NEXT_VIEW[view];
+          // 3D stands on the satellite imagery; the light map is flat only.
+          engine.setBase(next === 'light' ? 'light' : 'satellite');
+          if ((next === '3d') !== engine.is3D) view3d.value = engine.toggle3DMode(next === '3d');
+          setView(next);
         }}
       />
     );

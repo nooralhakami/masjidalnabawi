@@ -29,9 +29,10 @@ export const test = base.extend<{ errors: string[] }>({
 export { expect };
 
 /** Open the map in a language and wait until it has drawn. */
+/** The map, flat (`view=2d`): the 3D view it opens in by default is tested on its own. */
 export async function openMap(page: Page, lang = 'ar', query = '') {
   await page.addInitScript((l) => localStorage.setItem('lang', l), lang);
-  await page.goto(`map.html${query}`);
+  await page.goto(`map.html${query ? `${query}&` : '?'}view=2d`);
   await page.waitForFunction(() => (window as any).__engine?.map?.loaded() && (window as any).__engine.map.getLayer('facilities'));
   await idle(page);
 }

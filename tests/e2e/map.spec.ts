@@ -177,7 +177,7 @@ test.describe('map buttons', () => {
     await expect(compass).not.toHaveClass(/is-rotated/);
   });
 
-  test('zoom buttons step one whole zoom; the layer button switches to the light map and back', async ({ page, errors: _ }) => {
+  test('zoom buttons step one whole zoom; the layers button steps satellite → light → 3D → satellite (owner, 2026-11-06)', async ({ page, errors: _ }) => {
     await openMap(page);
     const zoomed = moved(page);
     await page.getByRole('button', { name: 'تكبير' }).click();
@@ -186,12 +186,30 @@ test.describe('map buttons', () => {
     const vis = () => page.evaluate(() => ['esri', 'light'].map((l) => (window as unknown as Win).__engine.map.getLayoutProperty(l, 'visibility') ?? 'visible'));
     expect(await vis()).toEqual(['visible', 'none']);
     const layers = page.locator('.mc-layers');
+    const is3D = () => page.evaluate(() => (window as unknown as Win).__engine.is3D);
+    await expect(layers).toHaveAttribute('data-view', 'satellite');
+    await expect(page.locator('.mc-3d')).toHaveCount(0);
     const before = await layers.getAttribute('aria-label');
     await layers.click();
     expect(await vis()).toEqual(['none', 'visible']);
+    expect(await is3D()).toBe(false);
     expect(await layers.getAttribute('aria-label')).not.toBe(before);
     await layers.click();
+    await expect(layers).toHaveAttribute('data-view', '3d');
     expect(await vis()).toEqual(['visible', 'none']);
+    expect(await is3D()).toBe(true);
+    await layers.click();
+    await expect(layers).toHaveAttribute('data-view', 'satellite');
+    expect(await is3D()).toBe(false);
+  });
+
+  test('the map opens in 3D, the first view of the layers button (owner, 2026-11-06)', async ({ page, errors: _ }) => {
+    await page.addInitScript(() => localStorage.setItem('lang', 'ar'));
+    await page.goto('map.html');
+    await page.waitForFunction(() => (window as any).__engine?.map?.loaded() && (window as any).__engine.map.getLayer('facilities'));
+    expect(await page.evaluate(() => (window as unknown as Win).__engine.is3D)).toBe(true);
+    await expect(page.locator('.mc-layers')).toHaveAttribute('data-view', '3d');
+    await expect.poll(() => page.evaluate(() => (window as unknown as Win).__engine.map.getPitch())).toBeCloseTo(45, 0);
   });
 
   test('a tap on a marker picks that place', async ({ page, errors: _ }) => {
