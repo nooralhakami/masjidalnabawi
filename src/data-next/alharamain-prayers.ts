@@ -63,10 +63,33 @@ const RAW_PRAYERS: readonly string[] = [
   '39.6127899,24.4677695#39.6129374,24.4677683#39.6129401,24.4674497#39.6127966,24.4674497',
 ];
 
-/** Each prayer area's outline, `[lng, lat]`, unclosed. */
-export const ALHARAMAIN_PRAYERS: readonly (readonly [number, number])[][] = RAW_PRAYERS.map((ring) =>
+const NAVQ: (readonly [number, number])[][] = RAW_PRAYERS.map((ring) =>
   ring.split('#').map((p) => {
     const [lng, lat] = p.split(',').map(Number);
     return [lng, lat] as const;
   }),
 );
+
+/**
+ * The owner's correction to the north courtyard (2026-11-06): the corridor south of the northern
+ * row of prayer areas starts at the back of the restroom blocks, not at their middle, so the areas
+ * of that row reach down to the middle of navQ's corridor. Their southern edge moves half way to the
+ * top of the area below them.
+ */
+function northRowExtended(rings: (readonly [number, number])[][]): (readonly [number, number])[][] {
+  const lats = (r: readonly (readonly [number, number])[]) => r.map((p) => p[1]);
+  const lngs = (r: readonly (readonly [number, number])[]) => r.map((p) => p[0]);
+  return rings.map((ring) => {
+    if (Math.max(...lats(ring)) < 24.4709) return ring;
+    const south = Math.min(...lats(ring));
+    const [w, e] = [Math.min(...lngs(ring)), Math.max(...lngs(ring))];
+    const below = rings.filter((q) => q !== ring && Math.max(...lats(q)) < south - 1e-6 && Math.min(...lngs(q)) < e && Math.max(...lngs(q)) > w);
+    if (!below.length) return ring;
+    const top = Math.max(...below.map((q) => Math.max(...lats(q))));
+    const mid = (south + top) / 2;
+    return ring.map(([lng, lat]) => [lng, Math.abs(lat - south) < 2e-6 ? mid : lat] as const);
+  });
+}
+
+/** Each prayer area's outline, `[lng, lat]`, unclosed: navQ's, with the owner's north correction. */
+export const ALHARAMAIN_PRAYERS: readonly (readonly [number, number])[][] = northRowExtended(NAVQ);
