@@ -91,12 +91,16 @@ export interface AlharamainModel {
   rotation: number;
 }
 
-/** Venue 4 and the campus POIs carrying a `threeDModel`: 41 placements of 4 distinct files. */
+/**
+ * Venue 4 and the campus POIs carrying a `threeDModel`: 41 placements of 4 distinct files. The
+ * restroom blocks stand where navQ puts its plain service boxes, drawn instead with a model made
+ * from the owner's photographs (`scripts/restroom-model.mjs`, 2026-11-06).
+ */
 export const ALHARAMAIN_MODELS: readonly AlharamainModel[] = [
   { url: './models/haram-3d.glb', anchors: [[39.611752, 24.466806]], rotation: 0 },
   { url: './models/haram-canopies.glb', anchors: [[39.611732, 24.4668]], rotation: 1 },
   {
-    url: './models/haram-service-a.glb',
+    url: './models/haram-restroom-a.glb',
     rotation: 1,
     anchors: [
       [39.608028, 24.46684],
@@ -111,7 +115,7 @@ export const ALHARAMAIN_MODELS: readonly AlharamainModel[] = [
     ],
   },
   {
-    url: './models/haram-service-b.glb',
+    url: './models/haram-restroom-b.glb',
     rotation: 1,
     anchors: [
       [39.604948, 24.468399],

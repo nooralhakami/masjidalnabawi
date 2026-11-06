@@ -58,6 +58,42 @@ describe('the Al-Haramain 3D view: plaza areas and 3D files', () => {
     }
   });
 
+  it("the restroom blocks (made from the owner's photographs) stand on navQ's footprints, from the ground up", () => {
+    const bounds = (file: string) => {
+      const glb = readFileSync(resolve(__dirname, '../../public/models', file));
+      const gltf = JSON.parse(glb.subarray(20, 20 + glb.readUInt32LE(12)).toString('utf8'));
+      const min = [Infinity, Infinity, Infinity];
+      const max = [-Infinity, -Infinity, -Infinity];
+      for (const prim of gltf.meshes[0].primitives) {
+        const acc = gltf.accessors[prim.attributes.POSITION];
+        for (let k = 0; k < 3; k++) {
+          min[k] = Math.min(min[k], acc.min[k]);
+          max[k] = Math.max(max[k], acc.max[k]);
+        }
+      }
+      return { min, max };
+    };
+    expect(ALHARAMAIN_MODELS.map((m) => m.url)).toEqual(expect.arrayContaining(['./models/haram-restroom-a.glb', './models/haram-restroom-b.glb']));
+    // navQ's boxes: a spans x -13.9..9.1, z -48.9..-34.9; b spans x -9.4..4.6, z -94.5..-71.3.
+    const a = bounds('haram-restroom-a.glb');
+    const b = bounds('haram-restroom-b.glb');
+    for (const [got, want] of [
+      [a.min[0], -13.9],
+      [a.max[0], 9.1],
+      [a.min[2], -48.9],
+      [a.max[2], -34.9],
+      [b.min[0], -9.4],
+      [b.max[0], 4.6],
+      [b.min[2], -94.5],
+      [b.max[2], -71.3],
+    ]) {
+      expect(Math.abs(got - want)).toBeLessThan(0.6);
+    }
+    expect(a.min[1]).toBeLessThanOrEqual(0);
+    expect(a.max[1]).toBeGreaterThan(8);
+    expect(a.max[1]).toBeLessThan(9);
+  });
+
   it('the canopies file carries all 318 canopies of the courtyards', () => {
     expect(glbNodes(readFileSync(resolve(__dirname, '../../public/models/haram-canopies.glb')))).toHaveLength(318);
   });

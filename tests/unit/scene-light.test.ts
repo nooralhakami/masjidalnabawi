@@ -119,6 +119,15 @@ describe('materialGlow (what lights up at night)', () => {
     expect(materialGlow('./models/haram-service-a.glb', 'Material.005')!.rise).toBe(1);
   });
 
+  it("lights the restroom blocks' lattice windows from inside, warmer and brighter than their marble", () => {
+    const file = './models/haram-restroom-a.glb';
+    const window = materialGlow(file, 'window')!;
+    const marble = materialGlow(file, 'marble')!;
+    expect(window.color[0]).toBeGreaterThan(marble.color[0] * 2);
+    expect(window.color[0] - window.color[2]).toBeGreaterThan(marble.color[0] - marble.color[2]);
+    expect(marble.rise).toBe(1);
+  });
+
   it('lights the gates softly so their wood and gold show, never burnt to white', () => {
     for (const m of ['Gate1', 'GateR', 'Door3', 'Door5-1', 'ogdoor.001', 'arc', 'G1']) {
       const g = materialGlow('./models/haram-3d.glb', m)!;
