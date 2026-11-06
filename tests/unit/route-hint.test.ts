@@ -22,14 +22,15 @@ describe('the name shown over the place a visitor goes by (owner, 2026-10-25)', 
   });
 
   it('keeps the same name while the visitor is by it, then names the next once the first is left behind', () => {
+    // 5 m outside the gates: restroom 230 stands between them 22 m inside (2026-11-06), out of reach.
     const h = new HintPicker();
-    expect(h.pick(at(338, 0, 4), 10, 'walk', 0)).toBe(338);
-    expect(h.pick(at(338, 0, 20), 10, 'walk', 1000)).toBe(338);
+    expect(h.pick(at(338, 5, 4), 10, 'walk', 0)).toBe(338);
+    expect(h.pick(at(338, 5, 20), 10, 'walk', 1000)).toBe(338);
     // About 31 m from each (the gates are 62 m apart): still the first, never a jump to the other.
-    expect(h.pick(at(338, 0, 30), 10, 'walk', 2000)).toBe(338);
+    expect(h.pick(at(338, 5, 30), 10, 'walk', 2000)).toBe(338);
     // Past it (and not yet by 339): the first is let go, never kept from afar.
-    expect(h.pick(at(338, 0, 36), 10, 'walk', 3000)).not.toBe(338);
-    expect(h.pick(at(339, 0, -10), 10, 'walk', 4000)).toBe(339);
+    expect(h.pick(at(338, 5, 36), 10, 'walk', 3000)).not.toBe(338);
+    expect(h.pick(at(339, 5, -10), 10, 'walk', 4000)).toBe(339);
   });
 
   it('two places a few metres apart: the first stays until the visitor is clearly nearer the second and its time has passed', () => {

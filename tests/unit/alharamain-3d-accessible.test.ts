@@ -113,7 +113,8 @@ describe('vertical transit nodes (vertical_nodes.geojson)', () => {
     const node = nearestVerticalNode([f236.lat, f236.lng], { venueId: 20 });
     expect(node).not.toBeNull();
     expect(node?.kind).toBe('elevator');
-    expect(node?.meters).toBeLessThan(20);
+    // 236 marks the middle of its block since 2026-11-06, about 24 m from the lift; routing looks up to 40 m.
+    expect(node?.meters).toBeLessThan(30);
   });
 
   it('finds Mosque elevators near Gate 33 and Gate 9 (venueId 4)', () => {
