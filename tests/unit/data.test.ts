@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import rawPois from '../../data/pois.json';
+import { ALHARAMAIN_MODELS } from '../../src/data-next/alharamain-3d';
 import { POIS, POI_BY_ID, RULES, ROUTING, I18N } from '../../src/data';
 import { applyOverrides } from '../../src/data/overrides';
 import type { Poi } from '../../src/data';
@@ -170,15 +171,13 @@ describe('pois.json', () => {
 });
 
 describe('overrides', () => {
-  it('only the owner-requested POIs are nudged (outer gates north 328–343, west 322–327, south 301–309 and 365–370; restrooms 205–209, 211–218 and north 220–230 (even); service buildings 501, 504–507; centres 511 and 604; women prayer halls 601–602); everything else is untouched', () => {
+  it('only the owner-requested POIs are nudged (outer gates north 328–343, west 322–327, south 301–309 and 365–370; restrooms 201–236 (centred on their blocks, 2026-11-06), except 251–254; service buildings 501, 504–507; centres 511 and 604; women prayer halls 601–602); everything else is untouched', () => {
     const raw = rawPois as Poi[];
     const moved = (id: number) =>
       (id >= 322 && id <= 343) ||
       (id >= 301 && id <= 309) ||
       (id >= 365 && id <= 370) ||
-      (id >= 205 && id <= 209) ||
-      (id >= 211 && id <= 218) ||
-      [220, 222, 224, 226, 228, 230].includes(id) ||
+      (id >= 201 && id <= 236) ||
       id === 501 ||
       (id >= 504 && id <= 507) ||
       id === 511 ||
@@ -213,31 +212,23 @@ describe('overrides', () => {
       expect(metres(id).north).toBeCloseTo(5, 5);
       expect(metres(id).east).toBeCloseTo(0, 5);
     }
-    // Restrooms: 207–208 5 m then 12 m west (17 m in all), 205–206 4 m west.
-    for (const id of [207, 208]) {
-      expect(metres(id).east).toBeCloseTo(-17, 5);
-      expect(metres(id).north).toBeCloseTo(0, 5);
-    }
-    for (const id of [205, 206]) expect(metres(id).east).toBeCloseTo(-4, 5);
-    // 209 3 m east; 211–212 9 m south.
-    expect(metres(209).east).toBeCloseTo(3, 5);
-    expect(metres(209).north).toBeCloseTo(0, 5);
-    for (const id of [211, 212]) {
-      expect(metres(id).north).toBeCloseTo(-9, 5);
-      expect(metres(id).east).toBeCloseTo(0, 5);
-    }
-    // 213–214 4 m south, 215–216 3 m north, 217–218 6 m north, north restrooms 220–230 (even) 4 m then 2 m north (6 m).
-    const north: [number[], number][] = [
-      [[213, 214], -4],
-      [[215, 216], 3],
-      [[217, 218], 6],
-      [[220, 222, 224, 226, 228, 230], 6],
-    ];
-    for (const [group, m] of north) {
-      for (const id of group) {
-        expect(metres(id).north, String(id)).toBeCloseTo(m, 5);
-        expect(metres(id).east, String(id)).toBeCloseTo(0, 5);
-      }
+    // Restrooms 201–236 (owner, 2026-11-06): each marker in the middle of its 3D block, one marker per
+    // block. 251–254 stay at the two ends of their west blocks.
+    const R = 111_320;
+    const centres = ALHARAMAIN_MODELS.filter((m) => m.url.includes('restroom')).flatMap((m) => {
+      const [x, z] = m.url.includes('restroom-a-') ? [-2.415, -41.918] : [-2.355, -82.929];
+      const t = (m.rotation * Math.PI) / 180;
+      const east = x * Math.cos(t) - z * Math.sin(t);
+      const south = x * Math.sin(t) + z * Math.cos(t);
+      return m.anchors.map(([lng, lat]) => [lat - south / R, lng + east / (R * Math.cos((lat * Math.PI) / 180))] as const);
+    });
+    const taken = new Set<number>();
+    for (const p of POIS.filter((q) => q.category === 'toilets' && q.id >= 201 && q.id <= 236)) {
+      const d = centres.map(([lat, lng]) => Math.hypot((p.lat - lat) * R, (p.lng - lng) * R * Math.cos((lat * Math.PI) / 180)));
+      const i = d.indexOf(Math.min(...d));
+      expect(d[i], String(p.id)).toBeLessThan(1);
+      expect(taken.has(i), String(p.id)).toBe(false);
+      taken.add(i);
     }
     // South services centre 7 m north; all southern outer gates 5 m north.
     expect(metres(511).north).toBeCloseTo(7, 5);

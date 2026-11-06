@@ -92,62 +92,79 @@ export interface AlharamainModel {
 }
 
 /**
- * Venue 4 and the campus POIs carrying a `threeDModel`: 41 placements of 4 distinct files. The
+ * Venue 4 and the campus POIs carrying a `threeDModel`: 42 placements of 6 files (41 from navQ, one added). The
  * restroom blocks stand where navQ puts its plain service boxes, drawn instead with a model made
- * from the owner's photographs (`scripts/restroom-model.mjs`, 2026-11-06).
+ * from the owner's photographs (`scripts/restroom-model.mjs`, 2026-11-06). Its entrance is one end
+ * only, so each block uses the file turned the way it opens (owner, 2026-11-06): towards the Mosque
+ * for the inner rows, towards the outer gates for the outer rows; on the east side 233-236 open to
+ * the north and 231-232 to the south.
  */
 export const ALHARAMAIN_MODELS: readonly AlharamainModel[] = [
   { url: './models/haram-3d.glb', anchors: [[39.611752, 24.466806]], rotation: 0 },
   { url: './models/haram-canopies.glb', anchors: [[39.611732, 24.4668]], rotation: 1 },
   {
-    url: './models/haram-restroom-a.glb',
+    url: './models/haram-restroom-a-east.glb',
     rotation: 1,
     anchors: [
-      [39.608028, 24.46684],
-      [39.608676, 24.467703],
-      [39.608028, 24.46865],
-      [39.608676, 24.46865],
-      [39.608048, 24.469958],
-      [39.608676, 24.469548],
-      [39.608028, 24.467703],
-      [39.608028, 24.469548],
-      [39.608676, 24.46684],
+      [39.608676, 24.46684], // restroom 211
+      [39.608676, 24.467703], // restroom 213
+      [39.608676, 24.46865], // restroom 215
+      [39.608676, 24.469548], // restroom 217
     ],
   },
   {
-    url: './models/haram-restroom-b.glb',
+    url: './models/haram-restroom-a-west.glb',
     rotation: 1,
     anchors: [
-      [39.604948, 24.468399],
-      [39.604948, 24.469768],
-      [39.608028, 24.470105],
-      [39.608676, 24.465472],
-      [39.614195, 24.467806],
-      [39.610748, 24.469562],
-      [39.613613, 24.467806],
-      [39.604948, 24.469096],
-      [39.612644, 24.465472],
-      [39.613632, 24.469562],
-      [39.612668, 24.470105],
-      [39.614195, 24.469562],
-      [39.608676, 24.469562],
-      [39.611593, 24.470105],
-      [39.611593, 24.469562],
-      [39.609726, 24.470105],
-      [39.609726, 24.469562],
-      [39.608676, 24.470105],
-      [39.608676, 24.46611],
-      [39.610748, 24.470105],
-      [39.614195, 24.468454],
-      [39.612641, 24.466101],
-      [39.613613, 24.468454],
-      [39.604948, 24.467751],
-      [39.609682, 24.46611],
-      [39.611669, 24.46608],
-      [39.611666, 24.4655],
-      [39.610661, 24.465472],
-      [39.609682, 24.465472],
-      [39.610659, 24.4661],
+      [39.608028, 24.46684], // restroom 212
+      [39.608028, 24.467703], // restroom 214
+      [39.608028, 24.46865], // restroom 216
+      [39.608028, 24.469548], // restroom 218
+      [39.608048, 24.469958], // restroom 219
+    ],
+  },
+  {
+    url: './models/haram-restroom-b-north.glb',
+    rotation: 1,
+    anchors: [
+      [39.612641, 24.466101], // restroom 201
+      [39.611669, 24.46608], // restroom 203
+      [39.610659, 24.4661], // restroom 205
+      [39.609682, 24.46611], // restroom 207
+      [39.608676, 24.46611], // restroom 209
+      [39.608028, 24.470105], // restroom 220
+      [39.608676, 24.470105], // restroom 222
+      [39.609726, 24.470105], // restroom 224
+      [39.610748, 24.470105], // restroom 226
+      [39.611593, 24.470105], // restroom 228
+      [39.612668, 24.470105], // restroom 230
+      [39.613613, 24.468454], // restroom 233
+      [39.614195, 24.468454], // restroom 234
+      [39.613613, 24.467806], // restroom 235
+      [39.614195, 24.467806], // restroom 236
+      [39.604948, 24.467751], // restroom 252/251; west extension, opens north (owner, 2026-11-06)
+      [39.604948, 24.468399], // restroom 253/254; west extension, opens north (owner, 2026-11-06)
+      [39.604948, 24.469768], // no marker; west extension, opens north (owner, 2026-11-06)
+      [39.604948, 24.469096], // no marker; west extension, opens north (owner, 2026-11-06)
+    ],
+  },
+  {
+    url: './models/haram-restroom-b-south.glb',
+    rotation: 1,
+    anchors: [
+      [39.612644, 24.465472], // restroom 202
+      [39.611666, 24.4655], // restroom 204
+      [39.610661, 24.465472], // restroom 206
+      [39.609682, 24.465472], // restroom 208
+      [39.608676, 24.465472], // restroom 210
+      [39.608676, 24.469562], // restroom 221
+      [39.609726, 24.469562], // restroom 223
+      [39.610748, 24.469562], // restroom 225
+      [39.611593, 24.469562], // restroom 227
+      // Under restroom 229, opposite 230: navQ left this block out; added at the owner's request (2026-11-06).
+      [39.612668, 24.469562], // restroom 229
+      [39.613632, 24.469562], // restroom 231
+      [39.614195, 24.469562], // restroom 232
     ],
   },
 ];

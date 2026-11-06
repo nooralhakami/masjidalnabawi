@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import rawPois from '../../data/pois.json';
 import { POI_BY_ID } from '../../src/data';
 import type { LatLng } from '../../src/data';
 import { lotLevels, parkingAccess, parkingEntrances } from '../../src/domain/parking';
@@ -374,7 +375,10 @@ describe('the car park roads run beside the facilities, not the mosque (owner, 2
   const lane = (id: string) => GARAGE.lanes.find((l) => l.id === id)!.path.map(toM);
   const mosque = network().obstacles[0];
   it('the east road: nearer the east facilities than the mosque wall', () => {
-    const eastFacilities = toM([POI_BY_ID.get(233)!.lat, POI_BY_ID.get(233)!.lng])[0];
+    // The road was drawn along the facilities' west side, where 233 stood until its marker moved to the
+    // middle of its block (2026-11-06); the line it was drawn against is that first position.
+    const f233 = (rawPois as { id: number; lat: number; lng: number }[]).find((p) => p.id === 233)!;
+    const eastFacilities = toM([f233.lat, f233.lng])[0];
     for (const [x, y] of lane('east-lane')) {
       if (y < mosque.y0 || y > mosque.y1) continue; // only alongside the mosque
       expect(eastFacilities - x, `at y=${y.toFixed(0)}`).toBeLessThan(x - mosque.x1);

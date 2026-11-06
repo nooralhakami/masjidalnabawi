@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 /**
- * Builds the courtyard restroom blocks' 3D model, `public/models/haram-restroom-{a,b}.glb`, from the
- * owner's photographs (2026-11-06): white marble with four corner towers, each carrying a pair of
+ * Builds the courtyard restroom blocks' 3D model, `public/models/haram-restroom-{a-east,a-west,
+ * b-north,b-south}.glb`, from the owner's photographs (2026-11-06): white marble with four corner towers, each carrying a pair of
  * round-arched lattice windows (lit from inside at night) on a corbelled bay and a blind arch below;
  * an open middle bay on each long side behind a bronze lattice fence, under a marble lintel with a
  * dark steel soffit; a wudu counter with chrome taps and decorated panels in front of it, on a step;
- * and on each short end the arched portal of the stairs down to the restrooms.
+ * The entrance is one short end only (owner, 2026-11-06): ordinary stairs in the left bay and an
+ * escalator in the right one as seen from outside, the lift between them under a blind arch and the
+ * sign. The other end has three openings closed with lattice: a tall pointed arch between two bays.
+ * The four files are the same block with its entrance turned to the east, west, north or south.
  *
  * It replaces navQ's plain boxes (`haram-service-a/b.glb`) on the same footprints: a is 23 m east to
  * west, b 23 m north to south, both 14 m across, placed at the same offsets from their anchors.
@@ -217,22 +220,80 @@ function soffitTexture() {
   });
 }
 
-/** Inside the end portal: the lit stair hall above, a bronze lattice gate across the lower part. */
-function portalTexture() {
+/** The bronze zigzag lattice over a warm lit hall: the closed openings at the back end. */
+function gateTexture() {
   const W = 128;
   const H = 256;
   return png(W, H, (x, y) => {
     const up = 1 - y / H;
-    if (up > 0.55) {
-      const lamp = Math.exp(-(((x - W / 2) / 20) ** 2) - ((up - 0.8) / 0.08) ** 2);
-      return mix([0.92, 0.86, 0.74], [1, 0.98, 0.9], lamp);
-    }
+    const hall = mix([0.78, 0.72, 0.6], [0.98, 0.93, 0.8], up);
     const xm = x % 16;
     const t = (y % 24) / 24;
     const zig = (Math.abs(t * 2 - 1) - 0.5) * 9;
     const d = Math.min(Math.abs(xm - (8 + zig)), Math.abs(xm - (8 - zig)));
-    if (d < 1.2 || up > 0.53 || y > H - 4 || Math.abs(x - W / 2) < 1.5) return BRONZE;
-    return [0.62, 0.58, 0.5];
+    if (d < 1.2 || y < 3 || y > H - 4 || x < 3 || x > W - 4) return BRONZE;
+    return hall;
+  });
+}
+
+/** Looking into an open entrance bay: the lit hall above, the way down below (stairs or escalator). */
+function wayDownTexture(escalator) {
+  const W = 128;
+  const H = 256;
+  return png(W, H, (x, y) => {
+    const up = 1 - y / H;
+    if (up > 0.5) {
+      const lamp = Math.exp(-(((x - W / 2) / 26) ** 2) - ((up - 0.86) / 0.07) ** 2);
+      return mix([0.86, 0.8, 0.68], [1, 0.97, 0.88], lamp);
+    }
+    // Treads closing up towards the far end: a band every step, thinner as it recedes.
+    const k = (0.5 - up) / 0.5;
+    const step = (k * 9) ** 1.35 % 1;
+    if (escalator) {
+      const side = Math.abs(x - W / 2) / (W / 2);
+      if (side > 0.62) return side > 0.9 ? [0.12, 0.12, 0.13] : [0.78, 0.8, 0.83];
+      const groove = x % 4 < 1 ? 0.8 : 1;
+      return (step < 0.18 ? [0.62, 0.62, 0.6] : [0.3, 0.3, 0.31]).map((v) => v * groove);
+    }
+    if (Math.abs(x - 10) < 2 || Math.abs(x - W + 10) < 2) return [0.82, 0.83, 0.86];
+    return step < 0.3 ? [0.56, 0.53, 0.48] : [0.86, 0.84, 0.79];
+  });
+}
+
+/** The sign over the entrance: gold, a number box, two lines of lettering and the figure. */
+function signTexture() {
+  const W = 256;
+  const H = 64;
+  const n = noise(64, 8, 41);
+  return png(W, H, (x, y) => {
+    const gold = [0.64, 0.48, 0.24];
+    const light = [0.98, 0.95, 0.86];
+    if (x < 3 || x > W - 4 || y < 3 || y > H - 4) return [0.3, 0.24, 0.14];
+    if (x > 12 && x < 44 && y > 12 && y < 52) return x > 15 && x < 41 && y > 15 && y < 49 ? gold : light;
+    if (x > 214 && x < 244 && y > 10 && y < 54) {
+      const fx = x - 229;
+      const head = Math.hypot(fx, y - 17) < 4;
+      const body = Math.abs(fx) < 6 && y > 22 && y < 38;
+      const legs = (Math.abs(fx - 3) < 2 || Math.abs(fx + 3) < 2) && y >= 38 && y < 50;
+      return head || body || legs ? light : gold;
+    }
+    const line = (y > 12 && y < 28) || (y > 36 && y < 50);
+    const glyph = n[(y % 64) * 64 + (Math.floor(x / 4) % 64)] > 0.48 && x > 54 && x < 204;
+    return line && glyph ? light : gold;
+  });
+}
+
+/** The recessed panel over the lift: a pointed blind arch cut in the marble. */
+function archPanelTexture() {
+  const W = 128;
+  const H = 96;
+  return png(W, H, (x, y) => {
+    const s = Math.abs(x - W / 2) / 44;
+    const apex = 14 + 46 * s ** 1.5;
+    const edge = s < 1 ? Math.abs(y - apex) : 99;
+    const jamb = Math.abs(s - 1) * 44 < 2 && y > 60;
+    const shade = s < 1 && y > apex ? 0.86 : 0.95;
+    return WHITE_MARBLE.map((k) => k * (edge < 2 || jamb ? 0.66 : shade));
   });
 }
 
@@ -259,7 +320,11 @@ const MATERIALS = {
   fence: { texture: fenceTexture },
   counter: { texture: counterTexture },
   soffit: { texture: soffitTexture, repeat: 2 },
-  portal: { texture: portalTexture },
+  gate: { texture: gateTexture },
+  stairs: { texture: () => wayDownTexture(false) },
+  escalator: { texture: () => wayDownTexture(true) },
+  sign: { texture: signTexture },
+  archpanel: { texture: archPanelTexture },
   corbel: { texture: corbelTexture },
   steel: { color: [0.86, 0.87, 0.9, 1] },
   dark: { color: [0.2, 0.2, 0.21, 1] },
@@ -424,10 +489,53 @@ function wallWithOpenings(mat, origin, across, normal, [s0, s1], [h0, h1], openi
   quad(mat, [at(left, h0), at(s1, h0), at(s1, h1), at(left, h1)], normal);
 }
 
+/**
+ * A wall face with rectangular openings: { s0, s1, h0, h1, depth, back, top?, bottom? }. The face is
+ * cut into cells along every edge, and each opening gets its reveals (`top` and `bottom` may give the
+ * soffit and the floor another material) and a back panel, fitted when its texture has no repeat.
+ */
+function rectWall(mat, origin, across, normal, [s0, s1], [h0, h1], holes) {
+  const at = (s, h, d = 0) => add(add(add(origin, mul(across, s)), [0, h, 0]), mul(normal, -d));
+  const quad = (m, pts, n, uvs) => poly(m, pts, uvs ?? pts.map((q) => faceUv(m, q, n)), n);
+  const cuts = (lo, hi, k0, k1) => [...new Set([lo, hi, ...holes.flatMap((o) => [o[k0], o[k1]])])].filter((v) => v >= lo && v <= hi).sort((p, q) => p - q);
+  const ss = cuts(s0, s1, 's0', 's1');
+  const hs = cuts(h0, h1, 'h0', 'h1');
+  for (let i = 0; i < ss.length - 1; i++) {
+    for (let j = 0; j < hs.length - 1; j++) {
+      const sc = (ss[i] + ss[i + 1]) / 2;
+      const hc = (hs[j] + hs[j + 1]) / 2;
+      if (holes.some((o) => sc > o.s0 && sc < o.s1 && hc > o.h0 && hc < o.h1)) continue;
+      quad(mat, [at(ss[i], hs[j]), at(ss[i + 1], hs[j]), at(ss[i + 1], hs[j + 1]), at(ss[i], hs[j + 1])], normal);
+    }
+  }
+  for (const o of holes) {
+    const d = o.depth;
+    quad(mat, [at(o.s0, o.h0), at(o.s0, o.h1), at(o.s0, o.h1, d), at(o.s0, o.h0, d)], across);
+    quad(mat, [at(o.s1, o.h0), at(o.s1, o.h1), at(o.s1, o.h1, d), at(o.s1, o.h0, d)], mul(across, -1));
+    quad(o.top ?? mat, [at(o.s0, o.h1), at(o.s1, o.h1), at(o.s1, o.h1, d), at(o.s0, o.h1, d)], [0, -1, 0]);
+    if (o.bottom || o.h0 > h0) quad(o.bottom ?? mat, [at(o.s0, o.h0), at(o.s1, o.h0), at(o.s1, o.h0, d), at(o.s0, o.h0, d)], [0, 1, 0]);
+    const back = [at(o.s0, o.h0, d), at(o.s1, o.h0, d), at(o.s1, o.h1, d), at(o.s0, o.h1, d)];
+    // Fitted: u runs left to right as seen from outside (the viewer's right is -normal x up).
+    const right = cross(mul(normal, -1), [0, 1, 0]);
+    const flip = dot(right, across) < 0;
+    const fitted = MATERIALS[o.back].repeat === undefined && MATERIALS[o.back].texture;
+    const uvs = fitted
+      ? [
+          [0, 1],
+          [1, 1],
+          [1, 0],
+          [0, 0],
+        ].map(([u, v]) => [flip ? 1 - u : u, v])
+      : undefined;
+    quad(o.back, back, normal, uvs);
+  }
+}
+
 // Sizes in metres, from the photographs against people and the 23 x 14 m footprint.
 const HALF_L = 11.5; // along the block
 const CORE = 5.5; // half the width of the building; the counters reach 7
-const TOWER = 3.4;
+const TOWER = 3.4; // along the block
+const TOWER_W = 2.0; // across it: the ends are towers, two bays and the lift pier between them
 const TOWER_H = 7.6;
 const END_H = 7.0;
 const BAY = HALF_L - TOWER; // 8.1, where the open middle bay ends
@@ -437,8 +545,8 @@ function towers() {
     for (const sb of [-1, 1]) {
       const a0 = sa > 0 ? BAY : -HALF_L;
       const a1 = sa > 0 ? HALF_L : -BAY;
-      const b0 = sb > 0 ? CORE - TOWER : -CORE;
-      const b1 = sb > 0 ? CORE : -(CORE - TOWER);
+      const b0 = sb > 0 ? CORE - TOWER_W : -CORE;
+      const b1 = sb > 0 ? CORE : -(CORE - TOWER_W);
       const ac = (a0 + a1) / 2;
       const bc = (b0 + b1) / 2;
       box('marble', [a0, 0, b0], [a1, TOWER_H, b1], { skip: [sa > 0 ? '+a' : '-a', sb > 0 ? '+b' : '-b'] });
@@ -449,12 +557,14 @@ function towers() {
       box('marble', [a0 + 0.35, TOWER_H + 0.95, b0 + 0.35], [a1 - 0.35, TOWER_H + 1.05, b1 - 0.35]);
 
       // The two outer faces: a blind arch below, a corbelled bay with two lit windows above.
+      // The end face is narrower than the long one; its arch and windows are scaled down to it.
       const outer = [
-        { origin: [sa * HALF_L, 0, bc], across: [0, 0, 1], normal: [sa, 0, 0] },
-        { origin: [ac, 0, sb * CORE], across: [1, 0, 0], normal: [0, 0, sb] },
+        { origin: [sa * HALF_L, 0, bc], across: [0, 0, 1], normal: [sa, 0, 0], f: TOWER_W / TOWER },
+        { origin: [ac, 0, sb * CORE], across: [1, 0, 0], normal: [0, 0, sb], f: 1 },
       ];
-      for (const { origin, across, normal } of outer) {
-        wallWithOpenings('marble', origin, across, normal, [-TOWER / 2, TOWER / 2], [0, TOWER_H], [{ c: 0, w: 0.62, sill: 1.3, spring: 3.3, k: 1.3, depth: 0.1, back: 'marble' }]);
+      for (const { origin, across, normal, f } of outer) {
+        const half = (TOWER * f) / 2;
+        wallWithOpenings('marble', origin, across, normal, [-half, half], [0, TOWER_H], [{ c: 0, w: 0.62 * f, sill: 1.3, spring: 3.3, k: 1.3, depth: 0.1, back: 'marble' }]);
         const along = (s, d) => add(add(origin, mul(across, s)), mul(normal, d));
         const span = (s0, s1, d0, d1, h0, h1, opts) => {
           const p = along(s0, d0);
@@ -463,21 +573,23 @@ function towers() {
         };
         const frontKey = normal[0] > 0 ? '+a' : normal[0] < 0 ? '-a' : normal[2] > 0 ? '+b' : '-b';
         const backKey = { '+a': '-a', '-a': '+a', '+b': '-b', '-b': '+b' }[frontKey];
-        span(-1.25, 1.25, 0, 0.32, 4.7, 7.25, { skip: [frontKey, backKey] });
+        const bay = Math.min(1.25, half - 0.12);
+        const wf = bay / 1.25;
+        span(-bay, bay, 0, 0.32, 4.7, 7.25, { skip: [frontKey, backKey] });
         wallWithOpenings(
           'marble',
           along(0, 0.32),
           across,
           normal,
-          [-1.25, 1.25],
+          [-bay, bay],
           [4.7, 7.25],
           [
-            { c: -0.55, w: 0.38, sill: 5.05, spring: 6.4, k: 1, depth: 0.14, back: 'window' },
-            { c: 0.55, w: 0.38, sill: 5.05, spring: 6.4, k: 1, depth: 0.14, back: 'window' },
+            { c: -0.55 * wf, w: 0.38 * wf, sill: 5.05, spring: 6.4, k: 1, depth: 0.14, back: 'window' },
+            { c: 0.55 * wf, w: 0.38 * wf, sill: 5.05, spring: 6.4, k: 1, depth: 0.14, back: 'window' },
           ],
         );
-        span(-1.25, 1.25, 0, 0.36, 7.25, 7.4, { skip: [backKey] });
-        span(-1.2, 1.2, 0, 0.26, 4.2, 4.7, { skip: [backKey], faces: { [frontKey]: 'corbel', '-h': 'corbel' } });
+        span(-bay, bay, 0, 0.36, 7.25, 7.4, { skip: [backKey] });
+        span(-bay + 0.05, bay - 0.05, 0, 0.26, 4.2, 4.7, { skip: [backKey], faces: { [frontKey]: 'corbel', '-h': 'corbel' } });
       }
     }
   }
@@ -495,25 +607,94 @@ function fixCorbelUvs() {
   }
 }
 
+const INNER = CORE - TOWER_W; // 3.5: the end between the towers
+const PIER = 1.45; // half the lift pier
+const BAY_TOP = 3.6;
+
+/** Three small square windows over a bay, and the ledge under them. */
+function windowRow(s0, s1) {
+  const c = (s0 + s1) / 2;
+  return [-0.62, 0, 0.62].map((d) => ({ s0: c + d - 0.2, s1: c + d + 0.2, h0: 4.55, h1: 5.05, depth: 0.12, back: 'dark' }));
+}
+
+/**
+ * The two ends; the entrance faces +a. Seen from outside it, the viewer's right is -b: the escalator
+ * is in the -b bay, the ordinary stairs in the +b bay.
+ */
 function endBlocks() {
   for (const sa of [-1, 1]) {
     const a0 = sa > 0 ? BAY : -HALF_L;
     const a1 = sa > 0 ? HALF_L : -BAY;
-    const inner = CORE - TOWER;
-    box('marble', [a0, 0, -inner], [a1, END_H, inner], { skip: [sa > 0 ? '+a' : '-a'] });
-    box('marble', [a0, END_H, -inner], [a1, END_H + 0.15, inner], { faces: {} });
-    wallWithOpenings(
-      'marble',
-      [sa * HALF_L, 0, 0],
-      [0, 0, 1],
-      [sa, 0, 0],
-      [-inner, inner],
-      [0, END_H],
-      [{ c: 0, w: 1.4, sill: 0, spring: 3.7, k: 1.3, depth: 1.3, back: 'portal' }],
-    );
-    // The portal's floor, and the dark sign over it.
-    box('granite', [sa > 0 ? HALF_L - 1.3 : -HALF_L, -0.2, -1.4], [sa > 0 ? HALF_L : -HALF_L + 1.3, 0.02, 1.4], { skip: ['-h'] });
-    box('dark', [sa > 0 ? HALF_L : -HALF_L - 0.06, 5.75, -0.75], [sa > 0 ? HALF_L + 0.06 : -HALF_L, 6.55, 0.75]);
+    box('marble', [a0, 0, -INNER], [a1, END_H, INNER], { skip: [sa > 0 ? '+a' : '-a'] });
+    box('marble', [a0 - 0.05, END_H, -INNER - 0.05], [a1 + 0.05, END_H + 0.18, INNER + 0.05]);
+    const face = [sa * HALF_L, 0, 0];
+    const ledge = (s0, s1) => box('marble', [sa > 0 ? HALF_L : -HALF_L - 0.1, 4.42, s0], [sa > 0 ? HALF_L + 0.1 : -HALF_L, 4.52, s1]);
+    for (const sb of [-1, 1]) {
+      const s0 = sb > 0 ? PIER : -INNER;
+      const s1 = sb > 0 ? INNER : -PIER;
+      const bayHole =
+        sa > 0 ? { depth: 3.0, back: sb > 0 ? 'stairs' : 'escalator', top: 'soffit', bottom: 'granite' } : { depth: 0.35, back: 'gate', top: 'soffit', bottom: 'granite' };
+      rectWall('marble', face, [0, 0, 1], [sa, 0, 0], [s0, s1], [0, END_H], [{ s0, s1, h0: 0, h1: BAY_TOP, ...bayHole }, ...windowRow(s0, s1)]);
+      ledge(s0, s1);
+      if (sa > 0) {
+        // The bay's lattice gate, folded open against its outer side.
+        const b = sb * (INNER - 0.04);
+        const leaf = [
+          [HALF_L - 0.95, 0, b],
+          [HALF_L - 0.08, 0, b],
+          [HALF_L - 0.08, BAY_TOP - 0.15, b],
+          [HALF_L - 0.95, BAY_TOP - 0.15, b],
+        ];
+        poly(
+          'fence',
+          leaf,
+          leaf.map(([a, h]) => [(HALF_L - a) / 4, 0.38 + (0.6 * (BAY_TOP - 0.15 - h)) / (BAY_TOP - 0.15)]),
+          [0, 0, -sb],
+        );
+      }
+    }
+    if (sa > 0) {
+      // The lift in the pier, the blind arch over it, and the sign at the top.
+      rectWall(
+        'marble',
+        face,
+        [0, 0, 1],
+        [1, 0, 0],
+        [-PIER, PIER],
+        [0, END_H],
+        [
+          { s0: -0.62, s1: 0.62, h0: 0, h1: 2.35, depth: 0.12, back: 'steel' },
+          { s0: -1.05, s1: 1.05, h0: 4.25, h1: 5.85, depth: 0.06, back: 'archpanel' },
+        ],
+      );
+      box('dark', [HALF_L - 0.12, 0, -0.008], [HALF_L - 0.11, 2.35, 0.008]);
+      box('marble', [HALF_L, 0, -0.78], [HALF_L + 0.06, 2.5, -0.62]);
+      box('marble', [HALF_L, 0, 0.62], [HALF_L + 0.06, 2.5, 0.78]);
+      box('marble', [HALF_L, 2.35, -0.78], [HALF_L + 0.06, 2.5, 0.78]);
+      box('dark', [HALF_L, 6.05, -1.75], [HALF_L + 0.08, 6.85, 1.75], { skip: ['+a'] });
+      const sign = [
+        [HALF_L + 0.08, 6.05, 1.75],
+        [HALF_L + 0.08, 6.05, -1.75],
+        [HALF_L + 0.08, 6.85, -1.75],
+        [HALF_L + 0.08, 6.85, 1.75],
+      ];
+      poly(
+        'sign',
+        sign,
+        [
+          [0, 1],
+          [1, 1],
+          [1, 0],
+          [0, 0],
+        ],
+        [1, 0, 0],
+      );
+      // The panel antennas on the roof over the entrance.
+      for (const b of [-2.2, -0.7, 0.7, 2.2]) box('marble', [HALF_L - 0.9, END_H + 0.18, b - 0.22], [HALF_L - 0.8, END_H + 1.15, b + 0.22]);
+    } else {
+      // The back: a tall pointed arch closed with the same lattice.
+      wallWithOpenings('marble', face, [0, 0, 1], [-1, 0, 0], [-PIER, PIER], [0, END_H], [{ c: 0, w: 1.15, sill: 0, spring: 3.9, k: 1.3, depth: 0.35, back: 'gate' }]);
+    }
   }
 }
 
@@ -594,17 +775,24 @@ middleBay();
  * The two placements navQ gives (`haram-service-a/b.glb`): the block's centre from its anchor in
  * the models' frame (X east, Y up, Z south), and which way its length runs.
  */
+const A = { centre: [-2.415, -41.918], lengthAlong: 'x' };
+const B = { centre: [-2.355, -82.929], lengthAlong: 'z' };
+/** The entrance (+a) faces east on a, north on b; `flip` turns the block half round on its centre. */
 const VARIANTS = [
-  { file: 'haram-restroom-a.glb', centre: [-2.415, -41.918], lengthAlong: 'x' },
-  { file: 'haram-restroom-b.glb', centre: [-2.355, -82.929], lengthAlong: 'z' },
+  { file: 'haram-restroom-a-east.glb', ...A, flip: false },
+  { file: 'haram-restroom-a-west.glb', ...A, flip: true },
+  { file: 'haram-restroom-b-north.glb', ...B, flip: false },
+  { file: 'haram-restroom-b-south.glb', ...B, flip: true },
 ];
 
-function place([a, h, b], { centre, lengthAlong }) {
+function turn([a, h, b], { lengthAlong, flip }) {
+  if (flip) [a, b] = [-a, -b];
   // A quarter turn about Y keeps the faces' handedness: (a, b) -> (b, -a).
-  return lengthAlong === 'x' ? [centre[0] + a, h, centre[1] + b] : [centre[0] + b, h, centre[1] - a];
-}
-function turn([a, h, b], { lengthAlong }) {
   return lengthAlong === 'x' ? [a, h, b] : [b, h, -a];
+}
+function place(q, v) {
+  const [x, y, z] = turn(q, v);
+  return [v.centre[0] + x, y, v.centre[1] + z];
 }
 
 const images = Object.fromEntries(

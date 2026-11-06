@@ -1,79 +1,79 @@
 {
   "205": {
-    "north": 0,
-    "east": -4
+    "north": -1,
+    "east": -7
   },
   "206": {
-    "north": 0,
-    "east": -4
+    "north": -3,
+    "east": -7
   },
   "207": {
     "north": 0,
-    "east": -17
+    "east": -14
   },
   "208": {
-    "north": 0,
-    "east": -17
+    "north": -3,
+    "east": -14
   },
   "209": {
     "north": 0,
-    "east": 3
+    "east": 4
   },
   "211": {
-    "north": -9,
+    "north": -12,
     "east": 0
   },
   "212": {
-    "north": -9,
-    "east": 0
+    "north": -12,
+    "east": -4
   },
   "213": {
-    "north": -4,
-    "east": 0
+    "north": -11,
+    "east": 3
   },
   "214": {
-    "north": -4,
-    "east": 0
+    "north": -11,
+    "east": -4
   },
   "215": {
-    "north": 3,
-    "east": 0
+    "north": 4,
+    "east": 3
   },
   "216": {
-    "north": 3,
-    "east": 0
+    "north": 4,
+    "east": -4
   },
   "217": {
-    "north": 6,
-    "east": 0
+    "north": 9,
+    "east": 3
   },
   "218": {
-    "north": 6,
-    "east": 0
+    "north": 9,
+    "east": -4
   },
   "220": {
-    "north": 6,
-    "east": 0
+    "north": 3,
+    "east": -3
   },
   "222": {
-    "north": 6,
-    "east": 0
+    "north": 3,
+    "east": 4
   },
   "224": {
-    "north": 6,
-    "east": 0
+    "north": 3,
+    "east": -8
   },
   "226": {
-    "north": 6,
-    "east": 0
+    "north": 3,
+    "east": 4
   },
   "228": {
-    "north": 6,
-    "east": 0
+    "north": 3,
+    "east": -4
   },
   "230": {
-    "north": 6,
-    "east": 0
+    "north": 3,
+    "east": 9
   },
   "301": {
     "north": 5,
@@ -258,5 +258,73 @@
   "604": {
     "north": 15,
     "east": 0
+  },
+  "202": {
+    "north": -3,
+    "east": 7
+  },
+  "201": {
+    "north": -1,
+    "east": 6
+  },
+  "204": {
+    "north": 0,
+    "east": 3
+  },
+  "203": {
+    "north": -3,
+    "east": 3
+  },
+  "210": {
+    "north": -3,
+    "east": 4
+  },
+  "219": {
+    "north": 4,
+    "east": -2
+  },
+  "221": {
+    "north": 1,
+    "east": 4
+  },
+  "223": {
+    "north": 1,
+    "east": -8
+  },
+  "225": {
+    "north": 1,
+    "east": 4
+  },
+  "227": {
+    "north": 1,
+    "east": -4
+  },
+  "229": {
+    "north": 1,
+    "east": 9
+  },
+  "236": {
+    "north": -12,
+    "east": 23
+  },
+  "235": {
+    "north": -12,
+    "east": 19
+  },
+  "234": {
+    "north": -10,
+    "east": 23
+  },
+  "233": {
+    "north": -10,
+    "east": 19
+  },
+  "232": {
+    "north": 1,
+    "east": 23
+  },
+  "231": {
+    "north": 1,
+    "east": 21
   }
 }
