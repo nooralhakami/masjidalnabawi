@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ALHARAMAIN_MODELS, alharamainPlaza } from '../../src/data-next/alharamain-3d';
+import { ALHARAMAIN_PRAYERS } from '../../src/data-next/alharamain-prayers';
+import { prayerBarriers, restroomWalkways } from '../../src/map/prayer-layout';
 import { CANOPY_MOVE_MS, canopyFoldAt, canopyFolding, foldCanopyVertex, metresFromOrigin, nodeShift, parseGlbBuffer } from '../../src/map/glb-layer';
 import { plazaMesh } from '../../src/map/plaza-layer';
 import { triangulate } from '../../src/map/polygon';
@@ -31,20 +33,60 @@ describe('triangulate', () => {
 });
 
 describe('plazaMesh (the marble)', () => {
-  it('covers every plaza area exactly (sectors, annex, prayer areas)', () => {
+  it("covers every plaza area exactly (sectors, annex, its prayer areas, the courtyards' prayer areas)", () => {
     const plazas = alharamainPlaza().features;
     expect(plazas).toHaveLength(18);
-    const rings = plazas.map((f) => f.geometry.coordinates[0].slice(0, -1).map((ll) => metresFromOrigin(ll as [number, number])));
+    expect(ALHARAMAIN_PRAYERS).toHaveLength(55);
+    const rings = [
+      ...plazas.map((f) => f.geometry.coordinates[0].slice(0, -1).map((ll) => metresFromOrigin(ll as [number, number]))),
+      ...ALHARAMAIN_PRAYERS.map((r) => r.map((ll) => metresFromOrigin(ll as [number, number]))),
+    ];
     const { vertices, indices } = plazaMesh();
-    expect(vertices.length / 3).toBe(rings.reduce((n, r) => n + r.length, 0));
+    expect(vertices.length / 5).toBe(rings.reduce((n, r) => n + r.length, 0));
     const pts: [number, number][] = [];
-    for (let i = 0; i < vertices.length; i += 3) pts.push([vertices[i], vertices[i + 1]]);
-    // Granite sectors, the concrete western annex, and its carpeted prayer areas.
+    for (let i = 0; i < vertices.length; i += 5) pts.push([vertices[i], vertices[i + 1]]);
+    // Granite sectors, the concrete western annex, its carpeted prayer areas, the courtyards' ones.
     const kinds = new Set<number>();
-    for (let i = 2; i < vertices.length; i += 3) kinds.add(vertices[i]);
-    expect([...kinds].sort()).toEqual([0, 1, 2]);
+    for (let i = 2; i < vertices.length; i += 5) kinds.add(vertices[i]);
+    expect([...kinds].sort()).toEqual([0, 1, 2, 3]);
     const total = rings.reduce((s, r) => s + ringArea(r), 0);
     expect(triArea(pts, indices)).toBeCloseTo(total, -1);
+    // Each area's carpets start from its own north-west corner.
+    for (let i = 0; i < vertices.length; i += 5) {
+      expect(vertices[i + 3]).toBeLessThanOrEqual(vertices[i] + 1e-3);
+      expect(vertices[i + 4]).toBeLessThanOrEqual(vertices[i + 1] + 1e-3);
+    }
+  });
+});
+
+describe("the courtyards' prayer areas (navQ, owner 2026-11-06)", () => {
+  it('lie in the courtyards, inside the Haram, and are ringed by green barriers just outside them', () => {
+    for (const ring of ALHARAMAIN_PRAYERS) {
+      for (const [lng, lat] of ring) {
+        expect(lng).toBeGreaterThan(39.6078);
+        expect(lng).toBeLessThan(39.6144);
+        expect(lat).toBeGreaterThan(24.4674);
+        expect(lat).toBeLessThan(24.4711);
+      }
+    }
+    const barriers = prayerBarriers().features;
+    expect(barriers.length).toBeGreaterThan(1000);
+    const inside = (x: number, y: number, r: readonly (readonly [number, number])[]) => {
+      let c = false;
+      for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+        if (r[i][1] > y !== r[j][1] > y && x < ((r[j][0] - r[i][0]) * (y - r[i][1])) / (r[j][1] - r[i][1]) + r[i][0]) c = !c;
+      }
+      return c;
+    };
+    // Every section stands outside its area (never on the carpets), about 2 m long.
+    for (const f of barriers.slice(0, 400)) {
+      const [a, b, c] = f.geometry.coordinates[0];
+      const mid: [number, number] = [(a[0] + c[0]) / 2, (a[1] + c[1]) / 2];
+      expect(ALHARAMAIN_PRAYERS.some((r) => inside(mid[0], mid[1], r))).toBe(false);
+      const len = Math.hypot((b[0] - a[0]) * 111_320 * Math.cos((a[1] * Math.PI) / 180), (b[1] - a[1]) * 111_320);
+      expect(len).toBeGreaterThan(0.4);
+      expect(len).toBeLessThan(2.7);
+    }
   });
 });
 
@@ -136,12 +178,72 @@ describe('a canopy opens and closes at a tap (owner, 2026-11-06)', () => {
     const slope = (p: readonly number[]) => Math.atan2(p[1] - axis[2], r(p));
     const half = 0.5;
     expect(slope(foldCanopyVertex(root, half, axis)) - slope(root)).toBeLessThan(slope(foldCanopyVertex(tip, half, axis)) - slope(tip));
+    // It opens from the bottom up (owner, 2026-11-06): half way, the part of the arm near the column
+    // lies open while the part beyond still stands upright above it.
+    const near: [number, number, number] = [5, 11, 0];
+    const far: [number, number, number] = [11, 14, 0];
+    const mid = 0.35;
+    expect(foldCanopyVertex(near, mid, axis)[1]).toBeCloseTo(near[1], 0);
+    const f = foldCanopyVertex(far, mid, axis);
+    expect(f[1]).toBeGreaterThan(far[1] + 1.5);
+    expect(r(f)).toBeLessThan(r(far) - 3);
     // The column and its lantern stay where they are.
     for (const p of [
       [-0.72, 4, -0.72],
       [0.2, 8, -0.5],
     ] as [number, number, number][]) {
       expect(foldCanopyVertex(p, 0, axis)).toEqual(p);
+    }
+  });
+});
+
+describe('a 10 m walkway in front of each restroom, toward the Haram (owner, 2026-11-06)', () => {
+  const walks = restroomWalkways();
+  const centre = (w: readonly (readonly [number, number])[]) => [w.reduce((s, p) => s + p[0], 0) / 4, w.reduce((s, p) => s + p[1], 0) / 4];
+
+  it('one per block, 10 m deep along its whole face', () => {
+    expect(walks).toHaveLength(40); // every restroom block (the 42 placements include the Mosque and the canopies)
+    for (const w of walks) {
+      expect(Math.hypot(w[2][0] - w[1][0], w[2][1] - w[1][1])).toBeCloseTo(10, 5);
+      const face = Math.hypot(w[1][0] - w[0][0], w[1][1] - w[0][1]);
+      expect([14, 23.2, 23].some((f) => Math.abs(face - f) < 0.3)).toBe(true);
+    }
+  });
+
+  it('on the face toward the Mosque: south of the north row (229), west of the east blocks (236), north of the south row (203)', () => {
+    const near = (lng: number, lat: number) => {
+      const [x, z] = metresFromOrigin([lng, lat]);
+      return walks.reduce((best, w) => {
+        const [cx, cz] = centre(w);
+        return Math.hypot(cx - x, cz - z) < Math.hypot(centre(best)[0] - x, centre(best)[1] - z) ? w : best;
+      });
+    };
+    // Block centres (the restroom markers stand in their middles).
+    const [x229, z229] = metresFromOrigin([39.612645, 24.470307]);
+    const w229 = near(39.612645, 24.470307 - 0.0001);
+    expect(centre(w229)[1] - z229).toBeGreaterThan(11);
+    const [x236, z236] = metresFromOrigin([39.614172, 24.468551]);
+    const w236 = near(39.614172 - 0.0001, 24.468551);
+    expect(centre(w236)[0] - x236).toBeLessThan(-7);
+    expect(Math.abs(centre(w236)[1] - z236)).toBeLessThan(3);
+    const [, z203] = metresFromOrigin([39.611646, 24.466825]);
+    const w203 = near(39.611646, 24.466825 + 0.0001);
+    expect(centre(w203)[1] - z203).toBeLessThan(-11);
+    expect(Math.abs(x229)).toBeGreaterThan(0);
+  });
+
+  it('no barrier stands in a walkway', () => {
+    const inside = (x: number, y: number, r: readonly (readonly [number, number])[]) => {
+      let c = false;
+      for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+        if (r[i][1] > y !== r[j][1] > y && x < ((r[j][0] - r[i][0]) * (y - r[i][1])) / (r[j][1] - r[i][1]) + r[i][0]) c = !c;
+      }
+      return c;
+    };
+    for (const f of prayerBarriers().features) {
+      const [a, , c] = f.geometry.coordinates[0];
+      const [x, z] = metresFromOrigin([(a[0] + c[0]) / 2, (a[1] + c[1]) / 2]);
+      expect(walks.some((w) => inside(x, z, w))).toBe(false);
     }
   });
 });
