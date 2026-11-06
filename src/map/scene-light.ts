@@ -183,6 +183,13 @@ const LANTERN: Rgb = [1, 0.99, 0.95];
 export function materialGlow(file: string, material: string | undefined): MaterialGlow | null {
   const name = (material ?? '').toLowerCase();
   const canopies = file.includes('canopies');
+  // The restroom blocks' lattice windows and stair portal, lit from inside: the light shows through
+  // the lattice's holes and the bronze stays dark (scripts/restroom-model.mjs).
+  if (file.includes('restroom')) {
+    if (name === 'window' || name === 'portal') return { color: scale(INSIDE, 1.5), tint: 1, rise: 0 };
+    // Its white marble is lit less than the Mosque's cream walls, or it burns out and loses its joints.
+    if (name !== 'steel' && name !== 'dark') return { color: scale(FLOOD, 0.42), tint: 1, rise: 1 };
+  }
   if (name.startsWith('glass')) {
     // The lanterns on the canopy columns, near white; the Mosque's windows, warm from inside.
     return canopies ? { color: scale(LANTERN, 2.2), tint: 0, rise: 0 } : { color: scale(INSIDE, 0.9), tint: 0, rise: 0 };
