@@ -600,7 +600,7 @@ export function nodeShift(model: AlharamainModel, east: number, south: number): 
 }
 
 /** Where each node of a file stands on the ground, as `[lng, lat]` (one per node and anchor). */
-function nodePositions(model: AlharamainModel, gltf: GltfJson): [number, number][] {
+export function nodePositions(model: AlharamainModel, gltf: GltfJson): [number, number][] {
   const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
   const perMetre = origin.meterInMercatorCoordinateUnits();
   const turn = (model.rotation * Math.PI) / 180;

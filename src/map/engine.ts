@@ -12,6 +12,7 @@ import { isTapName } from '../domain/route-hint';
 import { FEATURED_IDS } from '../domain/visits';
 import { lookOf } from '../presentation/markers';
 import type { IconName } from '../presentation/icons';
+import { CrowdLayer } from './crowd-layer';
 import { HaramGlbLayer } from './glb-layer';
 import { IconAtlas, createDrawer, cssPalette, type Drawer } from './images';
 import { LampGlowLayer } from './lamp-glow-layer';
@@ -79,6 +80,7 @@ export class MapEngine {
   private mode3d = false;
   /** The 3D models' layer while 3D is on, and the minute timer that follows the sun meanwhile. */
   private models: HaramGlbLayer | null = null;
+  private crowd: CrowdLayer | null = null;
   private terrain: TerrainLayer | null = null;
   private marble: PlazaMarbleLayer | null = null;
   private glow: LampGlowLayer | null = null;
@@ -290,8 +292,15 @@ export class MapEngine {
           this.lamps = lamps;
           (m.getSource('alharamain-lamps') as GeoJSONSource | undefined)?.setData(lampFeatures(lamps));
           this.glow?.setLamps(lamps);
+          this.crowd?.setColumns(lamps);
         });
         m.addLayer(this.models, before);
+      }
+      // People walking the courtyards, after the models so they share their depth (owner, 2026-11-06).
+      if (!m.getLayer('alharamain-3d-crowd')) {
+        this.crowd = new CrowdLayer(this.currentLight());
+        if (this.lamps) this.crowd.setColumns(this.lamps);
+        m.addLayer(this.crowd, before);
       }
       // The lanterns' glow, after the models so the Mosque hides those behind it.
       if (!m.getLayer('alharamain-3d-glow')) {
@@ -305,11 +314,13 @@ export class MapEngine {
       if (this.lightTimer) clearInterval(this.lightTimer);
       this.lightTimer = null;
       this.models = null;
+      this.crowd = null;
       this.terrain = null;
       this.marble = null;
       this.glow = null;
       for (const id of [
         'alharamain-3d-models',
+        'alharamain-3d-crowd',
         'alharamain-3d-barriers',
         'alharamain-3d-glow',
         'alharamain-3d-terrain',
@@ -343,6 +354,7 @@ export class MapEngine {
     if (!this.mode3d) return;
     const light = this.currentLight();
     this.models?.setLight(light);
+    this.crowd?.setLight(light);
     this.terrain?.setLight(light);
     this.marble?.setLight(light);
     this.glow?.setLight(light);

@@ -247,3 +247,16 @@ describe('a 10 m walkway in front of each restroom, toward the Haram (owner, 202
     }
   });
 });
+
+describe('the north corridor starts at the back of the restrooms (owner, 2026-11-06)', () => {
+  it('the northern row of prayer areas reaches half way across navQ corridor, no further', () => {
+    const north = ALHARAMAIN_PRAYERS.filter((r) => Math.max(...r.map((p) => p[1])) > 24.4709);
+    expect(north).toHaveLength(9);
+    for (const r of north) {
+      const south = Math.min(...r.map((p) => p[1]));
+      // navQ had them end at about 24.47083; the corridor's middle lies near 24.47078-24.47079.
+      expect(south).toBeLessThan(24.4708);
+      expect(south).toBeGreaterThan(24.47076);
+    }
+  });
+});
