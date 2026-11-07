@@ -240,10 +240,10 @@ export type Stretch = Level | 'up' | 'down';
 
 /**
  * One step of the way inside the car park, for step-by-step directions: head north/east/south/west,
- * take the ramp up to A or down to B, turn into the lot or out of it.
+ * take the ramp up to A or down to B, turn into the lot or out of it; on foot, up the stairs to the plaza.
  */
 export interface GarageStep {
-  kind: 'n' | 'e' | 's' | 'w' | 'up' | 'down' | 'lot_in' | 'lot_out';
+  kind: 'n' | 'e' | 's' | 'w' | 'up' | 'down' | 'lot_in' | 'lot_out' | 'stairs';
   path: LatLng[];
   meters: number;
 }

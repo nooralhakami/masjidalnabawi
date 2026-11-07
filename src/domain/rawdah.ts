@@ -1,8 +1,5 @@
-import { CalculationMethod, Coordinates, PrayerTimes } from 'adhan';
+import { MADINAH_UTC_OFFSET_MIN as UTC_OFFSET_MIN, madinahDate, prayersOn } from './prayer';
 
-/** Al-Madinah, Saudi Arabia (UTC+3 all year, no DST). */
-const MADINAH = new Coordinates(24.4672, 39.6111);
-const UTC_OFFSET_MIN = 180;
 const HOUR = 3_600_000;
 
 export type RawdahTurn = 'women' | 'men';
@@ -20,12 +17,6 @@ export interface RawdahState {
   fajr: Date;
 }
 
-/** Madinah calendar date (y, m0, d) for an instant. */
-function madinahDate(now: Date): [number, number, number] {
-  const shifted = new Date(now.getTime() + UTC_OFFSET_MIN * 60_000);
-  return [shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()];
-}
-
 /** Instant of a Madinah wall-clock hour on a Madinah date. */
 function madinahTime(y: number, m: number, d: number, hour: number): Date {
   return new Date(Date.UTC(y, m, d, hour) - UTC_OFFSET_MIN * 60_000);
@@ -33,9 +24,8 @@ function madinahTime(y: number, m: number, d: number, hour: number): Date {
 
 /** Fajr and Isha in Madinah for a Madinah date, Umm al-Qura method. */
 export function prayerTimes(y: number, m: number, d: number): { fajr: Date; isha: Date } {
-  // adhan reads the calendar day from the Date's local fields.
-  const pt = new PrayerTimes(MADINAH, new Date(y, m, d, 12), CalculationMethod.UmmAlQura());
-  return { fajr: pt.fajr, isha: pt.isha };
+  const { fajr, isha } = prayersOn(y, m, d);
+  return { fajr, isha };
 }
 
 /**
