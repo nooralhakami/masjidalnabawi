@@ -180,6 +180,7 @@ async function main() {
             if (headingUp.value) trip.setHeadingUp(false);
             engine.resetNorth();
           }}
+          onTilt={(d) => engine.tilt(d)}
           watchNorth={watchNorth}
         />
       </LangContext.Provider>,

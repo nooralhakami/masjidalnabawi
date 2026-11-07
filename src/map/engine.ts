@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
 import { POIS, RULES } from '../data';
 import { alharamainPlaza } from '../data-next/alharamain-3d';
-import { prayerBarriers } from './prayer-layout';
+import { rugLayout } from './rug-layout';
 import { sunPosition } from '../domain/daylight';
 import type { Poi, Status } from '../data/types';
 import { isHidden } from '../domain/filters';
@@ -13,6 +13,7 @@ import { FEATURED_IDS } from '../domain/visits';
 import { lookOf } from '../presentation/markers';
 import type { IconName } from '../presentation/icons';
 import { CrowdLayer } from './crowd-layer';
+import { RugLayer } from './rug-layer';
 import { HaramGlbLayer } from './glb-layer';
 import { IconAtlas, createDrawer, cssPalette, type Drawer } from './images';
 import { LampGlowLayer } from './lamp-glow-layer';
@@ -57,6 +58,8 @@ const DIRS: Record<string, string> = { south: 'dir-south', west: 'dir-west', nor
 
 /** Map zoom of a legacy (Leaflet) zoom threshold. */
 const at = mapZoom;
+/** How close the 3D view may come (MapLibre zoom; the flat map stops at the live app's 19, MapLibre 18). */
+export const MAX_ZOOM_3D = 22;
 
 /**
  * The map (SPEC F1, N1; ARCHITECTURE §5): Esri imagery (or a light map), one GeoJSON source for every
@@ -81,6 +84,7 @@ export class MapEngine {
   /** The 3D models' layer while 3D is on, and the minute timer that follows the sun meanwhile. */
   private models: HaramGlbLayer | null = null;
   private crowd: CrowdLayer | null = null;
+  private rugs: RugLayer | null = null;
   private terrain: TerrainLayer | null = null;
   private marble: PlazaMarbleLayer | null = null;
   private glow: LampGlowLayer | null = null;
@@ -111,7 +115,9 @@ export class MapEngine {
       maxZoom: at(LEGACY_MAX),
       // Flat until 3D mode unlocks pitch up to 85° (SPEC-3D.md §1); map-main opens in 3D (owner, 2026-11-06).
       maxPitch: 0,
-      pitchWithRotate: false,
+      // A right-button (or Ctrl) drag turns and tilts, as in other 3D maps; flat (max pitch 0), the
+      // tilt has nowhere to go, so the 2D map only turns (owner, 2026-11-07).
+      pitchWithRotate: true,
       dragRotate: true,
       touchPitch: false,
       attributionControl: false,
@@ -141,6 +147,7 @@ export class MapEngine {
     });
     this.map.touchZoomRotate.enableRotation();
     this.map.keyboard.enable();
+    this.desktopGestures();
     // Esri's line whenever its imagery shows; OpenStreetMap's always (the streets and routes come from it).
     this.map.addControl(
       new AttributionControl({
@@ -268,8 +275,16 @@ export class MapEngine {
         this.marble = new PlazaMarbleLayer(this.currentLight());
         m.addLayer(this.marble, 'alharamain-3d-lamps');
       }
+      // The prayer carpets, laid whole on the paving (owner, 2026-11-07).
+      if (!m.getLayer('alharamain-3d-rugs')) {
+        this.rugs = new RugLayer(this.currentLight());
+        if (this.lamps) this.rugs.setColumns(this.lamps);
+        m.addLayer(this.rugs, 'alharamain-3d-lamps');
+      }
       // The green barriers round the courtyards' prayer areas (owner, 2026-11-06), about a metre high.
-      if (!m.getSource('alharamain-barriers')) m.addSource('alharamain-barriers', { type: 'geojson', data: prayerBarriers() });
+      // Laid once the canopies' file has said where the columns stand (the carpets keep clear of them).
+      if (!m.getSource('alharamain-barriers'))
+        m.addSource('alharamain-barriers', { type: 'geojson', data: this.lamps ? rugLayout(this.lamps).barriers : { type: 'FeatureCollection', features: [] } });
       if (!m.getLayer('alharamain-3d-barriers')) {
         m.addLayer(
           {
@@ -293,6 +308,8 @@ export class MapEngine {
           (m.getSource('alharamain-lamps') as GeoJSONSource | undefined)?.setData(lampFeatures(lamps));
           this.glow?.setLamps(lamps);
           this.crowd?.setColumns(lamps);
+          this.rugs?.setColumns(lamps);
+          (m.getSource('alharamain-barriers') as GeoJSONSource | undefined)?.setData(rugLayout(lamps).barriers);
         });
         m.addLayer(this.models, before);
       }
@@ -315,6 +332,7 @@ export class MapEngine {
       this.lightTimer = null;
       this.models = null;
       this.crowd = null;
+      this.rugs = null;
       this.terrain = null;
       this.marble = null;
       this.glow = null;
@@ -325,6 +343,7 @@ export class MapEngine {
         'alharamain-3d-glow',
         'alharamain-3d-terrain',
         'alharamain-3d-lamps',
+        'alharamain-3d-rugs',
         'alharamain-3d-marble',
         'alharamain-3d-plaza',
         'alharamain-3d-ground',
@@ -355,6 +374,7 @@ export class MapEngine {
     const light = this.currentLight();
     this.models?.setLight(light);
     this.crowd?.setLight(light);
+    this.rugs?.setLight(light);
     this.terrain?.setLight(light);
     this.marble?.setLight(light);
     this.glow?.setLight(light);
@@ -532,15 +552,20 @@ export class MapEngine {
     const instant = opts.instant || reduce();
     if (enabled) {
       this.map.setMaxPitch(85);
+      // Close enough to see the models' detail (owner, 2026-11-07); the flat map keeps the live app's limit.
+      this.map.setMaxZoom(MAX_ZOOM_3D);
       this.map.touchPitch.enable();
       this.sync3DLayer();
       this.map.easeTo({ pitch: 45, bearing: 22, duration: instant ? 0 : 1000 });
     } else {
       this.map.touchPitch.disable();
       this.sync3DLayer();
-      this.map.easeTo({ pitch: 0, bearing: 0, duration: instant ? 0 : 800 });
+      const flatMax = at(LEGACY_MAX);
+      this.map.easeTo({ pitch: 0, bearing: 0, zoom: Math.min(this.map.getZoom(), flatMax), duration: instant ? 0 : 800 });
       const lockFlat = () => {
-        if (!this.mode3d) this.map.setMaxPitch(0);
+        if (this.mode3d) return;
+        this.map.setMaxPitch(0);
+        this.map.setMaxZoom(flatMax);
       };
       if (instant) lockFlat();
       else this.map.once('moveend', lockFlat);
@@ -550,6 +575,46 @@ export class MapEngine {
 
   get is3D(): boolean {
     return this.mode3d;
+  }
+
+  /**
+   * The laptop's ways to turn and tilt the 3D view (owner, 2026-11-07), besides a right-button or
+   * Ctrl drag: Option/Alt with a two-finger scroll tilts (up and down) and turns (left and right);
+   * Safari's two-finger turn on the trackpad turns the map. A plain scroll still zooms, and touch
+   * screens keep their own gestures untouched.
+   */
+  private desktopGestures(): void {
+    const el = this.map.getCanvasContainer();
+    el.addEventListener(
+      'wheel',
+      (e) => {
+        if (!e.altKey || !this.mode3d) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        const k = e.deltaMode === 1 ? 16 : 1;
+        this.map.jumpTo({
+          pitch: Math.max(0, Math.min(this.map.getMaxPitch(), this.map.getPitch() - e.deltaY * k * 0.12)),
+          bearing: this.map.getBearing() + e.deltaX * k * 0.2,
+        });
+      },
+      { capture: true, passive: false },
+    );
+    let last = 0;
+    type Gesture = Event & { rotation: number };
+    el.addEventListener('gesturestart', (e) => {
+      last = (e as Gesture).rotation;
+    });
+    el.addEventListener('gesturechange', (e) => {
+      const r = (e as Gesture).rotation;
+      if (this.mode3d) this.map.setBearing(this.map.getBearing() - (r - last));
+      last = r;
+    });
+  }
+
+  /** Tilt the 3D view by `deg` (+ more toward the horizon), as the tilt buttons do. */
+  tilt(deg: number): void {
+    const pitch = Math.max(0, Math.min(this.map.getMaxPitch(), this.map.getPitch() + deg));
+    this.map.easeTo({ pitch, duration: reduce() ? 0 : 250 });
   }
 
   /** The visitor's turn of the map, as the live app's buttons: +15° turns the map clockwise. */

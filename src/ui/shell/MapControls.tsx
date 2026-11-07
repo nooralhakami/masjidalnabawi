@@ -1,6 +1,7 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
 import { IconButton } from '../kit/Button';
+import { view3d } from '../../state/store';
 import { useI18n } from '../i18n';
 
 export interface MapControlsProps {
@@ -8,6 +9,8 @@ export interface MapControlsProps {
   /** Turn the map clockwise (+) or anticlockwise (−) by 15°, as the live app's buttons. */
   onTurn(deg: 15 | -15): void;
   onNorth(): void;
+  /** Tilt the 3D view by `deg` (shown in 3D only). */
+  onTilt?(deg: 10 | -10): void;
   /** Subscribe to where true north points on screen (deg clockwise); returns an unsubscribe. */
   watchNorth(fn: (deg: number) => void): () => void;
 }
@@ -17,7 +20,7 @@ export interface MapControlsProps {
  * needle follows true north on screen, the Kaaba mark at its other end points to the qibla, as in
  * the live app). The needle is turned by writing one transform, never a render.
  */
-export function MapControls({ onZoom, onTurn, onNorth, watchNorth }: MapControlsProps) {
+export function MapControls({ onZoom, onTurn, onNorth, onTilt, watchNorth }: MapControlsProps) {
   const { t } = useI18n();
   const compass = useRef<HTMLSpanElement>(null);
   useEffect(
@@ -43,6 +46,14 @@ export function MapControls({ onZoom, onTurn, onNorth, watchNorth }: MapControls
         </span>
         <IconButton icon="rotate-left" class="mc-turn" label={t('rot_left')} onClick={() => onTurn(-15)} />
       </div>
+      {onTilt && view3d.value ? (
+        // In 3D: tilt toward the horizon or back toward the top view; their titles say how a laptop
+        // turns and tilts by hand (owner, 2026-11-07).
+        <div class="mc-group mc-tilt" title={t('gestures_desktop')}>
+          <IconButton icon="tilt-up" label={`${t('tilt_up')} — ${t('gestures_desktop')}`} onClick={() => onTilt(10)} />
+          <IconButton icon="tilt-down" label={`${t('tilt_down')} — ${t('gestures_desktop')}`} onClick={() => onTilt(-10)} />
+        </div>
+      ) : null}
     </div>
   );
 }

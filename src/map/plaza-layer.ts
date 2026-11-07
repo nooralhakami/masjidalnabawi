@@ -4,7 +4,7 @@ import { ALHARAMAIN_PRAYERS } from '../data-next/alharamain-prayers';
 import { frameMatrix, metresFromOrigin, mulMat4 } from './glb-layer';
 import { triangulate } from './polygon';
 import type { SceneLight } from './scene-light';
-import { MOSQUE_MAIN, MOSQUE_SOUTH, restroomWalkways } from './prayer-layout';
+import { MOSQUE_MAIN, MOSQUE_SOUTH } from './prayer-layout';
 import { createShadowTexture, SHADOW_GLSL, sunShadow } from './sun-shadow';
 
 const VERT_SRC = `#version 300 es
@@ -40,9 +40,6 @@ uniform vec2 u_grid;
 // The Mosque's footprint (from its own model): the main block and the narrower southern block, as
 // boxes (centre x, z, half width, half depth) in the models' frame.
 uniform vec4 u_main;
-// The restrooms' walkways toward the Haram, kept clear of carpets: x0, y0, x1, y1 in the turned frame.
-uniform vec4 u_walk[48];
-uniform int u_walkCount;
 uniform vec4 u_south;
 // The camera, in the models' metres (x east, y up, z south), and the sky the floor reflects.
 uniform vec3 u_eye;
@@ -93,43 +90,9 @@ void main() {
   float gloss;
 
   if (v_kind > 1.5) {
-    // The prayer areas (owner, 2026-11-06): the Mosque's green carpets, each 5 m across (east to
-    // west) and 1 m deep toward the qibla (south), laid from the area's north-west corner in groups
-    // of three rows with 80 cm of floor between the groups; a navy border, a gold line and a
-    // medallion on each, as in the photographs.
-    // A restroom's walkway: no carpet, the plaza's own floor shows (owner, 2026-11-06).
-    vec2 pt = p + u_grid;
-    for (int i = 0; i < 48; i++) {
-      if (i >= u_walkCount) break;
-      vec4 w = u_walk[i];
-      if (pt.x > w.x && pt.x < w.z && pt.y > w.y && pt.y < w.w) discard;
-    }
-    vec2 o = vec2(c * v_origin.x - s * v_origin.y, s * v_origin.x + c * v_origin.y) - u_grid;
-    vec2 q = p - o - vec2(0.0, 0.5);
-    float inRow = mod(q.y, 3.8);
-    float gap = step(3.0, inRow) + step(q.y, 0.0);
-    vec2 rug = vec2(5.0, 1.0);
-    vec2 r = vec2(mod(q.x, 5.0) - 2.5, fract(inRow) - 0.5);
-    vec2 edge = rug * 0.5 - abs(r);
-    float fwR = max(fwidth(q.x), fwidth(q.y));
-    float detail = 1.0 - smoothstep(0.05, 0.2, fwR);
-    float border = (1.0 - smoothstep(0.11, 0.11 + fwR, min(edge.x, edge.y))) * detail;
-    float gold = line(min(edge.x, edge.y) - 0.15, 0.012, fwR) * detail;
-    float seam = 1.0 - smoothstep(0.012, 0.012 + fwR, min(edge.x, edge.y));
-    float medal = (1.0 - smoothstep(0.26, 0.26 + fwR, length(r * vec2(0.42, 1.0)))) * detail;
-    float flower = hash(floor(q * 9.0)) * (1.0 - smoothstep(0.01, 0.05, fwR));
-    color = vec3(0.42, 0.47, 0.32) * (0.9 + 0.2 * flower);
-    color = mix(color, vec3(0.13, 0.16, 0.27), max(border, medal * 0.8));
-    color = mix(color, vec3(0.72, 0.62, 0.36), gold * 0.8);
-    color = mix(color, vec3(0.3, 0.33, 0.22), seam);
-    alpha = 0.95;
-    gloss = 0.0;
-    // Between the groups, the polished floor shows.
-    if (gap > 0.5) {
-      color = vec3(0.86, 0.86, 0.85);
-      alpha = 0.6;
-      gloss = 1.0;
-    }
+    // The prayer areas: their carpets are laid whole, one by one, by the rug layer (owner,
+    // 2026-11-07); here only the paving under them shows.
+    discard;
   } else if (v_kind > 0.5) {
     // The western plaza: polished concrete in large white squares, nothing else (owner, 2026-11-04).
     color = vec3(0.92, 0.91, 0.88);
@@ -253,7 +216,7 @@ export class PlazaMarbleLayer implements CustomLayerInterface {
     gl.deleteShader(vs);
     gl.deleteShader(fs);
     this.program = prog;
-    for (const name of ['u_mvp', 'u_turn', 'u_night', 'u_grid', 'u_main', 'u_south', 'u_eye', 'u_sheen', 'u_shadowMap', 'u_light', 'u_shadow', 'u_walk', 'u_walkCount'])
+    for (const name of ['u_mvp', 'u_turn', 'u_night', 'u_grid', 'u_main', 'u_south', 'u_eye', 'u_sheen', 'u_shadowMap', 'u_light', 'u_shadow'])
       this.uniforms[name] = gl.getUniformLocation(prog, name);
 
     const { vertices, indices } = plazaMesh();
@@ -319,8 +282,6 @@ export class PlazaMarbleLayer implements CustomLayerInterface {
     gl.uniform2fv(this.uniforms.u_grid, CANOPY_GRID);
     gl.uniform4fv(this.uniforms.u_main, MOSQUE_MAIN);
     gl.uniform4fv(this.uniforms.u_south, MOSQUE_SOUTH);
-    gl.uniform4fv(this.uniforms.u_walk, WALKS);
-    gl.uniform1i(this.uniforms.u_walkCount, WALKS.length / 4);
     // The camera in the models' metres, for the floor's gloss.
     const eye = this.map ? cameraEye(this.map) : ([0, 1000, 0] as const);
     gl.uniform3f(this.uniforms.u_eye, eye[0], eye[1], eye[2]);
@@ -345,7 +306,7 @@ export class PlazaMarbleLayer implements CustomLayerInterface {
  * Where the camera stands, in the models' metres (x east, y up, z south), from the map's public
  * camera: it looks at the centre from `distance` away, tilted by the pitch, turned by the bearing.
  */
-function cameraEye(map: MLMap): [number, number, number] {
+export function cameraEye(map: MLMap): [number, number, number] {
   const c = map.getCenter();
   const [cx, cz] = metresFromOrigin([c.lng, c.lat]);
   const metresPerPixel = (40_075_016.686 * Math.cos((c.lat * Math.PI) / 180)) / (512 * 2 ** map.getZoom());
@@ -370,21 +331,6 @@ const CANOPY_GRID: [number, number] = (() => {
   const nx = ax + -171.45 * Math.cos(t) - -400.41 * Math.sin(t);
   const nz = az + -171.45 * Math.sin(t) + -400.41 * Math.cos(t);
   return [Math.cos(t) * nx - Math.sin(t) * nz, Math.sin(t) * nx + Math.cos(t) * nz];
-})();
-
-/**
- * The restrooms' walkways as rectangles in the frame the shader turns the plaza to (the blocks
- * stand turned with the canopies, so they are square to it): x0, y0, x1, y1 each.
- */
-const WALKS: Float32Array = (() => {
-  const t = (ALHARAMAIN_MODELS[1].rotation * Math.PI) / 180;
-  const walks = restroomWalkways().slice(0, 48);
-  const out = new Float32Array(walks.length * 4);
-  walks.forEach((w, i) => {
-    const turned = w.map(([x, z]) => [Math.cos(t) * x - Math.sin(t) * z, Math.sin(t) * x + Math.cos(t) * z]);
-    out.set([Math.min(...turned.map((q) => q[0])), Math.min(...turned.map((q) => q[1])), Math.max(...turned.map((q) => q[0])), Math.max(...turned.map((q) => q[1]))], i * 4);
-  });
-  return out;
 })();
 
 /**

@@ -20,8 +20,10 @@ export interface CrowdInput {
   walkable: readonly (readonly XY[])[];
   /** Where they may not (carpets, buildings), unless also in `open`. */
   blocked: readonly (readonly XY[])[];
-  /** Cut back out of `blocked` (the restrooms' walkways). */
+  /** Cut back out of `blocked` (the restrooms' walkways, the owner's cleared corridors). */
   open: readonly (readonly XY[])[];
+  /** Never walkable, whatever `open` says: buildings (the Mosque, the restroom blocks). */
+  solid?: readonly (readonly XY[])[];
   /** The canopy and lamp columns. */
   columns: readonly XY[];
   /** Where people walk to: the gates. */
@@ -112,8 +114,10 @@ export class Crowd {
     for (const r of input.walkable) raster(W, w, h, x0, z0, r, 1);
     for (const r of input.blocked) raster(B, w, h, x0, z0, r, 1);
     for (const r of input.open) raster(O, w, h, x0, z0, r, 1);
+    const S = new Uint8Array(w * h);
+    for (const r of input.solid ?? []) raster(S, w, h, x0, z0, r, 1);
     this.walk = new Uint8Array(w * h);
-    for (let k = 0; k < w * h; k++) this.walk[k] = W[k] && (!B[k] || O[k]) ? 1 : 0;
+    for (let k = 0; k < w * h; k++) this.walk[k] = W[k] && (!B[k] || O[k]) && !S[k] ? 1 : 0;
     // A clear disc round each column (its body plus a walker's).
     this.columns = input.columns;
     const reach = COLUMN_R + BODY_R;

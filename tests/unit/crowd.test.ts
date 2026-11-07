@@ -2,11 +2,12 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ALHARAMAIN_MODELS } from '../../src/data-next/alharamain-3d';
-import { ALHARAMAIN_PRAYERS } from '../../src/data-next/alharamain-prayers';
+import { PRAYER_CLEARINGS } from '../../src/data-next/alharamain-prayers';
 import { BODY_R, COLUMN_R, Crowd } from '../../src/map/crowd-sim';
 import { crowdInput } from '../../src/map/crowd-world';
 import { metresFromOrigin, nodePositions, parseGlbBuffer } from '../../src/map/glb-layer';
 import { restroomFootprints, restroomWalkways } from '../../src/map/prayer-layout';
+import { rugLayout } from '../../src/map/rug-layout';
 
 const inside = (x: number, z: number, r: readonly (readonly [number, number])[]) => {
   let c = false;
@@ -25,8 +26,9 @@ describe('people walking in the courtyards (owner, 2026-11-06)', () => {
   const start = Array.from({ length: crowd.n }, (_, a) => [crowd.px[a], crowd.pz[a]]);
   for (let t = 0; t < 60; t += 1 / 30) crowd.step(1 / 30);
 
-  const carpets = ALHARAMAIN_PRAYERS.map((r) => r.map((ll) => metresFromOrigin(ll as [number, number])));
-  const walkways = restroomWalkways();
+  // The carpets as laid (whole ones only).
+  const carpets = rugLayout(columnsLL).covered;
+  const walkways = [...restroomWalkways(), ...PRAYER_CLEARINGS.map((r) => r.map((ll) => metresFromOrigin(ll as [number, number])))];
   const blocks = restroomFootprints();
 
   it('every walker stands on walkable ground: never on a carpet, in a restroom block or in a column', () => {
@@ -37,7 +39,19 @@ describe('people walking in the courtyards (owner, 2026-11-06)', () => {
       if (Number.isNaN(x)) continue;
       placed++;
       expect(crowd.standable(x, z)).toBe(true);
-      const onCarpet = carpets.some((r) => inside(x, z, r)) && !walkways.some((w) => inside(x, z, w));
+      // The ground is a 0.5 m grid: a walker may graze an edge by less than half a cell, never more.
+      const depth = (r: readonly (readonly [number, number])[]) => {
+        let d = Number.POSITIVE_INFINITY;
+        for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+          const [ax, az] = r[j];
+          const ex = r[i][0] - ax;
+          const ez = r[i][1] - az;
+          const t = Math.max(0, Math.min(1, ((x - ax) * ex + (z - az) * ez) / (ex * ex + ez * ez)));
+          d = Math.min(d, Math.hypot(ax + t * ex - x, az + t * ez - z));
+        }
+        return d;
+      };
+      const onCarpet = carpets.some((r) => inside(x, z, r) && depth(r) > 0.3) && !walkways.some((w) => inside(x, z, w));
       expect(onCarpet).toBe(false);
       expect(blocks.some((b) => inside(x, z, b))).toBe(false);
       for (const [cx, cz] of input.columns) expect(Math.hypot(x - cx, z - cz)).toBeGreaterThan(COLUMN_R);

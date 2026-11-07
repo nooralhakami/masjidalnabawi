@@ -34,6 +34,8 @@ const PATHS = {
   minus: '<path d="M5 12h14"/>',
   'rotate-left': '<path d="M9 5H5v4"/><path d="M5.5 9A7 7 0 1 1 7 17"/>',
   'rotate-right': '<path d="M15 5h4v4"/><path d="M18.5 9A7 7 0 1 0 17 17"/>',
+  'tilt-up': '<path d="M3 20l4-6h10l4 6z"/><path d="M12 11V3"/><path d="M9 6l3-3 3 3"/>',
+  'tilt-down': '<path d="M3 20l4-6h10l4 6z"/><path d="M12 3v8"/><path d="M9 8l3 3 3-3"/>',
   // Compass needle: the filled (north) half is coloured by CSS and turned to true north.
   'rotate-reset':
     '<circle cx="12" cy="12" r="9.5" stroke-width="1.5"/><path class="needle-n" d="M12 3.6l2.8 8.4h-5.6z" fill="currentColor" stroke="none"/><path class="needle-s" d="M10.6 12h2.8l-1.4 3z" fill="currentColor" stroke="none"/><g class="kaaba"><rect x="9.6" y="15.4" width="4.8" height="4.8" rx=".4" stroke-width=".7"/><rect class="kaaba-band" x="9.6" y="16.5" width="4.8" height=".9" stroke="none"/></g><circle cx="12" cy="12" r="1.3" fill="var(--surface-2, #fff)" stroke="none"/>',

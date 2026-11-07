@@ -1,9 +1,10 @@
 import { POIS } from '../data';
 import { alharamainPlaza } from '../data-next/alharamain-3d';
-import { ALHARAMAIN_PRAYERS } from '../data-next/alharamain-prayers';
+import { PRAYER_CLEARINGS } from '../data-next/alharamain-prayers';
 import type { CrowdInput, XY } from './crowd-sim';
 import { metresFromOrigin } from './glb-layer';
 import { MOSQUE_MAIN, MOSQUE_SOUTH, restroomFootprints, restroomWalkways } from './prayer-layout';
+import { rugLayout } from './rug-layout';
 
 const m = (ll: readonly [number, number]): XY => metresFromOrigin(ll as [number, number]);
 
@@ -26,13 +27,12 @@ export function crowdInput(columns: readonly (readonly [number, number])[]): Cro
   return {
     walkable: plaza.filter((f) => f.properties.kind === 'sector' || f.properties.kind === 'annex').map(ring),
     blocked: [
-      ...ALHARAMAIN_PRAYERS.map((r) => r.map(m)),
-      ...plaza.filter((f) => f.properties.kind === 'men' || f.properties.kind === 'women').map(ring),
-      box(MOSQUE_MAIN, 0.5),
-      box(MOSQUE_SOUTH, 0.5),
-      ...restroomFootprints(0.5),
+      // The carpets as laid (whole carpets only, owner 2026-11-07), not the areas' outlines.
+      ...rugLayout(columns).blocked,
     ],
-    open: restroomWalkways(),
+    open: [...restroomWalkways(), ...PRAYER_CLEARINGS.map((r) => r.map(m))],
+    // Buildings stay closed even where a cleared corridor crosses them.
+    solid: [box(MOSQUE_MAIN, 0.5), box(MOSQUE_SOUTH, 0.5), ...restroomFootprints(0.5)],
     columns: columns.map(m),
     goals: POIS.filter((p) => p.category === 'gates').map((p) => m([p.lng, p.lat])),
   };
