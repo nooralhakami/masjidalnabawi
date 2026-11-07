@@ -60,11 +60,12 @@ test.describe('walking from the west plaza', () => {
     await openAndRoute(page, 204);
     await expect(card(page)).toBeVisible({ timeout: 20_000 });
     // ≈510 m since the owner's west-plaza walkways (2026-10-08); ≈550 m since 204's marker stands in
-    // the middle of its block (owner, 2026-11-06). Still 7 minutes.
+    // the middle of its block (owner, 2026-11-06); ≈570 m and 8 minutes since the west walkway follows
+    // its real corridor, off the carpets (owner, 2026-11-07).
     const m = await metresOf(page);
     expect(m).toBeGreaterThan(470);
-    expect(m).toBeLessThan(580);
-    await expect(card(page).locator('.route-box')).toContainText('7');
+    expect(m).toBeLessThan(610);
+    await expect(card(page).locator('.route-box')).toContainText('8');
     expect(await drawn(page, 'route-walk')).toBeGreaterThan(0);
     expect(await drawn(page, 'route-arrows')).toBeGreaterThan(3);
     await expect(page.locator('.me-dot')).toBeVisible();
