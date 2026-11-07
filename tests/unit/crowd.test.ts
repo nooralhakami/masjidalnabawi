@@ -92,3 +92,64 @@ describe('people walking in the courtyards (owner, 2026-11-06)', () => {
     expect(moved / crowd.n).toBeGreaterThan(0.6);
   });
 });
+
+describe('the women’s areas (owner, 2026-11-07)', () => {
+  const file = readFileSync(resolve(__dirname, '../../public/models/haram-canopies.glb'));
+  const { gltf } = parseGlbBuffer(file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength) as ArrayBuffer);
+  const columnsLL = nodePositions(ALHARAMAIN_MODELS.find((m) => m.url.includes('canopies'))!, gltf);
+  const input = crowdInput(columnsLL);
+  const n = 300;
+  const women = Uint8Array.from({ length: n }, (_, a) => (a % 2 ? 1 : 0));
+  const crowd = new Crowd(input, n, 3, women);
+  const zones = input.womenOnly!;
+  const fences = input.fences!;
+  // About the north-west area, where the visitor looks.
+  const [cx, cz] = metresFromOrigin([39.6093, 24.4699]);
+  const crosses = (ax: number, az: number, bx: number, bz: number) =>
+    fences.some((line) =>
+      line.slice(1).some(([qx, qz], k) => {
+        const [px, pz] = line[k];
+        const d = (x1: number, z1: number, x2: number, z2: number, x3: number, z3: number) => (x2 - x1) * (z3 - z1) - (z2 - z1) * (x3 - x1);
+        return d(px, pz, qx, qz, ax, az) * d(px, pz, qx, qz, bx, bz) < 0 && d(ax, az, bx, bz, px, pz) * d(ax, az, bx, bz, qx, qz) < 0;
+      }),
+    );
+  let menInside = 0;
+  let crossed = 0;
+  crowd.keepNear(cx, cz, 90, 0);
+  for (let t = 0; t < 40; t += 1 / 30) {
+    const before = Array.from({ length: n }, (_, a) => [crowd.px[a], crowd.pz[a]]);
+    crowd.step(1 / 30);
+    crowd.keepNear(cx, cz, 90);
+    for (let a = 0; a < n; a++) {
+      if (Number.isNaN(crowd.px[a])) continue;
+      if (!women[a] && zones.some((z) => inside(crowd.px[a], crowd.pz[a], z))) menInside++;
+      // A step (not a walker placed again by keepNear) never goes through a barrier.
+      if (Math.hypot(crowd.px[a] - before[a][0], crowd.pz[a] - before[a][1]) < 1 && crosses(before[a][0], before[a][1], crowd.px[a], crowd.pz[a])) crossed++;
+    }
+  }
+
+  it('the two areas and their barriers are read in: north-west and north-east', () => {
+    expect(zones).toHaveLength(2);
+    expect(fences.length).toBe(13);
+  });
+
+  it('no man ever stands inside a women’s area, and no one walks through a barrier', () => {
+    expect(menInside).toBe(0);
+    expect(crossed).toBe(0);
+  });
+
+  it('women gather in their area; fewer men about it than women in it', () => {
+    let womenIn = 0;
+    let menNear = 0;
+    for (let a = 0; a < n; a++) {
+      const x = crowd.px[a];
+      const z = crowd.pz[a];
+      if (Number.isNaN(x)) continue;
+      const inZone = zones.some((r) => inside(x, z, r));
+      if (women[a] && inZone) womenIn++;
+      if (!women[a] && Math.hypot(x - cx, z - cz) < 60) menNear++;
+    }
+    expect(womenIn).toBeGreaterThan(40);
+    expect(womenIn).toBeGreaterThan(menNear);
+  });
+});

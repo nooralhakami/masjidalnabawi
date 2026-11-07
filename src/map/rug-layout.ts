@@ -95,6 +95,47 @@ function within(u0: number, v0: number, u1: number, v1: number, poly: readonly X
 
 let cache: { key: number; layout: RugLayout } | null = null;
 
+/** The fewest carpets an area may hold (owner, 2026-11-07: no small patches of three or seven). */
+export const MIN_RUGS = 12;
+
+/**
+ * The largest rectangle of `on` cells (rows × columns) whose first row passes `top` and last row
+ * passes `bottom` (whole groups of rows); null if there is none.
+ */
+export function largestRectangle(
+  on: readonly (readonly boolean[])[],
+  top: (row: number) => boolean,
+  bottom: (row: number) => boolean,
+): { r0: number; r1: number; c0: number; c1: number } | null {
+  let best: { r0: number; r1: number; c0: number; c1: number } | null = null;
+  let bestArea = 0;
+  const width = on[0]?.length ?? 0;
+  for (let r0 = 0; r0 < on.length; r0++) {
+    if (!top(r0)) continue;
+    const all = on[r0].slice();
+    for (let r1 = r0; r1 < on.length; r1++) {
+      if (r1 > r0) for (let c = 0; c < width; c++) all[c] = all[c] && on[r1][c];
+      if (!all.some(Boolean)) break;
+      if (!bottom(r1)) continue;
+      // The longest run of columns open in every row from r0 to r1.
+      let run = 0;
+      for (let c = 0; c <= width; c++) {
+        if (c < width && all[c]) {
+          run++;
+          continue;
+        }
+        const area = run * (r1 - r0 + 1);
+        if (area > bestArea) {
+          bestArea = area;
+          best = { r0, r1, c0: c - run, c1: c - 1 };
+        }
+        run = 0;
+      }
+    }
+  }
+  return best;
+}
+
 /**
  * Lay the carpets in every prayer area (the courtyards' and the western annex's), clear of the
  * columns at `columns` (`[lng, lat]`, the canopies' and lamps'), and ring the courtyards' laid areas
@@ -173,6 +214,34 @@ export function rugLayout(columns: readonly (readonly [number, number])[]): RugL
           return du * du + dv * dv < COLUMN_CLEAR * COLUMN_CLEAR;
         });
         return column ? 'column' : 'rug';
+      }),
+    );
+    // Only clean squares and rectangles (owner, 2026-11-07): the largest of whole groups of rows
+    // inside what could be laid, then the next largest clear of it (not touching, so no L or T
+    // shapes), each with at least MIN_RUGS carpets; what is left over is not laid.
+    const free = laid.map((row) => row.map((x) => x !== false));
+    const keepCell = laid.map((row) => row.map(() => false));
+    for (;;) {
+      const r = largestRectangle(
+        free,
+        (k) => k % GROUP_ROWS === 0,
+        (k) => k % GROUP_ROWS === GROUP_ROWS - 1 || k === rows.length - 1,
+      );
+      if (!r) break;
+      let count = 0;
+      for (let k = r.r0; k <= r.r1; k++) for (let i = r.c0; i <= r.c1; i++) if (laid[k][i] === 'rug') count++;
+      if (count < MIN_RUGS) break;
+      for (let k = r.r0 - 1; k <= r.r1 + 1; k++) {
+        for (let i = r.c0 - 1; i <= r.c1 + 1; i++) {
+          if (k < 0 || i < 0 || k >= rows.length || i >= across) continue;
+          free[k][i] = false;
+          if (k >= r.r0 && k <= r.r1 && i >= r.c0 && i <= r.c1) keepCell[k][i] = true;
+        }
+      }
+    }
+    laid.forEach((row, k) =>
+      row.forEach((_, i) => {
+        if (!keepCell[k][i]) row[i] = false;
       }),
     );
     const onArea = laid.map((row) => row.map((x) => x !== false));
