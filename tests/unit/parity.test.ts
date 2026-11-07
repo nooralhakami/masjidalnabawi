@@ -18,9 +18,9 @@ const P = (id: number) => POI_BY_ID.get(id)!;
 const round = (n: number) => Math.round(n);
 
 describe('parity: walking', () => {
-  it('from [24.469, 39.6125] to restroom 227: 410 m, 6 minutes, one route', async () => {
+  it('from [24.469, 39.6125] to restroom 227: 386 m, 5 minutes, one route', async () => {
     const plans = await planRoutes([24.469, 39.6125], P(227), 'walk');
-    expect(plans.map((p) => [round(p.walkM), p.minutes])).toEqual([[410, 6]]);
+    expect(plans.map((p) => [round(p.walkM), p.minutes])).toEqual([[386, 5]]);
   });
   it('from the south plaza to Quba Mosque: about 3.3 km, with two alternatives', async () => {
     const plans = await planRoutes([24.4655, 39.6111], P(542), 'walk');

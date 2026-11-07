@@ -131,7 +131,8 @@ describe('route progress', () => {
   });
 
   it('measures how far off the route the visitor is', () => {
-    const p = track.locate(offset(path[2], 0, -30));
+    // Well away from every part of the route (the west walkway moved to its real corridor, 2026-11-07).
+    const p = track.locate(offset(path[2], 0, -60));
     expect(p.offset).toBeGreaterThan(20);
   });
 
