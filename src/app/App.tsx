@@ -31,7 +31,13 @@ import {
   toiletSub,
   travel,
   typed,
+  nearWho,
+  setNearWho,
+  whereQ,
 } from '../state/store';
+import type { NearKind, NearWho } from '../domain/near';
+import { NearRow } from '../ui/near/NearRow';
+import { WhereAsk, WhoAsk } from '../ui/near/NearAsk';
 import type { AdminPanel as AdminPanelT } from '../ui/admin/AdminPanel';
 import { AdminGate } from '../ui/admin/AdminGate';
 import { adminUnlocked } from '../state/admin';
@@ -123,6 +129,8 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
 
   /** Open a place's card: the map flies to it when it was chosen from a list or a link (the live app's select()). */
   const [routing, setRouting] = useState(false);
+  /** «Men's or women's?», asked once before the first «nearest restroom» (null: dismissed). */
+  const [whoQ, setWhoQ] = useState<((w: NearWho | null) => void) | null>(null);
   // The navigation bar's height, so the notices sit above it.
   const navHost = useRef<HTMLDivElement>(null);
   const [navH, setNavH] = useState(0);
@@ -132,7 +140,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
     const ro = new ResizeObserver(() => setNavH(el.offsetHeight));
     ro.observe(el);
     return () => ro.disconnect();
-  }, [!!(nav.value || garageQ.value)]);
+  }, [!!(nav.value || garageQ.value || whereQ.value || whoQ)]);
   const [langOpen, setLangOpen] = useState(false);
   // The stories (at a site) and the library (at an entry, or the list) open full screen.
   const [stories, setStories] = useState<number | null>(null);
@@ -190,6 +198,24 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
   useEffect(() => {
     if (hasRoute) sheet.value = 'peek';
   }, [hasRoute]);
+
+  const askWho = () => new Promise<NearWho | null>((answer) => setWhoQ(() => answer));
+  /** «Near you now»: the nearest open restroom or gate, two ways drawn (UI plan phase 2). */
+  const runNear = async (kind: NearKind) => {
+    let who = nearWho.value;
+    if (kind === 'toilet' && !who) {
+      who = await askWho();
+      setWhoQ(null);
+      if (!who) return;
+      setNearWho(who);
+    }
+    await trip.near(
+      kind,
+      who ?? 'men',
+      (id) => fac.isOpen(id),
+      (p) => select(p, false),
+    );
+  };
 
   const runRoute = async (p: Poi) => {
     setRouting(true);
@@ -337,11 +363,19 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
           />
         ) : null}
       </BottomSheet>
-      {nav.value || garageQ.value ? (
+      {nav.value || garageQ.value || whereQ.value || whoQ ? (
         // The car park question is a modal over the card, from the bottom of the screen (it is too
         // tall to sit above a half-open card on a short phone); the navigation bar sits above the sheet.
-        <div ref={navHost} class={`nav-host${garageQ.value ? ' is-modal' : ''}`} style={{ '--sheet-h': `${place && !garageQ.value ? sheetH.value : 0}px` }}>
-          {garageQ.value ? (
+        <div
+          ref={navHost}
+          class={`nav-host${garageQ.value || whereQ.value || whoQ ? ' is-modal' : ''}`}
+          style={{ '--sheet-h': `${place && !garageQ.value && !whereQ.value && !whoQ ? sheetH.value : 0}px` }}
+        >
+          {whoQ ? (
+            <WhoAsk onAnswer={whoQ} />
+          ) : whereQ.value ? (
+            <WhereAsk rough={whereQ.value.rough} onAnswer={whereQ.value.answer} />
+          ) : garageQ.value ? (
             <GarageAsk key={garageQ.value.lots.map((l) => l.id).join()} lots={garageQ.value.lots} spot={garageQ.value.spot} onAnswer={garageQ.value.answer} />
           ) : nav.value ? (
             <NavBar
@@ -368,7 +402,9 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
             const entrance = POI_BY_ID.get(BEHIND_RAWDAH_ID);
             if (entrance) select(entrance, true);
           }}
-        />
+        >
+          <NearRow onNear={runNear} />
+        </RawdahHost>
       ) : null}
       {Admin && adminUnlocked.value ? <Admin fac={fac} onNotApplicable={() => notify(t('admin_na'))} /> : null}
       {gate ? (
@@ -405,7 +441,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
         />
       ) : null}
       {/* Notices rise above the navigation bar too, never on it. */}
-      <div class="toast-host" style={{ '--sheet-h': `${(place ? sheetH.value : 0) + (nav.value || garageQ.value ? navH + 12 : 0)}px` }}>
+      <div class="toast-host" style={{ '--sheet-h': `${(place ? sheetH.value : 0) + (nav.value || garageQ.value || whereQ.value || whoQ ? navH + 12 : 0)}px` }}>
         {toast.value ? (
           <Toast key={toast.value.id} tone={toast.value.tone} icon={toast.value.tone === 'ok' ? 'check' : 'info'}>
             {toast.value.text}

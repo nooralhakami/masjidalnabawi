@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { rawdahState } from '../../domain/rawdah';
 import { RawdahCard } from './RawdahCard';
@@ -11,7 +12,10 @@ export function RawdahHost({
   onBehind,
   onHeight,
   watchMove,
+  children,
 }: {
+  /** Over the card, in the same measured box («near you now»): the map's buttons sit above both. */
+  children?: ComponentChildren;
   onOpen(): void;
   onBehind(): void;
   onHeight(px: number): void;
@@ -50,6 +54,7 @@ export function RawdahHost({
   }, []);
   return (
     <div class="rawdah-host" ref={box}>
+      {children}
       <RawdahCard state={rawdahState(now)} onOpen={onOpen} onBehind={onBehind} compact={moving} />
     </div>
   );
