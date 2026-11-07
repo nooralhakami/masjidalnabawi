@@ -4,6 +4,7 @@ import type { LatLng, Poi } from '../../src/data/types';
 import { nearestByAir, nearPool, pickTwo, placeByNumber, TIE_M } from '../../src/domain/near';
 import { nextPrayer, PRAYERS, prayersOn } from '../../src/domain/prayer';
 import { stepMarks, type StepKind } from '../../src/presentation/route-view';
+import { tapChoice } from '../../src/presentation/tap';
 import { garageExit, garageRoute, LEVELS } from '../../src/routing/garage';
 import { planFromLot } from '../../src/routing/plan';
 
@@ -163,5 +164,57 @@ describe('on foot from a lot underground', () => {
   });
   it('none to a lot itself', () => {
     expect(planFromLot(P(903), P(904))).toBeNull();
+  });
+});
+
+describe('a tap on the map (markers stay in place; a tight group zooms in)', () => {
+  it('nothing within 22 px: nothing opens', () => {
+    expect(tapChoice([{ id: 1, d: 23 }], true)).toEqual({ open: null });
+    expect(tapChoice([], true)).toEqual({ open: null });
+  });
+  it('one marker, or one clearly nearer: it opens', () => {
+    expect(tapChoice([{ id: 1, d: 20 }], true)).toEqual({ open: 1 });
+    expect(
+      tapChoice(
+        [
+          { id: 1, d: 2 },
+          { id: 2, d: 15 },
+        ],
+        true,
+      ),
+    ).toEqual({ open: 1 });
+  });
+  it('two about as near: zoom in there instead of guessing', () => {
+    expect(
+      tapChoice(
+        [
+          { id: 1, d: 6 },
+          { id: 2, d: 9 },
+        ],
+        true,
+      ),
+    ).toEqual({ zoomIn: true });
+  });
+  it('at the closest zoom: the nearer one opens', () => {
+    expect(
+      tapChoice(
+        [
+          { id: 1, d: 6 },
+          { id: 2, d: 9 },
+        ],
+        false,
+      ),
+    ).toEqual({ open: 1 });
+  });
+  it('the same place in two layers counts once', () => {
+    expect(
+      tapChoice(
+        [
+          { id: 7, d: 3 },
+          { id: 7, d: 5 },
+        ],
+        true,
+      ),
+    ).toEqual({ open: 7 });
   });
 });

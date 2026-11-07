@@ -22,11 +22,13 @@ import { MeMarker } from './me';
 import { PlazaMarbleLayer } from './plaza-layer';
 import { addHintLayer, EMPTY_HINTS, HintLayer } from './hints';
 import { addPoiLayers } from './poi-layers';
-import { applyPoiView, entranceAt, entranceFeatures, markerImageIds, pairFeatures, placeAt, poiFeatures, popMarkers, womenAreas, type PoiView } from './pois';
+import { applyPoiView, entranceAt, entranceFeatures, markerImageIds, pairFeatures, placesAt, poiFeatures, popMarkers, womenAreas, type PoiView } from './pois';
 import { RouteLayer, type RouteText } from './route';
 import { sceneLight, sceneOverride, type SceneLight } from './scene-light';
 import { TerrainLayer } from './terrain-layer';
 import { LEGACY_MAX, LEGACY_MIN, fitView, haramBounds, legacyZoom, mapZoom } from './zoom';
+import { SelectPulse } from './pulse';
+import { TAP_ZOOM_STEP, tapChoice } from '../presentation/tap';
 
 export type { PoiView } from './pois';
 
@@ -160,6 +162,7 @@ export class MapEngine {
     this.map.addControl(new ScaleControl({ unit: 'metric', maxWidth: 90 }), 'bottom-left');
     const ratio = Math.min(3, Math.max(1, devicePixelRatio || 1));
     this.route = new RouteLayer(this.map, this.palette, opts.routeText, ratio);
+    this.pulse = new SelectPulse(this.map, this.palette);
     this.hints = new HintLayer(this.map, (id) => POIS.find((p) => p.id === id));
     this.me = new MeMarker(
       this.map,
@@ -477,9 +480,17 @@ export class MapEngine {
 
   /** Open (or, with null, close) a place's card on the map: its pin, and nothing else, shows. */
   select(id: number | null): void {
+    const changed = id !== this.selected;
     this.selected = id;
     if (this.map.getLayer('facilities')) this.applyView();
+    // A short gold ring on the newly chosen marker: «this one» (UI plan phase 3).
+    const p = id !== null && changed ? this.poi(id) : undefined;
+    if (p && this.map.getLayer('selected')) this.pulse.play(p.lng, p.lat);
+    else if (id === null) this.pulse.stop();
   }
+
+  /** The chosen marker's gold ring (UI plan phase 3). */
+  readonly pulse: SelectPulse;
 
   get selection(): number | null {
     return this.selected;
@@ -678,7 +689,17 @@ export class MapEngine {
       this.opts.onEntrance?.(ent);
       return;
     }
-    const place = placeAt(this.map, x, y);
+    // Markers stay where they are (owner); a tap on a tight group zooms in there until they part.
+    const max = this.map.getMaxZoom();
+    const choice = tapChoice(placesAt(this.map, x, y), this.map.getZoom() < max - 0.5);
+    if ('zoomIn' in choice) {
+      const around = this.map.unproject([x, y]);
+      const zoom = Math.min(max, this.map.getZoom() + TAP_ZOOM_STEP);
+      if (reduce()) this.map.jumpTo({ center: around, zoom });
+      else this.map.easeTo({ center: around, zoom, duration: 300 });
+      return;
+    }
+    const place = choice.open;
     // In 3D, a tap on no place but on a canopy opens or closes it (owner, 2026-11-06).
     if (place === null && this.mode3d && this.models?.toggleCanopyAt(x, y)) return;
     this.opts.onPick?.(place);
