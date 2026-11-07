@@ -16,10 +16,28 @@ describe('prayer areas only as squares and rectangles (owner, 2026-11-07)', () =
       [true, true, true, true],
     ];
     // Any rows: the bottom three, all four columns.
-    expect(largestRectangle(on, () => true, () => true)).toEqual({ r0: 1, r1: 3, c0: 0, c1: 3 });
+    expect(
+      largestRectangle(
+        on,
+        () => true,
+        () => true,
+      ),
+    ).toEqual({ r0: 1, r1: 3, c0: 0, c1: 3 });
     // From row 0 only: two columns, four rows.
-    expect(largestRectangle(on, (r) => r === 0, () => true)).toEqual({ r0: 0, r1: 3, c0: 0, c1: 1 });
-    expect(largestRectangle([[false]], () => true, () => true)).toBeNull();
+    expect(
+      largestRectangle(
+        on,
+        (r) => r === 0,
+        () => true,
+      ),
+    ).toEqual({ r0: 0, r1: 3, c0: 0, c1: 1 });
+    expect(
+      largestRectangle(
+        [[false]],
+        () => true,
+        () => true,
+      ),
+    ).toBeNull();
   });
 
   const file = readFileSync(resolve(__dirname, '../../public/models/haram-canopies.glb'));
