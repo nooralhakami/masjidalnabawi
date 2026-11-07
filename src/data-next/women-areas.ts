@@ -18,9 +18,11 @@ export const WOMEN_AREAS: readonly WomenArea[] = [
       [24.4704073, 39.6087296],
       [24.4704078, 39.6100907],
       [24.469888, 39.6100905],
-      [24.4698877, 39.6091034],
-      [24.4689495, 39.6091031],
-      [24.4689494, 39.6085573],
+      // To the Mosque's west wall itself, so no strip is left along it (owner, 2026-11-07).
+      [24.4698879, 39.6091633],
+      [24.4689626, 39.6091633],
+      // The south side on the face of restroom block 215 (the owner's red line, 2026-11-07).
+      [24.4689626, 39.6085576],
       [24.4699192, 39.6085576],
       [24.4699193, 39.6087295],
     ],
@@ -50,9 +52,11 @@ export const WOMEN_AREAS: readonly WomenArea[] = [
         [24.4694417, 39.6085574],
         [24.4690888, 39.6085573],
       ],
+      // On the face of block 215 from its corner to the Mosque's wall: no slot along the block, and
+      // none along the wall (owner's red line, 2026-11-07).
       [
-        [24.4689484, 39.6087547],
-        [24.4689485, 39.6091008],
+        [24.4689626, 39.6087721],
+        [24.4689626, 39.6091534],
       ],
     ],
   },
