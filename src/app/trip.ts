@@ -118,6 +118,11 @@ export class Trip {
       },
     );
     this.tracker.onChange((s) => {
+      // Arrived: a gold ring at the place, as on choosing it (UI plan phase 4), once per arrival.
+      if (s.state === 'arrived' && nav.value?.state !== 'arrived') {
+        const dest = selected.value !== null ? POI_BY_ID.get(selected.value) : undefined;
+        if (dest) engine.pulse.play(dest.lng, dest.lat);
+      }
       nav.value = s.state === 'stopped' ? null : { ...s };
       // The place the visitor goes by is named, faintly, over itself (owner, 2026-10-25).
       engine.hints.setNear(s.state === 'stopped' ? null : this.hint.pick(s.position, s.accuracy, this.plans[this.chosen]?.mode ?? 'walk', Date.now()));

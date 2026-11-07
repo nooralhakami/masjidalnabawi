@@ -16,7 +16,7 @@ import type { Palette } from './images';
  *
  * How it stays cheap: a route is a handful of GeoJSON features set once per route; the arrows are
  * placed in metres once (a zoom does not move them); the draw-in animates one paint property for
- * 700 ms, by share of the line (line-progress), so a zoom during it cannot hide part of the line.
+ * 600 ms, by share of the line (line-progress), so a zoom during it cannot hide part of the line.
  */
 
 export interface RouteInfo extends RouteSummary {
@@ -42,7 +42,8 @@ const TOP_LAYERS = [...FOCUS_LAYERS, 'route-arrows', 'route-marks'] as const;
 export const ROUTE_LAYERS = [...LINE_LAYERS, ...TOP_LAYERS];
 const SOURCES = ['route-lines', 'route-alts', 'route-focus', 'route-arrows', 'route-marks'] as const;
 
-const DRAW_MS = 700;
+/** The route draws itself from the visitor to the place (UI plan phase 4: about 600 ms). */
+const DRAW_MS = 600;
 /** MapLibre zoom from which the numbered steps underground show (below it they would pile on each other). */
 const STEPS_ZOOM = 15.5;
 const FADED = 0.35;

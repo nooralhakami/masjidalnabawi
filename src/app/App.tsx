@@ -37,6 +37,7 @@ import {
 } from '../state/store';
 import type { NearKind, NearWho } from '../domain/near';
 import { NearRow } from '../ui/near/NearRow';
+import { tapHaptic } from '../ui/haptic';
 import { WhereAsk, WhoAsk } from '../ui/near/NearAsk';
 import type { AdminPanel as AdminPanelT } from '../ui/admin/AdminPanel';
 import { AdminGate } from '../ui/admin/AdminGate';
@@ -168,9 +169,18 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
   const [, setFacTick] = useState(0);
   useEffect(() => fac.onChange(() => setFacTick((n) => n + 1)), [fac]);
 
+  /** Where the card grows from (UI plan phase 4): the tapped marker's place across the sheet, in px; null: its middle. */
+  const [growX, setGrowX] = useState<number | null>(null);
   const select = (p: Poi, fly: boolean) => {
     // A new destination ends the current walk entirely (GPS watch, wake lock, the bar).
     if (selected.value !== p.id) trip.end();
+    // Tapped on the map: the card grows out of the marker. From a list or a link: from the middle.
+    if (!fly) {
+      const q = engine.map.project([p.lng, p.lat]);
+      const box = engine.map.getContainer().getBoundingClientRect();
+      const sheetBox = document.querySelector('.sheet')?.getBoundingClientRect();
+      setGrowX(Math.round(box.left + q.x - (sheetBox?.left ?? 0)));
+    } else setGrowX(null);
     const wasClosed = sheet.value === 'closed';
     selected.value = p.id;
     if (sheet.value !== 'full') sheet.value = 'half';
@@ -202,6 +212,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
   const askWho = () => new Promise<NearWho | null>((answer) => setWhoQ(() => answer));
   /** «Near you now»: the nearest open restroom or gate, two ways drawn (UI plan phase 2). */
   const runNear = async (kind: NearKind) => {
+    tapHaptic();
     let who = nearWho.value;
     if (kind === 'toilet' && !who) {
       who = await askWho();
@@ -218,6 +229,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
   };
 
   const runRoute = async (p: Poi) => {
+    tapHaptic();
     setRouting(true);
     try {
       await trip.draw(p);
@@ -231,7 +243,10 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
       const p = id !== null ? POI_BY_ID.get(id) : undefined;
       // On a route, a tap on a gate or a restroom block says its name for two seconds and does not open its card (owner, 2026-10-25).
       if (p && trip.active && isTapName(p)) trip.nameTapped(p.id);
-      else if (p) select(p, false);
+      else if (p) {
+        tapHaptic();
+        select(p, false);
+      }
       // While a route is followed, a stray tap on the map must not end it (use «إنهاء المسار»).
       else if (selected.value !== null && !trip.active) deselect();
     };
@@ -330,37 +345,42 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
         fit={!!route.value}
         onHeight={(h) => (sheetH.value = h)}
       >
-        {place && route.value ? (
-          <RouteCard
-            p={place}
-            r={route.value}
-            closed={isClosed(fac.status(place.id))}
-            onClose={deselect}
-            onEnd={() => trip.end()}
-            onWayOut={() => void trip.wayOut()}
-            onWayIn={() => void runRoute(place)}
-          />
-        ) : place ? (
-          <PlaceCard
-            p={place}
-            fac={fac}
-            travel={travel.value}
-            level={level.value}
-            accessible={accessibleRoute.value}
-            onTravel={(v) => (travel.value = v)}
-            onLevel={(v) => (level.value = v)}
-            onAccessible={(v) => (accessibleRoute.value = v)}
-            onRoute={() => void runRoute(place)}
-            routing={routing}
-            onShare={() => {
-              const url = new URL('./map.html', location.href);
-              url.search = '';
-              url.searchParams.set('poi', String(place.id));
-              void share(url.href, nm(place), t('place_link_copied'));
-            }}
-            onClose={deselect}
-            onGo={(p) => select(p, true)}
-          />
+        {place ? (
+          // The card grows out of the place it is about (UI plan phase 4); a new place grows anew.
+          <div class="card-in" key={place.id} style={{ '--from-x': growX === null ? '50%' : `${growX}px` }}>
+            {place && route.value ? (
+              <RouteCard
+                p={place}
+                r={route.value}
+                closed={isClosed(fac.status(place.id))}
+                onClose={deselect}
+                onEnd={() => trip.end()}
+                onWayOut={() => void trip.wayOut()}
+                onWayIn={() => void runRoute(place)}
+              />
+            ) : place ? (
+              <PlaceCard
+                p={place}
+                fac={fac}
+                travel={travel.value}
+                level={level.value}
+                accessible={accessibleRoute.value}
+                onTravel={(v) => (travel.value = v)}
+                onLevel={(v) => (level.value = v)}
+                onAccessible={(v) => (accessibleRoute.value = v)}
+                onRoute={() => void runRoute(place)}
+                routing={routing}
+                onShare={() => {
+                  const url = new URL('./map.html', location.href);
+                  url.search = '';
+                  url.searchParams.set('poi', String(place.id));
+                  void share(url.href, nm(place), t('place_link_copied'));
+                }}
+                onClose={deselect}
+                onGo={(p) => select(p, true)}
+              />
+            ) : null}
+          </div>
         ) : null}
       </BottomSheet>
       {nav.value || garageQ.value || whereQ.value || whoQ ? (
