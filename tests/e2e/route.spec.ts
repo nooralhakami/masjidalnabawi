@@ -426,36 +426,50 @@ test.describe('alternative routes', () => {
   });
 
   test('walking onto another offered route switches to it, without re-planning', async ({ page, context, errors: _ }) => {
-    // The two routes go round the mosque, one by the west side of the walkway ring, one up its east
-    // side; they are nearly as long (since the west walkway moved to its corridor, owner 2026-11-07),
-    // so the test walks up whichever side the chosen route does not take.
-    const ring = (JSON.parse(readFileSync('data/routing.json', 'utf8')) as { walkway_ring: [number, number][] }).walkway_ring;
-    // The ring's side at a latitude: the outermost of its stretches there (the east side steps east
-    // north of the narrow neck, owner 2026-10-25, so one longitude for a whole side does not fit).
-    const sideLngAt = (lat: number, east: boolean) => {
-      const at = ring.flatMap((a, i) => {
-        const b = ring[(i + 1) % ring.length];
-        if (lat < Math.min(a[0], b[0]) || lat > Math.max(a[0], b[0]) || a[0] === b[0]) return [];
-        return [a[1] + ((b[1] - a[1]) * (lat - a[0])) / (b[0] - a[0])];
-      });
-      return east ? Math.max(...at) : Math.min(...at);
-    };
+    // The two routes go round the mosque by its west and east sides and are nearly as long (since the
+    // west walkway moved to its corridor, owner 2026-11-07), so the test does not assume either: it
+    // walks along the drawn other route, where it is well away from the chosen one.
     await openAndRoute(page, 21);
     const stats = card(page).locator('.route-stats');
     await expect(stats).toBeVisible({ timeout: 20_000 });
     const before = await stats.textContent();
-    // Which side the chosen route takes: its westernmost point, against the mosque's middle.
-    const chosenWest = await page.evaluate(() => {
+    const steps = await page.evaluate(() => {
       const m = (window as unknown as Win).__engine.map;
-      const lngs = m
-        .queryRenderedFeatures({ layers: ['route-walk'] })
-        .flatMap((f: any) => (f.geometry.type === 'LineString' ? f.geometry.coordinates : f.geometry.coordinates.flat()).map((c: number[]) => c[0]));
-      return Math.min(...lngs) < 39.6095;
+      const coords = (layer: string) =>
+        m.queryRenderedFeatures({ layers: [layer] }).flatMap((f: any) => (f.geometry.type === 'LineString' ? [f.geometry.coordinates] : f.geometry.coordinates)) as number[][][];
+      const chosen = coords('route-walk');
+      const other = coords('route-alt');
+      const M = 111_320;
+      const k = Math.cos((24.468 * Math.PI) / 180);
+      const distTo = (p: number[], lines: number[][][]) => {
+        let d = Number.POSITIVE_INFINITY;
+        for (const l of lines) {
+          for (let i = 0; i + 1 < l.length; i++) {
+            const [ax, ay] = [l[i][0] * k * M, l[i][1] * M];
+            const [bx, by] = [l[i + 1][0] * k * M, l[i + 1][1] * M];
+            const [px, py] = [p[0] * k * M, p[1] * M];
+            const t = Math.max(0, Math.min(1, ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / ((bx - ax) ** 2 + (by - ay) ** 2 || 1)));
+            d = Math.min(d, Math.hypot(ax + t * (bx - ax) - px, ay + t * (by - ay) - py));
+          }
+        }
+        return d;
+      };
+      // Points every ~25 m along the other route, kept where it is 40 m or more from the chosen one.
+      const out: [number, number][] = [];
+      for (const l of other) {
+        for (let i = 0; i + 1 < l.length; i++) {
+          const len = Math.hypot((l[i + 1][0] - l[i][0]) * k * M, (l[i + 1][1] - l[i][1]) * M);
+          for (let s = 0; s < len; s += 25) {
+            const p = [l[i][0] + ((l[i + 1][0] - l[i][0]) * s) / len, l[i][1] + ((l[i + 1][1] - l[i][1]) * s) / len];
+            if (distTo(p, chosen) >= 40) out.push([p[1], p[0]]);
+          }
+        }
+      }
+      return out.slice(0, 6);
     });
-    // Walking north up the other side, ~30 m a step.
-    for (let i = 0; i < 5; i++) {
-      const latitude = 24.4674 + (i * 30) / 111_320;
-      await context.setGeolocation({ latitude, longitude: sideLngAt(latitude, chosenWest), accuracy: 8 });
+    expect(steps.length).toBeGreaterThanOrEqual(4);
+    for (const [latitude, longitude] of steps) {
+      await context.setGeolocation({ latitude, longitude, accuracy: 8 });
       await page.waitForTimeout(900);
     }
     await expect(page.locator('.toast')).toContainText('تحوّل المسار');
