@@ -54,15 +54,21 @@
   box-shadow: var(--shadow-2);
   animation: mc-pop-in var(--m-base) var(--ease-emph);
 }
-/* The right column opens to its left, the left column to its right, in every language (the columns
-   stand where the live app's do, whatever the language). */
+/* The right column opens to its left, the left column's menu above its button, in every language
+   (the columns stand where the live app's do, whatever the language). */
 .map-overlay .mc-pop {
   right: calc(100% + var(--s-2));
   transform-origin: right bottom;
 }
 .map-overlay-left .mc-pop {
-  left: calc(100% + var(--s-2));
+  left: 0;
+  bottom: calc(100% + var(--s-2));
   transform-origin: left bottom;
+}
+/* The «more» menu rises over the weather chip, above its button, so it never covers the right
+   column on a narrow phone; its column stands over the other while it is open. */
+.map-overlay-left:has(.mc-pop) {
+  z-index: 3;
 }
 .mc-group .mc-adjust-pop .icon-btn {
   border-top: 0;
@@ -80,6 +86,7 @@
 .mc-more-pop {
   flex-direction: column;
   min-width: 13rem;
+  max-width: calc(100vw - 2 * var(--s-3));
   padding: var(--s-1);
 }
 .mc-row {

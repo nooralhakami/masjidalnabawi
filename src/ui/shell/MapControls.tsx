@@ -55,7 +55,7 @@ export function MapControls({ onZoom, onTurn, onNorth, onTilt, watchNorth }: Map
         const el = compass.current;
         if (!el) return;
         el.style.setProperty('--north', `${deg}deg`);
-        el.classList.toggle('is-rotated', Math.abs(((deg % 360) + 360) % 360) > 0.5 && Math.abs(((deg % 360) + 360) %360) < 359.5);
+        el.classList.toggle('is-rotated', Math.abs(((deg % 360) + 360) % 360) > 0.5 && Math.abs(((deg % 360) + 360) % 360) < 359.5);
       }),
     [watchNorth],
   );
@@ -134,23 +134,21 @@ export function MapTools({
   const box = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   usePopover(open, () => setOpen(false), box);
-  const pick = (fn: () => void, stay = false) => () => {
-    if (!stay) setOpen(false);
-    fn();
-  };
+  const pick =
+    (fn: () => void, stay = false) =>
+    () => {
+      if (!stay) {
+        setOpen(false);
+        // The row goes with the menu: what it opens returns focus to «more» when closed.
+        box.current?.querySelector<HTMLElement>('.mc-more')?.focus();
+      }
+      fn();
+    };
   return (
     <div class="map-controls">
       {weather}
       <div class="mc-menu" ref={box}>
-        <IconButton
-          icon="grid"
-          floating
-          class="mc-more"
-          label={t('map_more')}
-          aria-expanded={open}
-          aria-controls="mc-more-panel"
-          onClick={() => setOpen(!open)}
-        />
+        <IconButton icon="grid" floating class="mc-more" label={t('map_more')} aria-expanded={open} aria-controls="mc-more-panel" onClick={() => setOpen(!open)} />
         {open ? (
           <div id="mc-more-panel" class="mc-pop mc-more-pop" role="group" aria-label={t('map_more')}>
             {onStories ? (

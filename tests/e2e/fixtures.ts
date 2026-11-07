@@ -76,3 +76,9 @@ export function moved(page: Page): Promise<void> {
     .then(() => page.waitForFunction(() => (window as any).__moved === true))
     .then(() => undefined);
 }
+
+/** Open the map's «more» menu (stories, library, the map's view, share), if it is not open yet. */
+export async function more(page: Page) {
+  const btn = page.locator('.mc-more');
+  if ((await btn.getAttribute('aria-expanded')) !== 'true') await btn.click();
+}

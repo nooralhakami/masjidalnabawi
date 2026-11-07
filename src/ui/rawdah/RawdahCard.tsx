@@ -47,42 +47,42 @@ export function RawdahCard({ state, onOpen, onBehind, compact = false }: { state
   return (
     <div class={`rawdah-stack${compact ? ' is-compact' : ''}`}>
       <div class="rawdah-track" ref={track}>
-      <button type="button" class="rawdah-card" onClick={onOpen}>
-        <Ring left={1 - state.progress} color={color}>
-          <Icon name="dome" size={22} />
-        </Ring>
-        <span class="rawdah-body">
-          <span class="rawdah-title">
-            {t('ro_title')} · {t('gate_n', { id: 37 })}
-          </span>
-          <span class="rawdah-now">
-            <span class={`turn turn-${state.turn}`}>{t('ro_now', { who: t(women ? 'ro_women' : 'ro_men') })}</span>
-            <span class="rawdah-left">{t('ro_switch', { t: left })}</span>
-          </span>
-          {women ? (
-            <span class="rawdah-permit">
-              <Icon name="lock" size={14} />
-              {t('ro_permit')}
-            </span>
-          ) : null}
-        </span>
-        <Icon name="chevleft" size={20} flip />
-      </button>
-      {women ? (
-        <button type="button" class="rawdah-card rawdah-behind" onClick={onBehind}>
-          <span class="rawdah-tile">
-            <Icon name="women" size={20} />
-          </span>
+        <button type="button" class="rawdah-card" onClick={onOpen}>
+          <Ring left={1 - state.progress} color={color}>
+            <Icon name="dome" size={22} />
+          </Ring>
           <span class="rawdah-body">
-            <span class="rawdah-title">{t('ro_behind')}</span>
-            <span class="rawdah-free">
-              <Icon name="check" size={14} />
-              {t('ro_no_permit')}
+            <span class="rawdah-title">
+              {t('ro_title')} · {t('gate_n', { id: 37 })}
             </span>
+            <span class="rawdah-now">
+              <span class={`turn turn-${state.turn}`}>{t('ro_now', { who: t(women ? 'ro_women' : 'ro_men') })}</span>
+              <span class="rawdah-left">{t('ro_switch', { t: left })}</span>
+            </span>
+            {women ? (
+              <span class="rawdah-permit">
+                <Icon name="lock" size={14} />
+                {t('ro_permit')}
+              </span>
+            ) : null}
           </span>
           <Icon name="chevleft" size={20} flip />
         </button>
-      ) : null}
+        {women ? (
+          <button type="button" class="rawdah-card rawdah-behind" onClick={onBehind}>
+            <span class="rawdah-tile">
+              <Icon name="women" size={20} />
+            </span>
+            <span class="rawdah-body">
+              <span class="rawdah-title">{t('ro_behind')}</span>
+              <span class="rawdah-free">
+                <Icon name="check" size={14} />
+                {t('ro_no_permit')}
+              </span>
+            </span>
+            <Icon name="chevleft" size={20} flip />
+          </button>
+        ) : null}
       </div>
       {women ? (
         <div class="rawdah-dots">

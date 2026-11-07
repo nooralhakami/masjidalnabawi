@@ -1,4 +1,4 @@
-import { drawn, expect, idle, moved, openMap, test, zoomTo } from './fixtures';
+import { drawn, expect, idle, moved, openMap, test, zoomTo, more } from './fixtures';
 
 // The map engine (phase 3): SPEC F1 and N1, the live app's journeys 6, 38, 40 and 41 (docs/PARITY.md),
 // and what the GPU map must keep: every place in its own spot, no data rebuilt on a filter.
@@ -160,6 +160,8 @@ test.describe('map buttons', () => {
     const compass = page.locator('.mc-compass');
     await expect(compass.locator('.kaaba')).toHaveCount(1);
     const turned = moved(page);
+    // Turning is one tap away, under the turn button beside the compass (owner, 2026-11-07).
+    await page.locator('.mc-adjust').click();
     await page.getByRole('button', { name: 'تدوير الخريطة مع عقارب الساعة' }).click();
     await turned;
     await expect(compass).toHaveClass(/is-rotated/);
@@ -185,15 +187,16 @@ test.describe('map buttons', () => {
     expect(await page.evaluate(() => (window as unknown as Win).__engine.legacyZoom)).toBeCloseTo(17, 1);
     const vis = () => page.evaluate(() => ['esri', 'light'].map((l) => (window as unknown as Win).__engine.map.getLayoutProperty(l, 'visibility') ?? 'visible'));
     expect(await vis()).toEqual(['visible', 'none']);
+    await more(page);
     const layers = page.locator('.mc-layers');
     const is3D = () => page.evaluate(() => (window as unknown as Win).__engine.is3D);
     await expect(layers).toHaveAttribute('data-view', 'satellite');
     await expect(page.locator('.mc-3d')).toHaveCount(0);
-    const before = await layers.getAttribute('aria-label');
+    const before = await layers.textContent();
     await layers.click();
     expect(await vis()).toEqual(['none', 'visible']);
     expect(await is3D()).toBe(false);
-    expect(await layers.getAttribute('aria-label')).not.toBe(before);
+    expect(await layers.textContent()).not.toBe(before);
     await layers.click();
     await expect(layers).toHaveAttribute('data-view', '3d');
     expect(await vis()).toEqual(['visible', 'none']);
@@ -208,6 +211,7 @@ test.describe('map buttons', () => {
     await page.goto('map.html');
     await page.waitForFunction(() => (window as any).__engine?.map?.loaded() && (window as any).__engine.map.getLayer('facilities'));
     expect(await page.evaluate(() => (window as unknown as Win).__engine.is3D)).toBe(true);
+    await more(page);
     await expect(page.locator('.mc-layers')).toHaveAttribute('data-view', '3d');
     await expect.poll(() => page.evaluate(() => (window as unknown as Win).__engine.map.getPitch())).toBeCloseTo(45, 0);
   });
