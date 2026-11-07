@@ -172,7 +172,7 @@ describe('a tap on the map (markers stay in place; a tight group zooms in)', () 
     expect(tapChoice([{ id: 1, d: 23 }], true)).toEqual({ open: null });
     expect(tapChoice([], true)).toEqual({ open: null });
   });
-  it('one marker, or one clearly nearer: it opens', () => {
+  it('one marker, or one right under the finger with the rest clearly farther: it opens', () => {
     expect(tapChoice([{ id: 1, d: 20 }], true)).toEqual({ open: 1 });
     expect(
       tapChoice(
@@ -190,6 +190,17 @@ describe('a tap on the map (markers stay in place; a tight group zooms in)', () 
         [
           { id: 1, d: 6 },
           { id: 2, d: 9 },
+        ],
+        true,
+      ),
+    ).toEqual({ zoomIn: true });
+  });
+  it('several, none right under the finger: zoom in, even if one is a little nearer', () => {
+    expect(
+      tapChoice(
+        [
+          { id: 1, d: 12 },
+          { id: 2, d: 21 },
         ],
         true,
       ),

@@ -473,11 +473,15 @@ test.describe('alternative routes', () => {
       return out.slice(0, 6);
     });
     expect(steps.length).toBeGreaterThanOrEqual(4);
+    // The notice lasts 3 s and six readings take longer: stop walking once the switch is said.
+    let said = false;
     for (const [latitude, longitude] of steps) {
       await context.setGeolocation({ latitude, longitude, accuracy: 8 });
       await page.waitForTimeout(900);
+      said = (await page.locator('.toast').allTextContents()).some((t) => t.includes('تحوّل المسار'));
+      if (said) break;
     }
-    await expect(page.locator('.toast')).toContainText('تحوّل المسار');
+    if (!said) await expect(page.locator('.toast')).toContainText('تحوّل المسار');
     await expect(stats).not.toHaveText(before!);
   });
 });
