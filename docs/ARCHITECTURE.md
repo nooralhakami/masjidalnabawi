@@ -118,6 +118,8 @@ tests/unit/  tests/e2e/  scripts/perf.mjs
   - The car park question is a Promise answered by the UI (no DOM in the trip).
   - Camera: `fitBounds` after the sheet has settled to its fitted height (the sheet's `fit` mode: content height, ≤ 45% of the screen); padding is reset first, because MapLibre adds fitBounds' padding to the current one.
   - Nav types the UI needs (`StepView`, `NavView`, `STATE_LABEL`) live in `presentation/route-view.ts`, so ui/ never imports navigation/. The architecture test now also checks `.tsx` files.
+  - «Near you now» (UI plan phase 2, 2026-11-07): `ui/near/NearRow` asks `Trip.near(kind, who)`. The trip finds where the visitor is (a fix within 50 m, else the `whereQ` question answered by `ui/near/NearAsk`), takes the candidates from `domain/near` (open ones, men's or women's), plans walks (`routing/plan.planRoutes`, or `planFromLot` from a lot underground) and shows the two nearest, each plan with its place, so a tap on the other route moves the card too. `domain/prayer` gives the next prayer.
+  - Numbered steps: `presentation/route-view.stepMarks` turns a leg's `steps` (the car park's, or the stairs up from a lot) into numbered marks with left/right turns; `map/route.ts` draws them as `step` marks from zoom 15.5.
 - **Route.**
   - The sheet's button triggers a location request, only now.
   - In or by the car park, `GarageAsk` asks where the car is.
