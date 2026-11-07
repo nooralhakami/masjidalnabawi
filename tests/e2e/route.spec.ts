@@ -426,26 +426,36 @@ test.describe('alternative routes', () => {
   });
 
   test('walking onto another offered route switches to it, without re-planning', async ({ page, context, errors: _ }) => {
-    // The best route goes round the west side; the other one up the east side of the walkway ring.
+    // The two routes go round the mosque, one by the west side of the walkway ring, one up its east
+    // side; they are nearly as long (since the west walkway moved to its corridor, owner 2026-11-07),
+    // so the test walks up whichever side the chosen route does not take.
     const ring = (JSON.parse(readFileSync('data/routing.json', 'utf8')) as { walkway_ring: [number, number][] }).walkway_ring;
-    // The ring's east side at a latitude: the easternmost of its stretches there (it steps east north
-    // of the narrow neck, owner 2026-10-25, so one longitude for the whole side no longer fits).
-    const eastLngAt = (lat: number) =>
-      Math.max(
-        ...ring.flatMap((a, i) => {
-          const b = ring[(i + 1) % ring.length];
-          if (lat < Math.min(a[0], b[0]) || lat > Math.max(a[0], b[0]) || a[0] === b[0]) return [];
-          return [a[1] + ((b[1] - a[1]) * (lat - a[0])) / (b[0] - a[0])];
-        }),
-      );
+    // The ring's side at a latitude: the outermost of its stretches there (the east side steps east
+    // north of the narrow neck, owner 2026-10-25, so one longitude for a whole side does not fit).
+    const sideLngAt = (lat: number, east: boolean) => {
+      const at = ring.flatMap((a, i) => {
+        const b = ring[(i + 1) % ring.length];
+        if (lat < Math.min(a[0], b[0]) || lat > Math.max(a[0], b[0]) || a[0] === b[0]) return [];
+        return [a[1] + ((b[1] - a[1]) * (lat - a[0])) / (b[0] - a[0])];
+      });
+      return east ? Math.max(...at) : Math.min(...at);
+    };
     await openAndRoute(page, 21);
     const stats = card(page).locator('.route-stats');
     await expect(stats).toBeVisible({ timeout: 20_000 });
     const before = await stats.textContent();
-    // Walking north up the east side, ~30 m a step.
+    // Which side the chosen route takes: its westernmost point, against the mosque's middle.
+    const chosenWest = await page.evaluate(() => {
+      const m = (window as unknown as Win).__engine.map;
+      const lngs = m
+        .queryRenderedFeatures({ layers: ['route-walk'] })
+        .flatMap((f: any) => (f.geometry.type === 'LineString' ? f.geometry.coordinates : f.geometry.coordinates.flat()).map((c: number[]) => c[0]));
+      return Math.min(...lngs) < 39.6095;
+    });
+    // Walking north up the other side, ~30 m a step.
     for (let i = 0; i < 5; i++) {
       const latitude = 24.4674 + (i * 30) / 111_320;
-      await context.setGeolocation({ latitude, longitude: eastLngAt(latitude), accuracy: 8 });
+      await context.setGeolocation({ latitude, longitude: sideLngAt(latitude, chosenWest), accuracy: 8 });
       await page.waitForTimeout(900);
     }
     await expect(page.locator('.toast')).toContainText('تحوّل المسار');
