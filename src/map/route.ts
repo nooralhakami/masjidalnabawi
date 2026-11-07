@@ -2,7 +2,7 @@ import type { Feature, FeatureCollection, LineString, Point } from 'geojson';
 import type { ExpressionSpecification, GeoJSONSource, Map as MLMap } from 'maplibre-gl';
 import type { LatLng, Poi } from '../data/types';
 import { parkingAccess } from '../domain/parking';
-import { ARROW_EVERY_M, arrowsAlong, boundsOf, pointAlong, routeSummary, type RouteSummary } from '../presentation/route-view';
+import { ARROW_EVERY_M, arrowsAlong, boundsOf, pointAlong, routeSummary, stepMarks, type RouteSummary, type StepTurn } from '../presentation/route-view';
 import { fullPath, type Plan } from '../routing/plan';
 import type { Palette } from './images';
 
@@ -30,6 +30,8 @@ export interface RouteText {
   level(l: 'A'): string;
   /** A car park entrance's name, on the nearest one when walking to a lot. */
   entrance(p: Poi): string;
+  /** The short note on a numbered step underground: «turn right», «up to level A», «into lot 9». */
+  step(turn: StepTurn, lot: number | null): string;
 }
 
 /** Layers of the route, bottom to top (all under the selected place's pin). */
@@ -41,6 +43,8 @@ export const ROUTE_LAYERS = [...LINE_LAYERS, ...TOP_LAYERS];
 const SOURCES = ['route-lines', 'route-alts', 'route-focus', 'route-arrows', 'route-marks'] as const;
 
 const DRAW_MS = 700;
+/** MapLibre zoom from which the numbered steps underground show (below it they would pile on each other). */
+const STEPS_ZOOM = 15.5;
 const FADED = 0.35;
 const EMPTY: FeatureCollection = { type: 'FeatureCollection', features: [] };
 const lngLat = ([lat, lng]: LatLng): [number, number] => [lng, lat];
@@ -52,7 +56,11 @@ const line = (path: readonly LatLng[], properties: Record<string, unknown>): Fea
 const point = (at: LatLng, properties: Record<string, unknown>): Feature<Point> => ({ type: 'Feature', geometry: { type: 'Point', coordinates: lngLat(at) }, properties });
 
 interface Mark {
-  kind: 'alt' | 'ramp' | 'lot-gate' | 'level-ramp' | 'level-label' | 'entrance' | 'entrance-label' | 'start' | 'end';
+  kind: 'alt' | 'ramp' | 'lot-gate' | 'level-ramp' | 'level-label' | 'entrance' | 'entrance-label' | 'step' | 'start' | 'end';
+  /** A numbered step: its number (the note is `text`). */
+  n?: number;
+  /** Drawn under its point rather than over it (a step that ends at the place, whose pin stands over the point). */
+  below?: boolean;
   at: LatLng;
   img?: string;
   text?: string;
@@ -189,8 +197,16 @@ export class RouteLayer {
         'icon-allow-overlap': true,
         'icon-ignore-placement': true,
         'symbol-sort-key': ['get', 'z'],
-        'icon-offset': ['match', ['get', 'kind'], 'entrance-label', ['literal', [0, -27]], ['literal', [0, 0]]],
+        // A numbered step sits just over its point, clear of the line; one ending at the place sits under it, clear of the place's pin.
+        'icon-offset': [
+          'case',
+          ['==', ['get', 'below'], true],
+          ['literal', [0, 22]],
+          ['match', ['get', 'kind'], 'entrance-label', ['literal', [0, -27]], 'step', ['literal', [0, -22]], ['literal', [0, 0]]],
+        ],
       },
+      // The numbered steps show once the car park is close enough to read them apart.
+      paint: { 'icon-opacity': ['step', ['zoom'], ['match', ['get', 'kind'], 'step', 0, 1], STEPS_ZOOM, 1] },
     });
     this.addArrowImage();
     this.setFaded(this.focused);
@@ -282,9 +298,18 @@ export class RouteLayer {
         });
       marks.push({ kind: 'entrance-label', at: [plan.nearest.lat, plan.nearest.lng], text: this.text.entrance(plan.nearest), z: 1002 });
     }
+    // Numbered steps underground (owner, 2026-11-07), counted on from one leg to the next.
+    let n = 1;
+    for (const leg of plan.legs) {
+      if (!leg.steps?.length) continue;
+      for (const s of stepMarks(leg.steps, n)) {
+        marks.push({ kind: 'step', at: s.at, n: s.n, below: s.turn === 'stairs', text: this.text.step(s.turn, plan.lot ? plan.lot.id - 900 : null), z: 1100 - s.n });
+        n = s.n + 1;
+      }
+    }
     for (const o of this.others) marks.push({ kind: 'alt', at: pointAlong(o.path, 0.5), text: this.text.minutes(this.plans[o.i].minutes), alt: o.i, path: o.path, z: 950 });
     marks.push({ kind: 'start', at: this.path[0], z: 0 }, { kind: 'end', at: this.path[this.path.length - 1], z: 0 });
-    for (const mk of marks) mk.img ??= mk.kind === 'start' || mk.kind === 'end' ? this.endImage(mk.kind) : this.chip(mk);
+    for (const mk of marks) mk.img ??= mk.kind === 'start' || mk.kind === 'end' ? this.endImage(mk.kind) : mk.kind === 'step' ? this.stepImage(mk) : this.chip(mk);
     this.marks = marks;
     this.set('route-lines', lines);
     this.set(
@@ -423,7 +448,9 @@ export class RouteLayer {
   private writeMarks() {
     this.set(
       'route-marks',
-      this.marks.map((m) => point(m.at, { kind: m.kind, z: m.z, ...(m.img ? { img: m.img } : {}), ...(m.alt !== undefined ? { alt: m.alt } : {}) })),
+      this.marks.map((m) =>
+        point(m.at, { kind: m.kind, z: m.z, ...(m.img ? { img: m.img } : {}), ...(m.alt !== undefined ? { alt: m.alt } : {}), ...(m.below ? { below: true } : {}) }),
+      ),
     );
   }
 
@@ -499,6 +526,56 @@ export class RouteLayer {
     ctx.direction = mk.kind === 'entrance-label' || mk.kind === 'alt' || mk.kind === 'level-label' ? 'inherit' : 'ltr';
     ctx.fillText(text, w / 2, pad + k.h / 2 + 0.5, w - 2 * pad - 8);
     return this.add(`rt:${mk.kind}:${this.images.length}@${this.version}`, cv);
+  }
+
+  /**
+   * A numbered step: the number in a green disc, then its short note, on the card colour with a
+   * gold thread (DESIGN §1-ب). The number reads the same in every language; the note takes the
+   * page's direction, so the disc sits at the start of the line (right in Arabic).
+   */
+  private stepImage(mk: Mark): string {
+    const c = (t: string) => this.palette.get(t);
+    const font = '600 12px "IBM Plex Sans Arabic", system-ui, sans-serif';
+    const numFont = '700 13px "IBM Plex Sans Arabic", system-ui, sans-serif';
+    const text = mk.text ?? '';
+    const probe = this.canvas(1, 1).ctx;
+    probe.font = font;
+    const tw = Math.min(170, Math.ceil(probe.measureText(text).width));
+    const pad = 4;
+    const h = 28;
+    const disc = 22;
+    const w = 3 + disc + 6 + tw + 10 + 2 * pad;
+    const { cv, ctx } = this.canvas(w, h + 2 * pad);
+    const rtl = document.documentElement.dir === 'rtl';
+    ctx.shadowColor = 'rgba(0,0,0,0.25)';
+    ctx.shadowBlur = 3;
+    ctx.shadowOffsetY = 1;
+    ctx.beginPath();
+    ctx.roundRect(pad + 0.5, pad + 0.5, w - 2 * pad - 1, h - 1, h / 2);
+    ctx.fillStyle = c('surface-2');
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = c('gold-500');
+    ctx.stroke();
+    const cx = rtl ? w - pad - 3 - disc / 2 : pad + 3 + disc / 2;
+    const cy = pad + h / 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, disc / 2, 0, Math.PI * 2);
+    ctx.fillStyle = c('accent');
+    ctx.fill();
+    ctx.font = numFont;
+    ctx.fillStyle = c('accent-ink');
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.direction = 'ltr';
+    ctx.fillText(String(mk.n ?? ''), cx, cy + 0.5);
+    ctx.font = font;
+    ctx.fillStyle = c('ink');
+    ctx.direction = rtl ? 'rtl' : 'ltr';
+    ctx.textAlign = 'start';
+    ctx.fillText(text, rtl ? w - pad - 3 - disc - 6 : pad + 3 + disc + 6, cy + 0.5, tw);
+    return this.add(`rt:step:${this.images.length}@${this.version}`, cv);
   }
 
   /** The route's start (the visitor's blue) and end (gold), ringed white (the live app's circle markers). */

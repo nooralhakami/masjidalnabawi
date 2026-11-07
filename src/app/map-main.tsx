@@ -53,7 +53,12 @@ async function main() {
       nameOf: (p) => nm(p),
       status: (id) => fac.status(id),
       onPick: (id) => emit('map-tap', id),
-      routeText: { minutes: (m) => t('r_min', { t: m }), level: (l) => t('lvl_name', { l }), entrance: (p) => nm(p) },
+      routeText: {
+        minutes: (m) => t('r_min', { t: m }),
+        level: (l) => t('lvl_name', { l }),
+        entrance: (p) => nm(p),
+        step: (turn, lot) => t(`st_${turn}`, { n: lot ?? '' }),
+      },
       meLabel: () => t('you'),
       // The new vehicle entrances (owner, 2026-10-16): a tap says the name, the state and how to leave.
       entranceText: (id, open) => {
