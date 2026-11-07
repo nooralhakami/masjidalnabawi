@@ -1,7 +1,5 @@
-import type { Feature, FeatureCollection, Polygon } from 'geojson';
 import { ALHARAMAIN_MODELS } from '../data-next/alharamain-3d';
-import { ALHARAMAIN_PRAYERS, PRAYER_CLEARINGS } from '../data-next/alharamain-prayers';
-import { lngLatFromMetres, metresFromOrigin } from './glb-layer';
+import { metresFromOrigin } from './glb-layer';
 
 type XY = readonly [number, number];
 
@@ -81,56 +79,4 @@ export function restroomWalkways(): XY[][] {
     out.push([at(off, -len), at(off, len), at(off + WALKWAY_M, len), at(off + WALKWAY_M, -len)]);
   }
   return out;
-}
-
-function inside([x, y]: XY, ring: readonly XY[]): boolean {
-  let c = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    if (ring[i][1] > y !== ring[j][1] > y && x < ((ring[j][0] - ring[i][0]) * (y - ring[i][1])) / (ring[j][1] - ring[i][1]) + ring[i][0]) c = !c;
-  }
-  return c;
-}
-
-/**
- * The green barriers round the courtyards' prayer areas, as the owner describes them: 2 m sections
- * with a hand's gap between them, 0.3 m outside each edge, 12 cm thick, as polygons to extrude.
- * Where a restroom's walkway or a corridor the owner cleared cuts an area, the barrier leaves it open
- * and runs along it; between two areas that touch there is none.
- */
-export function prayerBarriers(): FeatureCollection<Polygon, { height: number }> {
-  const areas = ALHARAMAIN_PRAYERS.map((r) => r.map((ll) => metresFromOrigin(ll as [number, number]) as XY));
-  // Kept open: the restrooms' walkways and the owner's cleared corridors (2026-11-07).
-  const walks = [...restroomWalkways(), ...PRAYER_CLEARINGS.map((r) => r.map((ll) => metresFromOrigin(ll as [number, number]) as XY))];
-  const inWalk = (p: XY) => walks.some((w) => inside(p, w));
-  const inArea = (p: XY) => areas.some((a) => inside(p, a));
-  const features: Feature<Polygon, { height: number }>[] = [];
-  /** Sections along a→b, `side` (+1 right, −1 left of a→b, the models' frame being x east, z south) out. */
-  const run = (a: XY, b: XY, side: number, keep: (mid: XY) => boolean) => {
-    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
-    if (len < 0.5) return;
-    const u: XY = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
-    const nrm: XY = [-u[1] * side, u[0] * side];
-    const pieces = Math.max(1, Math.round(len / 2.1));
-    const step = len / pieces;
-    for (let s = 0; s < pieces; s++) {
-      const t0 = s * step + 0.05;
-      const t1 = (s + 1) * step - 0.05;
-      const at = (t: number, off: number): XY => [a[0] + u[0] * t + nrm[0] * off, a[1] + u[1] * t + nrm[1] * off];
-      if (!keep(at((t0 + t1) / 2, 0.36))) continue;
-      const corners = [at(t0, 0.3), at(t1, 0.3), at(t1, 0.42), at(t0, 0.42)].map((p) => lngLatFromMetres(p));
-      features.push({ type: 'Feature', properties: { height: 1.05 }, geometry: { type: 'Polygon', coordinates: [[...corners, corners[0]]] } });
-    }
-  };
-  const area2 = (r: readonly XY[]) => r.reduce((s, p, i) => s + p[0] * r[(i + 1) % r.length][1] - r[(i + 1) % r.length][0] * p[1], 0);
-  for (const ring of areas) {
-    // Outside the area, whichever way navQ wound it: the side away from its interior.
-    const side = area2(ring) > 0 ? -1 : 1;
-    // No barrier between two areas that touch: the carpet runs on.
-    for (let i = 0; i < ring.length; i++) run(ring[i], ring[(i + 1) % ring.length], side, (m) => !inWalk(m) && !inArea(m));
-  }
-  for (const w of walks) {
-    const side = area2(w) > 0 ? -1 : 1;
-    for (let i = 0; i < w.length; i++) run(w[i], w[(i + 1) % w.length], side, (m) => inArea(m) && !inWalk(m));
-  }
-  return { type: 'FeatureCollection', features };
 }

@@ -3,10 +3,26 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ALHARAMAIN_MODELS, alharamainPlaza } from '../../src/data-next/alharamain-3d';
 import { ALHARAMAIN_PRAYERS, PRAYER_CLEARINGS } from '../../src/data-next/alharamain-prayers';
-import { prayerBarriers, restroomWalkways } from '../../src/map/prayer-layout';
-import { CANOPY_MOVE_MS, canopyFoldAt, canopyFolding, foldCanopyVertex, metresFromOrigin, nodeShift, parseGlbBuffer } from '../../src/map/glb-layer';
+import { restroomFootprints, restroomWalkways } from '../../src/map/prayer-layout';
+import { GROUP_GAP, RUG_D, RUG_W, rugLayout } from '../../src/map/rug-layout';
+import { CANOPY_MOVE_MS, canopyFoldAt, canopyFolding, foldCanopyVertex, metresFromOrigin, nodePositions, nodeShift, parseGlbBuffer } from '../../src/map/glb-layer';
 import { plazaMesh } from '../../src/map/plaza-layer';
 import { triangulate } from '../../src/map/polygon';
+
+/** The canopy and lamp columns (the carpets keep clear of them), as the 3D layer reads them. */
+const COLUMNS = (() => {
+  const f = readFileSync(resolve(__dirname, '../../public/models/haram-canopies.glb'));
+  const { gltf } = parseGlbBuffer(f.buffer.slice(f.byteOffset, f.byteOffset + f.byteLength) as ArrayBuffer);
+  return nodePositions(ALHARAMAIN_MODELS.find((m) => m.url.includes('canopies'))!, gltf);
+})();
+const LAYOUT = rugLayout(COLUMNS);
+const insideRing = (x: number, y: number, r: readonly (readonly [number, number])[]) => {
+  let c = false;
+  for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+    if (r[i][1] > y !== r[j][1] > y && x < ((r[j][0] - r[i][0]) * (y - r[i][1])) / (r[j][1] - r[i][1]) + r[i][0]) c = !c;
+  }
+  return c;
+};
 
 const triArea = (pts: [number, number][], tri: ArrayLike<number>, base = 0) => {
   let sum = 0;
@@ -69,24 +85,74 @@ describe("the courtyards' prayer areas (navQ, owner 2026-11-06)", () => {
         expect(lat).toBeLessThan(24.4711);
       }
     }
-    const barriers = prayerBarriers().features;
+    const barriers = LAYOUT.barriers.features;
     expect(barriers.length).toBeGreaterThan(1000);
-    const inside = (x: number, y: number, r: readonly (readonly [number, number])[]) => {
-      let c = false;
-      for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
-        if (r[i][1] > y !== r[j][1] > y && x < ((r[j][0] - r[i][0]) * (y - r[i][1])) / (r[j][1] - r[i][1]) + r[i][0]) c = !c;
-      }
-      return c;
-    };
-    // Every section stands outside its area (never on the carpets), about 2 m long.
-    for (const f of barriers.slice(0, 400)) {
+    // Every section stands off the carpets, about 2 m long.
+    const covered = LAYOUT.covered;
+    for (const f of barriers.slice(0, 600)) {
       const [a, b, c] = f.geometry.coordinates[0];
-      const mid: [number, number] = [(a[0] + c[0]) / 2, (a[1] + c[1]) / 2];
-      expect(ALHARAMAIN_PRAYERS.some((r) => inside(mid[0], mid[1], r))).toBe(false);
+      const [x, z] = metresFromOrigin([(a[0] + c[0]) / 2, (a[1] + c[1]) / 2]);
+      expect(covered.some((r) => insideRing(x, z, r))).toBe(false);
       const len = Math.hypot((b[0] - a[0]) * 111_320 * Math.cos((a[1] * Math.PI) / 180), (b[1] - a[1]) * 111_320);
       expect(len).toBeGreaterThan(0.4);
-      expect(len).toBeLessThan(2.7);
+      expect(len).toBeLessThan(2.8);
     }
+  });
+});
+
+describe('the prayer carpets, laid whole (owner, 2026-11-07)', () => {
+  const t = (ALHARAMAIN_MODELS[1].rotation * Math.PI) / 180;
+  const corners = (x: number, z: number): [number, number][] =>
+    [
+      [-RUG_W / 2, -RUG_D / 2],
+      [RUG_W / 2, -RUG_D / 2],
+      [RUG_W / 2, RUG_D / 2],
+      [-RUG_W / 2, RUG_D / 2],
+    ].map(([u, v]) => [x + Math.cos(t) * u + Math.sin(t) * v, z - Math.sin(t) * u + Math.cos(t) * v]);
+  const areas = ALHARAMAIN_PRAYERS.map((r) => r.map((ll) => metresFromOrigin(ll as [number, number])));
+  const open = [...restroomWalkways(), ...PRAYER_CLEARINGS.map((r) => r.map((ll) => metresFromOrigin(ll as [number, number]))), ...restroomFootprints()];
+  const cols = COLUMNS.map((ll) => metresFromOrigin(ll as [number, number]));
+
+  it('thousands of 5 m by 1.2 m carpets, each whole inside its area, none over a walkway, a cleared corridor, a restroom or a column', () => {
+    const court = LAYOUT.rugs.filter((r) => r.courtyard);
+    expect(court.length).toBeGreaterThan(2000);
+    for (const rug of court) {
+      const cs = corners(rug.x, rug.z);
+      expect(areas.some((a) => cs.every(([x, z]) => insideRing(x, z, a)))).toBe(true);
+      for (const [x, z] of [...cs, [rug.x, rug.z] as [number, number]]) expect(open.some((w) => insideRing(x, z, w))).toBe(false);
+      for (const [cx, cz] of cols) expect(Math.hypot(cx - rug.x, cz - rug.z)).toBeGreaterThan(0.6);
+    }
+  });
+
+  it('no two carpets overlap; rows 1.2 m apart in groups of three, 0.8 m of floor between groups', () => {
+    const rugs = LAYOUT.rugs;
+    const byRow = new Map<number, number>();
+    const hash = new Map<string, number[]>();
+    rugs.forEach((r, i) => {
+      const k = `${Math.floor(r.x / 6)}|${Math.floor(r.z / 6)}`;
+      hash.set(k, [...(hash.get(k) ?? []), i]);
+    });
+    for (let i = 0; i < rugs.length; i++) {
+      const hx = Math.floor(rugs[i].x / 6);
+      const hz = Math.floor(rugs[i].z / 6);
+      for (let a = -1; a <= 1; a++) {
+        for (let b = -1; b <= 1; b++) {
+          for (const j of hash.get(`${hx + a}|${hz + b}`) ?? []) {
+            if (j <= i) continue;
+            const dx = rugs[i].x - rugs[j].x;
+            const dz = rugs[i].z - rugs[j].z;
+            // In the carpets' own frame: apart by a whole carpet across, or a whole row deep.
+            const u = Math.abs(Math.cos(t) * dx - Math.sin(t) * dz);
+            const v = Math.abs(Math.sin(t) * dx + Math.cos(t) * dz);
+            expect(u >= RUG_W - 1e-3 || v >= RUG_D - 1e-3).toBe(true);
+            if (u < 0.01 && v < 3 * RUG_D + GROUP_GAP + 0.01) byRow.set(Math.round(v * 100), (byRow.get(Math.round(v * 100)) ?? 0) + 1);
+          }
+        }
+      }
+    }
+    // Neighbours in a column: 1.2 m (in a group) or 2.0 m (across the gap between groups).
+    expect(byRow.has(Math.round(RUG_D * 100))).toBe(true);
+    expect(byRow.has(Math.round((RUG_D + GROUP_GAP) * 100))).toBe(true);
   });
 });
 
@@ -240,7 +306,7 @@ describe('a 10 m walkway in front of each restroom, toward the Haram (owner, 202
       }
       return c;
     };
-    for (const f of prayerBarriers().features) {
+    for (const f of LAYOUT.barriers.features) {
       const [a, , c] = f.geometry.coordinates[0];
       const [x, z] = metresFromOrigin([(a[0] + c[0]) / 2, (a[1] + c[1]) / 2]);
       expect(walks.some((w) => inside(x, z, w))).toBe(false);
@@ -272,7 +338,7 @@ describe("the owner's marks on the top view of the prayer areas (2026-11-07)", (
       }
       return c;
     };
-    for (const f of prayerBarriers().features) {
+    for (const f of LAYOUT.barriers.features) {
       const [a, , c] = f.geometry.coordinates[0];
       const [x, z] = metresFromOrigin([(a[0] + c[0]) / 2, (a[1] + c[1]) / 2]);
       expect(walks.some((w) => inside(x, z, w))).toBe(false);

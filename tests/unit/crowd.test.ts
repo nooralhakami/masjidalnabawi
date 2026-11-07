@@ -2,11 +2,12 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ALHARAMAIN_MODELS } from '../../src/data-next/alharamain-3d';
-import { ALHARAMAIN_PRAYERS, PRAYER_CLEARINGS } from '../../src/data-next/alharamain-prayers';
+import { PRAYER_CLEARINGS } from '../../src/data-next/alharamain-prayers';
 import { BODY_R, COLUMN_R, Crowd } from '../../src/map/crowd-sim';
 import { crowdInput } from '../../src/map/crowd-world';
 import { metresFromOrigin, nodePositions, parseGlbBuffer } from '../../src/map/glb-layer';
 import { restroomFootprints, restroomWalkways } from '../../src/map/prayer-layout';
+import { rugLayout } from '../../src/map/rug-layout';
 
 const inside = (x: number, z: number, r: readonly (readonly [number, number])[]) => {
   let c = false;
@@ -25,7 +26,8 @@ describe('people walking in the courtyards (owner, 2026-11-06)', () => {
   const start = Array.from({ length: crowd.n }, (_, a) => [crowd.px[a], crowd.pz[a]]);
   for (let t = 0; t < 60; t += 1 / 30) crowd.step(1 / 30);
 
-  const carpets = ALHARAMAIN_PRAYERS.map((r) => r.map((ll) => metresFromOrigin(ll as [number, number])));
+  // The carpets as laid (whole ones only).
+  const carpets = rugLayout(columnsLL).covered;
   const walkways = [...restroomWalkways(), ...PRAYER_CLEARINGS.map((r) => r.map((ll) => metresFromOrigin(ll as [number, number])))];
   const blocks = restroomFootprints();
 
