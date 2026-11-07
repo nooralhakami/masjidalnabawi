@@ -12,6 +12,8 @@ export interface AppEvents {
   'stories-request': number;
   /** Open the Islamic library. */
   'library-request': undefined;
+  /** Share the guide's own link (from the map's «more» menu). */
+  'share-app-request': undefined;
   /** Open a place's card and fly to it (the tests use it to choose a place). */
   'open-place': Poi;
 }

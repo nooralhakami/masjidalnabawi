@@ -1,5 +1,5 @@
 import { useComputed, useSignal } from '@preact/signals';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { POI_BY_ID, RULES } from '../data';
 import type { Poi } from '../data/types';
 import type { Facilities } from '../domain/facilities';
@@ -92,6 +92,22 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
   const dark = useSignal(currentTheme() === 'dark');
   const contrast = useSignal(document.documentElement.dataset.contrast === 'more');
   const top = useRef<HTMLDivElement>(null);
+  // When the visitor moves the map by hand (and when it rests): the Rawdah card is compact meanwhile.
+  const watchMove = useCallback(
+    (fn: (moving: boolean) => void) => {
+      const start = (e: { originalEvent?: unknown }) => {
+        if (e.originalEvent) fn(true);
+      };
+      const end = () => fn(false);
+      engine.map.on('movestart', start);
+      engine.map.on('moveend', end);
+      return () => {
+        engine.map.off('movestart', start);
+        engine.map.off('moveend', end);
+      };
+    },
+    [engine],
+  );
 
   // How many places each pill shows (the live app's counts), and what the chosen pill shows now.
   const counts = useComputed(() => {
@@ -198,6 +214,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
       listen('open-place', (p) => select(p, true)),
       listen('stories-request', (at) => void openStories(at ?? 0)),
       listen('library-request', () => void openLibrary()),
+      listen('share-app-request', () => void share(new URL('./', location.href).href, t('title'), t('app_link_copied'))),
     ];
     if (initial) select(initial, true);
     if (initialVisit !== undefined) void openStories(initialVisit);
@@ -250,7 +267,6 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
           langShort={pack(lang).short}
           onLang={() => setLangOpen(!langOpen)}
           onAdmin={toAdmin}
-          onShare={() => void share(new URL('./', location.href).href, t('title'), t('app_link_copied'))}
           count={counts.value[filter.value]}
         />
         {langOpen ? (
@@ -343,6 +359,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
       {!place ? (
         <RawdahHost
           onHeight={(h) => (rawdahH.value = h)}
+          watchMove={watchMove}
           onOpen={() => {
             const gate = POI_BY_ID.get(RULES.rules.rawdah.gate);
             if (gate) select(gate, true);

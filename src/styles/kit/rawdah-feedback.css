@@ -3,13 +3,82 @@
   display: grid;
   gap: var(--s-2);
 }
+/* One card, its faces side by side (owner, 2026-11-07): swiped with the browser's own snapping. */
+.rawdah-track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 100%;
+  gap: var(--s-3);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  border-radius: var(--r-card);
+}
+.rawdah-track::-webkit-scrollbar {
+  display: none;
+}
+.rawdah-track > .rawdah-card {
+  scroll-snap-align: start;
+}
+.rawdah-dots {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  margin-top: -6px;
+  margin-bottom: -10px;
+}
+/* A small dot, in a 24 px target (a dot is a second way: the card itself is swiped). */
+.rawdah-dot {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.rawdah-dot::before {
+  content: '';
+  width: 18px;
+  height: 7px;
+  border-radius: var(--r-pill);
+  background: var(--panel);
+  box-shadow: 0 0 0 1px var(--line-strong);
+  /* A dot is the pill narrowed (a transform, not a width, so only the compositor works). */
+  transform: scaleX(0.39);
+  transition:
+    transform var(--m-base) var(--ease),
+    background-color var(--m-base) var(--ease);
+}
+.rawdah-dot[aria-current='true']::before {
+  transform: none;
+  background: var(--gold-500);
+  box-shadow: none;
+}
+/* While the map moves: the permit lines and the dots step aside; the ring and the time left stay. */
+.rawdah-stack.is-compact .rawdah-permit,
+.rawdah-stack.is-compact .rawdah-free,
+.rawdah-stack.is-compact .rawdah-dots {
+  display: none;
+}
+.rawdah-stack.is-compact .rawdah-card {
+  min-height: 56px;
+  padding-block: var(--s-2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .rawdah-dot::before {
+    transition: none;
+  }
+}
 .rawdah-card {
   display: flex;
   align-items: center;
   gap: var(--s-3);
   width: 100%;
-  min-height: 72px;
-  padding: var(--s-3);
+  min-height: 64px;
+  padding: 10px var(--s-3);
   border: 1px solid var(--line);
   border-top-color: var(--gold-line);
   border-radius: var(--r-card);

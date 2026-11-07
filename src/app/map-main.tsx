@@ -143,6 +143,7 @@ async function main() {
         weather={<WeatherChip w={weather.value} />}
         onStories={() => emit('stories-request', 0)}
         onLibrary={() => emit('library-request', undefined)}
+        onShare={() => emit('share-app-request', undefined)}
         onLocate={() => void trip.locate()}
         view={view}
         onView={() => {
