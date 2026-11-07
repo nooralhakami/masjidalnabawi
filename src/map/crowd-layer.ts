@@ -27,11 +27,13 @@ out vec3 v_normal;
 out vec3 v_color;
 out float v_mat;
 out vec2 v_local;
+out float v_y;
 
 void main() {
   float woman = floor(a_head.w);
   float skin = fract(a_head.w) * 2.0;
-  bool hidden = (a_part.z == 1.0 && woman > 0.5) || (a_part.z == 2.0 && woman < 0.5);
+  // Parts for the other sex, and a walker not placed (far off at z 1e6), are not drawn.
+  bool hidden = (a_part.z == 1.0 && woman > 0.5) || (a_part.z == 2.0 && woman < 0.5) || a_inst.y > 1e5;
   float s = a_robe.w / 1.75;
   vec3 p = a_pos * vec3(1.0, s, 1.0);
   vec3 n = a_normal;
@@ -64,6 +66,7 @@ void main() {
   v_color = a_part.y == 0.0 ? a_robe.rgb : a_part.y == 1.0 ? skinCol : a_part.y == 2.0 ? a_head.rgb : vec3(0.18, 0.15, 0.13);
   v_mat = a_part.y;
   v_local = a_pos.xz;
+  v_y = a_pos.y / 1.75;
 }
 `;
 
@@ -73,6 +76,7 @@ in vec3 v_normal;
 in vec3 v_color;
 in float v_mat;
 in vec2 v_local;
+in float v_y;
 uniform vec3 u_sunDir;
 uniform vec3 u_sun;
 uniform vec3 u_ambient;
@@ -86,9 +90,17 @@ void main() {
     return;
   }
   vec3 n = normalize(v_normal);
-  float direct = max(dot(n, normalize(u_sunDir)), 0.0);
-  float sky = 0.75 + 0.25 * n.y;
-  vec3 lit = v_color * (u_ambient * sky + u_sun * direct);
+  vec3 l = normalize(u_sunDir);
+  // Cloth: the light wraps a little round the folds, and the robe darkens toward the ground
+  // (the shade of the body and the light the floor gives back).
+  float direct = max((dot(n, l) + 0.2) / 1.2, 0.0);
+  float sky = 0.72 + 0.28 * n.y;
+  float ao = mix(0.62, 1.0, smoothstep(0.0, 0.45, v_y));
+  vec3 bounce = vec3(0.9, 0.86, 0.8) * 0.12 * max(-n.y, 0.0);
+  vec3 lit = v_color * (u_ambient * sky * ao + u_sun * direct * mix(0.8, 1.0, ao) + bounce);
+  // A soft sheen at the edges of the cloth against the light, and a little on the skin.
+  float rim = pow(1.0 - abs(n.y), 3.0) * max(dot(n, l), 0.0);
+  lit += u_sun * rim * (v_mat == 1.0 ? 0.08 : 0.05);
   // At night the plazas' lamps light people from above, near white.
   lit += v_color * vec3(0.42, 0.41, 0.38) * u_night * (0.6 + 0.4 * max(n.y, 0.0));
   fragColor = vec4(lit, 1.0);
@@ -97,62 +109,88 @@ void main() {
 
 type V3 = [number, number, number];
 
-/** The figure: x forward, y up, z to the side; 1.75 m tall before the walker's own height. */
+/**
+ * The figure: x forward, y up, z to the side; 1.75 m tall before the walker's own height. Smooth
+ * (a normal at each vertex), in proportion (head about an eighth of the height), the thobe straight
+ * and the abaya fuller to the ground (owner, 2026-11-07: more lifelike).
+ */
 function personMesh(): { data: Float32Array; shadowFirst: number; shadowCount: number; count: number } {
   const out: number[] = [];
   const push = (p: V3, n: V3, swing: number, mat: number, who: number) => out.push(...p, ...n, swing, mat, who);
+  const norm = (n: V3): V3 => {
+    const l = Math.hypot(...n) || 1;
+    return [n[0] / l, n[1] / l, n[2] / l];
+  };
   const tri = (a: V3, b: V3, c: V3, swing: number, mat: number, who: number, normal?: V3) => {
     const u: V3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
     const v: V3 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
-    let n: V3 = normal ?? [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
-    const l = Math.hypot(...n) || 1;
-    n = [n[0] / l, n[1] / l, n[2] / l];
+    const n = norm(normal ?? [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]);
     push(a, n, swing, mat, who);
     push(b, n, swing, mat, who);
     push(c, n, swing, mat, who);
   };
-  /** A tube from y0 (radii forward/side r0) to y1 (r1), over the angles where `keep` says so. */
-  const tube = (
-    y0: number,
-    r0: [number, number],
-    y1: number,
-    r1: [number, number],
+  /**
+   * A smooth surface of revolution through rings `[y, forward radius, side radius]`, about (dx, dz),
+   * over the angles `keep` allows; capped on top if asked.
+   */
+  const lathe = (
+    rings: [number, number, number][],
     mat: number,
     who: number,
-    opts: { seg?: number; dx?: number; keep?: (a: number) => boolean; cap?: boolean; swing?: number; dz?: number } = {},
+    opts: { seg?: number; dx?: number; dz?: number; keep?: (a: number) => boolean; cap?: boolean; swing?: number } = {},
   ) => {
-    const seg = opts.seg ?? 10;
+    const seg = opts.seg ?? 16;
     const dx = opts.dx ?? 0;
     const dz = opts.dz ?? 0;
     const swing = opts.swing ?? 0;
-    const at = (a: number, y: number, r: [number, number]): V3 => [dx + Math.cos(a) * r[0], y, dz + Math.sin(a) * r[1]];
-    for (let i = 0; i < seg; i++) {
-      const a0 = (i / seg) * Math.PI * 2;
-      const a1 = ((i + 1) / seg) * Math.PI * 2;
-      if (opts.keep && !opts.keep((a0 + a1) / 2)) continue;
-      const mid = (a0 + a1) / 2;
-      const nrm: V3 = [Math.cos(mid), 0.15, Math.sin(mid)];
-      tri(at(a0, y0, r0), at(a1, y0, r0), at(a1, y1, r1), swing, mat, who, nrm);
-      tri(at(a0, y0, r0), at(a1, y1, r1), at(a0, y1, r1), swing, mat, who, nrm);
-      if (opts.cap) tri([dx, y1, dz], at(a1, y1, r1), at(a0, y1, r1), swing, mat, who, [0, 1, 0]);
+    const at = (a: number, r: [number, number, number]): V3 => [dx + Math.cos(a) * r[1], r[0], dz + Math.sin(a) * r[2]];
+    // The normal: outward, tilted by how the radius changes along the height.
+    const nrm = (a: number, k: number): V3 => {
+      const lo = rings[Math.max(0, k - 1)];
+      const hi = rings[Math.min(rings.length - 1, k + 1)];
+      const dy = hi[0] - lo[0] || 1e-3;
+      const dr = (hi[1] + hi[2] - lo[1] - lo[2]) / 2;
+      return norm([Math.cos(a) / (rings[k][1] + 1e-3), -dr / dy / ((rings[k][1] + rings[k][2]) / 2 + 1e-3), Math.sin(a) / (rings[k][2] + 1e-3)]);
+    };
+    for (let k = 0; k + 1 < rings.length; k++) {
+      for (let i = 0; i < seg; i++) {
+        const a0 = (i / seg) * Math.PI * 2;
+        const a1 = ((i + 1) / seg) * Math.PI * 2;
+        if (opts.keep && !opts.keep((a0 + a1) / 2)) continue;
+        const p00 = at(a0, rings[k]);
+        const p10 = at(a1, rings[k]);
+        const p01 = at(a0, rings[k + 1]);
+        const p11 = at(a1, rings[k + 1]);
+        const n00 = nrm(a0, k);
+        const n10 = nrm(a1, k);
+        const n01 = nrm(a0, k + 1);
+        const n11 = nrm(a1, k + 1);
+        push(p00, n00, swing, mat, who);
+        push(p10, n10, swing, mat, who);
+        push(p11, n11, swing, mat, who);
+        push(p00, n00, swing, mat, who);
+        push(p11, n11, swing, mat, who);
+        push(p01, n01, swing, mat, who);
+      }
+    }
+    if (opts.cap) {
+      const top = rings[rings.length - 1];
+      for (let i = 0; i < seg; i++) {
+        const a0 = (i / seg) * Math.PI * 2;
+        const a1 = ((i + 1) / seg) * Math.PI * 2;
+        tri([dx, top[0], dz], at(a1, top), at(a0, top), swing, mat, who, [0, 1, 0]);
+      }
     }
   };
-  /** An ellipsoid (rings of tubes). */
-  const blob = (cy: number, r: V3, mat: number, who: number, dx = 0) => {
-    const rings = 5;
-    for (let k = 0; k < rings; k++) {
-      const t0 = -Math.PI / 2 + (k / rings) * Math.PI;
-      const t1 = -Math.PI / 2 + ((k + 1) / rings) * Math.PI;
-      tube(
-        cy + Math.sin(t0) * r[1],
-        [Math.cos(t0) * r[0] + 1e-3, Math.cos(t0) * r[2] + 1e-3],
-        cy + Math.sin(t1) * r[1],
-        [Math.cos(t1) * r[0] + 1e-3, Math.cos(t1) * r[2] + 1e-3],
-        mat,
-        who,
-        { seg: 8, dx },
-      );
+  /** An ellipsoid about (dx, cy, dz) with radii r (forward, up, side). */
+  const blob = (cy: number, r: V3, mat: number, who: number, opts: { dx?: number; dz?: number; swing?: number; seg?: number } = {}) => {
+    const rings: [number, number, number][] = [];
+    const n = 7;
+    for (let k = 0; k <= n; k++) {
+      const t = -Math.PI / 2 + (k / n) * Math.PI;
+      rings.push([cy + Math.sin(t) * r[1], Math.cos(t) * r[0] + 1e-3, Math.cos(t) * r[2] + 1e-3]);
     }
+    lathe(rings, mat, who, { seg: opts.seg ?? 12, dx: opts.dx, dz: opts.dz, swing: opts.swing });
   };
   const box = (x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, swing: number, mat: number, who: number) => {
     const c = (x: number, y: number, z: number): V3 => [x, y, z];
@@ -168,27 +206,123 @@ function personMesh(): { data: Float32Array; shadowFirst: number; shadowCount: n
       tri(a, cc, d, swing, mat, who);
     }
   };
-  // Feet in sandals, under the hem.
-  box(-0.08, 0.16, 0, 0.07, 0.05, 0.14, 3, 3, 0);
-  box(-0.08, 0.16, 0, 0.07, -0.14, -0.05, 4, 3, 0);
-  // The robe (thobe or abaya), wider at the hem, and the shoulders.
-  tube(0.06, [0.2, 0.25], 1.3, [0.13, 0.2], 0, 0, { seg: 12 });
-  tube(1.3, [0.13, 0.2], 1.46, [0.09, 0.13], 0, 0, { seg: 12, cap: true });
-  // Arms in the robe's sleeves, hands at their ends.
-  box(-0.05, 0.05, 0.86, 1.42, 0.2, 0.27, 1, 0, 0);
-  box(-0.05, 0.05, 0.86, 1.42, -0.27, -0.2, 2, 0, 0);
-  box(-0.04, 0.04, 0.78, 0.87, 0.21, 0.26, 1, 1, 0);
-  box(-0.04, 0.04, 0.78, 0.87, -0.26, -0.21, 2, 1, 0);
-  // Neck and face.
-  tube(1.44, [0.05, 0.05], 1.55, [0.05, 0.05], 1, 0, { seg: 6 });
-  blob(1.64, [0.1, 0.12, 0.09], 1, 0);
-  // Men: a shemagh or cap on the head, falling behind to the shoulders.
-  tube(1.66, [0.112, 0.102], 1.78, [0.1, 0.095], 2, 1, { seg: 10, cap: true });
-  tube(1.72, [0.115, 0.105], 1.38, [0.17, 0.22], 2, 1, { seg: 12, dx: -0.02, keep: (a) => Math.cos(a) < 0.3 });
-  // Women: the hijab round the face and over the shoulders.
-  blob(1.65, [0.118, 0.135, 0.108], 2, 2, -0.012);
-  tube(1.6, [0.11, 0.12], 1.3, [0.19, 0.25], 2, 2, { seg: 12, keep: (a) => Math.cos(a) < 0.55 });
-  tube(1.55, [0.1, 0.11], 1.3, [0.17, 0.22], 2, 2, { seg: 12, keep: (a) => Math.cos(a) >= 0.55 });
+  // Feet in sandals, under the hem, rounded at the toe.
+  box(-0.07, 0.13, 0, 0.05, 0.055, 0.135, 3, 3, 0);
+  box(-0.07, 0.13, 0, 0.05, -0.135, -0.055, 4, 3, 0);
+  box(0.13, 0.17, 0, 0.04, 0.065, 0.125, 3, 3, 0);
+  box(0.13, 0.17, 0, 0.04, -0.125, -0.065, 4, 3, 0);
+  // Men: the thobe, straight and narrow to the ankle, with a fuller chest and square shoulders.
+  lathe(
+    [
+      [0.05, 0.15, 0.19],
+      [0.5, 0.14, 0.185],
+      [0.95, 0.13, 0.18],
+      [1.15, 0.14, 0.19],
+      [1.32, 0.125, 0.205],
+      [1.42, 0.1, 0.17],
+      [1.47, 0.06, 0.08],
+    ],
+    0,
+    1,
+    { cap: true },
+  );
+  // Women: the abaya, falling fuller to the ground.
+  lathe(
+    [
+      [0.02, 0.2, 0.24],
+      [0.4, 0.17, 0.21],
+      [0.9, 0.135, 0.175],
+      [1.12, 0.13, 0.17],
+      [1.3, 0.115, 0.18],
+      [1.4, 0.09, 0.15],
+      [1.45, 0.06, 0.08],
+    ],
+    0,
+    2,
+    { cap: true },
+  );
+  // The sleeves, from the shoulder, a little apart from the body; hands at their ends.
+  for (const [side, swing] of [
+    [1, 1],
+    [-1, 2],
+  ] as const) {
+    lathe(
+      [
+        [0.84, 0.045, 0.045],
+        [1.1, 0.05, 0.05],
+        [1.4, 0.055, 0.06],
+      ],
+      0,
+      0,
+      { seg: 8, dz: side * 0.235, swing, cap: true },
+    );
+    blob(0.8, [0.04, 0.05, 0.032], 1, 0, { dz: side * 0.235, swing, seg: 8 });
+  }
+  // Neck and face (an eighth of the height), a little forward of the neck.
+  lathe(
+    [
+      [1.43, 0.048, 0.05],
+      [1.53, 0.045, 0.047],
+    ],
+    1,
+    0,
+    { seg: 8 },
+  );
+  blob(1.63, [0.095, 0.115, 0.082], 1, 0, { dx: 0.008 });
+  // Men: the ghutra over a cap, held by the black agal, falling behind to the shoulders.
+  lathe(
+    [
+      [1.66, 0.104, 0.092],
+      [1.72, 0.103, 0.091],
+      [1.76, 0.085, 0.078],
+    ],
+    2,
+    1,
+    { seg: 14, cap: true },
+  );
+  lathe(
+    [
+      [1.725, 0.106, 0.095],
+      [1.745, 0.104, 0.093],
+    ],
+    3,
+    1,
+    { seg: 14 },
+  );
+  lathe(
+    [
+      [1.72, 0.108, 0.097],
+      [1.58, 0.12, 0.13],
+      [1.4, 0.15, 0.22],
+      [1.3, 0.14, 0.215],
+    ],
+    2,
+    1,
+    { seg: 14, dx: -0.015, keep: (a) => Math.cos(a) < 0.35 },
+  );
+  // Women: the hijab round the face, and the khimar over the shoulders to the chest.
+  blob(1.645, [0.108, 0.128, 0.096], 2, 2, { dx: -0.01, seg: 14 });
+  lathe(
+    [
+      [1.62, 0.1, 0.1],
+      [1.48, 0.13, 0.16],
+      [1.34, 0.15, 0.225],
+      [1.16, 0.15, 0.225],
+    ],
+    2,
+    2,
+    { seg: 14, dx: -0.005, keep: (a) => Math.cos(a) < 0.6 },
+  );
+  lathe(
+    [
+      [1.55, 0.095, 0.1],
+      [1.4, 0.13, 0.18],
+      [1.2, 0.145, 0.2],
+    ],
+    2,
+    2,
+    { seg: 14, keep: (a) => Math.cos(a) >= 0.6 },
+  );
   const count = out.length / 9;
   // The shadow, a flat oval just above the ground.
   const s0: V3 = [-0.45, 0.012, -0.36];
@@ -200,8 +334,12 @@ function personMesh(): { data: Float32Array; shadowFirst: number; shadowCount: n
   return { data: new Float32Array(out), shadowFirst: count, shadowCount: 6, count };
 }
 
-/** Who each walker is: robe, height, headwear, woman or man, skin. */
-function looks(n: number, seed: number): Float32Array {
+/**
+ * Who each walker is: robe, height, headwear, woman or man, skin (`data`, 8 floats each); and
+ * `women`, 1 for each woman, which the walk keeps to (women only in the women's areas). About half
+ * are women (owner, 2026-11-07: more women about their areas).
+ */
+export function looks(n: number, seed: number): { data: Float32Array; women: Uint8Array } {
   let s = seed;
   const r = () => {
     s = (s * 1664525 + 1013904223) >>> 0;
@@ -209,61 +347,78 @@ function looks(n: number, seed: number): Float32Array {
   };
   const pick = <T>(list: readonly T[]): T => list[Math.floor(r() * list.length)];
   const out = new Float32Array(n * 8);
+  const women = new Uint8Array(n);
   for (let a = 0; a < n; a++) {
     const kind = r();
     let robe: number[];
     let head: number[];
     let woman = 0;
     let height: number;
-    if (kind < 0.5) {
-      // A man in a white thobe, with a white or red shemagh, or a white cap.
-      const w = 0.9 + r() * 0.06;
-      robe = [w, w, w * 0.97];
+    if (kind < 0.42) {
+      // A man in a white thobe (some off-white or light grey), with a white or red shemagh.
+      const w = 0.88 + r() * 0.08;
+      robe = pick([
+        [w, w, w * 0.97],
+        [w, w, w * 0.97],
+        [w * 0.95, w * 0.93, w * 0.86],
+        [w * 0.86, w * 0.87, w * 0.88],
+      ]);
       head = pick([
         [0.95, 0.95, 0.93],
         [0.95, 0.95, 0.93],
-        [0.78, 0.3, 0.3],
-        [0.94, 0.94, 0.92],
+        [0.76, 0.22, 0.24],
+        [0.8, 0.3, 0.3],
       ]);
       height = 1.66 + r() * 0.18;
-    } else if (kind < 0.85) {
-      // A woman in a black abaya and hijab; some in beige or brown.
+    } else if (kind < 0.82) {
+      // A woman in a black abaya and hijab; some in dark blue, beige or brown.
       woman = 1;
       const dark = r() < 0.75;
       robe = dark
-        ? [0.06, 0.06, 0.07]
+        ? pick([
+            [0.05, 0.05, 0.06],
+            [0.07, 0.07, 0.08],
+            [0.06, 0.07, 0.11],
+          ])
         : pick([
-            [0.62, 0.52, 0.42],
-            [0.45, 0.36, 0.3],
+            [0.6, 0.5, 0.4],
+            [0.43, 0.34, 0.28],
+            [0.3, 0.31, 0.36],
           ]);
       head = dark
-        ? [0.05, 0.05, 0.06]
+        ? [0.04, 0.04, 0.05]
         : pick([
-            [0.66, 0.56, 0.46],
-            [0.72, 0.6, 0.62],
-            [0.08, 0.08, 0.09],
+            [0.64, 0.54, 0.44],
+            [0.7, 0.58, 0.6],
+            [0.07, 0.07, 0.08],
           ]);
       height = 1.54 + r() * 0.16;
     } else {
       // Pilgrims in coloured clothes.
       robe = pick([
-        [0.55, 0.68, 0.82],
-        [0.42, 0.6, 0.48],
-        [0.66, 0.62, 0.55],
-        [0.58, 0.58, 0.6],
-        [0.82, 0.62, 0.68],
+        [0.52, 0.64, 0.78],
+        [0.4, 0.56, 0.46],
+        [0.64, 0.6, 0.53],
+        [0.56, 0.56, 0.58],
+        [0.78, 0.6, 0.64],
       ]);
-      head = pick([
-        [0.94, 0.94, 0.92],
-        [0.15, 0.15, 0.17],
-        [0.6, 0.5, 0.4],
-      ]);
-      woman = r() < 0.4 ? 1 : 0;
+      woman = r() < 0.45 ? 1 : 0;
+      head = woman
+        ? pick([
+            [0.92, 0.92, 0.9],
+            [0.14, 0.14, 0.16],
+            [0.58, 0.48, 0.4],
+          ])
+        : pick([
+            [0.94, 0.94, 0.92],
+            [0.2, 0.2, 0.22],
+          ]);
       height = woman ? 1.52 + r() * 0.14 : 1.62 + r() * 0.16;
     }
+    women[a] = woman;
     out.set([...robe, height, ...head, woman + r() * 0.49], a * 8);
   }
-  return out;
+  return { data: out, women };
 }
 
 /**
@@ -283,6 +438,7 @@ export class CrowdLayer implements CustomLayerInterface {
   private buffers: WebGLBuffer[] = [];
   private instBuf: WebGLBuffer | null = null;
   private mesh = personMesh();
+  private who = looks(CROWD_SIZE, 1234);
   private crowd: Crowd | null = null;
   private columns: [number, number][] | null = null;
   private inst = new Float32Array(CROWD_SIZE * 4);
@@ -343,7 +499,7 @@ export class CrowdLayer implements CustomLayerInterface {
     gl.vertexAttribDivisor(3, 1);
     const look = gl.createBuffer()!;
     gl.bindBuffer(gl.ARRAY_BUFFER, look);
-    gl.bufferData(gl.ARRAY_BUFFER, looks(CROWD_SIZE, 1234), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, this.who.data, gl.STATIC_DRAW);
     gl.enableVertexAttribArray(4);
     gl.vertexAttribPointer(4, 4, gl.FLOAT, false, 32, 0);
     gl.vertexAttribDivisor(4, 1);
@@ -380,7 +536,7 @@ export class CrowdLayer implements CustomLayerInterface {
     const radius = Math.max(40, Math.min(320, metresPerPixel * Math.max(canvas.clientWidth, canvas.clientHeight) * 0.7));
     if (!this.crowd) {
       if (!this.columns) return;
-      this.crowd = new Crowd(crowdInput(this.columns), CROWD_SIZE, 7);
+      this.crowd = new Crowd(crowdInput(this.columns), CROWD_SIZE, 7, this.who.women);
       this.crowd.keepNear(cx, cz, radius, 0);
       this.last = performance.now();
     }
@@ -392,11 +548,12 @@ export class CrowdLayer implements CustomLayerInterface {
     const now = performance.now();
     if (!still) crowd.step(Math.min(0.1, (now - this.last) / 1000));
     this.last = now;
-    let k = 0;
+    // Each walker keeps its own looks (the looks buffer is by walker): one not placed is drawn far
+    // below the ground, out of sight.
+    const k = crowd.n;
     for (let a = 0; a < crowd.n; a++) {
-      if (Number.isNaN(crowd.px[a])) continue;
-      this.inst.set([crowd.px[a], crowd.pz[a], crowd.heading[a], crowd.phase[a]], k * 4);
-      k++;
+      const off = Number.isNaN(crowd.px[a]);
+      this.inst.set([off ? 0 : crowd.px[a], off ? 1e6 : crowd.pz[a], crowd.heading[a], crowd.phase[a]], a * 4);
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, this.instBuf);
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.inst.subarray(0, k * 4));

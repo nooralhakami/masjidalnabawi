@@ -14,6 +14,7 @@ import { lookOf } from '../presentation/markers';
 import type { IconName } from '../presentation/icons';
 import { CrowdLayer } from './crowd-layer';
 import { RugLayer } from './rug-layer';
+import { womenBarriers } from './women-barriers';
 import { HaramGlbLayer } from './glb-layer';
 import { IconAtlas, createDrawer, cssPalette, type Drawer } from './images';
 import { LampGlowLayer } from './lamp-glow-layer';
@@ -297,6 +298,20 @@ export class MapEngine {
           before,
         );
       }
+      // The beige panels round the women's areas (owner, 2026-11-07), 1.1 m high.
+      if (!m.getSource('alharamain-women-barriers')) m.addSource('alharamain-women-barriers', { type: 'geojson', data: womenBarriers() });
+      if (!m.getLayer('alharamain-3d-women-barriers')) {
+        m.addLayer(
+          {
+            id: 'alharamain-3d-women-barriers',
+            type: 'fill-extrusion',
+            source: 'alharamain-women-barriers',
+            minzoom: 16,
+            paint: { 'fill-extrusion-color': '#d9c4a0', 'fill-extrusion-height': ['get', 'height'], 'fill-extrusion-opacity': 0.97 },
+          },
+          before,
+        );
+      }
       // The mountains of Madinah on the horizon, under the Mosque's own models.
       if (!m.getLayer('alharamain-3d-terrain')) {
         this.terrain = new TerrainLayer(this.currentLight());
@@ -340,6 +355,7 @@ export class MapEngine {
         'alharamain-3d-models',
         'alharamain-3d-crowd',
         'alharamain-3d-barriers',
+        'alharamain-3d-women-barriers',
         'alharamain-3d-glow',
         'alharamain-3d-terrain',
         'alharamain-3d-lamps',
