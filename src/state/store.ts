@@ -127,3 +127,10 @@ export interface WhereQuestion {
   answer(a: WhereAnswer): void;
 }
 export const whereQ = signal<WhereQuestion | null>(null);
+
+/** First-visit hints (UI plan phase 5): seen once on this device, then never again. */
+export const hintsSeen = signal(load('hints-seen') === '1');
+export function markHintsSeen(): void {
+  hintsSeen.value = true;
+  save('hints-seen', '1');
+}

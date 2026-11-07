@@ -9,7 +9,7 @@ test.describe('landing', () => {
     await page.goto('./');
     await expect(page.locator('h1')).toHaveText('دليل زوار المسجد النبوي');
     await expect(page.locator('#qr-code svg[shape-rendering]')).toBeVisible();
-    await expect(page.locator('#map-link')).toHaveValue('https://masjidalnabawi.vercel.app/');
+    await expect(page.locator('#map-link')).toHaveValue('https://masjidalnabawi.vercel.app/map.html');
     await page.getByRole('link', { name: 'ابدأ استخدام الخريطة' }).click();
     await expect(page).toHaveURL(/map\.html$/);
     await expect(page.getByRole('combobox')).toBeVisible();
@@ -49,7 +49,7 @@ test.describe('landing', () => {
     await page.goto('./');
     await page.locator('#copy').click();
     await expect(page.locator('.toast')).toBeVisible();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('https://masjidalnabawi.vercel.app/');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('https://masjidalnabawi.vercel.app/map.html');
   });
 });
 

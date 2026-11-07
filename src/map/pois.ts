@@ -212,6 +212,22 @@ export function entranceAt(m: MLMap, x: number, y: number): string | null {
   return ent.length ? String(ent[0].properties.eid) : null;
 }
 
+/**
+ * The marker drawn nearest to a point of the screen, within a box (container px): where the
+ * first-visit hint «tap any marker» points (UI plan phase 5). Null when none is drawn there.
+ */
+export function markerNear(m: MLMap, at: { x: number; y: number }, box: [[number, number], [number, number]]): { x: number; y: number } | null {
+  const layers = PICK_LAYERS.filter((l) => l !== 'selected' && m.getLayer(l));
+  let best: { x: number; y: number; d: number } | null = null;
+  for (const f of m.queryRenderedFeatures(box, { layers })) {
+    const [lng, lat] = (f.geometry as Point).coordinates;
+    const q = m.project([lng, lat]);
+    const d = Math.hypot(q.x - at.x, q.y - at.y);
+    if (!best || d < best.d) best = { x: q.x, y: q.y, d };
+  }
+  return best && { x: best.x, y: best.y };
+}
+
 /** The places under a tap, each with its distance on screen (px) to the finger. */
 export function placesAt(m: MLMap, x: number, y: number): { id: number; d: number }[] {
   return near(

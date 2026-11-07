@@ -34,7 +34,12 @@ import {
   nearWho,
   setNearWho,
   whereQ,
+  hintsSeen,
+  markHintsSeen,
+  searching,
 } from '../state/store';
+import { HINT_DELAY_MS, showHints, type HintId } from '../presentation/hints';
+import { FirstHints, type HintTarget } from '../ui/hints/FirstHints';
 import type { NearKind, NearWho } from '../domain/near';
 import { NearRow } from '../ui/near/NearRow';
 import { tapHaptic } from '../ui/haptic';
@@ -264,6 +269,32 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
     return () => stop.forEach((f) => f());
   }, []);
 
+  // First-visit hints (UI plan phase 5): a plain first visit only, once the map has drawn. Seen as
+  // soon as the first shows, so they never come back, even if the visitor leaves half way.
+  const [hints, setHints] = useState(false);
+  useEffect(() => {
+    if (!showHints({ seen: hintsSeen.value, deepLink: !!initial || initialVisit !== undefined || initialLib !== undefined || !!admin })) return;
+    let timer = 0;
+    const go = () => (timer = window.setTimeout(() => (markHintsSeen(), setHints(true)), HINT_DELAY_MS));
+    // The first time the map rests with everything drawn (its 'load' may be long past by now).
+    engine.map.once('idle', go);
+    engine.map.triggerRepaint();
+    return () => {
+      clearTimeout(timer);
+      engine.map.off('idle', go);
+    };
+  }, []);
+  const rectOf = (sel: string) => document.querySelector(sel)?.getBoundingClientRect();
+  const hintTarget = (h: HintId): HintTarget | null => {
+    if (h !== 'marker') {
+      const r = rectOf(h === 'search' ? '.search-field' : '.cat-row');
+      return r && r.width ? { x: r.left + r.width / 2, y: r.bottom, side: 'below' } : null;
+    }
+    // A real marker in the free part of the map, between the categories and the row at the bottom.
+    const q = engine.markerOnScreen(rectOf('.cat-wrap')?.bottom ?? 0, rectOf('.rawdah-host')?.top ?? innerHeight);
+    return q ? { x: q.x, y: q.y, side: 'above', gap: 16 } : null;
+  };
+
   const share = async (url: string, title: string, copied: string) => {
     try {
       if (navigator.share) await navigator.share({ title, text: title === t('title') ? title : `${title} — ${t('title')}`, url });
@@ -277,6 +308,23 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
   };
 
   const place = selected.value !== null ? POI_BY_ID.get(selected.value) : undefined;
+  // Anything else on screen ends the hints: they are about the bare map.
+  const hintsOn =
+    hints &&
+    !place &&
+    !route.value &&
+    !nav.value &&
+    !garageQ.value &&
+    !whereQ.value &&
+    !whoQ &&
+    !langOpen &&
+    stories === null &&
+    library === undefined &&
+    !gate &&
+    !searching.value;
+  useEffect(() => {
+    if (hints && !hintsOn) setHints(false);
+  }, [hints, hintsOn]);
   const pickFilter = (f: FilterId) => {
     filter.value = f;
     if (f !== 'toilets') toiletSub.value = 'all';
@@ -460,6 +508,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
           }}
         />
       ) : null}
+      {hintsOn ? <FirstHints target={hintTarget} onDone={() => setHints(false)} /> : null}
       {/* Notices rise above the navigation bar too, never on it. */}
       <div class="toast-host" style={{ '--sheet-h': `${(place ? sheetH.value : 0) + (nav.value || garageQ.value || whereQ.value || whoQ ? navH + 12 : 0)}px` }}>
         {toast.value ? (

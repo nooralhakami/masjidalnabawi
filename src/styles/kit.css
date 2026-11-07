@@ -12,3 +12,4 @@
 @import './kit/extras.css'; /* Weather, languages, the Rawdah card on the map, the supervisor simulator. */
 @import './kit/error-trip.css'; /* The map cannot start; trip mode. */
 @import './kit/near.css'; /* «Near you now» and «where are you exactly?» (UI plan phase 2). */
+@import './kit/hints.css'; /* First-visit hints (UI plan phase 5). */

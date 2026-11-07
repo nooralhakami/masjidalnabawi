@@ -22,7 +22,7 @@ import { MeMarker } from './me';
 import { PlazaMarbleLayer } from './plaza-layer';
 import { addHintLayer, EMPTY_HINTS, HintLayer } from './hints';
 import { addPoiLayers } from './poi-layers';
-import { applyPoiView, entranceAt, entranceFeatures, markerImageIds, pairFeatures, placesAt, poiFeatures, popMarkers, womenAreas, type PoiView } from './pois';
+import { applyPoiView, entranceAt, entranceFeatures, markerImageIds, markerNear, pairFeatures, placesAt, poiFeatures, popMarkers, womenAreas, type PoiView } from './pois';
 import { RouteLayer, type RouteText } from './route';
 import { sceneLight, sceneOverride, type SceneLight } from './scene-light';
 import { TerrainLayer } from './terrain-layer';
@@ -443,6 +443,24 @@ export class MapEngine {
   /** Every place a visitor can find (hidden sub-categories aside: data/hidden.ts). */
   get allIds(): number[] {
     return POIS.filter((p) => !isHidden(p)).map((p) => p.id);
+  }
+
+  /**
+   * Where a drawn marker is on screen (page px), the one nearest the middle of the free part of the
+   * map between `top` and `bottom` (page px): for the first-visit hint. Null when none shows there.
+   */
+  markerOnScreen(top: number, bottom: number): { x: number; y: number } | null {
+    const r = this.map.getContainer().getBoundingClientRect();
+    const t = Math.max(0, top - r.top);
+    const b = Math.min(r.height, bottom - r.top);
+    if (b - t < 40) return null;
+    // Room above the marker for the hint's bubble; a fingertip's room at the sides and below.
+    const pad = 24;
+    const q = markerNear(this.map, { x: r.width / 2, y: (t + b) / 2 }, [
+      [pad, t + 88],
+      [r.width - pad, b - pad],
+    ]);
+    return q && { x: r.left + q.x, y: r.top + q.y };
   }
 
   poi(id: number): Poi | undefined {

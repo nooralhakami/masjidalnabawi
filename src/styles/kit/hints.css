@@ -1,0 +1,55 @@
+/* ---------- First-visit hints (UI plan phase 5) ---------- */
+/* One small bubble beside the thing it is about. It never takes a touch: the page under it gets it. */
+.hint {
+  position: fixed;
+  z-index: 9;
+  max-width: min(300px, calc(100vw - 2 * var(--gutter)));
+  padding: var(--s-2) var(--s-3);
+  border-radius: 14px;
+  /* White on the deep green: well over 4.5:1 by day and by night; a gold edge sets it off the map. */
+  background: var(--green-900);
+  color: var(--white);
+  border: 1px solid var(--gold-500);
+  box-shadow: var(--shadow-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+  pointer-events: none;
+  animation: hint-in var(--m-base) var(--ease) backwards;
+}
+.hint::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--arrow-x) - 6px);
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  border: inherit;
+  rotate: 45deg;
+}
+/* Turned 45°, its top-left corner points up and its bottom-right one down: only those two edges show. */
+.hint.is-below::before {
+  top: -7px;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+}
+.hint.is-above::before {
+  bottom: -7px;
+  border-top-color: transparent;
+  border-left-color: transparent;
+}
+@keyframes hint-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--hint-from, 4px));
+  }
+}
+.hint.is-above {
+  --hint-from: -4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hint {
+    animation: none;
+  }
+}
