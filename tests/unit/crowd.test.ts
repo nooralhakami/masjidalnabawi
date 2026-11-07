@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ALHARAMAIN_MODELS } from '../../src/data-next/alharamain-3d';
 import { PRAYER_CLEARINGS } from '../../src/data-next/alharamain-prayers';
-import { BODY_R, COLUMN_R, Crowd } from '../../src/map/crowd-sim';
+import { BODY_R, CELL, COLUMN_R, Crowd } from '../../src/map/crowd-sim';
 import { crowdInput } from '../../src/map/crowd-world';
 import { metresFromOrigin, nodePositions, parseGlbBuffer } from '../../src/map/glb-layer';
 import { restroomFootprints, restroomWalkways } from '../../src/map/prayer-layout';
@@ -151,5 +151,54 @@ describe('the women’s areas (owner, 2026-11-07)', () => {
     }
     expect(womenIn).toBeGreaterThan(40);
     expect(womenIn).toBeGreaterThan(menNear);
+  });
+
+  it('the barriers close the areas: one goes in only through the gates the owner left (four), none by block 215 or along the Mosque wall', () => {
+    const grid = new Crowd(input, 1, 1);
+    const { w, h, walk, x0, z0 } = grid;
+    // Where women-only ground meets ground anyone may stand on: the ways in.
+    const edge = new Uint8Array(w * h);
+    for (let j = 1; j < h - 1; j++)
+      for (let i = 1; i < w - 1; i++) {
+        const k = j * w + i;
+        if (walk[k] === 2 && [k - 1, k + 1, k - w, k + w].some((q) => walk[q] === 1)) edge[k] = 1;
+      }
+    const ways: { x: number; z: number; long: number }[] = [];
+    const seen = new Uint8Array(w * h);
+    for (let k = 0; k < w * h; k++) {
+      if (!edge[k] || seen[k]) continue;
+      const stack = [k];
+      seen[k] = 1;
+      const cells: number[] = [];
+      while (stack.length) {
+        const c = stack.pop()!;
+        cells.push(c);
+        // Joined across a column standing in a gate (up to 2 m).
+        for (let dj = -4; dj <= 4; dj++)
+          for (let di = -4; di <= 4; di++) {
+            const q = c + dj * w + di;
+            if (q >= 0 && q < w * h && edge[q] && !seen[q]) {
+              seen[q] = 1;
+              stack.push(q);
+            }
+          }
+      }
+      const xs = cells.map((c) => x0 + ((c % w) + 0.5) * CELL);
+      const zs = cells.map((c) => z0 + (Math.floor(c / w) + 0.5) * CELL);
+      ways.push({
+        x: (Math.min(...xs) + Math.max(...xs)) / 2,
+        z: (Math.min(...zs) + Math.max(...zs)) / 2,
+        long: Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs)),
+      });
+    }
+    // The gates: the north-west area's north and west gaps, the north-east area's north and east.
+    expect(ways).toHaveLength(4);
+    for (const g of ways) expect(g.long).toBeGreaterThan(6);
+    const [bx, bz] = metresFromOrigin([39.608657, 24.469027]); // block 215
+    for (const g of ways) {
+      expect(Math.hypot(g.x - bx, g.z - bz)).toBeGreaterThan(40);
+      // Along the Mosque's west wall, beside the north-west area.
+      expect(g.x > -275 && g.x < -255 && g.z > -345 && g.z < -235).toBe(false);
+    }
   });
 });
