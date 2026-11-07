@@ -171,7 +171,7 @@ describe('pois.json', () => {
 });
 
 describe('overrides', () => {
-  it('only the owner-requested POIs are nudged (outer gates north 328–343, west 322–327, south 301–309 and 365–370; restrooms 201–236 (centred on their blocks, 2026-11-06), except 251–254; service buildings 501, 504–507; centres 511 and 604; women prayer halls 601–602); everything else is untouched', () => {
+  it('only the owner-requested POIs are nudged (outer gates north 328–343, west 322–327, south 301–309 and 365–370; restrooms 201–236 (centred on their blocks, 2026-11-06), except 251–254; service buildings 501, 504–507; centres 511 and 604; women prayer halls 601–602; mosque doors 2–5 (2026-11-07)); everything else is untouched', () => {
     const raw = rawPois as Poi[];
     const moved = (id: number) =>
       (id >= 322 && id <= 343) ||
@@ -183,7 +183,8 @@ describe('overrides', () => {
       id === 511 ||
       id === 601 ||
       id === 602 ||
-      id === 604;
+      id === 604 ||
+      (id >= 2 && id <= 5);
     POIS.forEach((p, i) => {
       if (moved(p.id)) return;
       expect(p.lat).toBe(raw[i].lat);
@@ -198,6 +199,12 @@ describe('overrides', () => {
     for (const id of [332, 334, 336]) {
       expect(metres(id).north).toBeCloseTo(-3, 5);
       expect(metres(id).east).toBeCloseTo(12, 5);
+    }
+    // Mosque doors 2–5 (owner, 2026-11-07, arrows on a 3D screenshot): to their doorways in the wall.
+    const doors: Record<number, [number, number]> = { 2: [8, 6], 3: [22, 3], 4: [9, -11], 5: [6, -9] };
+    for (const [id, [north, east]] of Object.entries(doors)) {
+      expect(metres(Number(id)).north).toBeCloseTo(north, 5);
+      expect(metres(Number(id)).east).toBeCloseTo(east, 5);
     }
     // 604 shared Gate 21's exact point and hid it: it now sits 15 m north, facing the gate.
     expect(metres(604).north).toBeCloseTo(15, 5);
