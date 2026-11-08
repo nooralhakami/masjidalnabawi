@@ -316,6 +316,10 @@ test.describe('by car to the car park under the Haram (owner’s drawing, 2026-1
     await routeBtn(page).click();
     await expect.poll(() => marks(page), { timeout: 30_000 }).toContain('lot-gate:9A');
     expect((await marks(page)).filter((m) => m.startsWith('level-ramp'))).toEqual(['level-ramp:↑A']);
+    // Numbered steps underground (owner, 2026-11-07): the ramp as «up to level A», and into the lot last.
+    const steps = (await marks(page)).filter((m) => m.startsWith('step:'));
+    expect(steps).toContain('step:اصعد إلى الدور A');
+    expect(steps[steps.length - 1]).toBe('step:ادخل الموقف 9');
     await expect(card(page).locator('.leg-lot')).toContainText('A');
     // The way on level A has a yellow edge and a «الدور A» label; the card explains the edge.
     expect(await drawn(page, 'route-edge')).toBeGreaterThan(0);
@@ -326,6 +330,7 @@ test.describe('by car to the car park under the Haram (owner’s drawing, 2026-1
     await card(page).locator('.rc-wayout').click();
     await expect(card(page).locator('.leg-ent')).toContainText('مخرج');
     expect((await marks(page)).filter((m) => m.startsWith('level-ramp'))).toEqual(['level-ramp:↓B']);
+    expect(await marks(page)).toContain('step:انزل إلى الدور B');
     await expect(card(page).locator('.pc-kicker')).toContainText('الخروج');
     // And back to the way in.
     await card(page).locator('.rc-wayin').click();
@@ -468,11 +473,15 @@ test.describe('alternative routes', () => {
       return out.slice(0, 6);
     });
     expect(steps.length).toBeGreaterThanOrEqual(4);
+    // The notice lasts 3 s and six readings take longer: stop walking once the switch is said.
+    let said = false;
     for (const [latitude, longitude] of steps) {
       await context.setGeolocation({ latitude, longitude, accuracy: 8 });
       await page.waitForTimeout(900);
+      said = (await page.locator('.toast').allTextContents()).some((t) => t.includes('تحوّل المسار'));
+      if (said) break;
     }
-    await expect(page.locator('.toast')).toContainText('تحوّل المسار');
+    if (!said) await expect(page.locator('.toast')).toContainText('تحوّل المسار');
     await expect(stats).not.toHaveText(before!);
   });
 });

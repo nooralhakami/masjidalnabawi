@@ -154,6 +154,24 @@
   .lang-chev {
     display: none;
   }
+  /* One line for the guide's name (owner, 2026-11-07): the language button shows its short name
+     only («AR»), still a 44 px target. */
+  .lang-btn {
+    min-width: var(--hit);
+    justify-content: center;
+    padding-inline: 8px;
+  }
+  .lang-btn > .ic:first-child {
+    display: none;
+  }
+  /* A longer name (English and others) takes a second line rather than being cut. */
+  .top-title {
+    text-wrap: balance;
+  }
+  .top-card {
+    gap: var(--s-2);
+    padding: 10px;
+  }
 }
 /* The narrowest (320–359 px): the buttons need the whole row; the name is on the landing page. */
 @media (max-width: 359px) {

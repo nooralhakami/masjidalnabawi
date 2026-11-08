@@ -11,9 +11,10 @@ const ICON: Record<NonNullable<StepView['now']>['kind'], IconName> = {
   down: 'arrowleft',
   lot_in: 'parking',
   lot_out: 'parking',
+  stairs: 'arrowleft',
 };
 /** The arrow turns to the compass point (screen up = north); ramps point the way of travel. */
-const TURN: Record<string, number> = { n: 90, e: 180, s: 270, w: 0, up: 90, down: 270 };
+const TURN: Record<string, number> = { n: 90, e: 180, s: 270, w: 0, up: 90, down: 270, stairs: 90 };
 
 /**
  * Inside the car park: the step now with the metres left in it, and «then: …» under it (the live

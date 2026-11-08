@@ -282,3 +282,52 @@
 .turn-men {
   --c: var(--cat-men);
 }
+/*
+ * The card grows out of the place it is about (UI plan phase 4): from the tapped marker's place
+ * across the sheet (--from-x), or from the middle when chosen from a list. Transform and opacity
+ * only, at most 360 ms; nothing is left on the element afterwards (fill: backwards), so the card's
+ * own layout (its sticky footer) is untouched. --m-emph is 0 with «reduce motion».
+ */
+.card-in {
+  transform-origin: var(--from-x, 50%) 100%;
+  animation: card-in var(--m-emph) var(--ease-emph) backwards;
+}
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.92);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-in {
+    animation: none;
+  }
+}
+/* «وصلت»: a gold ring leaves the check mark twice, then rests (UI plan phase 4). */
+.nav-arrived-ic {
+  position: relative;
+}
+.nav-arrived-ic::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--gold-500);
+  opacity: 0;
+  animation: arrived-ring 600ms var(--ease) 2;
+}
+@keyframes arrived-ring {
+  from {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-arrived-ic::after {
+    animation: none;
+  }
+}

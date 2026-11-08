@@ -117,7 +117,8 @@ export function SearchBar({
               aria-expanded={expanded}
               aria-autocomplete="list"
               aria-label={t('ph')}
-              placeholder={t('ph')}
+              // A short hint that fits a phone's field (owner, 2026-11-07); the full one is its label.
+              placeholder={t('ph_short')}
               {...inputProps}
               value={value}
               onInput={(e) => onInput(e.currentTarget.value)}

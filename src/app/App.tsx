@@ -1,5 +1,5 @@
 import { useComputed, useSignal } from '@preact/signals';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { POI_BY_ID, RULES } from '../data';
 import type { Poi } from '../data/types';
 import type { Facilities } from '../domain/facilities';
@@ -31,7 +31,19 @@ import {
   toiletSub,
   travel,
   typed,
+  nearWho,
+  setNearWho,
+  whereQ,
+  hintsSeen,
+  markHintsSeen,
+  searching,
 } from '../state/store';
+import { HINT_DELAY_MS, showHints, type HintId } from '../presentation/hints';
+import { FirstHints, type HintTarget } from '../ui/hints/FirstHints';
+import type { NearKind, NearWho } from '../domain/near';
+import { NearRow } from '../ui/near/NearRow';
+import { tapHaptic } from '../ui/haptic';
+import { WhereAsk, WhoAsk } from '../ui/near/NearAsk';
 import type { AdminPanel as AdminPanelT } from '../ui/admin/AdminPanel';
 import { AdminGate } from '../ui/admin/AdminGate';
 import { adminUnlocked } from '../state/admin';
@@ -92,6 +104,22 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
   const dark = useSignal(currentTheme() === 'dark');
   const contrast = useSignal(document.documentElement.dataset.contrast === 'more');
   const top = useRef<HTMLDivElement>(null);
+  // When the visitor moves the map by hand (and when it rests): the Rawdah card is compact meanwhile.
+  const watchMove = useCallback(
+    (fn: (moving: boolean) => void) => {
+      const start = (e: { originalEvent?: unknown }) => {
+        if (e.originalEvent) fn(true);
+      };
+      const end = () => fn(false);
+      engine.map.on('movestart', start);
+      engine.map.on('moveend', end);
+      return () => {
+        engine.map.off('movestart', start);
+        engine.map.off('moveend', end);
+      };
+    },
+    [engine],
+  );
 
   // How many places each pill shows (the live app's counts), and what the chosen pill shows now.
   const counts = useComputed(() => {
@@ -107,6 +135,8 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
 
   /** Open a place's card: the map flies to it when it was chosen from a list or a link (the live app's select()). */
   const [routing, setRouting] = useState(false);
+  /** «Men's or women's?», asked once before the first «nearest restroom» (null: dismissed). */
+  const [whoQ, setWhoQ] = useState<((w: NearWho | null) => void) | null>(null);
   // The navigation bar's height, so the notices sit above it.
   const navHost = useRef<HTMLDivElement>(null);
   const [navH, setNavH] = useState(0);
@@ -116,7 +146,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
     const ro = new ResizeObserver(() => setNavH(el.offsetHeight));
     ro.observe(el);
     return () => ro.disconnect();
-  }, [!!(nav.value || garageQ.value)]);
+  }, [!!(nav.value || garageQ.value || whereQ.value || whoQ)]);
   const [langOpen, setLangOpen] = useState(false);
   // The stories (at a site) and the library (at an entry, or the list) open full screen.
   const [stories, setStories] = useState<number | null>(null);
@@ -144,9 +174,18 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
   const [, setFacTick] = useState(0);
   useEffect(() => fac.onChange(() => setFacTick((n) => n + 1)), [fac]);
 
+  /** Where the card grows from (UI plan phase 4): the tapped marker's place across the sheet, in px; null: its middle. */
+  const [growX, setGrowX] = useState<number | null>(null);
   const select = (p: Poi, fly: boolean) => {
     // A new destination ends the current walk entirely (GPS watch, wake lock, the bar).
     if (selected.value !== p.id) trip.end();
+    // Tapped on the map: the card grows out of the marker. From a list or a link: from the middle.
+    if (!fly) {
+      const q = engine.map.project([p.lng, p.lat]);
+      const box = engine.map.getContainer().getBoundingClientRect();
+      const sheetBox = document.querySelector('.sheet')?.getBoundingClientRect();
+      setGrowX(Math.round(box.left + q.x - (sheetBox?.left ?? 0)));
+    } else setGrowX(null);
     const wasClosed = sheet.value === 'closed';
     selected.value = p.id;
     if (sheet.value !== 'full') sheet.value = 'half';
@@ -175,7 +214,27 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
     if (hasRoute) sheet.value = 'peek';
   }, [hasRoute]);
 
+  const askWho = () => new Promise<NearWho | null>((answer) => setWhoQ(() => answer));
+  /** «Near you now»: the nearest open restroom or gate, two ways drawn (UI plan phase 2). */
+  const runNear = async (kind: NearKind) => {
+    tapHaptic();
+    let who = nearWho.value;
+    if (kind === 'toilet' && !who) {
+      who = await askWho();
+      setWhoQ(null);
+      if (!who) return;
+      setNearWho(who);
+    }
+    await trip.near(
+      kind,
+      who ?? 'men',
+      (id) => fac.isOpen(id),
+      (p) => select(p, false),
+    );
+  };
+
   const runRoute = async (p: Poi) => {
+    tapHaptic();
     setRouting(true);
     try {
       await trip.draw(p);
@@ -189,7 +248,10 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
       const p = id !== null ? POI_BY_ID.get(id) : undefined;
       // On a route, a tap on a gate or a restroom block says its name for two seconds and does not open its card (owner, 2026-10-25).
       if (p && trip.active && isTapName(p)) trip.nameTapped(p.id);
-      else if (p) select(p, false);
+      else if (p) {
+        tapHaptic();
+        select(p, false);
+      }
       // While a route is followed, a stray tap on the map must not end it (use «إنهاء المسار»).
       else if (selected.value !== null && !trip.active) deselect();
     };
@@ -198,6 +260,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
       listen('open-place', (p) => select(p, true)),
       listen('stories-request', (at) => void openStories(at ?? 0)),
       listen('library-request', () => void openLibrary()),
+      listen('share-app-request', () => void share(new URL('./', location.href).href, t('title'), t('app_link_copied'))),
     ];
     if (initial) select(initial, true);
     if (initialVisit !== undefined) void openStories(initialVisit);
@@ -205,6 +268,32 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
     if (adminUnlocked.value) void loadAdmin();
     return () => stop.forEach((f) => f());
   }, []);
+
+  // First-visit hints (UI plan phase 5): a plain first visit only, once the map has drawn. Seen as
+  // soon as the first shows, so they never come back, even if the visitor leaves half way.
+  const [hints, setHints] = useState(false);
+  useEffect(() => {
+    if (!showHints({ seen: hintsSeen.value, deepLink: !!initial || initialVisit !== undefined || initialLib !== undefined || !!admin })) return;
+    let timer = 0;
+    const go = () => (timer = window.setTimeout(() => (markHintsSeen(), setHints(true)), HINT_DELAY_MS));
+    // The first time the map rests with everything drawn (its 'load' may be long past by now).
+    engine.map.once('idle', go);
+    engine.map.triggerRepaint();
+    return () => {
+      clearTimeout(timer);
+      engine.map.off('idle', go);
+    };
+  }, []);
+  const rectOf = (sel: string) => document.querySelector(sel)?.getBoundingClientRect();
+  const hintTarget = (h: HintId): HintTarget | null => {
+    if (h !== 'marker') {
+      const r = rectOf(h === 'search' ? '.search-field' : '.cat-row');
+      return r && r.width ? { x: r.left + r.width / 2, y: r.bottom, side: 'below' } : null;
+    }
+    // A real marker in the free part of the map, between the categories and the row at the bottom.
+    const q = engine.markerOnScreen(rectOf('.cat-wrap')?.bottom ?? 0, rectOf('.rawdah-host')?.top ?? innerHeight);
+    return q ? { x: q.x, y: q.y, side: 'above', gap: 16 } : null;
+  };
 
   const share = async (url: string, title: string, copied: string) => {
     try {
@@ -219,6 +308,23 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
   };
 
   const place = selected.value !== null ? POI_BY_ID.get(selected.value) : undefined;
+  // Anything else on screen ends the hints: they are about the bare map.
+  const hintsOn =
+    hints &&
+    !place &&
+    !route.value &&
+    !nav.value &&
+    !garageQ.value &&
+    !whereQ.value &&
+    !whoQ &&
+    !langOpen &&
+    stories === null &&
+    library === undefined &&
+    !gate &&
+    !searching.value;
+  useEffect(() => {
+    if (hints && !hintsOn) setHints(false);
+  }, [hints, hintsOn]);
   const pickFilter = (f: FilterId) => {
     filter.value = f;
     if (f !== 'toilets') toiletSub.value = 'all';
@@ -250,7 +356,6 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
           langShort={pack(lang).short}
           onLang={() => setLangOpen(!langOpen)}
           onAdmin={toAdmin}
-          onShare={() => void share(new URL('./', location.href).href, t('title'), t('app_link_copied'))}
           count={counts.value[filter.value]}
         />
         {langOpen ? (
@@ -288,44 +393,57 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
         fit={!!route.value}
         onHeight={(h) => (sheetH.value = h)}
       >
-        {place && route.value ? (
-          <RouteCard
-            p={place}
-            r={route.value}
-            closed={isClosed(fac.status(place.id))}
-            onClose={deselect}
-            onEnd={() => trip.end()}
-            onWayOut={() => void trip.wayOut()}
-            onWayIn={() => void runRoute(place)}
-          />
-        ) : place ? (
-          <PlaceCard
-            p={place}
-            fac={fac}
-            travel={travel.value}
-            level={level.value}
-            accessible={accessibleRoute.value}
-            onTravel={(v) => (travel.value = v)}
-            onLevel={(v) => (level.value = v)}
-            onAccessible={(v) => (accessibleRoute.value = v)}
-            onRoute={() => void runRoute(place)}
-            routing={routing}
-            onShare={() => {
-              const url = new URL('./map.html', location.href);
-              url.search = '';
-              url.searchParams.set('poi', String(place.id));
-              void share(url.href, nm(place), t('place_link_copied'));
-            }}
-            onClose={deselect}
-            onGo={(p) => select(p, true)}
-          />
+        {place ? (
+          // The card grows out of the place it is about (UI plan phase 4); a new place grows anew.
+          <div class="card-in" key={place.id} style={{ '--from-x': growX === null ? '50%' : `${growX}px` }}>
+            {place && route.value ? (
+              <RouteCard
+                p={place}
+                r={route.value}
+                closed={isClosed(fac.status(place.id))}
+                onClose={deselect}
+                onEnd={() => trip.end()}
+                onWayOut={() => void trip.wayOut()}
+                onWayIn={() => void runRoute(place)}
+              />
+            ) : place ? (
+              <PlaceCard
+                p={place}
+                fac={fac}
+                travel={travel.value}
+                level={level.value}
+                accessible={accessibleRoute.value}
+                onTravel={(v) => (travel.value = v)}
+                onLevel={(v) => (level.value = v)}
+                onAccessible={(v) => (accessibleRoute.value = v)}
+                onRoute={() => void runRoute(place)}
+                routing={routing}
+                onShare={() => {
+                  const url = new URL('./map.html', location.href);
+                  url.search = '';
+                  url.searchParams.set('poi', String(place.id));
+                  void share(url.href, nm(place), t('place_link_copied'));
+                }}
+                onClose={deselect}
+                onGo={(p) => select(p, true)}
+              />
+            ) : null}
+          </div>
         ) : null}
       </BottomSheet>
-      {nav.value || garageQ.value ? (
+      {nav.value || garageQ.value || whereQ.value || whoQ ? (
         // The car park question is a modal over the card, from the bottom of the screen (it is too
         // tall to sit above a half-open card on a short phone); the navigation bar sits above the sheet.
-        <div ref={navHost} class={`nav-host${garageQ.value ? ' is-modal' : ''}`} style={{ '--sheet-h': `${place && !garageQ.value ? sheetH.value : 0}px` }}>
-          {garageQ.value ? (
+        <div
+          ref={navHost}
+          class={`nav-host${garageQ.value || whereQ.value || whoQ ? ' is-modal' : ''}`}
+          style={{ '--sheet-h': `${place && !garageQ.value && !whereQ.value && !whoQ ? sheetH.value : 0}px` }}
+        >
+          {whoQ ? (
+            <WhoAsk onAnswer={whoQ} />
+          ) : whereQ.value ? (
+            <WhereAsk rough={whereQ.value.rough} onAnswer={whereQ.value.answer} />
+          ) : garageQ.value ? (
             <GarageAsk key={garageQ.value.lots.map((l) => l.id).join()} lots={garageQ.value.lots} spot={garageQ.value.spot} onAnswer={garageQ.value.answer} />
           ) : nav.value ? (
             <NavBar
@@ -343,6 +461,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
       {!place ? (
         <RawdahHost
           onHeight={(h) => (rawdahH.value = h)}
+          watchMove={watchMove}
           onOpen={() => {
             const gate = POI_BY_ID.get(RULES.rules.rawdah.gate);
             if (gate) select(gate, true);
@@ -351,7 +470,9 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
             const entrance = POI_BY_ID.get(BEHIND_RAWDAH_ID);
             if (entrance) select(entrance, true);
           }}
-        />
+        >
+          <NearRow onNear={runNear} />
+        </RawdahHost>
       ) : null}
       {Admin && adminUnlocked.value ? <Admin fac={fac} onNotApplicable={() => notify(t('admin_na'))} /> : null}
       {gate ? (
@@ -387,8 +508,9 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
           }}
         />
       ) : null}
+      {hintsOn ? <FirstHints target={hintTarget} onDone={() => setHints(false)} /> : null}
       {/* Notices rise above the navigation bar too, never on it. */}
-      <div class="toast-host" style={{ '--sheet-h': `${(place ? sheetH.value : 0) + (nav.value || garageQ.value ? navH + 12 : 0)}px` }}>
+      <div class="toast-host" style={{ '--sheet-h': `${(place ? sheetH.value : 0) + (nav.value || garageQ.value || whereQ.value || whoQ ? navH + 12 : 0)}px` }}>
         {toast.value ? (
           <Toast key={toast.value.id} tone={toast.value.tone} icon={toast.value.tone === 'ok' ? 'check' : 'info'}>
             {toast.value.text}

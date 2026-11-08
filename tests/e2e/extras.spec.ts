@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect, openMap, test } from './fixtures';
+import { expect, openMap, test, more } from './fixtures';
 
 // Phase 6: the Rawdah card, languages, the admin simulator, the weather, the landmark stories and
 // the library — the live app's journeys 10–13, 16–19, 34 and 49–56 (docs/PARITY.md), its expected
@@ -198,6 +198,7 @@ test('the weather chip shows the current temperature in Madinah, labelled in the
 test.describe('landmark stories', () => {
   test('open from the map button: one segment per site, Quba first; tapping moves on; close returns to the map', async ({ page, errors: _ }) => {
     await openMap(page);
+    await more(page);
     await page.locator('.mc-stories').click();
     const stories = page.locator('.stories');
     await expect(stories).toBeVisible();
@@ -212,11 +213,12 @@ test.describe('landmark stories', () => {
     await expect(page.locator('.st-text')).toHaveText(first!);
     await page.locator('[data-act="close"]').click();
     await expect(stories).toHaveCount(0);
-    await expect(page.locator('.mc-stories')).toBeFocused();
+    await expect(page.locator('.mc-more')).toBeFocused();
   });
 
   test('every site ends with the prayer on the Prophet ﷺ; the count is kept on the device', async ({ page, errors: _ }) => {
     await openMap(page);
+    await more(page);
     await page.locator('.mc-stories').click();
     // Quba has 3 text slides, so the 4th is the prayer.
     for (let i = 0; i < 3; i++) await page.locator('[data-act="next"]').click();
@@ -228,12 +230,14 @@ test.describe('landmark stories', () => {
     await page.keyboard.press('Escape');
     await expect(page.locator('.stories')).toHaveCount(0);
     // Another visit continues from the saved count.
+    await more(page);
     await page.locator('.mc-stories').click();
     await expect(page.locator('.st-mini b')).toHaveText('2');
   });
 
   test('the story advances by itself, and pauses with the pause button', async ({ page, errors: _ }) => {
     await openMap(page);
+    await more(page);
     await page.locator('.mc-stories').click();
     const first = await page.locator('.st-text').textContent();
     await page.locator('[data-act="pause"]').click();
@@ -256,6 +260,7 @@ test.describe('landmark stories', () => {
 
   test("texts and buttons come in the visitor's language", async ({ page, errors: _ }) => {
     await openMap(page, 'tr');
+    await more(page);
     await page.locator('.mc-stories').click();
     await expect(page.locator('.st-text')).toHaveAttribute('lang', 'tr');
     await expect(page.locator('.st-text')).toContainText('İslam');
@@ -264,6 +269,7 @@ test.describe('landmark stories', () => {
 
   test('a long press pauses the story (no copy/save menu on the photo), and shows no credit line', async ({ page, errors: _ }) => {
     await openMap(page);
+    await more(page);
     await page.locator('.mc-stories').click();
     await expect(page.locator('.st-credit')).toHaveCount(0);
     await expect(page.locator('.st-img')).toHaveCSS('pointer-events', 'none');
@@ -292,6 +298,7 @@ test.describe('landmark stories', () => {
     await openMap(page);
     await page.waitForTimeout(500);
     expect(photos).toEqual([]);
+    await more(page);
     await page.locator('.mc-stories').click();
     await expect.poll(() => photos.length).toBeGreaterThan(0);
   });
@@ -300,6 +307,7 @@ test.describe('landmark stories', () => {
 test.describe("library: landmarks of the Prophet's Mosque", () => {
   test('opens from the map button with the not-reviewed notice, a place, its sources, and closes', async ({ page, errors: _ }) => {
     await openMap(page);
+    await more(page);
     await page.locator('.mc-library').click();
     const lib = page.locator('.library');
     await expect(lib).toBeVisible();
@@ -317,7 +325,7 @@ test.describe("library: landmarks of the Prophet's Mosque", () => {
     await expect(lib.locator('.lib-item').first()).toBeVisible();
     await lib.locator('[data-act="close"]').click();
     await expect(lib).toHaveCount(0);
-    await expect(page.locator('.mc-library')).toBeFocused();
+    await expect(page.locator('.mc-more')).toBeFocused();
   });
 });
 
@@ -340,6 +348,7 @@ test('library: the companions follow the mosque landmarks, in their groups, with
 
 test('library in English: the labels in English, a line that the texts are Arabic only', async ({ page, errors: _ }) => {
   await openMap(page, 'en');
+  await more(page);
   await page.locator('.mc-library').click();
   await expect(page.locator('.lib-head h2')).toHaveText('Islamic Library');
   await expect(page.locator('.lib-lang')).toBeVisible();

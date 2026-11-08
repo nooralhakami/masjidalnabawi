@@ -12,6 +12,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <!-- The theme before the first paint (dark by default here, as the live app); the language is set by main.ts. -->
     <script>try{var t=localStorage.getItem('theme');document.documentElement.dataset.theme=t==='light'||t==='dark'?t:'dark'}catch(e){document.documentElement.dataset.theme='dark'}</script>
+    <!-- The small map's still picture is the largest thing in the first screen (UI plan phase 6): fetched with the styles, not after them. -->
+    <link rel="preload" as="image" type="image/webp" imagesrcset="./mini-map-1x.webp 600w, ./mini-map-700.webp 700w, ./mini-map.webp 1200w" imagesizes="(min-width: 900px) 520px, calc(100vw - 32px)" fetchpriority="high" />
     <title>دليل زوار المسجد النبوي</title>
     <meta name="description" content="خريطة تفاعلية للبوابات ودورات المياه والمواقف والخدمات حول المسجد النبوي بـ26 لغة." />
   </head>

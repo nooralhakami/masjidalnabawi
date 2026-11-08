@@ -137,7 +137,7 @@ export function arrowsAlong(legs: readonly (readonly LatLng[])[], every = ARROW_
 // ---------- live navigation, as the bar shows it ----------
 
 export type NavigationState = 'locating' | 'updated' | 'low-accuracy' | 'away' | 'signal-lost' | 'off-route' | 'error' | 'stopped' | 'arrived';
-export type StepKind = 'n' | 'e' | 's' | 'w' | 'up' | 'down' | 'lot_in' | 'lot_out';
+export type StepKind = 'n' | 'e' | 's' | 'w' | 'up' | 'down' | 'lot_in' | 'lot_out' | 'stairs';
 
 /** The car park instruction to show: the step now with the metres left in it, and the one after. */
 export interface StepView {
@@ -172,3 +172,64 @@ export interface NavView {
 
 /** The bar shows the minutes and metres once known (the live app's «known»). */
 export const navKnown = (s: Pick<NavView, 'remainingMeters' | 'state'>): boolean => s.remainingMeters > 0 || s.state === 'updated';
+
+// ---------- numbered steps on the map (owner, 2026-11-07) ----------
+
+/** What a numbered mark on the route says: a turn, the ramp to a level, into the lot, or up the stairs. */
+export type StepTurn = 'left' | 'right' | 'back' | 'ahead' | 'up' | 'down' | 'lot_in' | 'lot_out' | 'stairs';
+export interface StepMark {
+  /** 1, 2, 3… in the order the visitor meets them. */
+  n: number;
+  at: LatLng;
+  turn: StepTurn;
+}
+
+/** Under this change of direction (degrees) a step is «carry on ahead»; over this, «turn back». */
+const TURN_MIN = 30;
+const TURN_BACK = 150;
+
+/** The direction of the last (or first) segment of a path, if it has length. */
+function endBearing(path: readonly LatLng[], last: boolean): number | null {
+  if (path.length < 2) return null;
+  const [a, b] = last ? [path[path.length - 2], path[path.length - 1]] : [path[0], path[1]];
+  return a[0] === b[0] && a[1] === b[1] ? null : bearing(a, b);
+}
+
+/**
+ * Numbered marks for step-by-step directions underground, where GPS does not work (owner,
+ * 2026-11-07): «1» at the first turn with «turn right», the ramps «up to level A» / «down to
+ * level B», into the lot, and up the stairs. A turn is read from the direction before and after
+ * it, so it says left or right as the driver sees it, not a compass point. The first step is where
+ * the visitor already is (the route's start), so it carries no number unless it is a ramp or the stairs.
+ */
+export function stepMarks(steps: readonly { kind: StepKind; path: readonly LatLng[] }[], from = 1): StepMark[] {
+  const out: StepMark[] = [];
+  let n = from;
+  for (let i = 0; i < steps.length; i++) {
+    const s = steps[i];
+    if (!s.path.length) continue;
+    let turn: StepTurn | null = null;
+    let at = s.path[0];
+    if (s.kind === 'up' || s.kind === 'down') {
+      turn = s.kind;
+      at = pointAlong(s.path, 0.5);
+    } else if (s.kind === 'stairs') {
+      turn = 'stairs';
+      at = s.path[s.path.length - 1];
+    } else if (s.kind === 'lot_in') {
+      // Where the car leaves the road for the lot (the lot's own marks are at its edge).
+      turn = 'lot_in';
+    } else if (s.kind === 'lot_out') {
+      turn = i === 0 ? null : 'lot_out';
+    } else if (i > 0) {
+      const before = endBearing(steps[i - 1].path, true);
+      const after = endBearing(s.path, false);
+      if (before !== null && after !== null) {
+        const d = ((after - before + 540) % 360) - 180;
+        turn = Math.abs(d) >= TURN_BACK ? 'back' : d >= TURN_MIN ? 'right' : d <= -TURN_MIN ? 'left' : 'ahead';
+      }
+    }
+    if (turn) out.push({ n: n++, at, turn });
+  }
+  return out;
+}

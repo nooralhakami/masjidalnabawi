@@ -107,7 +107,7 @@
   --m-fast: 120ms;
   --m-base: 220ms;
   --m-emph: 360ms;
-  --m-draw: 700ms;
+  --m-draw: 600ms;
   --ease: cubic-bezier(0.2, 0, 0, 1);
   --ease-emph: cubic-bezier(0.3, 0, 0, 1);
 

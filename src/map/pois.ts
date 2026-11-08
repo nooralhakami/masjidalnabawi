@@ -7,6 +7,7 @@ import { isClosed } from '../domain/facilities';
 import type { FilterId } from '../domain/filters';
 import { FEATURED_IDS } from '../domain/visits';
 import { markerLook } from '../presentation/marker-look';
+import { TAP_RADIUS_PX } from '../presentation/tap';
 import { mapZoom } from './zoom';
 
 /**
@@ -33,7 +34,8 @@ const PICK_LAYERS = ['selected', 'featured', 'facilities', 'facility-dots', 'mix
 /** The markers that pop in on a new filter (the nine must-visit sites and the open card's pin stay). */
 const POP_LAYERS = ['inner-dots', 'outer-dots', 'facility-dots', 'mixed-dots', 'facilities', 'parking', 'outer-chips', 'inner-numbers', 'pairs', 'gate-names'];
 const POP_MS = 200;
-const HIT_PX = 16;
+/** Half a fingertip: every marker within 22 px of a tap is a candidate (44 px target, phase 3). */
+const HIT_PX = TAP_RADIUS_PX;
 
 // ---------- data ----------
 
@@ -193,7 +195,7 @@ export function popMarkers(m: MLMap, current: () => boolean): void {
 
 // ---------- picking ----------
 
-/** The rendered features of these layers within 16 px of a tap (the live app's 32 px hit area). */
+/** The rendered features of these layers within 22 px of a tap (a 44 px touch target). */
 const near = (m: MLMap, x: number, y: number, layers: string[]) =>
   m.queryRenderedFeatures(
     [
@@ -210,20 +212,32 @@ export function entranceAt(m: MLMap, x: number, y: number): string | null {
   return ent.length ? String(ent[0].properties.eid) : null;
 }
 
-/** The place under a tap: the nearest marker within 16 px, or null. */
-export function placeAt(m: MLMap, x: number, y: number): number | null {
-  const hits = near(
+/**
+ * The marker drawn nearest to a point of the screen, within a box (container px): where the
+ * first-visit hint «tap any marker» points (UI plan phase 5). Null when none is drawn there.
+ */
+export function markerNear(m: MLMap, at: { x: number; y: number }, box: [[number, number], [number, number]]): { x: number; y: number } | null {
+  const layers = PICK_LAYERS.filter((l) => l !== 'selected' && m.getLayer(l));
+  let best: { x: number; y: number; d: number } | null = null;
+  for (const f of m.queryRenderedFeatures(box, { layers })) {
+    const [lng, lat] = (f.geometry as Point).coordinates;
+    const q = m.project([lng, lat]);
+    const d = Math.hypot(q.x - at.x, q.y - at.y);
+    if (!best || d < best.d) best = { x: q.x, y: q.y, d };
+  }
+  return best && { x: best.x, y: best.y };
+}
+
+/** The places under a tap, each with its distance on screen (px) to the finger. */
+export function placesAt(m: MLMap, x: number, y: number): { id: number; d: number }[] {
+  return near(
     m,
     x,
     y,
     PICK_LAYERS.filter((l) => m.getLayer(l)),
-  );
-  let best: { id: number; d: number } | null = null;
-  for (const f of hits) {
+  ).map((f) => {
     const [lng, lat] = (f.geometry as Point).coordinates;
     const q = m.project([lng, lat]);
-    const d = Math.hypot(q.x - x, q.y - y);
-    if (!best || d < best.d) best = { id: Number(f.properties.id), d };
-  }
-  return best ? best.id : null;
+    return { id: Number(f.properties.id), d: Math.hypot(q.x - x, q.y - y) };
+  });
 }

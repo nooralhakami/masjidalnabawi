@@ -213,7 +213,9 @@ export class Crowd {
         }
         const c = fj * this.fw + fi;
         forWomen[c] = all >= (FLOW * FLOW) / 2 ? 1 : 0;
-        forMen[c] = men >= (FLOW * FLOW) / 2 ? 1 : 0;
+        // A man's way keeps off any 2 m cell that touches a women's area, so it never leads him
+        // along its edge to push at it (the crush by block 215, owner 2026-11-07).
+        forMen[c] = men >= (FLOW * FLOW) / 2 && only === 0 ? 1 : 0;
         zone[c] = only > 0 ? 1 : 0;
       }
     }
@@ -239,7 +241,9 @@ export class Crowd {
     this.menGoals = [];
     this.womenGoals = [];
     const addGoal = ([gx, gz]: XY, womens: boolean) => {
-      const c = this.nearestFlowCell(gx, gz, 15);
+      // A women's goal stays inside their areas (snapped to the nearest cell there, never out to a
+      // corridor beside them, where the women would gather).
+      const c = womens ? this.nearestFlowCell(gx, gz, 15, (k) => zone[k] === 1) : this.nearestFlowCell(gx, gz, 15);
       if (c < 0) return;
       let g = this.goalCells.indexOf(c);
       if (g < 0) {
@@ -287,7 +291,7 @@ export class Crowd {
     return true;
   }
 
-  private nearestFlowCell(x: number, z: number, radius: number): number {
+  private nearestFlowCell(x: number, z: number, radius: number, accept: (cell: number) => boolean = () => true): number {
     const ci = Math.floor((x - this.x0) / (CELL * FLOW));
     const cj = Math.floor((z - this.z0) / (CELL * FLOW));
     for (let r = 0; r <= radius; r++) {
@@ -295,7 +299,7 @@ export class Crowd {
         for (let i = ci - r; i <= ci + r; i++) {
           if (Math.max(Math.abs(i - ci), Math.abs(j - cj)) !== r) continue;
           if (i < 0 || j < 0 || i >= this.fw || j >= this.fh) continue;
-          if (this.flowWalk[0][j * this.fw + i]) return j * this.fw + i;
+          if (this.flowWalk[0][j * this.fw + i] && accept(j * this.fw + i)) return j * this.fw + i;
         }
       }
     }

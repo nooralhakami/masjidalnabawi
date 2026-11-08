@@ -1,16 +1,17 @@
 import { POI_BY_ID } from '../data';
 import type { LatLng, Poi } from '../data/types';
+import { nearestByAir, nearPool, pickTwo, WEAK_FIX_M, type NearKind, type NearWho } from '../domain/near';
 import { HintPicker } from '../domain/route-hint';
 import { t } from '../i18n';
-import { LocationService } from '../location/LocationService';
+import { LocationService, type LiveFix } from '../location/LocationService';
 import { RouteTrack } from '../location/progress';
 import type { MapEngine } from '../map/engine';
 import { mapZoom } from '../map/zoom';
 import { NavigationTracker, type NavigationHost } from '../navigation/tracker';
-import { lotsToAsk, planExit, planRoutes, type GarageStart, type Plan } from '../routing/plan';
+import { lotsToAsk, planExit, planFromLot, planRoutes, type GarageStart, type Plan } from '../routing/plan';
 import { spotOf } from '../routing/spot';
 import { bearing } from '../presentation/route-view';
-import { accessibleRoute, garageQ, headingUp, level, nav, notify, route, selected, setHeadingUp, sheet, travel } from '../state/store';
+import { accessibleRoute, garageQ, headingUp, level, nav, notify, route, selected, setHeadingUp, sheet, travel, whereQ, type WhereAnswer } from '../state/store';
 
 /** Within this distance of the car park leg, the visitor is in the car park: no re-planning from the streets. */
 const IN_CAR_PARK_M = 60;
@@ -22,6 +23,13 @@ const ANSWER_M = 40;
 /** Heading-up: the way ahead over this many metres sets which way is up; turns under this many degrees wait. */
 const HEADING_AHEAD_M = 40;
 const HEADING_MIN_TURN = 6;
+/** «Near you now»: how long to wait for a sharper fix than the first rough one, before asking. */
+const SHARPEN_MS = 4000;
+/** How many of the nearest (in a straight line) get a planned walk, to find the two really nearest. */
+const NEAR_TRIED = 6;
+
+/** Where a «near you now» trip starts: a fix good enough to follow live, a place the visitor named, or a lot underground. */
+type Here = { at: LatLng; live: boolean; place?: Poi } | { lot: Poi };
 
 export interface TripLayout {
   /** Bottom of the search bar and pills, in px from the top. */
@@ -46,6 +54,8 @@ export class Trip {
   /** Heading-up just turned on: the follows zoom to street level until the map is there (a new fix can interrupt one ease). */
   private closeUp = false;
   private garageAnswer: { start: GarageStart; at: number; pos: LatLng } | null = null;
+  /** «Near you now»: the place each offered route leads to (a tap on the other route switches the place too). */
+  private dests: Poi[] | null = null;
   /** The route planner (routing/plan.ts); a test can put one that finds nothing. */
   planner = planRoutes;
 
@@ -101,13 +111,18 @@ export class Trip {
         notify(t('r_switched'));
       },
       () => {
-        // Short directions inside the car park (way in or way out), with the lot's number.
+        // Short directions inside the car park (way in or way out, or on foot to the stairs), with the lot's number.
         const plan = this.plans[this.chosen];
-        const garage = plan?.legs.find((l) => l.kind === 'garage');
+        const garage = plan?.legs.find((l) => l.steps?.length);
         return garage?.steps?.length ? { steps: garage.steps, lot: plan.lot ? plan.lot.id - 900 : null } : null;
       },
     );
     this.tracker.onChange((s) => {
+      // Arrived: a gold ring at the place, as on choosing it (UI plan phase 4), once per arrival.
+      if (s.state === 'arrived' && nav.value?.state !== 'arrived') {
+        const dest = selected.value !== null ? POI_BY_ID.get(selected.value) : undefined;
+        if (dest) engine.pulse.play(dest.lng, dest.lat);
+      }
       nav.value = s.state === 'stopped' ? null : { ...s };
       // The place the visitor goes by is named, faintly, over itself (owner, 2026-10-25).
       engine.hints.setNear(s.state === 'stopped' ? null : this.hint.pick(s.position, s.accuracy, this.plans[this.chosen]?.mode ?? 'walk', Date.now()));
@@ -145,10 +160,82 @@ export class Trip {
       return;
     }
     if (mode === 'drive' && next[0].mode === 'walk') notify(t('drive_fallback'), 'info', 5000);
+    this.dests = null;
     const info = this.showPlans(next, 0, true);
     await this.tracker.start(next[0].mode);
     await this.frame();
     this.fit(info.bounds);
+  }
+
+  /**
+   * «Near you now» (UI plan phase 2, owner 2026-11-07): the two nearest open restrooms (for `who`)
+   * or outer gates, by the walk, and both routes drawn — the nearer to follow, the other faint (a
+   * tap on it switches). `open` shows the chosen place's card first. Location is asked only now, on
+   * this tap; when it is missing or worse than 50 m (the underground car park), the visitor says
+   * where they are. False: nothing was drawn (the question was dismissed, or nothing is open).
+   */
+  async near(kind: NearKind, who: NearWho, isOpen: (id: number) => boolean, open: (p: Poi) => void): Promise<boolean> {
+    const here = await this.whereAmI();
+    if (!here) return false;
+    const from: LatLng = 'lot' in here ? [here.lot.lat, here.lot.lng] : here.at;
+    const pool = nearPool(kind, who, isOpen, accessibleRoute.value).filter((p) => !('place' in here) || p.id !== here.place?.id);
+    const tried = await Promise.all(
+      nearestByAir(from, pool, NEAR_TRIED).map(async (poi) => {
+        const plan = 'lot' in here ? planFromLot(here.lot, poi) : (await this.planner(from, poi, 'walk', { accessible: accessibleRoute.value }))[0];
+        return plan ? { poi, plan, meters: plan.walkM } : null;
+      }),
+    );
+    const ranked = tried.filter((x): x is NonNullable<typeof x> => x !== null).sort((a, b) => a.meters - b.meters);
+    const two = pickTwo(ranked, Math.random());
+    if (!two.length) {
+      notify(t('route_none'), 'error');
+      return false;
+    }
+    open(two[0].poi);
+    this.dests = two.map((x) => x.poi);
+    const info = this.showPlans(
+      two.map((x) => x.plan),
+      0,
+      true,
+    );
+    // Followed live only on a good fix; from a place the visitor named, the route stays as drawn.
+    if (!('lot' in here) && here.live) await this.tracker.start('walk');
+    await this.frame();
+    this.fit(info.bounds);
+    return true;
+  }
+
+  /** Where the visitor is, for «near you now»: a good fix (sharpened a few seconds if rough), or else their own answer. */
+  private async whereAmI(): Promise<Here | null> {
+    let fix = this.geo.fresh() ?? (await this.geo.start());
+    if (fix && fix.accuracy > WEAK_FIX_M) fix = await this.sharpen(fix);
+    if (fix && fix.accuracy <= WEAK_FIX_M) return { at: [fix.lat, fix.lng], live: true };
+    const rough = fix;
+    const a = await new Promise<WhereAnswer>((answer) => (whereQ.value = { rough: !!rough, answer }));
+    whereQ.value = null;
+    if (!a) return null;
+    if (a === 'rough') return rough ? { at: [rough.lat, rough.lng], live: true } : null;
+    if ('lot' in a) return { lot: a.lot };
+    // Standing at a named place: no live following (the GPS is what was not good enough).
+    this.geo.stop();
+    return { at: [a.place.lat, a.place.lng], live: false, place: a.place };
+  }
+
+  /** Wait a few seconds for a fix within 50 m; the best one seen otherwise. */
+  private sharpen(first: LiveFix): Promise<LiveFix> {
+    return new Promise((resolve) => {
+      let best = first;
+      const off = this.geo.onFix((f) => {
+        if (f.accuracy < best.accuracy) best = f;
+        if (f.accuracy <= WEAK_FIX_M) finish();
+      });
+      const timer = window.setTimeout(() => finish(), SHARPEN_MS);
+      function finish() {
+        clearTimeout(timer);
+        off();
+        resolve(best);
+      }
+    });
   }
 
   /** The way out of the car park from the lot just driven to: from its exit to the car park's exits, quickest first. */
@@ -174,6 +261,7 @@ export class Trip {
     this.engine.hints.clear();
     this.engine.route.clear();
     this.plans = [];
+    this.dests = null;
     route.value = null;
   }
 
@@ -220,6 +308,8 @@ export class Trip {
   /** The visitor tapped another of the offered routes on the map. */
   private pick(i: number) {
     if (i === this.chosen || !this.plans[i] || !this.engine.route.active) return;
+    // «Near you now»: the other route goes to the other place, whose card follows.
+    if (this.dests?.[i]) selected.value = this.dests[i].id;
     this.showPlans(this.plans, i, false);
   }
 
@@ -241,6 +331,8 @@ export class Trip {
     const start: GarageStart | undefined = said === 'outside' ? 'outside' : said ? { lot: null, level: said.level } : undefined;
     void planRoutes(from, dest, travel.value, { heading, level: level.value, start, accessible: accessibleRoute.value }).then((next) => {
       if (selected.value !== dest.id || !this.engine.route.active || !next.length) return;
+      // Re-planned to this one place: the other «near you» place is no longer offered.
+      this.dests = null;
       this.showPlans(next, 0, false);
       notify(t('rerouted'));
     });

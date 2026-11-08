@@ -201,44 +201,208 @@ a {
   padding-block: var(--s-6, 2.5rem) var(--s-6, 2.5rem);
 }
 .hero-pattern {
-  /* The live app's pattern, kept by the owner's choice (2026-10-16): an eight-pointed star (two
-     squares and a circle) in each 72 px tile, joined by diagonal and straight lines. The SVG is a
-     mask, so the gold comes from the tokens and follows the theme. Over the hero's side of the
-     page, as before. */
+  /* The live app's pattern (owner, 2026-10-16): an eight-pointed star (two squares and a circle) in
+     each 72 px tile, joined by diagonal and straight lines. The SVG is a mask, so the gold comes from
+     the tokens and follows the theme. In the header only, and quieter (UI plan phase 6, owner
+     2026-11-07: «only if it is not noisy»): lighter, and fading out before the text and the map. */
   --hero-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Cg fill='none' stroke='%23000' stroke-width='1'%3E%3Crect x='21' y='21' width='30' height='30'/%3E%3Crect x='21' y='21' width='30' height='30' transform='rotate(45 36 36)'/%3E%3Ccircle cx='36' cy='36' r='7'/%3E%3Cpath d='M0 0L15 15M72 0L57 15M0 72L15 57M72 72L57 57M36 0V8M36 72V64M0 36H8M72 36H64'/%3E%3C/g%3E%3C/svg%3E");
+  --hero-fade: linear-gradient(to bottom, #000 0, #000 30%, transparent 75%);
   position: absolute;
-  inset-block: 0;
-  inset-inline-end: 0;
-  width: 58%;
-  opacity: 0.28;
+  inset: 0 0 auto;
+  height: min(520px, 70%);
+  opacity: 0.16;
   background-color: var(--gold-500);
-  -webkit-mask: var(--hero-tile) 0 0 / 72px 72px repeat;
-  mask: var(--hero-tile) 0 0 / 72px 72px repeat;
+  -webkit-mask: var(--hero-tile) 0 0 / 72px 72px repeat, var(--hero-fade);
+  -webkit-mask-composite: source-in;
+  mask: var(--hero-tile) 0 0 / 72px 72px repeat, var(--hero-fade);
+  mask-composite: intersect;
   pointer-events: none;
 }
-.hero-pattern.on-dark {
-  inset: 0;
-  width: auto;
-  opacity: 0.16;
+/* Gold stands out more on the night background: lighter still there. */
+:root[data-theme='dark'] .hero-pattern {
+  opacity: 0.1;
 }
 .hero-grid {
   position: relative;
   display: grid;
-  gap: var(--s-6, 2.5rem);
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'head' 'act' 'map' 'more';
+  gap: var(--s-4);
 }
 @media (min-width: 900px) {
   .hero-grid {
-    grid-template-columns: 1.1fr 0.9fr;
+    grid-template-columns: 1.05fr 0.95fr;
+    grid-template-areas: 'head map' 'act map' 'more map';
+    /* The text sits together at the top; the map's extra height goes below it. */
+    grid-template-rows: auto auto 1fr;
+    align-items: start;
+    column-gap: var(--s-6, 2.5rem);
   }
 }
-.hero-text {
+.hero-head {
+  grid-area: head;
   display: grid;
-  gap: var(--s-4);
+  gap: var(--s-3);
   justify-items: start;
 }
+.hero-act {
+  grid-area: act;
+  display: grid;
+  gap: var(--s-3);
+}
+.hero-more {
+  grid-area: more;
+  display: grid;
+  gap: var(--s-3);
+  justify-items: start;
+}
+/* The one thing to do on this page: big, full width on a phone (UI plan phase 6). */
+.btn-cta.btn-open {
+  min-height: 60px;
+  font-size: var(--fs-lg);
+}
+@media (min-width: 900px) {
+  .btn-open {
+    justify-self: start;
+    min-width: 320px;
+  }
+}
+/* The next prayer and the time left, under the button. Its height is kept while it is empty. */
+.prayer-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 56px;
+  margin: 0;
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--r-btn);
+  background: var(--surface);
+  border: 1px solid var(--gold-line);
+}
+.prayer-strip.is-empty > * {
+  visibility: hidden;
+}
+.pr-ic {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--gold-500) 16%, var(--surface));
+  color: color-mix(in srgb, var(--gold-500) 50%, var(--ink));
+}
+.pr-text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--s-2);
+  min-width: 0;
+}
+.pr-label {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  line-height: 1.3;
+}
+.pr-name {
+  color: var(--heading);
+  font-size: var(--fs-lg);
+}
+.pr-time {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.pr-left {
+  margin-inline-start: auto;
+  flex: none;
+  padding: 2px var(--s-3);
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--green-700) 14%, var(--surface));
+  color: var(--heading);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+/* The small live map: a picture of the map that opens it. The still shows first; the live map
+   fades in over it once drawn (no fade with «reduce motion»). */
+.mini-map {
+  grid-area: map;
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--r-card);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--gold-line);
+  box-shadow: var(--shadow-2);
+}
+@media (min-width: 900px) {
+  .mini-map {
+    aspect-ratio: 1;
+  }
+}
+.mini-still img,
+.mini-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.mini-still img {
+  object-fit: cover;
+}
+.mini-canvas {
+  opacity: 0;
+  transition: opacity var(--m-emph) var(--ease);
+}
+.mini-map.is-live .mini-canvas {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mini-canvas {
+    transition: none;
+  }
+}
+.mini-credit {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline: 0;
+  padding: 2px var(--s-2);
+  background: rgb(0 0 0 / 0.55);
+  color: #fff;
+  font-size: 10px;
+  line-height: 1.4;
+  text-align: end;
+}
+.mini-tag {
+  position: absolute;
+  inset-block-start: var(--s-3);
+  inset-inline-start: var(--s-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--heading);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  box-shadow: var(--shadow-1);
+}
+.mini-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+}
+.mini-map:focus-visible {
+  outline: 3px solid var(--gold-500);
+  outline-offset: 3px;
+}
 .haramain-logo {
-  width: min(200px, 55%);
+  width: min(170px, 46%);
   height: auto;
 }
 .logo-dark {
@@ -249,17 +413,6 @@ a {
 }
 :root[data-theme='dark'] .logo-dark {
   display: block;
-}
-.tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px var(--s-3);
-  border-radius: var(--r-pill);
-  border: 1px solid var(--gold-line);
-  color: var(--heading);
-  font-size: var(--fs-sm);
-  font-weight: 600;
 }
 .hero h1 {
   font-size: clamp(1.85rem, 6vw, var(--fs-3xl));
@@ -328,7 +481,7 @@ a {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--s-3);
   width: 100%;
-  margin: var(--s-2) 0 0;
+  margin: 0 0 var(--s-5, 1.25rem);
 }
 @media (min-width: 560px) {
   .stats {
@@ -355,72 +508,6 @@ a {
   color: var(--muted);
   font-size: var(--fs-sm);
 }
-.hero-visual {
-  position: relative;
-  justify-self: center;
-  padding-block: var(--s-4);
-}
-.phone {
-  width: min(280px, 72vw);
-  aspect-ratio: 304 / 658;
-  border-radius: 40px;
-  padding: 10px;
-  background: var(--ink-800);
-  box-shadow: var(--shadow-2), 0 0 0 1px var(--gold-line);
-}
-.phone img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 31px;
-}
-.callout {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  max-width: 230px;
-  padding: var(--s-2) var(--s-3);
-  border-radius: var(--r-btn);
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-2);
-}
-.callout b,
-.callout small {
-  display: block;
-}
-.callout small {
-  color: var(--muted);
-}
-.callout .tile {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
-  color: var(--accent);
-}
-.c1 {
-  top: 14%;
-  inset-inline-start: -14%;
-}
-.c2 {
-  bottom: 16%;
-  inset-inline-end: -12%;
-}
-@media (max-width: 520px) {
-  .c1 {
-    inset-inline-start: -4%;
-  }
-  .c2 {
-    inset-inline-end: -4%;
-  }
-}
-
 /* ---------- sections ---------- */
 .section {
   padding-block: var(--s-6, 2.5rem);

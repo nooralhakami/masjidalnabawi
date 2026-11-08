@@ -32,6 +32,8 @@ export { expect };
 /** The map, flat (`view=2d`): the 3D view it opens in by default is tested on its own. */
 export async function openMap(page: Page, lang = 'ar', query = '') {
   await page.addInitScript((l) => localStorage.setItem('lang', l), lang);
+  // The first-visit hints have their own tests (hints.spec.ts); elsewhere they are already seen.
+  await page.addInitScript(() => localStorage.getItem('hints-seen') === null && localStorage.setItem('hints-seen', '1'));
   await page.goto(`map.html${query ? `${query}&` : '?'}view=2d`);
   await page.waitForFunction(() => (window as any).__engine?.map?.loaded() && (window as any).__engine.map.getLayer('facilities'));
   await idle(page);
@@ -75,4 +77,10 @@ export function moved(page: Page): Promise<void> {
     })
     .then(() => page.waitForFunction(() => (window as any).__moved === true))
     .then(() => undefined);
+}
+
+/** Open the map's «more» menu (stories, library, the map's view, share), if it is not open yet. */
+export async function more(page: Page) {
+  const btn = page.locator('.mc-more');
+  if ((await btn.getAttribute('aria-expanded')) !== 'true') await btn.click();
 }

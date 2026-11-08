@@ -5,6 +5,7 @@ import type { NavigationSnapshot } from '../navigation/tracker';
 import type { RouteSummary } from '../presentation/route-view';
 import type { GarageStart } from '../routing/plan';
 import type { FilterId, ParkingSub, ToiletSub } from '../domain/filters';
+import type { NearWho } from '../domain/near';
 import type { Weather } from '../domain/weather';
 import { load, save } from './persist';
 
@@ -106,3 +107,30 @@ export const garageQ = signal<GarageQuestion | null>(null);
 
 /** Height of the Rawdah cards at the bottom (0 when hidden), so the map's buttons sit above them. */
 export const rawdahH = signal(0);
+
+/** «Near you now»: whose restrooms (asked once, remembered on this device). */
+export const nearWho = signal<NearWho | null>(((w) => (w === 'men' || w === 'women' ? w : null))(load('near-who')));
+export function setNearWho(w: NearWho): void {
+  nearWho.value = w;
+  save('near-who', w);
+}
+
+/**
+ * «Where are you exactly?» (owner, 2026-11-07): asked when the location is missing or worse than
+ * 50 m — always so in the underground car park. The visitor names the number in front of them (a
+ * gate, a mosque door, a restroom block) or the lot they are in; or keeps the rough location.
+ */
+export type WhereAnswer = { place: Poi } | { lot: Poi } | 'rough' | null;
+export interface WhereQuestion {
+  /** A rough location exists (worse than 50 m): it may be kept. */
+  rough: boolean;
+  answer(a: WhereAnswer): void;
+}
+export const whereQ = signal<WhereQuestion | null>(null);
+
+/** First-visit hints (UI plan phase 5): seen once on this device, then never again. */
+export const hintsSeen = signal(load('hints-seen') === '1');
+export function markHintsSeen(): void {
+  hintsSeen.value = true;
+  save('hints-seen', '1');
+}

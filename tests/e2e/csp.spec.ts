@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
-import { expect, openMap, test } from './fixtures';
+import { expect, openMap, test, more } from './fixtures';
 
 // The Content-Security-Policy from vercel.json, enforced here on every page the build serves (vite
 // preview sends no headers of its own). A blocked script, style, image, tile or worker shows up as a
@@ -35,9 +35,11 @@ test.describe('the Content-Security-Policy blocks nothing the guide needs', () =
     await enforce(page);
     await openMap(page);
     await expect(page.locator('.weather-chip')).toBeVisible();
+    await more(page);
     await page.locator('.mc-stories').click();
     await expect(page.locator('.stories')).toBeVisible();
     await page.keyboard.press('Escape');
+    await more(page);
     await page.locator('.mc-library').click();
     await expect(page.locator('.library')).toBeVisible();
     expect(await violations(page)).toEqual([]);

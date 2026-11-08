@@ -632,6 +632,30 @@ export function planExit(lot: Poi, level: Level = 'B'): Plan[] {
   );
 }
 
+/**
+ * On foot in the underground car park (owner, 2026-11-07: GPS does not work down there, so the
+ * visitor says which lot they are in): across the lot to the stairs of its entrance nearest the
+ * place (one of the four facilities round it), up them, and on along the plaza. The stretch under
+ * the plaza carries one step, «up the stairs», for the numbered marks and the step banner.
+ */
+export function planFromLot(lot: Poi, to: Poi): Plan | null {
+  const up = walkUp(lot, to);
+  if (!up) return null;
+  const under: LatLng[] = [at(lot), at(up.e)];
+  const underM = len(under);
+  const walkM = underM + up.m;
+  return {
+    mode: 'walk',
+    legs: [
+      { kind: 'walk', path: under, steps: [{ kind: 'stairs', path: under, meters: Math.round(underM) }] },
+      { kind: 'walk', path: up.path },
+    ],
+    walkM,
+    driveM: 0,
+    minutes: Math.max(1, Math.ceil(walkM / WALK_M_PER_MIN)),
+  };
+}
+
 /** The best trip from a point to a place. */
 export async function planRoute(from: LatLng, to: Poi, mode: Mode = 'walk'): Promise<Plan> {
   return (await planRoutes(from, to, mode))[0];

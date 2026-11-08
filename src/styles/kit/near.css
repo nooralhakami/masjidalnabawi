@@ -1,0 +1,213 @@
+/*
+ * «Near you now» (UI plan phase 2): three buttons over the map, above the Rawdah card, and the
+ * «where are you exactly?» question. Panel surface, no blur (DESIGN §3); only transform animates.
+ */
+.near {
+  position: relative;
+}
+.near-row {
+  display: flex;
+  gap: var(--s-2);
+  margin-bottom: var(--s-2);
+}
+.near-btn {
+  /* Three equal buttons; a long name wraps to a second line rather than pushing one off screen. */
+  flex: 1 1 0;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--hit);
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-top-color: var(--gold-line);
+  border-radius: var(--r-btn);
+  background: var(--panel);
+  box-shadow: var(--shadow-1);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: start;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+  cursor: pointer;
+  transition: transform var(--m-fast);
+}
+.near-btn .ic,
+.near-btn .spinner {
+  flex: none;
+}
+.near-btn .ic {
+  color: var(--heading);
+}
+.near-btn:active {
+  transform: scale(0.97);
+}
+.near-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.near-btn.is-loading {
+  color: var(--heading);
+}
+.near-time {
+  font-variant-numeric: tabular-nums;
+  unicode-bidi: isolate;
+}
+.near-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+}
+.near-panel {
+  position: absolute;
+  inset-inline: 0;
+  bottom: calc(100% + var(--s-1));
+  z-index: 5;
+  padding: var(--s-4);
+  border: 1px solid var(--line);
+  border-top-color: var(--gold-line);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+}
+.near-panel:focus {
+  outline: none;
+}
+.near-panel-t {
+  display: block;
+  margin-bottom: var(--s-2);
+  color: var(--heading);
+  font-size: var(--fs-base);
+}
+.near-times {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.near-times li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-2);
+  border-bottom: 1px solid var(--line);
+}
+.near-times li > span:first-child {
+  flex: 1;
+}
+.near-times li.is-next {
+  border-radius: var(--s-2);
+  border-bottom-color: transparent;
+  background: var(--field);
+  box-shadow: inset 3px 0 0 var(--gold-500);
+  color: var(--heading);
+  font-weight: 700;
+}
+[dir='rtl'] .near-times li.is-next {
+  box-shadow: inset -3px 0 0 var(--gold-500);
+}
+.near-left {
+  flex-basis: 100%;
+  order: 3;
+  color: var(--muted);
+  font-weight: 500;
+}
+.near-times li.is-next {
+  flex-wrap: wrap;
+}
+.near-tomorrow {
+  margin-top: var(--s-2);
+  color: var(--heading);
+  font-weight: 600;
+}
+.near-src {
+  display: block;
+  margin-top: var(--s-2);
+  color: var(--muted);
+  font-size: var(--fs-xs);
+}
+
+/* «Where are you exactly?» One column that never grows past the screen (the field's own width must not push it). */
+.where-ask {
+  grid-template-columns: minmax(0, 1fr);
+}
+.where-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.where-form {
+  display: grid;
+  gap: var(--s-1);
+}
+.where-label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.where-field {
+  display: flex;
+  gap: var(--s-2);
+}
+.where-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  min-height: var(--hit);
+  padding: 0 var(--s-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-btn);
+  background: var(--field);
+  color: var(--ink);
+  /* 18 px: no zoom on focus in iOS, and the number reads at arm's length. */
+  font: inherit;
+  font-size: var(--fs-lg);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  direction: ltr;
+}
+.where-input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+.where-input.is-wrong {
+  border-color: var(--danger);
+}
+.where-go {
+  flex: none;
+  text-align: center;
+}
+.where-go:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.where-wrong {
+  color: var(--danger);
+  font-size: var(--fs-sm);
+}
+.where-lots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-2);
+}
+.where-lot {
+  padding: 0 var(--s-2);
+  text-align: center;
+}
+/* Under 375 px the names need the whole button: the icons step aside (the words say it). */
+@media (max-width: 374px) {
+  .near-btn .ic {
+    display: none;
+  }
+  .near-btn {
+    padding-inline: var(--s-2);
+    text-align: center;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .near-btn {
+    transition: none;
+  }
+}
