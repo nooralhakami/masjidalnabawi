@@ -40,7 +40,9 @@ export class SelectPulse {
     (m.getSource('select-pulse') as GeoJSONSource).setData({ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [lng, lat] } });
     const start = performance.now();
     const step = (now: number) => {
-      const t = (now - start) / PULSE_RING_MS;
+      // A frame's time is when the frame began, which can be a moment before `start`: never below 0,
+      // or the opacity goes over 1 and MapLibre refuses it.
+      const t = Math.max(0, (now - start) / PULSE_RING_MS);
       if (t >= PULSE_RINGS) return this.stop();
       const k = t % 1;
       // Ease out: quick to leave the marker, slow to fade.

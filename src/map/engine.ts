@@ -1,4 +1,4 @@
-import { AttributionControl, Map as MLMap, ScaleControl, setWorkerUrl, type GeoJSONSource, type SkySpecification } from 'maplibre-gl';
+import { AttributionControl, Map as MLMap, ScaleControl, setWorkerUrl, type GeoJSONSource, type RasterSourceSpecification, type SkySpecification } from 'maplibre-gl';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
@@ -24,13 +24,21 @@ import { addHintLayer, EMPTY_HINTS, HintLayer } from './hints';
 import { addPoiLayers } from './poi-layers';
 import { applyPoiView, entranceAt, entranceFeatures, markerImageIds, markerNear, pairFeatures, placesAt, poiFeatures, popMarkers, womenAreas, type PoiView } from './pois';
 import { RouteLayer, type RouteText } from './route';
-import { sceneLight, sceneOverride, type SceneLight } from './scene-light';
+import { nearHaramRaster, sceneLight, sceneOverride, type SceneLight } from './scene-light';
 import { TerrainLayer } from './terrain-layer';
 import { LEGACY_MAX, LEGACY_MIN, fitView, haramBounds, legacyZoom, mapZoom } from './zoom';
 import { SelectPulse } from './pulse';
 import { TAP_ZOOM_STEP, tapChoice } from '../presentation/tap';
 
 export type { PoiView } from './pois';
+
+/** How far round the Haram the imagery is graded at half strength in 3D (owner, 2026-11-08). */
+const NEAR_HARAM_M = 3000;
+/** The near copy of each base layer: [its id, the layer it copies]. */
+const NEAR_IMAGERY = [
+  ['esri-near', 'esri'],
+  ['light-near', 'light'],
+] as const;
 
 /** The places a tap on a followed route names: every gate and every restroom block. */
 const ROUTE_NAME_IDS = POIS.filter(isTapName).map((p) => p.id);
@@ -235,6 +243,32 @@ export class MapEngine {
    * goes down, and the lamps of the plaza and the Mosque lit at night. All of it comes off in 2D, so
    * panning, zooming and rotating pay nothing (PERF.md).
    */
+  /**
+   * In 3D the imagery is greyed and dimmed under the models (scene-light.ts). Within 3 km of the
+   * Haram's outer gates, in every direction, the same tiles are laid again on top at half that
+   * grading (owner, 2026-11-08), so the streets, buildings and hotels round it show through. The
+   * source's `bounds` keeps those tiles to that box (to a tile's edge); the browser's cache serves them.
+   */
+  private addNearImagery(): void {
+    const m = this.map;
+    const b = haramBounds(POIS);
+    const dLat = NEAR_HARAM_M / 111_320;
+    const dLng = NEAR_HARAM_M / (111_320 * Math.cos((((b.south + b.north) / 2) * Math.PI) / 180));
+    const bounds: [number, number, number, number] = [b.west - dLng, b.south - dLat, b.east + dLng, b.north + dLat];
+    for (const [near, base] of NEAR_IMAGERY) {
+      if (!m.getLayer(base)) continue;
+      if (!m.getSource(near)) {
+        const src = m.getStyle().sources[base] as RasterSourceSpecification;
+        m.addSource(near, { type: 'raster', tileSize: src.tileSize, maxzoom: src.maxzoom, tiles: src.tiles, bounds });
+      }
+      if (!m.getLayer(near)) {
+        const layers = m.getStyle().layers;
+        const next = layers[layers.findIndex((l) => l.id === base) + 1]?.id;
+        m.addLayer({ id: near, type: 'raster', source: near, layout: { visibility: m.getLayoutProperty(base, 'visibility') ?? 'visible' } }, next);
+      }
+    }
+  }
+
   private sync3DLayer(): void {
     const m = this.map;
     const before = m.getLayer('inner-dots') ? 'inner-dots' : undefined;
@@ -242,6 +276,7 @@ export class MapEngine {
     if (on) {
       // Under everything: the ground's colour of the hour, where no imagery has loaded yet.
       if (!m.getLayer('alharamain-3d-ground')) m.addLayer({ id: 'alharamain-3d-ground', type: 'background' }, m.getLayer('esri') ? 'esri' : undefined);
+      this.addNearImagery();
       if (!m.getSource('alharamain-plaza')) m.addSource('alharamain-plaza', { type: 'geojson', data: alharamainPlaza() });
       if (!m.getLayer('alharamain-3d-plaza')) {
         m.addLayer(
@@ -383,6 +418,7 @@ export class MapEngine {
       this.marble = null;
       this.glow = null;
       for (const id of [
+        ...NEAR_IMAGERY.map(([near]) => near),
         'alharamain-3d-models',
         'alharamain-3d-crowd',
         'alharamain-3d-barriers',
@@ -433,6 +469,15 @@ export class MapEngine {
       m.setPaintProperty(id, 'raster-contrast', light.raster.contrast);
       m.setPaintProperty(id, 'raster-brightness-min', light.raster.brightnessMin);
       m.setPaintProperty(id, 'raster-brightness-max', light.raster.brightnessMax);
+    }
+    // Within 3 km of the Haram the same imagery again, at half the wash (owner, 2026-11-08).
+    const near = nearHaramRaster(light.raster);
+    for (const [id] of NEAR_IMAGERY) {
+      if (!m.getLayer(id)) continue;
+      m.setPaintProperty(id, 'raster-saturation', near.saturation);
+      m.setPaintProperty(id, 'raster-contrast', near.contrast);
+      m.setPaintProperty(id, 'raster-brightness-min', near.brightnessMin);
+      m.setPaintProperty(id, 'raster-brightness-max', near.brightnessMax);
     }
     // Lit plazas stand out of the dark city: their areas grow brighter as night falls.
     if (m.getLayer('alharamain-3d-plaza')) m.setPaintProperty('alharamain-3d-plaza', 'fill-opacity', ['min', 0.9, ['*', ['get', 'opacity'], 1 + 0.35 * light.night]]);
@@ -581,6 +626,7 @@ export class MapEngine {
       'alharamain-3d-plaza',
       'alharamain-3d-ground',
       'car-entrances',
+      ...NEAR_IMAGERY.map(([near]) => near),
       'esri',
       'light',
       'women-fill',
@@ -611,6 +657,7 @@ export class MapEngine {
     if (!this.map.getLayer('esri')) return;
     this.map.setLayoutProperty('esri', 'visibility', kind === 'satellite' ? 'visible' : 'none');
     this.map.setLayoutProperty('light', 'visibility', kind === 'light' ? 'visible' : 'none');
+    for (const [near, base] of NEAR_IMAGERY) if (this.map.getLayer(near)) this.map.setLayoutProperty(near, 'visibility', this.map.getLayoutProperty(base, 'visibility'));
   }
 
   get baseLayer(): BaseLayer {
