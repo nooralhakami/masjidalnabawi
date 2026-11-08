@@ -5,7 +5,6 @@ import type { NavigationSnapshot } from '../navigation/tracker';
 import type { RouteSummary } from '../presentation/route-view';
 import type { GarageStart } from '../routing/plan';
 import type { FilterId, ParkingSub, ToiletSub } from '../domain/filters';
-import type { NearWho } from '../domain/near';
 import type { Weather } from '../domain/weather';
 import { load, save } from './persist';
 
@@ -108,12 +107,11 @@ export const garageQ = signal<GarageQuestion | null>(null);
 /** Height of the Rawdah cards at the bottom (0 when hidden), so the map's buttons sit above them. */
 export const rawdahH = signal(0);
 
-/** «Near you now»: whose restrooms (asked once, remembered on this device). */
-export const nearWho = signal<NearWho | null>(((w) => (w === 'men' || w === 'women' ? w : null))(load('near-who')));
-export function setNearWho(w: NearWho): void {
-  nearWho.value = w;
-  save('near-who', w);
-}
+/**
+ * «Near you now»: whose restrooms is asked on every «nearest restroom», never remembered (owner,
+ * 2026-11-08: a phone is often shared). The answer an earlier version kept is cleared.
+ */
+save('near-who', null);
 
 /**
  * «Where are you exactly?» (owner, 2026-11-07): asked when the location is missing or worse than

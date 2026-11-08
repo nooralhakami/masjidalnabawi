@@ -67,7 +67,6 @@ test('a tapped marker: the card grows out of it within 400 ms, and the phone giv
 
 test('«near you now» gives a light tap too; the route draws in 600 ms', async ({ page, errors: _ }) => {
   await countBuzz(page);
-  await page.addInitScript(() => localStorage.setItem('near-who', 'men'));
   await openMap(page);
   expect(await drawMs(page)).toBe(600);
   await page.getByRole('group', { name: 'الآن بقربك' }).getByRole('button', { name: 'أقرب بوابة' }).click();
