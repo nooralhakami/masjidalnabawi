@@ -1,4 +1,5 @@
 import type { CustomLayerInterface, CustomRenderMethodInput, Map as MLMap } from 'maplibre-gl';
+import { Flows } from './crowd-flows';
 import { Crowd } from './crowd-sim';
 import { crowdInput } from './crowd-world';
 import { frameMatrix, metresFromOrigin, mulMat4 } from './glb-layer';
@@ -335,6 +336,37 @@ function personMesh(): { data: Float32Array; shadowFirst: number; shadowCount: n
 }
 
 /**
+ * A bier (owner, 2026-11-08): a wooden frame under a dark green cover, carried at shoulder height,
+ * 2 m long; x forward. Its cover takes the robe colour, its frame the sandals'.
+ */
+function bierMesh(): { data: Float32Array; count: number } {
+  const out: number[] = [];
+  const quad = (a: V3, b: V3, c: V3, d: V3, n: V3, mat: number) => {
+    for (const p of [a, b, c, a, c, d]) out.push(...p, ...n, 0, mat, 0);
+  };
+  const box = (x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, mat: number) => {
+    quad([x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [x1, y0, z1], [1, 0, 0], mat);
+    quad([x0, y0, z1], [x0, y1, z1], [x0, y1, z0], [x0, y0, z0], [-1, 0, 0], mat);
+    quad([x0, y1, z0], [x0, y1, z1], [x1, y1, z1], [x1, y1, z0], [0, 1, 0], mat);
+    quad([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], [0, 0, 1], mat);
+    quad([x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0], [0, 0, -1], mat);
+    quad([x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1], [0, -1, 0], mat);
+  };
+  // The frame and its handles, resting on the carriers' shoulders.
+  box(-1.0, 1.0, 1.4, 1.47, -0.3, 0.3, 3);
+  box(-1.25, 1.25, 1.41, 1.45, -0.42, -0.38, 3);
+  box(-1.25, 1.25, 1.41, 1.45, 0.38, 0.42, 3);
+  // The cover, falling a little over the sides, and its rounded top.
+  box(-0.98, 0.98, 1.33, 1.6, -0.31, 0.31, 0);
+  box(-0.92, 0.92, 1.6, 1.68, -0.24, 0.24, 0);
+  return { data: new Float32Array(out), count: out.length / 9 };
+}
+
+/** The cover's colour (dark green) for the bier's draw. */
+const BIER_COVER: [number, number, number] = [0.08, 0.24, 0.16];
+const MAX_BIERS = 4;
+
+/**
  * Who each walker is: robe, height, headwear, woman or man, skin (`data`, 8 floats each); and
  * `women`, 1 for each woman, which the walk keeps to (women only in the women's areas). About half
  * are women (owner, 2026-11-07: more women about their areas).
@@ -445,6 +477,11 @@ export class CrowdLayer implements CustomLayerInterface {
   private last = 0;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private frame = frameMatrix();
+  private flows: Flows | null = null;
+  private bier = bierMesh();
+  private bierVao: WebGLVertexArrayObject | null = null;
+  private bierInst: WebGLBuffer | null = null;
+  private bierData = new Float32Array(MAX_BIERS * 4);
 
   constructor(private light: SceneLight) {}
 
@@ -509,13 +546,42 @@ export class CrowdLayer implements CustomLayerInterface {
     gl.bindVertexArray(null);
     this.vao = vao;
     this.instBuf = inst;
-    this.buffers = [vbo, inst, look];
+    // The biers: their own mesh and places; their look is constant (attributes 4 and 5 left off).
+    const bvao = gl.createVertexArray()!;
+    gl.bindVertexArray(bvao);
+    const bvbo = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, bvbo);
+    gl.bufferData(gl.ARRAY_BUFFER, this.bier.data, gl.STATIC_DRAW);
+    for (const [loc, size, off] of [
+      [0, 3, 0],
+      [1, 3, 12],
+      [2, 3, 24],
+    ]) {
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 36, off);
+    }
+    const binst = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, binst);
+    gl.bufferData(gl.ARRAY_BUFFER, this.bierData.byteLength, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(3);
+    gl.vertexAttribPointer(3, 4, gl.FLOAT, false, 16, 0);
+    gl.vertexAttribDivisor(3, 1);
+    gl.disableVertexAttribArray(4);
+    gl.disableVertexAttribArray(5);
+    gl.bindVertexArray(null);
+    this.bierVao = bvao;
+    this.bierInst = binst;
+    this.buffers = [vbo, inst, look, bvbo, binst];
   }
 
   onRemove(_map: MLMap, gl: WebGL2RenderingContext): void {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
     if (this.vao) gl.deleteVertexArray(this.vao);
+    if (this.bierVao) gl.deleteVertexArray(this.bierVao);
+    this.bierVao = null;
+    this.bierInst = null;
+    this.flows = null;
     for (const b of this.buffers) gl.deleteBuffer(b);
     if (this.program) gl.deleteProgram(this.program);
     this.vao = null;
@@ -538,6 +604,7 @@ export class CrowdLayer implements CustomLayerInterface {
       if (!this.columns) return;
       this.crowd = new Crowd(crowdInput(this.columns), CROWD_SIZE, 7, this.who.women);
       this.crowd.keepNear(cx, cz, radius, 0);
+      this.flows = new Flows(this.crowd);
       this.last = performance.now();
     }
     this.crowd.keepNear(cx, cz, radius);
@@ -546,7 +613,11 @@ export class CrowdLayer implements CustomLayerInterface {
     const crowd = this.crowd;
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const now = performance.now();
-    if (!still) crowd.step(Math.min(0.1, (now - this.last) / 1000));
+    const dt = Math.min(0.1, (now - this.last) / 1000);
+    // The queues for the Rawdah, the greeting at the Prophet's chamber, a funeral now and then
+    // (owner, 2026-11-08): while the view is about the south of the Mosque.
+    this.flows?.update(still ? 0 : dt, new Date(), Flows.near(cx, cz, radius));
+    if (!still) crowd.step(dt);
     this.last = now;
     // Each walker keeps its own looks (the looks buffer is by walker): one not placed is drawn far
     // below the ground, out of sight.
@@ -578,6 +649,17 @@ export class CrowdLayer implements CustomLayerInterface {
     gl.depthMask(true);
     gl.disable(gl.BLEND);
     gl.drawArraysInstanced(gl.TRIANGLES, 0, this.mesh.count, k);
+    const biers = this.flows?.biers() ?? [];
+    if (biers.length && this.bierVao && this.bierInst) {
+      const nb = Math.min(MAX_BIERS, biers.length);
+      for (let b = 0; b < nb; b++) this.bierData.set([biers[b].x, biers[b].z, biers[b].heading, 0], b * 4);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bierInst);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.bierData.subarray(0, nb * 4));
+      gl.bindVertexArray(this.bierVao);
+      gl.vertexAttrib4f(4, BIER_COVER[0], BIER_COVER[1], BIER_COVER[2], 1.75);
+      gl.vertexAttrib4f(5, 0, 0, 0, 0);
+      gl.drawArraysInstanced(gl.TRIANGLES, 0, this.bier.count, nb);
+    }
     gl.enable(gl.BLEND);
     gl.bindVertexArray(null);
 
