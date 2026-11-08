@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import rawPois from '../../data/pois.json';
+import fence from '../../data/haram-fence.json';
 import { ALHARAMAIN_MODELS } from '../../src/data-next/alharamain-3d';
 import { POIS, POI_BY_ID, RULES, ROUTING, I18N } from '../../src/data';
 import { applyOverrides } from '../../src/data/overrides';
@@ -171,12 +172,10 @@ describe('pois.json', () => {
 });
 
 describe('overrides', () => {
-  it('only the owner-requested POIs are nudged (outer gates north 328–343, west 322–327, south 301–309 and 365–370; restrooms 201–236 (centred on their blocks, 2026-11-06), except 251–254; service buildings 501, 504–507; centres 511 and 604; women prayer halls 601–602; mosque doors 2–5 (2026-11-07)); everything else is untouched', () => {
+  it("only the owner-requested POIs are nudged (every outer gate 301–370 onto its opening in the courtyards' fence (2026-11-08); restrooms 201–236 (centred on their blocks, 2026-11-06), except 251–254; service buildings 501, 504–507; centres 511 and 604; women prayer halls 601–602; mosque doors 2–5 (2026-11-07)); everything else is untouched", () => {
     const raw = rawPois as Poi[];
     const moved = (id: number) =>
-      (id >= 322 && id <= 343) ||
-      (id >= 301 && id <= 309) ||
-      (id >= 365 && id <= 370) ||
+      (id >= 301 && id <= 370) ||
       (id >= 201 && id <= 236) ||
       id === 501 ||
       (id >= 504 && id <= 507) ||
@@ -195,10 +194,12 @@ describe('overrides', () => {
       const r = raw.find((x) => x.id === id)!;
       return { north: (p.lat - r.lat) * 111_320, east: (p.lng - r.lng) * 111_320 * Math.cos((r.lat * Math.PI) / 180) };
     };
-    // The middle group 332–336: 3 m south and 12 m east; the rest of the north side: 18 m north.
-    for (const id of [332, 334, 336]) {
-      expect(metres(id).north).toBeCloseTo(-3, 5);
-      expect(metres(id).east).toBeCloseTo(12, 5);
+    // Every outer gate on its opening in the fence (owner, 2026-11-08: the Authority's fence, matched
+    // with the owner's PDF): within 10 cm of the gate's point in data/haram-fence.json.
+    for (const g of fence.gates) {
+      const p = POI_BY_ID.get(g.id)!;
+      const off = Math.hypot((p.lat - g.at[1]) * 111_320, (p.lng - g.at[0]) * 111_320 * Math.cos((p.lat * Math.PI) / 180));
+      expect(off, `gate ${g.id}`).toBeLessThan(0.1);
     }
     // Mosque doors 2–5 (owner, 2026-11-07, arrows on a 3D screenshot): to their doorways in the wall.
     const doors: Record<number, [number, number]> = { 2: [8, 6], 3: [22, 3], 4: [9, -11], 5: [6, -9] };
@@ -209,16 +210,6 @@ describe('overrides', () => {
     // 604 shared Gate 21's exact point and hid it: it now sits 15 m north, facing the gate.
     expect(metres(604).north).toBeCloseTo(15, 5);
     expect(POI_BY_ID.get(21)!.lat).toBe(raw.find((x) => x.id === 21)!.lat);
-    for (const id of [328, 331, 337, 343]) {
-      expect(metres(id).north).toBeCloseTo(18, 5);
-      expect(metres(id).east).toBeCloseTo(0, 5);
-    }
-    // West side (2026-10-10): 327 15 m north, 322–326 5 m north; restrooms 207–208 5 m west.
-    expect(metres(327).north).toBeCloseTo(15, 5);
-    for (const id of [322, 324, 326]) {
-      expect(metres(id).north).toBeCloseTo(5, 5);
-      expect(metres(id).east).toBeCloseTo(0, 5);
-    }
     // Restrooms 201–236 (owner, 2026-11-06): each marker in the middle of its 3D block, one marker per
     // block. 251–254 stay at the two ends of their west blocks.
     const R = 111_320;
@@ -237,15 +228,11 @@ describe('overrides', () => {
       expect(taken.has(i), String(p.id)).toBe(false);
       taken.add(i);
     }
-    // South services centre 7 m north; all southern outer gates 5 m north.
+    // South services centre 7 m north.
     expect(metres(511).north).toBeCloseTo(7, 5);
     // South service buildings (health centre, lost & found, services 1–2, Seerah exhibition): 8 m north.
     for (const id of [501, 504, 505, 506, 507]) {
       expect(metres(id).north).toBeCloseTo(8, 5);
-      expect(metres(id).east).toBeCloseTo(0, 5);
-    }
-    for (const id of [301, 305, 309, 365, 370]) {
-      expect(metres(id).north).toBeCloseTo(5, 5);
       expect(metres(id).east).toBeCloseTo(0, 5);
     }
   });

@@ -10,7 +10,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'sha256-V6Etpi0Qhu2jOJBS46uv7zqeL7S+SCNdjfsSd3vLIXQ=' 'sha256-wsmnxD6kqdZZ/V2wQ85d92sMux2lvh7NN1y5/Y5SS5c=' 'sha256-yjl1nJ+uTSS1PZN4gbeav3mXGXw8/9WV9EpXgGrcUg4='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://tile.openstreetmap.org; connect-src 'self' https://server.arcgisonline.com https://tile.openstreetmap.org https://api.open-meteo.com; font-src 'self' data:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+          "value": "default-src 'self'; script-src 'self' 'sha256-V6Etpi0Qhu2jOJBS46uv7zqeL7S+SCNdjfsSd3vLIXQ=' 'sha256-wsmnxD6kqdZZ/V2wQ85d92sMux2lvh7NN1y5/Y5SS5c=' 'sha256-oLi52iYEVzq8TObTO+cPm1kud4rE00O7i9HIQ+R18ns='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://tile.openstreetmap.org; connect-src 'self' https://server.arcgisonline.com https://tile.openstreetmap.org https://api.open-meteo.com; font-src 'self' data:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
         },
         {
           "key": "X-Content-Type-Options",

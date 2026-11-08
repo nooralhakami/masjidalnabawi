@@ -60,7 +60,8 @@ describe('walking beyond the plazas', () => {
       expect(p.mode).toBe('walk');
       const path = p.legs[0].path;
       expect(path[0]).toEqual(from);
-      expect(path[path.length - 1][0]).toBeCloseTo(P(to).lat, 6);
+      // At the place, or at a restroom's door (233 opens north: owner, 2026-11-06).
+      expect(path[path.length - 1][0]).toBeCloseTo((restroomDoor(P(to)) ?? at(to))[0], 6);
       expect(enters(path)).toBe(false);
       // Realistic: at most ~1.6× the straight-line distance.
       const straight = pathLength([from, at(to)]);
@@ -225,9 +226,15 @@ const acrossTheMosque = (path: LatLng[]) => {
 };
 
 describe('the best route and its alternatives (owner, 2026-10-11)', () => {
+  // Pending the routes phase (owner, 2026-11-08: merge the fence now, fix these with the routes): restroom 233 opens north
+  // (owner, 2026-11-06) since the doors follow the 3D blocks, and from the east street only one way
+  // stays within 30%. It.fails reports once there are two again; then it goes back into the list below.
+  it.fails('east street → a west restroom (233): at least two ways (pending)', async () => {
+    expect((await planRoutes([24.4685, 39.615], P(233), 'walk')).length).toBeGreaterThanOrEqual(2);
+  });
+
   const trips: [string, LatLng, number, 'walk' | 'drive'][] = [
     ['hotel south-west of the Haram → Gate 37', [24.4655, 39.6085], 37, 'walk'],
-    ['east street → a west restroom', [24.4685, 39.615], 233, 'walk'],
     ['far south-west, by car → Gate 21', SOUTH_WEST, 21, 'drive'],
   ];
   it.each(trips)('%s: the best first, up to two others within 30% and really another way', async (_, from, to, mode) => {

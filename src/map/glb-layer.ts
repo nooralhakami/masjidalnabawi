@@ -29,6 +29,9 @@ interface GltfBufferView {
 
 interface GltfMaterial {
   name?: string;
+  /** `MASK`: a pixel whose alpha is under `alphaCutoff` is not drawn (a lattice's holes). */
+  alphaMode?: 'OPAQUE' | 'MASK' | 'BLEND';
+  alphaCutoff?: number;
   pbrMetallicRoughness?: {
     baseColorFactor?: [number, number, number, number];
     baseColorTexture?: { index: number };
@@ -89,6 +92,8 @@ interface GpuPrimitive {
   portalRect: [number, number, number, number];
   portalSize: [number, number];
   lattice: boolean;
+  /** Alpha under this is cut out (glTF `MASK`); 0 draws every pixel. */
+  cutoff: number;
   /**
    * When it is drawn: always, only while the canopies are open (day) or folded (night), or `anim`:
    * the canopies a visitor opened or closed with a tap, folded in the vertex shader.
@@ -201,6 +206,7 @@ uniform int u_portal;
 uniform vec4 u_portalRect;
 uniform vec2 u_portalSize;
 uniform float u_lattice;
+uniform float u_cutoff;
 uniform int u_hasTex;
 uniform sampler2D u_tex;
 // The scene's light (scene-light.ts): the sun, the sky, and how far into the night it is.
@@ -302,6 +308,8 @@ void main() {
     vec4 texel = texture(u_tex, v_uv);
     albedo *= vec4(pow(texel.rgb, vec3(1.6)), texel.a);
   }
+  // A cut-out material (the fence's lattice and spikes): its holes are not drawn at all.
+  if (u_cutoff > 0.0 && albedo.a < u_cutoff) discard;
 
   vec3 emit = vec3(0.0);
   if (u_portal > 0) {
@@ -654,6 +662,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
   private uPortalRect: WebGLUniformLocation | null = null;
   private uPortalSize: WebGLUniformLocation | null = null;
   private uLattice: WebGLUniformLocation | null = null;
+  private uCutoff: WebGLUniformLocation | null = null;
   private depthProgram: WebGLProgram | null = null;
   private uDepthLight: WebGLUniformLocation | null = null;
   private shadowFbo: WebGLFramebuffer | null = null;
@@ -768,6 +777,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
     this.uPortalRect = gl.getUniformLocation(prog, 'u_portalRect');
     this.uPortalSize = gl.getUniformLocation(prog, 'u_portalSize');
     this.uLattice = gl.getUniformLocation(prog, 'u_lattice');
+    this.uCutoff = gl.getUniformLocation(prog, 'u_cutoff');
     this.uCanopy = gl.getUniformLocation(prog, 'u_canopy');
 
     // The depth-only pass the sun's shadow map is drawn with: the same vertex arrays, position and
@@ -1005,6 +1015,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
           crown: minaretCrown(model.url, gltf.meshes[meshIndex].name, material?.name) ?? [0, 0],
           ...portalOf(gltf, bin, prim, portalKind(model.url, gltf.meshes[meshIndex].name, material?.name)),
           lattice: gateLattice(model.url, material?.name),
+          cutoff: material?.alphaMode === 'MASK' ? (material.alphaCutoff ?? 0.5) : 0,
           instances: matrices.length / 16,
           when,
         });
@@ -1172,6 +1183,8 @@ export class HaramGlbLayer implements CustomLayerInterface {
     gl.vertexAttrib1f(8, 1);
     for (const prim of this.prims) {
       if ((prim.when === 'day' && folded) || (prim.when === 'night' && !folded)) continue;
+      // A lattice casts the shadow of its bars, not of a wall: left out of the shadow map.
+      if (prim.cutoff > 0) continue;
       const instances = prim.when === 'anim' ? this.animCount : prim.instances;
       if (!instances) continue;
       gl.uniform4fv(this.uDepthCanopy, prim.when === 'anim' ? this.canopyAxis : [0, 0, 0, 0]);
@@ -1256,6 +1269,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
       gl.uniform4fv(this.uPortalRect, prim.portalRect);
       gl.uniform2fv(this.uPortalSize, prim.portalSize);
       gl.uniform1f(this.uLattice, prim.lattice ? 1 : 0);
+      gl.uniform1f(this.uCutoff, prim.cutoff);
 
       const texture = prim.hasUv && prim.textureIndex >= 0 ? this.textures[prim.textureIndex] : undefined;
       gl.uniform1i(this.uHasTex, texture ? 1 : 0);
