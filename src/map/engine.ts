@@ -14,7 +14,7 @@ import { lookOf } from '../presentation/markers';
 import type { IconName } from '../presentation/icons';
 import { CrowdLayer } from './crowd-layer';
 import { RugLayer } from './rug-layer';
-import { womenBarriers } from './women-barriers';
+import { greetingBarriers, queueRails, womenBarriers } from './women-barriers';
 import { HaramGlbLayer } from './glb-layer';
 import { IconAtlas, createDrawer, cssPalette, type Drawer } from './images';
 import { LampGlowLayer } from './lamp-glow-layer';
@@ -315,6 +315,34 @@ export class MapEngine {
           before,
         );
       }
+      // The metal rails of the Rawdah's queues (owner, 2026-11-08), 1 m high.
+      if (!m.getSource('alharamain-queue-rails')) m.addSource('alharamain-queue-rails', { type: 'geojson', data: queueRails() });
+      if (!m.getLayer('alharamain-3d-queue-rails')) {
+        m.addLayer(
+          {
+            id: 'alharamain-3d-queue-rails',
+            type: 'fill-extrusion',
+            source: 'alharamain-queue-rails',
+            minzoom: 16,
+            paint: { 'fill-extrusion-color': '#a7adb3', 'fill-extrusion-height': ['get', 'height'], 'fill-extrusion-opacity': 0.97 },
+          },
+          before,
+        );
+      }
+      // The green barriers ordering the greeting at the Prophet's chamber (owner, 2026-11-08).
+      if (!m.getSource('alharamain-greeting-barriers')) m.addSource('alharamain-greeting-barriers', { type: 'geojson', data: greetingBarriers() });
+      if (!m.getLayer('alharamain-3d-greeting-barriers')) {
+        m.addLayer(
+          {
+            id: 'alharamain-3d-greeting-barriers',
+            type: 'fill-extrusion',
+            source: 'alharamain-greeting-barriers',
+            minzoom: 16,
+            paint: { 'fill-extrusion-color': '#1f9a72', 'fill-extrusion-height': ['get', 'height'], 'fill-extrusion-opacity': 0.95 },
+          },
+          before,
+        );
+      }
       // The mountains of Madinah on the horizon, under the Mosque's own models.
       if (!m.getLayer('alharamain-3d-terrain')) {
         this.terrain = new TerrainLayer(this.currentLight());
@@ -359,6 +387,8 @@ export class MapEngine {
         'alharamain-3d-crowd',
         'alharamain-3d-barriers',
         'alharamain-3d-women-barriers',
+        'alharamain-3d-queue-rails',
+        'alharamain-3d-greeting-barriers',
         'alharamain-3d-glow',
         'alharamain-3d-terrain',
         'alharamain-3d-lamps',

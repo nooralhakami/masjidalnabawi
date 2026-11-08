@@ -3,10 +3,12 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ALHARAMAIN_MODELS } from '../../src/data-next/alharamain-3d';
 import { PRAYER_CLEARINGS } from '../../src/data-next/alharamain-prayers';
-import { BODY_R, CELL, COLUMN_R, Crowd } from '../../src/map/crowd-sim';
+import { Flows } from '../../src/map/crowd-flows';
+import { BODY_R, CELL, COLUMN_R, Crowd, FIXED, FREE, HIDDEN } from '../../src/map/crowd-sim';
 import { crowdInput } from '../../src/map/crowd-world';
 import { metresFromOrigin, nodePositions, parseGlbBuffer } from '../../src/map/glb-layer';
 import { restroomFootprints, restroomWalkways } from '../../src/map/prayer-layout';
+import { GREETING_BARRIERS, QUEUE_LANES, QUEUE_MOUTH_Z, QUEUE_RAILS } from '../../src/map/rawdah-layout';
 import { rugLayout } from '../../src/map/rug-layout';
 
 const inside = (x: number, z: number, r: readonly (readonly [number, number])[]) => {
@@ -130,7 +132,9 @@ describe('the women’s areas (owner, 2026-11-07)', () => {
 
   it('the two areas and their barriers are read in: north-west and north-east', () => {
     expect(zones).toHaveLength(2);
-    expect(fences.length).toBe(13);
+    // 13 for the women's areas, the 11 rails of the Rawdah's queues and the greeting's barriers (owner, 2026-11-08).
+    expect(fences.length).toBe(13 + QUEUE_RAILS.length + GREETING_BARRIERS.length);
+    expect(QUEUE_RAILS).toHaveLength(11);
   });
 
   it('no man ever stands inside a women’s area, and no one walks through a barrier', () => {
@@ -200,5 +204,95 @@ describe('the women’s areas (owner, 2026-11-07)', () => {
       // Along the Mosque's west wall, beside the north-west area.
       expect(g.x > -275 && g.x < -255 && g.z > -345 && g.z < -235).toBe(false);
     }
+  });
+});
+
+describe('the flows round the Rawdah (owner, 2026-11-08)', () => {
+  const file = readFileSync(resolve(__dirname, '../../public/models/haram-canopies.glb'));
+  const { gltf } = parseGlbBuffer(file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength) as ArrayBuffer);
+  const columnsLL = nodePositions(ALHARAMAIN_MODELS.find((m) => m.url.includes('canopies'))!, gltf);
+  const input = crowdInput(columnsLL);
+  // 08:00 in Madinah: the women's turn at the Rawdah.
+  const womenTime = new Date('2026-11-08T05:00:00Z');
+  // Half men and half women, as the crowd's looks have them.
+  const crowd = new Crowd(
+    input,
+    500,
+    7,
+    Uint8Array.from({ length: 500 }, (_, a) => (a % 2 ? 1 : 0)),
+  );
+  const flows = new Flows(crowd);
+  crowd.keepNear(-20, -50, 130, 0);
+  // Men seen going in for the greeting (hidden inside the Mosque), and where.
+  const wentIn = new Map<number, [number, number]>();
+  const last = new Float64Array(crowd.n * 2);
+  for (let t = 0; t < 120; t += 0.05) {
+    crowd.keepNear(-20, -50, 130);
+    for (let a = 0; a < crowd.n; a++) last.set([crowd.px[a], crowd.pz[a]], a * 2);
+    flows.update(0.05, womenTime, true);
+    crowd.step(0.05);
+    for (const a of flows.census().salam) if (crowd.mode[a] === HIDDEN && !wentIn.has(a) && !Number.isNaN(last[a * 2])) wentIn.set(a, [last[a * 2], last[a * 2 + 1]]);
+  }
+  const who = flows.census();
+
+  it('those queuing, waiting before Gate 37 and organising are of the turn (women now); those greeting are men', () => {
+    expect(who.queue.length).toBeGreaterThan(36);
+    for (const a of [...who.queue, ...who.hold, ...who.organisers]) expect(crowd.woman[a]).toBe(1);
+    expect(who.salam.length).toBeGreaterThan(10);
+    for (const a of who.salam) expect(crowd.woman[a]).toBe(0);
+  });
+
+  it('men greeting go in at Gate 1 (Bab al-Salam), through the way the barriers make', () => {
+    expect(wentIn.size).toBeGreaterThan(2);
+    for (const [x, z] of wentIn.values()) expect(Math.hypot(x - -115.2, z - -78.9)).toBeLessThan(6);
+  });
+
+  it('those in a lane keep between its rails', () => {
+    const lanes = (flows as unknown as { lanes: number[][] }).lanes;
+    lanes.forEach((lane, l) => {
+      const [w, e] = QUEUE_LANES[l];
+      for (const a of lane) {
+        if (crowd.pz[a] > QUEUE_MOUTH_Z) continue; // still at the mouth
+        expect(crowd.px[a]).toBeGreaterThan(w);
+        expect(crowd.px[a]).toBeLessThan(e);
+      }
+    });
+  });
+
+  it('no one stands where they may not (carpets, blocks, rails, the lanes for those not queuing)', () => {
+    for (let a = 0; a < crowd.n; a++) {
+      if (Number.isNaN(crowd.px[a]) || crowd.mode[a] === FIXED) continue;
+      expect(crowd.standable(crowd.px[a], crowd.pz[a], !crowd.woman[a], crowd.mode[a] === FREE)).toBe(true);
+    }
+  });
+
+  it('with the view elsewhere, every walker goes back to the crowd', () => {
+    flows.update(0.05, womenTime, false);
+    for (let a = 0; a < crowd.n; a++) expect(crowd.mode[a]).toBe(FREE);
+  });
+});
+
+describe('funerals come now and then, not all the time (owner, 2026-11-08)', () => {
+  it('none in the first minute; two to ten in half an hour; never more than two at once', () => {
+    const crowd = new Crowd(crowdInput([]), 500, 5);
+    const flows = new Flows(crowd, 9);
+    crowd.keepNear(-20, -50, 130, 0);
+    const menTime = new Date('2026-11-08T09:00:00Z');
+    let most = 0;
+    const firstAt: [number, number][] = [];
+    let seen = 0;
+    for (let t = 0; t < 1800; t += 0.5) {
+      flows.update(0.5, menTime, true);
+      const biers = flows.biers();
+      if (flows.funeralsStarted > seen && biers.length) firstAt.push([biers[biers.length - 1].x, biers[biers.length - 1].z]);
+      seen = flows.funeralsStarted;
+      if (t < 60) expect(flows.funeralsStarted).toBe(0);
+      most = Math.max(most, flows.census().funerals);
+    }
+    expect(flows.funeralsStarted).toBeGreaterThanOrEqual(2);
+    expect(flows.funeralsStarted).toBeLessThanOrEqual(10);
+    expect(most).toBeLessThanOrEqual(2);
+    // Each comes out of the door of block 203, on its north side (owner, 2026-11-08).
+    for (const [x, z] of firstAt) expect(Math.hypot(x - -6, z - -16)).toBeLessThan(5);
   });
 });
