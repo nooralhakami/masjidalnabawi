@@ -27,7 +27,8 @@ describe('parity: walking', () => {
     expect(plans.map((p) => [round(p.walkM), p.minutes])).toEqual([
       [3324, 42],
       [3554, 45],
-      [4315, 54],
+      // 4315 before the outer gates moved onto their fence openings (owner approved, 2026-11-08).
+      [4310, 54],
     ]);
   });
 });

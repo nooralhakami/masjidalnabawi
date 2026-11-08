@@ -106,10 +106,24 @@ describe('every reachable place, from every plaza side', () => {
         expect(path[path.length - 1][1]).toBeCloseTo(to[1], 6);
         // At most half the ring plus the two spurs to and from it (and rounding slack).
         const spurs = projectOnRing(toM(start), N).d + projectOnRing(toM(to), N).d;
+        // East plaza → 327: tracked on its own below (pending).
+        if (name === 'east plaza' && p.id === 327) continue;
         expect(m, `${name} → ${p.id}`).toBeLessThan(N.P / 2 + spurs + 20);
       }
     });
   }
+
+  // Pending the routes phase (owner, 2026-11-08: merge the fence now, fix these with the routes): gate 327 now stands on
+  // its opening at the north-west corner, 32 m beyond this bound from the east plaza. It.fails
+  // reports as soon as it holds again, so this marker is then removed.
+  it.fails('east plaza → 327 within the same bound (pending)', () => {
+    const N = network();
+    const start = SIDES.find(([n]) => n === 'east plaza')![1];
+    const p = POI_BY_ID.get(327)!;
+    const m = pathLength(walkPath(start, [p.lat, p.lng]));
+    const spurs = projectOnRing(toM(start), N).d + projectOnRing(toM([p.lat, p.lng]), N).d;
+    expect(m).toBeLessThan(N.P / 2 + spurs + 20);
+  });
 });
 
 describe('walkway network', () => {
@@ -295,7 +309,9 @@ describe('the east side through the narrow neck (owner, 2026-10-25)', () => {
     expect(neck.some(([x, y]) => x > 226.5 && y < 100 && x < 291)).toBe(false);
   });
 
-  it('the north line runs inside the gates 364–355, never outside them (owner: «the route must be inside the gates»)', () => {
+  // Pending the routes phase (owner, 2026-11-08: merge the fence now, fix these with the routes): with the gates on the real
+  // fence, this walkway is about 12 m outside it. It.fails reports once it is moved inside.
+  it.fails('the north line runs inside the gates 364–355, never outside them (owner: «the route must be inside the gates»)', () => {
     const ring = ROUTING.walkway_ring.map(toM);
     const gates = [364, 362, 361, 360, 359, 358, 357, 355].map((id) => toM(at(id)));
     const side = ring.filter(([x, y]) => x > 200 && x < 240 && y > -55 && y < 115);
