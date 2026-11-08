@@ -150,6 +150,19 @@ export function sceneLight({ elevation, azimuth }: SunPosition): SceneLight {
   };
 }
 
+/**
+ * The imagery's grading within 3 km of the Haram (owner, 2026-11-08): half the grey wash and half the
+ * night's dimming, so the streets, buildings and hotels round the Mosque show through.
+ */
+export function nearHaramRaster(r: SceneLight['raster']): SceneLight['raster'] {
+  return {
+    brightnessMin: r.brightnessMin / 2,
+    brightnessMax: 1 - (1 - r.brightnessMax) / 2,
+    contrast: r.contrast / 2,
+    saturation: r.saturation / 2,
+  };
+}
+
 /** A fixed moment for previews and tests (`?scene=night`), or null to follow the sun. */
 export function sceneOverride(search: string): SunPosition | null {
   const scene = new URLSearchParams(search).get('scene');
