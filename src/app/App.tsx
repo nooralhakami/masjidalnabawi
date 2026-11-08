@@ -31,8 +31,6 @@ import {
   toiletSub,
   travel,
   typed,
-  nearWho,
-  setNearWho,
   whereQ,
   hintsSeen,
   markHintsSeen,
@@ -135,7 +133,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
 
   /** Open a place's card: the map flies to it when it was chosen from a list or a link (the live app's select()). */
   const [routing, setRouting] = useState(false);
-  /** «Men's or women's?», asked once before the first «nearest restroom» (null: dismissed). */
+  /** «Men's or women's?», asked on every «nearest restroom» (owner, 2026-11-08; null: dismissed). */
   const [whoQ, setWhoQ] = useState<((w: NearWho | null) => void) | null>(null);
   // The navigation bar's height, so the notices sit above it.
   const navHost = useRef<HTMLDivElement>(null);
@@ -218,16 +216,17 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
   /** «Near you now»: the nearest open restroom or gate, two ways drawn (UI plan phase 2). */
   const runNear = async (kind: NearKind) => {
     tapHaptic();
-    let who = nearWho.value;
-    if (kind === 'toilet' && !who) {
+    // Asked every time, never remembered (owner, 2026-11-08): one phone is often shared by a family.
+    // A gate is the same for everyone, so «nearest gate» asks nothing.
+    let who: NearWho | null = 'men';
+    if (kind === 'toilet') {
       who = await askWho();
       setWhoQ(null);
       if (!who) return;
-      setNearWho(who);
     }
     await trip.near(
       kind,
-      who ?? 'men',
+      who,
       (id) => fac.isOpen(id),
       (p) => select(p, false),
     );

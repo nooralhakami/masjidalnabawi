@@ -11,12 +11,13 @@ const marks = (page: Page) =>
 const routeCount = (page: Page) => page.evaluate(() => (window as unknown as Win).__engine.route.alternatives.length + ((window as unknown as Win).__engine.route.active ? 1 : 0));
 const row = (page: Page) => page.getByRole('group', { name: 'الآن بقربك' });
 const where = (page: Page) => page.getByRole('dialog', { name: 'أين أنت بالضبط؟' });
+const who = (page: Page) => page.getByRole('dialog', { name: 'دورات مياه الرجال أم النساء؟' });
 
 test.describe('without the location', () => {
-  test('nearest restroom from a gate the visitor types: asked men or women once, two ways drawn', async ({ page, errors: _ }) => {
+  test('nearest restroom from a gate the visitor types: asked men or women, two ways drawn', async ({ page, errors: _ }) => {
     await openMap(page);
     await row(page).getByRole('button', { name: 'أقرب دورة مياه' }).click();
-    await page.getByRole('dialog', { name: 'دورات مياه الرجال أم النساء؟' }).getByRole('button', { name: 'للرجال' }).click();
+    await who(page).getByRole('button', { name: 'للرجال' }).click();
     await expect(where(page)).toBeVisible({ timeout: 15_000 });
     // A number that is no place: said, and the question stays.
     await where(page).getByLabel('رقم البوابة أو الباب أو دورة المياه أمامك').fill('999');
@@ -28,14 +29,36 @@ test.describe('without the location', () => {
     // The nearer one followed, the other one faint: two ways, to a men's (or shared) block.
     await expect.poll(() => routeCount(page), { timeout: 30_000 }).toBe(2);
     await expect(page.locator('.route-card .pc-title')).toContainText(/الرجال|مشترك/);
-    // The answer is remembered on this device: the next time, no men-or-women question.
-    expect(await page.evaluate(() => localStorage.getItem('near-who'))).toBe('men');
+    // Never remembered (owner, 2026-11-08: a phone is often shared): nothing kept on the device.
+    expect(await page.evaluate(() => localStorage.getItem('near-who'))).toBeNull();
+  });
+
+  test('asked again on every press, so someone else on the same phone can choose women', async ({ page, errors: _ }) => {
+    // A phone that kept «men» from an earlier version: the old answer is cleared and not used.
+    await page.addInitScript(() => localStorage.getItem('near-who') === null && localStorage.setItem('near-who', 'men'));
+    await openMap(page);
+    for (const answer of ['للرجال', 'للنساء']) {
+      await row(page).getByRole('button', { name: 'أقرب دورة مياه' }).click();
+      await expect(who(page)).toBeVisible();
+      await who(page).getByRole('button', { name: answer }).click();
+      await expect(where(page)).toBeVisible({ timeout: 15_000 });
+      await page.keyboard.press('Escape');
+      await expect(where(page)).toHaveCount(0);
+    }
+    expect(await page.evaluate(() => localStorage.getItem('near-who'))).toBeNull();
+  });
+
+  test('the nearest gate asks nothing about men or women', async ({ page, errors: _ }) => {
+    await openMap(page);
+    await row(page).getByRole('button', { name: 'أقرب بوابة' }).click();
+    await expect(where(page)).toBeVisible({ timeout: 15_000 });
+    await expect(who(page)).toHaveCount(0);
   });
 
   test('in the underground car park: the lot, then a numbered «up the stairs» on the map', async ({ page, errors: _ }) => {
-    await page.addInitScript(() => localStorage.setItem('near-who', 'women'));
     await openMap(page);
     await row(page).getByRole('button', { name: 'أقرب دورة مياه' }).click();
+    await who(page).getByRole('button', { name: 'للنساء' }).click();
     await where(page).getByRole('button', { name: 'أنا في المواقف تحت الأرض' }).click();
     await page.getByRole('dialog', { name: 'في أي موقف أنت؟' }).getByRole('button', { name: 'موقف 9', exact: true }).click();
     await expect.poll(() => marks(page), { timeout: 30_000 }).toContain('step:اصعد الدرج إلى الساحة');
@@ -43,7 +66,6 @@ test.describe('without the location', () => {
   });
 
   test('a dismissed question draws nothing', async ({ page, errors: _ }) => {
-    await page.addInitScript(() => localStorage.setItem('near-who', 'men'));
     await openMap(page);
     await row(page).getByRole('button', { name: 'أقرب بوابة' }).click();
     await expect(where(page)).toBeVisible({ timeout: 15_000 });
