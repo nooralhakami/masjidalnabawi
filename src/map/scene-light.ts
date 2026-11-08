@@ -196,7 +196,7 @@ export function materialGlow(file: string, material: string | undefined): Materi
   // dark green steel only catching some of their light.
   if (file.includes('fence')) {
     if (name === 'lantern') return { color: scale(LANTERN, 2.4), tint: 0, rise: 0 };
-    if (name === 'sign') return { color: scale(INSIDE, 1.1), tint: 1, rise: 0 };
+    if (name === 'sign') return { color: scale(INSIDE, 0.55), tint: 1, rise: 0 };
     if (name === 'granite') return { color: scale(FLOOD, 0.55), tint: 1, rise: 1 };
     if (name === 'gold' || name === 'spikes') return { color: scale(FLOOD, 0.8), tint: 1, rise: 0 };
     return { color: scale(FLOOD, 0.35), tint: 1, rise: 0 };

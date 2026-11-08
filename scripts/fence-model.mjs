@@ -97,7 +97,7 @@ function rng(seed) {
 
 const GREEN = [0.16, 0.27, 0.19];
 const GOLD = [0.86, 0.68, 0.33];
-const GRANITE = [0.82, 0.73, 0.62];
+const GRANITE = [0.93, 0.85, 0.76];
 
 /** Beige granite with dark and light grains, 1 m to the texture. */
 function graniteTexture() {
@@ -217,11 +217,41 @@ function poly(prims, mat, pts, uvs, normal) {
 function box(prims, mat, [x0, y0, z0], [x1, y1, z1], skip = []) {
   const r = MATERIALS[mat].repeat ?? 1;
   const faces = {
-    '+x': [[x1, y0, z0], [x1, y0, z1], [x1, y1, z1], [x1, y1, z0], [1, 0, 0]],
-    '-x': [[x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0], [-1, 0, 0]],
-    '+z': [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], [0, 0, 1]],
-    '-z': [[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0], [0, 0, -1]],
-    '+y': [[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1], [0, 1, 0]],
+    '+x': [
+      [x1, y0, z0],
+      [x1, y0, z1],
+      [x1, y1, z1],
+      [x1, y1, z0],
+      [1, 0, 0],
+    ],
+    '-x': [
+      [x0, y0, z0],
+      [x0, y0, z1],
+      [x0, y1, z1],
+      [x0, y1, z0],
+      [-1, 0, 0],
+    ],
+    '+z': [
+      [x0, y0, z1],
+      [x1, y0, z1],
+      [x1, y1, z1],
+      [x0, y1, z1],
+      [0, 0, 1],
+    ],
+    '-z': [
+      [x0, y0, z0],
+      [x1, y0, z0],
+      [x1, y1, z0],
+      [x0, y1, z0],
+      [0, 0, -1],
+    ],
+    '+y': [
+      [x0, y1, z0],
+      [x1, y1, z0],
+      [x1, y1, z1],
+      [x0, y1, z1],
+      [0, 1, 0],
+    ],
   };
   for (const [key, [a, b, c, d, n]] of Object.entries(faces)) {
     if (skip.includes(key)) continue;
@@ -242,7 +272,18 @@ function frustum(prims, mat, r0, r1, y0, y1) {
     const slope = (r0 - r1) / Math.max(1e-6, y1 - y0);
     const n = [Math.cos(mid), slope, Math.sin(mid)];
     const l = Math.hypot(...n);
-    poly(prims, mat, [p(r0, a0, y0), p(r0, a1, y0), p(r1, a1, y1), p(r1, a0, y1)], [[0, 1], [1, 1], [1, 0], [0, 0]], n.map((v) => v / l));
+    poly(
+      prims,
+      mat,
+      [p(r0, a0, y0), p(r0, a1, y0), p(r1, a1, y1), p(r1, a0, y1)],
+      [
+        [0, 1],
+        [1, 1],
+        [1, 0],
+        [0, 0],
+      ],
+      n.map((v) => v / l),
+    );
   }
 }
 
@@ -256,8 +297,40 @@ function panelMesh() {
   box(p, 'steel', [-h, RAIL_HI - 0.08, -0.045], [h, RAIL_HI, 0.045]);
   for (const s of [-1, 1]) box(p, 'steel', [s * h - 0.03, RAIL_LO, -0.04], [s * h + 0.03, RAIL_HI, 0.04], ['+y']);
   const iw = h - 0.03;
-  poly(p, 'lattice', [[-iw, RAIL_LO + 0.06, 0], [iw, RAIL_LO + 0.06, 0], [iw, RAIL_HI - 0.08, 0], [-iw, RAIL_HI - 0.08, 0]], [[0, 1], [1, 1], [1, 0], [0, 0]], [0, 0, 1]);
-  poly(p, 'spikes', [[-h, RAIL_HI, 0], [h, RAIL_HI, 0], [h, RAIL_HI + SPIKE_H, 0], [-h, RAIL_HI + SPIKE_H, 0]], [[0, 1], [1, 1], [1, 0], [0, 0]], [0, 0, 1]);
+  poly(
+    p,
+    'lattice',
+    [
+      [-iw, RAIL_LO + 0.06, 0],
+      [iw, RAIL_LO + 0.06, 0],
+      [iw, RAIL_HI - 0.08, 0],
+      [-iw, RAIL_HI - 0.08, 0],
+    ],
+    [
+      [0, 1],
+      [1, 1],
+      [1, 0],
+      [0, 0],
+    ],
+    [0, 0, 1],
+  );
+  poly(
+    p,
+    'spikes',
+    [
+      [-h, RAIL_HI, 0],
+      [h, RAIL_HI, 0],
+      [h, RAIL_HI + SPIKE_H, 0],
+      [-h, RAIL_HI + SPIKE_H, 0],
+    ],
+    [
+      [0, 1],
+      [1, 1],
+      [1, 0],
+      [0, 0],
+    ],
+    [0, 0, 1],
+  );
   return p;
 }
 
@@ -346,7 +419,15 @@ RUNS.forEach((run, k) => {
   const a = run.pts[0];
   const b = run.pts[run.pts.length - 1];
   const { L, u, n } = frame(a, b);
-  const ids = DATA.gates.filter((g) => g.opening === k).map((g) => ({ id: g.id, s: (() => { const q = toModel(g.at); return (q[0] - a[0]) * u[0] + (q[1] - a[1]) * u[1]; })() }));
+  const ids = DATA.gates
+    .filter((g) => g.opening === k)
+    .map((g) => ({
+      id: g.id,
+      s: (() => {
+        const q = toModel(g.at);
+        return (q[0] - a[0]) * u[0] + (q[1] - a[1]) * u[1];
+      })(),
+    }));
   ids.sort((x, y) => x.s - y.s);
   const at = (s) => [a[0] + u[0] * s, a[1] + u[1] * s];
   nodes.push(node(GATE_PILLAR_MESH, at(-GATE_PILLAR.w / 2), u), node(GATE_PILLAR_MESH, at(L + GATE_PILLAR.w / 2), u));
@@ -369,10 +450,32 @@ RUNS.forEach((run, k) => {
     const y0 = SIGN.y - h / 2;
     const y1 = SIGN.y + h / 2;
     const quad = [corner(-w / 2, y0), corner(w / 2, y0), corner(w / 2, y1), corner(-w / 2, y1)];
-    poly(signs, 'sign', quad, [[cu, cv + 1 / 7], [cu + 0.1, cv + 1 / 7], [cu + 0.1, cv], [cu, cv]], [n[0], 0, n[1]]);
+    poly(
+      signs,
+      'sign',
+      quad,
+      [
+        [cu, cv + 1 / 7],
+        [cu + 0.1, cv + 1 / 7],
+        [cu + 0.1, cv],
+        [cu, cv],
+      ],
+      [n[0], 0, n[1]],
+    );
     // Its back, plain steel, so the number never shows mirrored from inside.
     const back = quad.map((q) => [q[0] - n[0] * 0.015, q[1], q[2] - n[1] * 0.015]);
-    poly(signs, 'steel', back, [[0, 0], [1, 0], [1, 1], [0, 1]], [-n[0], 0, -n[1]]);
+    poly(
+      signs,
+      'steel',
+      back,
+      [
+        [0, 0],
+        [1, 0],
+        [1, 1],
+        [0, 1],
+      ],
+      [-n[0], 0, -n[1]],
+    );
   });
 });
 nodes.push({ mesh: SIGNS });
@@ -466,4 +569,6 @@ function buildGlb() {
 const glb = buildGlb();
 writeFileSync(OUT, glb);
 const count = (m) => nodes.filter((n) => n.mesh === m).length;
-console.log(`haram-fence.glb: ${(glb.length / 1024).toFixed(0)} KB; ${count(PANEL)} panels, ${count(PILLAR_MESH)} pillars, ${count(GATE_PILLAR_MESH)} gate pillars, ${DATA.gates.length} boards`);
+console.log(
+  `haram-fence.glb: ${(glb.length / 1024).toFixed(0)} KB; ${count(PANEL)} panels, ${count(PILLAR_MESH)} pillars, ${count(GATE_PILLAR_MESH)} gate pillars, ${DATA.gates.length} boards`,
+);
