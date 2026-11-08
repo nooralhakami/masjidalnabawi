@@ -5,6 +5,7 @@ import { WOMEN_AREAS } from '../data-next/women-areas';
 import type { CrowdInput, XY } from './crowd-sim';
 import { metresFromOrigin } from './glb-layer';
 import { MOSQUE_MAIN, MOSQUE_SOUTH, restroomFootprints, restroomWalkways } from './prayer-layout';
+import { QUEUE_AREA, QUEUE_RAILS } from './rawdah-layout';
 import { rugLayout } from './rug-layout';
 
 const m = (ll: readonly [number, number]): XY => metresFromOrigin(ll as [number, number]);
@@ -36,7 +37,8 @@ function inside(ring: readonly XY[], step = 25): XY[] {
  * annex's), the Mosque or the restroom blocks (with half a metre round them), but the walkways in
  * front of the blocks; round the canopy and lamp columns (`columns`, as `[lng, lat]`, once the
  * canopies' file has said where they stand); toward the Mosque's doors and the outer gates. The
- * women's areas (owner, 2026-11-07) are for women only, behind their barriers.
+ * women's areas (owner, 2026-11-07) are for women only, behind their barriers; the Rawdah's queue
+ * lanes (owner, 2026-11-08) only for those queuing.
  */
 export function crowdInput(columns: readonly (readonly [number, number])[]): CrowdInput {
   const plaza = alharamainPlaza().features;
@@ -59,7 +61,9 @@ export function crowdInput(columns: readonly (readonly [number, number])[]): Cro
     columns: columns.map(m),
     goals: POIS.filter((p) => p.category === 'gates').map((p) => m([p.lng, p.lat])),
     womenOnly: WOMEN_AREAS.map((a) => a.zone.map(mLatLng)),
-    fences: WOMEN_AREAS.flatMap((a) => a.barriers.map((line) => line.map(mLatLng))),
+    // The women's barriers, and the rails of the Rawdah's queues (owner, 2026-11-08).
+    fences: [...WOMEN_AREAS.flatMap((a) => a.barriers.map((line) => line.map(mLatLng))), ...QUEUE_RAILS],
+    reserved: [QUEUE_AREA],
     womenGoals: WOMEN_AREAS.flatMap((a) => inside(a.zone.map(mLatLng))),
   };
 }
