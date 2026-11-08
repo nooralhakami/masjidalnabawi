@@ -60,7 +60,8 @@ describe('walking beyond the plazas', () => {
       expect(p.mode).toBe('walk');
       const path = p.legs[0].path;
       expect(path[0]).toEqual(from);
-      expect(path[path.length - 1][0]).toBeCloseTo(P(to).lat, 6);
+      // At the place, or at a restroom's door (233 opens north: owner, 2026-11-06).
+      expect(path[path.length - 1][0]).toBeCloseTo((restroomDoor(P(to)) ?? at(to))[0], 6);
       expect(enters(path)).toBe(false);
       // Realistic: at most ~1.6× the straight-line distance.
       const straight = pathLength([from, at(to)]);
