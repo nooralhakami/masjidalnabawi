@@ -191,6 +191,16 @@ export function materialGlow(file: string, material: string | undefined): Materi
     // Its white marble is lit less than the Mosque's cream walls, or it burns out and loses its joints.
     if (name !== 'steel' && name !== 'dark') return { color: scale(FLOOD, 0.42), tint: 1, rise: 1 };
   }
+  // The outer fence (scripts/fence-model.mjs): its brass lanterns lit, the orange gate boards lit
+  // from inside as at night in the owner's photographs, the granite under the floodlights, and the
+  // dark green steel only catching some of their light.
+  if (file.includes('fence')) {
+    if (name === 'lantern') return { color: scale(LANTERN, 2.4), tint: 0, rise: 0 };
+    if (name === 'sign') return { color: scale(INSIDE, 1.1), tint: 1, rise: 0 };
+    if (name === 'granite') return { color: scale(FLOOD, 0.55), tint: 1, rise: 1 };
+    if (name === 'gold' || name === 'spikes') return { color: scale(FLOOD, 0.8), tint: 1, rise: 0 };
+    return { color: scale(FLOOD, 0.35), tint: 1, rise: 0 };
+  }
   if (name.startsWith('glass')) {
     // The lanterns on the canopy columns, near white; the Mosque's windows, warm from inside.
     return canopies ? { color: scale(LANTERN, 2.2), tint: 0, rise: 0 } : { color: scale(INSIDE, 0.9), tint: 0, rise: 0 };

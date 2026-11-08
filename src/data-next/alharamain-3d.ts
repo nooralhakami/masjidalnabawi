@@ -94,7 +94,7 @@ export interface AlharamainModel {
 }
 
 /**
- * Venue 4 and the campus POIs carrying a `threeDModel`: 42 placements of 6 files (41 from navQ, one added). The
+ * Venue 4 and the campus POIs carrying a `threeDModel`: 42 placements of 6 files (41 from navQ, one added), and the outer fence (one file, one placement). The
  * restroom blocks stand where navQ puts its plain service boxes, drawn instead with a model made
  * from the owner's photographs (`scripts/restroom-model.mjs`, 2026-11-06). Its entrance is one end
  * only, so each block uses the file turned the way it opens (owner, 2026-11-06): towards the Mosque
@@ -120,6 +120,10 @@ export const ALHARAMAIN_MODELS: readonly AlharamainModel[] = [
       },
     ],
   },
+  // The outer fence of the courtyards and its gates, along the Authority's line (owner, 2026-11-08):
+  // made from the owner's photographs by scripts/fence-model.mjs, in true metres from the Mosque's
+  // anchor, so it is placed there unturned.
+  { url: './models/haram-fence.glb', anchors: [[39.611752, 24.466806]], rotation: 0 },
   {
     url: './models/haram-restroom-a-east.glb',
     rotation: 1,
