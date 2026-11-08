@@ -7,9 +7,9 @@ import type { LangCode } from '../data/types';
  */
 export const SITE = {
   // The QR code is generated from this address so the displayed, copied and downloaded codes stay in sync.
-  // It opens the map itself (owner, 2026-11-07, UI plan phase 5): a visitor who scans it wants the map, not
-  // the landing page. Codes printed before still open the site's home, which leads to the map.
-  QR_URL: 'https://masjidalnabawi.vercel.app/map.html',
+  // It opens the site's home page, as the printed codes do (owner, 2026-11-08: «الباركود يفتح الصفحة
+  // الرئيسية وليس الخريطة»); the big «open the map» button is at the top there.
+  QR_URL: 'https://masjidalnabawi.vercel.app/',
   QR_IMAGE: '',
   // The organisation's name under the title in the landing footer; empty hides the line (owner, 2026-10-16).
   ORG_NAME: '',
