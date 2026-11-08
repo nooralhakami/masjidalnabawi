@@ -5,7 +5,7 @@ import { WOMEN_AREAS } from '../data-next/women-areas';
 import type { CrowdInput, XY } from './crowd-sim';
 import { metresFromOrigin } from './glb-layer';
 import { MOSQUE_MAIN, MOSQUE_SOUTH, restroomFootprints, restroomWalkways } from './prayer-layout';
-import { QUEUE_AREA, QUEUE_RAILS } from './rawdah-layout';
+import { GREETING_BARRIERS, GREETING_WAYS, QUEUE_AREA, QUEUE_MOUTH, QUEUE_RAILS } from './rawdah-layout';
 import { rugLayout } from './rug-layout';
 
 const m = (ll: readonly [number, number]): XY => metresFromOrigin(ll as [number, number]);
@@ -61,9 +61,11 @@ export function crowdInput(columns: readonly (readonly [number, number])[]): Cro
     columns: columns.map(m),
     goals: POIS.filter((p) => p.category === 'gates').map((p) => m([p.lng, p.lat])),
     womenOnly: WOMEN_AREAS.map((a) => a.zone.map(mLatLng)),
-    // The women's barriers, and the rails of the Rawdah's queues (owner, 2026-11-08).
-    fences: [...WOMEN_AREAS.flatMap((a) => a.barriers.map((line) => line.map(mLatLng))), ...QUEUE_RAILS],
+    // The women's barriers, the rails of the Rawdah's queues and the greeting's barriers (owner, 2026-11-08).
+    fences: [...WOMEN_AREAS.flatMap((a) => a.barriers.map((line) => line.map(mLatLng))), ...QUEUE_RAILS, ...GREETING_BARRIERS],
     reserved: [QUEUE_AREA],
+    heldWays: GREETING_WAYS,
+    quiet: [QUEUE_MOUTH],
     womenGoals: WOMEN_AREAS.flatMap((a) => inside(a.zone.map(mLatLng))),
   };
 }

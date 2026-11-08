@@ -4,11 +4,11 @@ import { describe, expect, it } from 'vitest';
 import { ALHARAMAIN_MODELS } from '../../src/data-next/alharamain-3d';
 import { PRAYER_CLEARINGS } from '../../src/data-next/alharamain-prayers';
 import { Flows } from '../../src/map/crowd-flows';
-import { BODY_R, CELL, COLUMN_R, Crowd, FIXED, FREE } from '../../src/map/crowd-sim';
+import { BODY_R, CELL, COLUMN_R, Crowd, FIXED, FREE, HIDDEN } from '../../src/map/crowd-sim';
 import { crowdInput } from '../../src/map/crowd-world';
 import { metresFromOrigin, nodePositions, parseGlbBuffer } from '../../src/map/glb-layer';
 import { restroomFootprints, restroomWalkways } from '../../src/map/prayer-layout';
-import { QUEUE_LANES, QUEUE_MOUTH_Z, QUEUE_RAILS } from '../../src/map/rawdah-layout';
+import { GREETING_BARRIERS, QUEUE_LANES, QUEUE_MOUTH_Z, QUEUE_RAILS } from '../../src/map/rawdah-layout';
 import { rugLayout } from '../../src/map/rug-layout';
 
 const inside = (x: number, z: number, r: readonly (readonly [number, number])[]) => {
@@ -132,8 +132,8 @@ describe('the women’s areas (owner, 2026-11-07)', () => {
 
   it('the two areas and their barriers are read in: north-west and north-east', () => {
     expect(zones).toHaveLength(2);
-    // 13 for the women's areas, and the 11 rails of the Rawdah's queues (owner, 2026-11-08).
-    expect(fences.length).toBe(13 + QUEUE_RAILS.length);
+    // 13 for the women's areas, the 11 rails of the Rawdah's queues and the greeting's barriers (owner, 2026-11-08).
+    expect(fences.length).toBe(13 + QUEUE_RAILS.length + GREETING_BARRIERS.length);
     expect(QUEUE_RAILS).toHaveLength(11);
   });
 
@@ -223,10 +223,15 @@ describe('the flows round the Rawdah (owner, 2026-11-08)', () => {
   );
   const flows = new Flows(crowd);
   crowd.keepNear(-20, -50, 130, 0);
+  // Men seen going in for the greeting (hidden inside the Mosque), and where.
+  const wentIn = new Map<number, [number, number]>();
+  const last = new Float64Array(crowd.n * 2);
   for (let t = 0; t < 120; t += 0.05) {
     crowd.keepNear(-20, -50, 130);
+    for (let a = 0; a < crowd.n; a++) last.set([crowd.px[a], crowd.pz[a]], a * 2);
     flows.update(0.05, womenTime, true);
     crowd.step(0.05);
+    for (const a of flows.census().salam) if (crowd.mode[a] === HIDDEN && !wentIn.has(a) && !Number.isNaN(last[a * 2])) wentIn.set(a, [last[a * 2], last[a * 2 + 1]]);
   }
   const who = flows.census();
 
@@ -235,6 +240,11 @@ describe('the flows round the Rawdah (owner, 2026-11-08)', () => {
     for (const a of [...who.queue, ...who.hold, ...who.organisers]) expect(crowd.woman[a]).toBe(1);
     expect(who.salam.length).toBeGreaterThan(10);
     for (const a of who.salam) expect(crowd.woman[a]).toBe(0);
+  });
+
+  it('men greeting go in at Gate 1 (Bab al-Salam), through the way the barriers make', () => {
+    expect(wentIn.size).toBeGreaterThan(2);
+    for (const [x, z] of wentIn.values()) expect(Math.hypot(x - -115.2, z - -78.9)).toBeLessThan(6);
   });
 
   it('those in a lane keep between its rails', () => {
@@ -269,13 +279,20 @@ describe('funerals come now and then, not all the time (owner, 2026-11-08)', () 
     crowd.keepNear(-20, -50, 130, 0);
     const menTime = new Date('2026-11-08T09:00:00Z');
     let most = 0;
+    const firstAt: [number, number][] = [];
+    let seen = 0;
     for (let t = 0; t < 1800; t += 0.5) {
       flows.update(0.5, menTime, true);
+      const biers = flows.biers();
+      if (flows.funeralsStarted > seen && biers.length) firstAt.push([biers[biers.length - 1].x, biers[biers.length - 1].z]);
+      seen = flows.funeralsStarted;
       if (t < 60) expect(flows.funeralsStarted).toBe(0);
       most = Math.max(most, flows.census().funerals);
     }
     expect(flows.funeralsStarted).toBeGreaterThanOrEqual(2);
     expect(flows.funeralsStarted).toBeLessThanOrEqual(10);
     expect(most).toBeLessThanOrEqual(2);
+    // Each comes out of the door of block 203, on its north side (owner, 2026-11-08).
+    for (const [x, z] of firstAt) expect(Math.hypot(x - -6, z - -16)).toBeLessThan(5);
   });
 });

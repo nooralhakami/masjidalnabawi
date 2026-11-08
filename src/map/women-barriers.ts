@@ -1,7 +1,7 @@
 import type { FeatureCollection, Polygon } from 'geojson';
 import { WOMEN_AREAS } from '../data-next/women-areas';
 import { lngLatFromMetres, metresFromOrigin } from './glb-layer';
-import { QUEUE_RAILS } from './rawdah-layout';
+import { GREETING_BARRIERS, QUEUE_RAILS } from './rawdah-layout';
 
 /** A barrier panel: 2 m long, 0.15 m thick, 1.1 m high, with a hand's gap to the next (owner, 2026-11-07). */
 export const PANEL = { length: 2, thick: 0.15, height: 1.1, gap: 0.08 };
@@ -21,6 +21,12 @@ export function womenBarriers(): FeatureCollection<Polygon, { height: number }> 
 export const RAIL = { length: 2, thick: 0.08, height: 1.0, gap: 0.05 };
 export function queueRails(): FeatureCollection<Polygon, { height: number }> {
   return panels(QUEUE_RAILS, RAIL);
+}
+
+/** The green barriers that order the greeting at the Prophet's chamber (owner, 2026-11-08): as the prayer areas'. */
+export const GREEN_PANEL = { length: 2, thick: 0.15, height: 1.0, gap: 0.08 };
+export function greetingBarriers(): FeatureCollection<Polygon, { height: number }> {
+  return panels(GREETING_BARRIERS, GREEN_PANEL);
 }
 
 /** Panels along runs given in the models' metres: whole panels, centred on each run. */

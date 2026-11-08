@@ -11,7 +11,8 @@ import type { XY } from './crowd-sim';
  *   through Gate 2.
  * - Green: men to greet the Prophet ﷺ enter through Gate 1 (Bab al-Salam); red: they leave through
  *   Gate 41 (Bab al-Baqi') and walk south.
- * - Blue: a funeral now and then, carried to the Mosque's south face by Gate 42 (Bab al-Jana'iz).
+ * - Blue: a funeral now and then, out of block 203 to the Mosque's south face by Gate 42 (Bab
+ *   al-Jana'iz).
  */
 
 /** The queue rails (polylines). */
@@ -64,6 +65,13 @@ export const QUEUE_AREA: XY[] = [
   [42.2, -33.3],
   [16.7, -33.3],
 ];
+/** The lanes' mouth, between the long rails south of the dividers: kept for those joining. */
+export const QUEUE_MOUTH: XY[] = [
+  [16.7, -33.3],
+  [42.2, -33.3],
+  [42.2, 2.9],
+  [16.7, 2.9],
+];
 /** Where the checkers stand: at the north end of the rails between the lanes, facing south. */
 export const QUEUE_CHECKERS: XY[] = [
   [20.2, -94],
@@ -85,25 +93,174 @@ export const RAWDAH_IN: XY = [-10.3, -113.4];
 export const RAWDAH_OUT: XY = [-112.5, -99.6];
 export const RAWDAH_AWAY: XY = [-140, -95];
 
-/** Men greeting the Prophet ﷺ: the way to Gate 1, and out of Gate 41 to the south. */
+/**
+ * The green barriers that order the greeting (owner, 2026-11-08: all there in fact, and all green;
+ * in his picture orange, grey, and red for the way out).
+ * - Orange: the west side of the way in, from the Mosque's wall north of Gate 1 down to block 205.
+ * - Grey: the east side of the way in, from the Mosque by Gate 1 south and round to the south;
+ *   a "D" beside block 205; a line along the south; a line from it to block 203.
+ * - Red: the two sides of the way out of Gate 41, south past block 203.
+ */
+export const GREETING_BARRIERS: XY[][] = [
+  // Orange.
+  [
+    [-109.6, -87.9],
+    [-122.5, -87.9],
+    [-122.5, -31.8],
+    [-118.6, -25.6],
+    [-106.2, -19.0],
+    [-106.2, -16.0],
+  ],
+  // Grey: the east side of the way in.
+  [
+    [-109.6, -68.4],
+    [-110.8, -68.4],
+    [-110.5, -35.2],
+    [-107.2, -28.5],
+    [-100.5, -26.6],
+    [-89.1, -23.8],
+    [-78.6, -18.0],
+    [-70.9, -10.5],
+    [-66.2, -1.0],
+    [-65.7, 2.9],
+    [-66.6, 7.6],
+    [-66.2, 22.2],
+  ],
+  // Grey: the "D" beside block 205.
+  [
+    [-102.9, -16.2],
+    [-102.9, 10.0],
+  ],
+  [
+    [-106.2, 10.0],
+    [-81.4, 10.0],
+  ],
+  [
+    [-102.9, -16.2],
+    [-92.9, -11.9],
+    [-85.2, -5.7],
+    [-80.0, 1.9],
+    [-80.5, 7.6],
+    [-81.4, 10.0],
+  ],
+  // Grey: along the south, and on to block 203.
+  [
+    [-119.6, 22.2],
+    [0.7, 22.2],
+  ],
+  [
+    [-70.0, -11.4],
+    [-16.5, -11.4],
+  ],
+  // Red: the way out of Gate 41, west side then east side.
+  [
+    [-11.4, -72.7],
+    [-8.4, -72.7],
+    [-5.1, -68.9],
+    [-2.2, -59.9],
+    [-0.8, -46.6],
+    [-0.1, -27.6],
+    [0.2, 22.3],
+  ],
+  [
+    [-11.4, -87.5],
+    [-2.2, -84.6],
+    [4.5, -75.1],
+    [8.3, -60.8],
+    [10.7, -37.1],
+    [11.6, 21.9],
+  ],
+];
+
+/**
+ * Where only the men the flows lead walk (inside those barriers): the way in to Gate 1, the way out
+ * of Gate 41, and the ground they close in between them, where the funerals go.
+ */
+export const GREETING_WAYS: XY[][] = [
+  [
+    [-122.5, -87.9],
+    [-109.6, -87.9],
+    [-109.6, -68.4],
+    [-110.8, -68.4],
+    [-110.5, -35.2],
+    [-107.2, -28.5],
+    [-100.5, -26.6],
+    [-89.1, -23.8],
+    [-78.6, -18.0],
+    [-70.9, -10.5],
+    [-66.2, -1.0],
+    [-66.2, 22.2],
+    [-119.6, 22.2],
+    [-119.6, 7.3],
+    [-118.7, 7.3],
+    [-118.7, -16.2],
+    [-106.2, -16.2],
+    [-106.2, -19.0],
+    [-118.6, -25.6],
+    [-122.5, -31.8],
+  ],
+  [
+    [-11.4, -87.5],
+    [-2.2, -84.6],
+    [4.5, -75.1],
+    [8.3, -60.8],
+    [10.7, -37.1],
+    [11.6, 21.9],
+    [0.2, 22.3],
+    [-0.1, -27.6],
+    [-0.8, -46.6],
+    [-2.2, -59.9],
+    [-5.1, -68.9],
+    [-8.4, -72.7],
+    [-11.4, -72.7],
+  ],
+  [
+    [-109.6, -57],
+    [-11.4, -57],
+    [-11.4, -72.7],
+    [-8.4, -72.7],
+    [-5.1, -68.9],
+    [-2.2, -59.9],
+    [-0.8, -46.6],
+    [-0.1, -27.6],
+    [0.2, 22.3],
+    [-66.2, 22.2],
+    [-66.6, 7.6],
+    [-65.7, 2.9],
+    [-66.2, -1.0],
+    [-70.9, -10.5],
+    [-78.6, -18.0],
+    [-89.1, -23.8],
+    [-100.5, -26.6],
+    [-107.2, -28.5],
+    [-110.5, -35.2],
+    [-110.8, -57],
+  ],
+];
+
+/**
+ * Men greeting the Prophet ﷺ: in from the west under block 205, north between the "D" and the
+ * grey line, then up between the orange and the grey to Gate 1; out of Gate 41 and south between
+ * the red lines.
+ */
 export const SALAM_IN: XY[] = [
-  [-76, 8],
-  [-84, -15],
-  [-117, -50],
+  [-124, 15],
+  [-73, 15],
+  [-75.5, -4],
+  [-93, -18],
+  [-116.5, -40],
   [-115.2, -78.9],
 ];
 export const SALAM_OUT_AT: XY = [-8.6, -78.9];
 export const SALAM_OUT: XY[] = [
-  [6, -78],
-  [6, -20],
-  [6, 18],
+  [-3, -77],
+  [4.5, -50],
+  [5.5, -10],
+  [6, 30],
 ];
 
-/** A funeral: in at the south gate 368, round block 203 and on to the south face by Gate 42. */
+/** A funeral: out of the door of block 203 (its north side) to the south face by Gate 42. */
 export const FUNERAL_WAY: XY[] = [
-  [4.7, 81],
-  [0, 45],
-  [0, 12],
   [-6, -16],
   [-57, -55.5],
 ];

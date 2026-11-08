@@ -30,28 +30,31 @@ import {
  *   six lanes, are checked one by one at the lanes' heads, wait before Gate 37, are sent in batches
  *   into the Rawdah through Gate 39, and come out of Gate 2 some time later.
  * - The greeting: men walk to Gate 1, are inside a while, come out of Gate 41 and walk south.
- * - Now and then a funeral: a bier on four men's shoulders, men following, to the south face by
- *   Gate 42.
+ * - Now and then a funeral: a bier on four men's shoulders, men following, out of block 203 to
+ *   the south face by Gate 42.
  *
  * Only while the view is about the south of the Mosque; otherwise every walker is free.
  */
 
 /** A walker's own way: a list of steps, done one after another. */
 type Step =
-  | { via: number } // led down the flow field to a goal
+  | { via: number; corridor?: boolean } // led down the flow field to a goal (through the greeting's ways)
   | { go: XY } // steered straight to a point
   | { hide: number } // inside the Mosque for so many seconds
   | { at: XY } // comes out here
   | { join: 'hold' } // waits before Gate 37
   | { done: true }; // back to the crowd
 
-/** How many queue in each lane, and the most who wait before Gate 37. */
-export const LANE_FILL = 12;
+/**
+ * How many queue in each lane, and the most who wait before Gate 37. The rates are set so the
+ * flows hold about 150 of the crowd's men or women at once, and the rest still walk the courtyards.
+ */
+export const LANE_FILL = 10;
 const HOLD_MAX = 30;
 const BATCH_MAX = 22;
 /** The greeting: a man every so many seconds, at most so many on the way at once. */
-const SALAM_EVERY = 2;
-const SALAM_MAX = 44;
+const SALAM_EVERY = 4;
+const SALAM_MAX = 30;
 /** A funeral: its walk (m/s), the men round the bier, those following. */
 const FUNERAL_SPEED = 1.15;
 const FOLLOWERS = 10;
@@ -122,9 +125,9 @@ export class Flows {
       hold: add(HOLD_CENTRE),
       rawdahIn: add(RAWDAH_IN),
       away: add(RAWDAH_AWAY),
-      salamIn: SALAM_IN.map(add),
-      salamOut: SALAM_OUT.map(add),
-      funeral: FUNERAL_WAY.map(add),
+      salamIn: SALAM_IN.map((p) => crowd.addSpecialGoal(p, 2)),
+      salamOut: SALAM_OUT.map((p) => crowd.addSpecialGoal(p, 2)),
+      funeral: FUNERAL_WAY.map((p) => crowd.addSpecialGoal(p, 2)),
     };
   }
 
@@ -188,7 +191,7 @@ export class Flows {
       c.free(a);
       return;
     }
-    if ('via' in step) c.lead(a, step.via);
+    if ('via' in step) c.lead(a, step.via, step.corridor);
     else if ('go' in step) c.steer(a, step.go[0], step.go[1]);
     else if ('hide' in step) {
       c.hide(a);
@@ -320,17 +323,25 @@ export class Flows {
     const x = way[leg][0] + (way[leg + 1][0] - way[leg][0]) * f;
     const z = way[leg][1] + (way[leg + 1][1] - way[leg][1]) * f;
     const a = this.recruit(x, z, false, 10_000);
-    if (a < 0 || !c.place(a, x, z)) return;
+    if (a < 0) return;
+    // On the way itself, not in a pocket the barriers close off.
+    const goal = part === 'in' ? this.g.salamIn[leg + 1] : this.g.salamOut[leg];
+    const [ox, oz] = [c.px[a], c.pz[a]];
+    if (!c.place(a, x, z) || !c.reachable(c.px[a], c.pz[a], goal, 2)) {
+      c.px[a] = ox;
+      c.pz[a] = oz;
+      return;
+    }
     this.salam.add(a);
     this.plan(a, part === 'in' ? this.salamSteps(leg + 1) : this.salamOutSteps(leg));
   }
 
   private salamSteps(from: number): Step[] {
-    return [...this.g.salamIn.slice(from).map((via) => ({ via })), { hide: 50 + this.rnd() * 40 }, { at: SALAM_OUT_AT }, ...this.salamOutSteps(0)];
+    return [...this.g.salamIn.slice(from).map((via) => ({ via, corridor: true })), { hide: 50 + this.rnd() * 40 }, { at: SALAM_OUT_AT }, ...this.salamOutSteps(0)];
   }
 
   private salamOutSteps(from: number): Step[] {
-    return [...this.g.salamOut.slice(from).map((via) => ({ via })), { done: true }];
+    return [...this.g.salamOut.slice(from).map((via) => ({ via, corridor: true })), { done: true }];
   }
 
   /** Each frame: the lanes, the waiting, the batches, the greeting and the funerals. */
@@ -381,20 +392,20 @@ export class Flows {
         if (Math.hypot(c.px[head] - x, c.pz[head] - z) < 0.9) {
           lane.shift();
           this.plan(head, [{ go: [x, QUEUE_OUT_Z] }, { via: this.g.hold }, { join: 'hold' }]);
-          this.nextRelease[l] = this.t + 8 + this.rnd() * 5;
+          this.nextRelease[l] = this.t + 16 + this.rnd() * 8;
         }
       }
       // Others of the turn's sex come to the lane's end.
       // (More set out than are missing: the way to the lane takes a minute or more.)
-      if (lane.length < LANE_FILL && lane.length + coming.length < LANE_FILL + 6 && this.t >= this.nextJoin[l]) {
+      if (lane.length < LANE_FILL && lane.length + coming.length < LANE_FILL + 4 && this.t >= this.nextJoin[l]) {
         const [w, e] = QUEUE_LANES[l];
-        const a = this.recruit((w + e) / 2, QUEUE_ENTRY_Z, woman, 90);
+        const a = this.recruit((w + e) / 2, QUEUE_ENTRY_Z, woman, 150);
         if (a >= 0) {
           c.lead(a, this.g.entry[l]);
           coming.push(a);
           this.setOut.set(a, this.t);
         }
-        this.nextJoin[l] = this.t + 1.5 + this.rnd() * 2;
+        this.nextJoin[l] = this.t + 3 + this.rnd() * 3;
       }
     }
 
@@ -444,7 +455,7 @@ export class Flows {
     let path: XY[] = [FUNERAL_WAY[0]];
     for (let k = 1; k < FUNERAL_WAY.length; k++) {
       const [x, z] = path[path.length - 1];
-      const leg = c.route(x, z, this.g.funeral[k]);
+      const leg = c.route(x, z, this.g.funeral[k], 2);
       path.push(...leg.slice(1));
     }
     path.push(FUNERAL_WAY[FUNERAL_WAY.length - 1]);
@@ -460,7 +471,7 @@ export class Flows {
     }
     const at = [0];
     for (let k = 1; k < path.length; k++) at.push(at[k - 1] + Math.hypot(path[k][0] - path[k - 1][0], path[k][1] - path[k - 1][1]));
-    const f: Funeral = { path, at, s: 6, carriers: [], followers: [] };
+    const f: Funeral = { path, at, s: 3, carriers: [], followers: [] };
     const [sx, sz] = path[0];
     for (let k = 0; k < 4; k++) {
       const a = this.recruit(sx, sz, false, 10_000);
