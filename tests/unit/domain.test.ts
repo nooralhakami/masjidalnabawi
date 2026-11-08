@@ -255,7 +255,8 @@ describe('nearby', () => {
   it('nearest outer gate and street side', () => {
     const g = nearestOuterGate(P(215))!;
     expect(g.poi.subCategory).toBe('gate_outer');
-    expect(g.poi.id).toBe(321);
+    // 320 since the gates stand on their openings in the fence (owner, 2026-11-08); it was 321.
+    expect(g.poi.id).toBe(320);
     expect(nearestOuterGate(P(301))).toBeNull();
   });
 });

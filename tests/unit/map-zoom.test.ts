@@ -23,9 +23,11 @@ describe('opening view: fitBounds over the outer gates, 16 px padding, whole zoo
   const b = haramBounds(POIS);
   it('the bounds are the 70 outer gates, with the owner’s position nudges (overrides.json) applied', () => {
     expect(POIS.filter((p) => p.subCategory === 'gate_outer')).toHaveLength(70);
-    expect(b.south).toBeCloseTo(24.4660176, 7);
-    expect(b.north).toBeCloseTo(24.4710527, 7);
-    expect([b.west, b.east]).toEqual([39.6077755, 39.6142706]);
+    // Each gate on its opening in the courtyards' fence (owner, 2026-11-08).
+    expect(b.south).toBeCloseTo(24.4660554, 7);
+    expect(b.north).toBeCloseTo(24.4710365, 7);
+    expect(b.west).toBeCloseTo(39.607812, 7);
+    expect(b.east).toBeCloseTo(39.614315, 7);
   });
   it('phones open at Leaflet zoom 16 (15 on a small 320 × 568 phone); tablets and laptops at 17, a large screen at 18', () => {
     expect(fitView(b, 320, 568).legacyZoom).toBe(15);
@@ -67,8 +69,8 @@ describe('opening view: fitBounds over the outer gates, 16 px padding, whole zoo
   });
   it('centred on the middle of the Haram', () => {
     const { center } = fitView(b, 375, 812);
-    expect(center[0]).toBeCloseTo(24.46854, 5);
-    expect(center[1]).toBeCloseTo(39.61102, 5);
+    expect(center[0]).toBeCloseTo(24.46855, 5);
+    expect(center[1]).toBeCloseTo(39.61106, 5);
   });
   it('map.html preloads the same first tiles: its bounds are these (to 7 decimals, ≈ 1 cm)', () => {
     // The live app's map.html had the bounds before the owner's nudges (south 24.4659727), so its
