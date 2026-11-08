@@ -1,4 +1,5 @@
 import { POIS, ROUTING } from '../data';
+import { ALHARAMAIN_MODELS } from '../data-next/alharamain-3d';
 import type { LatLng, Poi } from '../data/types';
 import { haversine } from '../domain/geo';
 
@@ -169,7 +170,33 @@ const DOOR_OUT_M = 1.5;
 const DOOR_CLEAR_M = 1;
 
 /**
- * The door of a restroom building (owner, 2026-10-14): one nearer the mosque than an outer gate opens
+ * The way each restroom block's entrance faces, as its 3D file says (owner, 2026-11-06: towards the
+ * Mosque for the inner rows, towards the outer gates for the outer rows, 233–236 north and 231–232
+ * south): the block's centre and the unit step out of its entrance. Block centres from their anchors
+ * as the restroom model places them (scripts/restroom-model.mjs).
+ */
+let blockDoors: { c: XY; dir: XY }[] | null = null;
+function restroomBlocks(): { c: XY; dir: XY }[] {
+  if (blockDoors) return blockDoors;
+  const R = 111_320;
+  const out: { c: XY; dir: XY }[] = [];
+  for (const model of ALHARAMAIN_MODELS) {
+    const m = model.url.match(/restroom-(a|b)-(east|west|north|south)/);
+    if (!m) continue;
+    const [x, z] = m[1] === 'a' ? [-2.415, -41.918] : [-2.355, -82.929];
+    const t = (model.rotation * Math.PI) / 180;
+    const east = x * Math.cos(t) - z * Math.sin(t);
+    const south = x * Math.sin(t) + z * Math.cos(t);
+    const dir: XY = m[2] === 'east' ? [1, 0] : m[2] === 'west' ? [-1, 0] : m[2] === 'north' ? [0, 1] : [0, -1];
+    for (const [lng, lat] of model.anchors) out.push({ c: toM([lat - south / R, lng + east / (R * Math.cos((lat * Math.PI) / 180))]), dir });
+  }
+  return (blockDoors = out);
+}
+
+/**
+ * The door of a restroom building. A block with a 3D model opens the way its file says (above); it
+ * used to be guessed from distances, and the gates' move onto the fence (2026-11-08) turned the
+ * south inner row's doors the wrong way. Otherwise (owner, 2026-10-14): one nearer the mosque than an outer gate opens
  * towards the mosque; one nearer an outer gate opens away from it, towards the outer gates. Taken on
  * the building's side that faces that way (north, east, south or west). Null for anything else, or a
  * restroom far from both.
@@ -179,6 +206,9 @@ export function restroomDoor(p: Poi): LatLng | null {
   const N = network();
   const c = toM([p.lat, p.lng]);
   if (!N.buildings.some((r) => insideRect(c, r))) return null;
+  const out = ROUTING.rules.toilet_building_m / 2 + DOOR_OUT_M;
+  const block = restroomBlocks().find((b) => dist(b.c, c) < 4);
+  if (block) return fromM([c[0] + block.dir[0] * out, c[1] + block.dir[1] * out]);
   const m = N.obstacles[0];
   const q: XY = [Math.max(m.x0, Math.min(m.x1, c[0])), Math.max(m.y0, Math.min(m.y1, c[1]))];
   const toMosque = dist(q, c);
@@ -186,7 +216,6 @@ export function restroomDoor(p: Poi): LatLng | null {
   if (Math.min(toMosque, toGate) > DOOR_RULE_M) return null;
   const sign = toMosque < toGate ? 1 : -1; // towards the mosque, or away from it
   const v: XY = [(q[0] - c[0]) * sign, (q[1] - c[1]) * sign];
-  const out = ROUTING.rules.toilet_building_m / 2 + DOOR_OUT_M;
   const d: XY = Math.abs(v[0]) > Math.abs(v[1]) ? [Math.sign(v[0]) * out, 0] : [0, Math.sign(v[1]) * out];
   return fromM([c[0] + d[0], c[1] + d[1]]);
 }

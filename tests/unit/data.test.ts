@@ -172,7 +172,7 @@ describe('pois.json', () => {
 });
 
 describe('overrides', () => {
-  it('only the owner-requested POIs are nudged (every outer gate 301–370 onto its opening in the courtyards\' fence (2026-11-08); restrooms 201–236 (centred on their blocks, 2026-11-06), except 251–254; service buildings 501, 504–507; centres 511 and 604; women prayer halls 601–602; mosque doors 2–5 (2026-11-07)); everything else is untouched', () => {
+  it("only the owner-requested POIs are nudged (every outer gate 301–370 onto its opening in the courtyards' fence (2026-11-08); restrooms 201–236 (centred on their blocks, 2026-11-06), except 251–254; service buildings 501, 504–507; centres 511 and 604; women prayer halls 601–602; mosque doors 2–5 (2026-11-07)); everything else is untouched", () => {
     const raw = rawPois as Poi[];
     const moved = (id: number) =>
       (id >= 301 && id <= 370) ||
