@@ -218,6 +218,10 @@ a {
   mask-composite: intersect;
   pointer-events: none;
 }
+/* Gold stands out more on the night background: lighter still there. */
+:root[data-theme='dark'] .hero-pattern {
+  opacity: 0.1;
+}
 .hero-grid {
   position: relative;
   display: grid;
@@ -229,6 +233,8 @@ a {
   .hero-grid {
     grid-template-columns: 1.05fr 0.95fr;
     grid-template-areas: 'head map' 'act map' 'more map';
+    /* The text sits together at the top; the map's extra height goes below it. */
+    grid-template-rows: auto auto 1fr;
     align-items: start;
     column-gap: var(--s-6, 2.5rem);
   }
@@ -333,7 +339,7 @@ a {
 }
 @media (min-width: 900px) {
   .mini-map {
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 1;
   }
 }
 .mini-still img,
