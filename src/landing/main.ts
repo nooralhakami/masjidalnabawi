@@ -8,7 +8,7 @@ import { applyLang, initialLang, onLangChange } from '../i18n/dom';
 import { loadLang } from '../i18n/load';
 import { applyTheme, currentTheme, savedTheme } from '../ui/theme';
 import { imageToPng, mapUrl, qrPng, qrSvg } from './qr';
-import { landingHtml } from './view';
+import { landingHtml, prayerStrip } from './view';
 
 /**
  * The landing page's behaviour (the live app's src/landing/main.ts, without a UI framework: the
@@ -43,8 +43,60 @@ function render(): void {
   bind();
 }
 
+/** The next prayer and its time left, now (every half minute; the build's page has the line empty). */
+function paintPrayer(): void {
+  const el = document.getElementById('next-prayer');
+  if (el) el.outerHTML = prayerStrip(new Date());
+}
+setInterval(paintPrayer, 30_000);
+
+/**
+ * The small live map (UI plan phase 6): after the page has shown and only once its card is on
+ * screen, in its own chunk with the map library, so the first paint does not wait for it. With
+ * «save data» on, or no WebGL, the still picture stays.
+ */
+let mini: { remove(): void } | null = null;
+let pageLoaded = document.readyState === 'complete';
+function startMini(): void {
+  mini?.remove();
+  mini = null;
+  const box = document.getElementById('mini-map');
+  const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+  if (!box || conn?.saveData) return;
+  const go = () => {
+    const seen = new IntersectionObserver(async (entries) => {
+      if (!entries.some((en) => en.isIntersecting)) return;
+      seen.disconnect();
+      try {
+        const { miniMap } = await import('../map/mini');
+        if (!box.isConnected) return;
+        const m = miniMap(box);
+        mini = m.map;
+        await m.ready;
+        box.closest('.mini-map')?.classList.add('is-live');
+      } catch {
+        /* no WebGL: the still picture stays */
+      }
+    });
+    seen.observe(box);
+  };
+  const idle = () => ('requestIdleCallback' in window ? requestIdleCallback(go, { timeout: 1500 }) : setTimeout(go, 200));
+  if (pageLoaded) idle();
+  else
+    addEventListener(
+      'load',
+      () => {
+        pageLoaded = true;
+        idle();
+      },
+      { once: true },
+    );
+}
+
 /** The parts that depend on the live host: the QR code and the copyable link. */
 function fillLive(): void {
+  paintPrayer();
+  startMini();
   const box = document.getElementById('qr-code');
   if (box && !SITE.QR_IMAGE && !box.querySelector('svg[shape-rendering]')) box.insertAdjacentHTML('afterbegin', qrSvg(url, 216));
   const link = document.getElementById('map-link') as HTMLInputElement | null;

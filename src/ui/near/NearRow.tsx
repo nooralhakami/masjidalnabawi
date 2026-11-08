@@ -1,21 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { NearKind } from '../../domain/near';
 import { nextPrayer, PRAYERS, type NextPrayer } from '../../domain/prayer';
-import { latinDigits } from '../../i18n';
+import { clock, minutesText } from '../../presentation/time';
 import { useI18n } from '../i18n';
 import { Icon } from '../kit/Icon';
-
-/** A Madinah wall-clock time in the visitor's language, Latin digits (DESIGN §2). */
-export function clock(at: Date, lang: string): string {
-  const opts: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Riyadh' };
-  let s: string;
-  try {
-    s = new Intl.DateTimeFormat(`${lang}-u-nu-latn`, opts).format(at);
-  } catch {
-    s = new Intl.DateTimeFormat('en', opts).format(at);
-  }
-  return latinDigits(s);
-}
 
 export interface NearRowProps {
   /** The visitor tapped «nearest restroom» or «nearest gate»; resolves when the route is drawn (or not). */
@@ -87,9 +75,7 @@ function PrayerPanel({ p, onClose }: { p: NextPrayer; onClose(): void }) {
     box.current?.focus();
     return () => document.removeEventListener('keydown', onKey);
   }, []);
-  const h = Math.floor(p.minutesLeft / 60);
-  const m = p.minutesLeft % 60;
-  const left = h ? t('dur_hm', { h, m }) : t('dur_m', { m });
+  const left = minutesText(p.minutesLeft, t);
   // After Isha the next is tomorrow's Fajr: today's list then marks none.
   const nextToday = p.today[p.name].getTime() === p.at.getTime();
   return (

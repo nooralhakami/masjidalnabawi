@@ -2,6 +2,8 @@ import { SITE } from '../config/site.config';
 import { LANGS, MORE_LANGS, getLang, pack, t } from '../i18n';
 import { esc } from '../presentation/dom';
 import { brandStar, icon, type IconName } from '../presentation/icons';
+import { nextPrayer } from '../domain/prayer';
+import { clock, minutesText } from '../presentation/time';
 import { COUNTS } from './counts';
 import { qrSvg } from './qr';
 
@@ -58,7 +60,22 @@ function installCard(kind: 'android' | 'ios'): string {
   </article>`;
 }
 
-export function landingHtml(url: string): string {
+/**
+ * The next prayer in Madinah with the time left (UI plan phase 6), under the «open the map» button.
+ * Without `now` (the build's prerendered page) the line keeps its place, empty, until main.ts fills
+ * it: a time baked in at build time would be wrong.
+ */
+export function prayerStrip(now?: Date): string {
+  const p = now ? nextPrayer(now) : null;
+  return `<p class="prayer-strip${p ? '' : ' is-empty'}" id="next-prayer">
+          <span class="pr-ic" aria-hidden="true">${icon('prayer', 20)}</span>
+          <span class="pr-text"><span class="pr-label">${e('pr_next')}</span>
+          <b class="pr-name">${p ? e(`pr_${p.name}`) : '&nbsp;'}</b> <span class="pr-time">${p ? esc(clock(p.at, getLang())) : ''}</span></span>
+          <span class="pr-left">${p ? e('pr_in', { t: minutesText(p.minutesLeft, t) }) : ''}</span>
+        </p>`;
+}
+
+export function landingHtml(url: string, now?: Date): string {
   const l = getLang();
   const stats: [number, string][] = [
     [COUNTS.places, 'st_places'],
@@ -87,31 +104,36 @@ export function landingHtml(url: string): string {
   <section id="top" class="hero">
     <div class="hero-pattern" aria-hidden="true"></div>
     <div class="wrap hero-grid">
-      <div class="hero-text">
+      <div class="hero-head">
         <img class="haramain-logo logo-light" src="./haramain-logo.png" width="720" height="393" alt="شعار الحرمين — الهيئة العامة للعناية بشؤون المسجد الحرام والمسجد النبوي" decoding="async" />
         <img class="haramain-logo logo-dark" src="./haramain-logo-dark.png" width="720" height="393" alt="" aria-hidden="true" decoding="async" />
-        <span class="tag">${icon('phone', 16)}${e('l_tag')}</span>
         <h1>${e('title')}</h1>
-        <p class="lead">${e('hero_p', { n: LANGS.length })}</p>
-        <div class="row">
-          <a class="btn-cta" href="./map.html">${e('l_open')}<span class="flip">${icon('arrowleft', 20)}</span></a>
-          <a class="btn-sec" href="#install">${icon('download', 20)}${e('l_install')}</a>
-        </div>
-        <dl class="stats">${stats.map(([n, k]) => `<div><dd>${n}</dd><dt>${e(k)}</dt></div>`).join('')}</dl>
       </div>
-      <div class="hero-visual" aria-hidden="false">
-        <div class="phone">
-          <picture><source type="image/webp" srcset="./preview-map-1x.webp 304w, ./preview-map.webp 608w" sizes="280px" /><img src="./preview-map.jpg" width="304" height="658" alt="${e('preview_alt')}" decoding="async" fetchpriority="high" /></picture>
-        </div>
-        <div class="callout c1"><span class="tile">${icon('dome', 20)}</span><span><b>${e('co1')}</b><small>${e('co1s')}</small></span></div>
-        <div class="callout c2"><span class="tile">${icon('check', 20)}</span><span><b>${e('co2')}</b><small>${e('co2s')}</small></span></div>
+      <div class="hero-act">
+        <a class="btn-cta btn-open" href="./map.html">${e('l_open_map')}<span class="flip">${icon('arrowleft', 22)}</span></a>
+        ${prayerStrip(now)}
+      </div>
+      <a class="mini-map" href="./map.html" aria-label="${e('l_live_alt')}">
+        <picture class="mini-still"><source type="image/webp" srcset="./mini-map-1x.webp 600w, ./mini-map-700.webp 700w, ./mini-map.webp 1200w" sizes="(min-width: 900px) 520px, calc(100vw - 32px)" /><img src="./mini-map.jpg" width="600" height="375" alt="" decoding="async" fetchpriority="high" /></picture>
+        <div class="mini-canvas" id="mini-map" aria-hidden="true"></div>
+        <span class="mini-tag"><span class="mini-dot" aria-hidden="true"></span>${e('l_live')}</span>
+        <small class="mini-credit" dir="ltr">© Esri, Maxar, Earthstar Geographics · © OpenStreetMap</small>
+      </a>
+      <div class="hero-more">
+        <p class="lead">${e('hero_p', { n: LANGS.length })}</p>
+        <a class="btn-sec" href="#install">${icon('download', 20)}${e('l_install')}</a>
       </div>
     </div>
   </section>
 
+  <section id="features" class="wrap section">
+    <div class="section-head"><span class="eyebrow">${e('nav_features')}</span><h2>${e('f_h')}</h2><p class="muted">${e('f_p')}</p></div>
+    <dl class="stats">${stats.map(([n, k]) => `<div><dd>${n}</dd><dt>${e(k)}</dt></div>`).join('')}</dl>
+    <div class="cards">${FEATURES.map(([ic, tk, dk]) => `<article class="l-card feature"><span class="feature-icon">${icon(ic, 24)}</span><h3>${e(tk, vars)}</h3><p class="muted">${e(dk, vars)}</p></article>`).join('')}</div>
+  </section>
+
   <section id="qr" class="wrap section">
     <div class="qr-panel">
-      <div class="hero-pattern on-dark" aria-hidden="true"></div>
       <div class="qr-text">
         <span class="eyebrow">${e('l_share')}</span>
         <h2>${e('l_qr_h')}</h2>
@@ -131,11 +153,6 @@ export function landingHtml(url: string): string {
         <figcaption>${e('l_scan')}</figcaption>
       </figure>
     </div>
-  </section>
-
-  <section id="features" class="wrap section">
-    <div class="section-head"><span class="eyebrow">${e('nav_features')}</span><h2>${e('f_h')}</h2><p class="muted">${e('f_p')}</p></div>
-    <div class="cards">${FEATURES.map(([ic, tk, dk]) => `<article class="l-card feature"><span class="feature-icon">${icon(ic, 24)}</span><h3>${e(tk, vars)}</h3><p class="muted">${e(dk, vars)}</p></article>`).join('')}</div>
   </section>
 
   <section id="install" class="wrap section">
