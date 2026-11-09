@@ -8,7 +8,7 @@ import { BODY_R, CELL, COLUMN_R, Crowd, FIXED, FREE, HIDDEN } from '../../src/ma
 import { crowdInput } from '../../src/map/crowd-world';
 import { metresFromOrigin, nodePositions, parseGlbBuffer } from '../../src/map/glb-layer';
 import { restroomFootprints, restroomWalkways } from '../../src/map/prayer-layout';
-import { GREETING_BARRIERS, QUEUE_LANES, QUEUE_MOUTH_Z, QUEUE_RAILS } from '../../src/map/rawdah-layout';
+import { GREETING_BARRIERS, GREETING_WAYS, QUEUE_LANES, QUEUE_MOUTH_Z, QUEUE_RAILS } from '../../src/map/rawdah-layout';
 import { rugLayout } from '../../src/map/rug-layout';
 
 const inside = (x: number, z: number, r: readonly (readonly [number, number])[]) => {
@@ -269,6 +269,73 @@ describe('the flows round the Rawdah (owner, 2026-11-08)', () => {
   it('with the view elsewhere, every walker goes back to the crowd', () => {
     flows.update(0.05, womenTime, false);
     for (let a = 0; a < crowd.n; a++) expect(crowd.mode[a]).toBe(FREE);
+  });
+});
+
+describe('the closed strip east of the greeting’s way out (owner, 2026-11-09)', () => {
+  const file = readFileSync(resolve(__dirname, '../../public/models/haram-canopies.glb'));
+  const { gltf } = parseGlbBuffer(file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength) as ArrayBuffer);
+  const columnsLL = nodePositions(ALHARAMAIN_MODELS.find((m) => m.url.includes('canopies'))!, gltf);
+  const input = crowdInput(columnsLL);
+  const strip = GREETING_WAYS[GREETING_WAYS.length - 1];
+
+  it('the ground inside the strip is not for free walkers, at every point of it', () => {
+    const crowd = new Crowd(input, 1, 1);
+    const xs = strip.map((p) => p[0]);
+    const zs = strip.map((p) => p[1]);
+    for (let z = Math.min(...zs) + 2; z < Math.max(...zs) - 1; z += 3) {
+      for (let x = Math.min(...xs) + 2; x < Math.max(...xs) - 1; x += 2) {
+        if (!inside(x, z, strip)) continue;
+        // Depth > 1 m from the ring's edge: past the barrier cells themselves.
+        let deep = true;
+        for (let k = 0, j = strip.length - 1; k < strip.length; j = k++) {
+          const [ax, az] = strip[j];
+          const ex = strip[k][0] - ax;
+          const ez = strip[k][1] - az;
+          const t = Math.max(0, Math.min(1, ((x - ax) * ex + (z - az) * ez) / (ex * ex + ez * ez || 1e-9)));
+          if (Math.hypot(ax + t * ex - x, az + t * ez - z) < 1) deep = false;
+        }
+        if (deep) expect(crowd.standable(x, z, false, true)).toBe(false);
+      }
+    }
+  });
+
+  it('no free walker stands in the strip while the crowd walks about it', () => {
+    const crowd = new Crowd(input, 400, 21);
+    crowd.keepNear(8, -50, 90, 0);
+    for (let t = 0; t < 40; t += 1 / 30) {
+      crowd.step(1 / 30);
+      crowd.keepNear(8, -50, 90);
+      for (let a = 0; a < crowd.n; a++) {
+        if (Number.isNaN(crowd.px[a]) || crowd.mode[a] !== FREE) continue;
+        expect(inside(crowd.px[a], crowd.pz[a], strip)).toBe(false);
+      }
+    }
+  });
+
+  it('the men leaving Gate 41 still walk their own way out, between the red rails', () => {
+    const crowd = new Crowd(
+      input,
+      500,
+      7,
+      Uint8Array.from({ length: 500 }, (_, a) => (a % 2 ? 1 : 0)),
+    );
+    const flows = new Flows(crowd);
+    crowd.keepNear(-20, -50, 130, 0);
+    const womenTime = new Date('2026-11-08T05:00:00Z');
+    let outSouth = 0;
+    for (let t = 0; t < 120; t += 0.05) {
+      crowd.keepNear(-20, -50, 130);
+      flows.update(0.05, womenTime, true);
+      crowd.step(0.05);
+      for (const a of flows.census().salam) {
+        if (crowd.mode[a] === HIDDEN || Number.isNaN(crowd.px[a])) continue;
+        // On the way out south of the block: between the red rails, not in the closed strip.
+        if (crowd.pz[a] > 0 && crowd.px[a] > -2 && crowd.px[a] < 12) outSouth++;
+        expect(inside(crowd.px[a], crowd.pz[a], strip)).toBe(false);
+      }
+    }
+    expect(outSouth).toBeGreaterThan(0);
   });
 });
 

@@ -170,11 +170,24 @@ export const GREETING_BARRIERS: XY[][] = [
     [10.7, -37.1],
     [11.6, 21.9],
   ],
+  // Magenta (owner, 2026-11-09): close the strip between the way out and the queue rails,
+  // from the Mosque's wall by Gate 41 to the rails' south ends. Read from his picture by the
+  // gates' markers in it (good to a metre or two).
+  [
+    [-0.5, -109.6],
+    [-0.5, -102.5],
+    [20.2, -103.2],
+  ],
+  [
+    [14.2, 2.9],
+    [20.2, 2.9],
+  ],
 ];
 
 /**
  * Where only the men the flows lead walk (inside those barriers): the way in to Gate 1, the way out
- * of Gate 41, and the ground they close in between them, where the funerals go.
+ * of Gate 41, and the ground they close in between them, where the funerals go. The strip between
+ * the way out and the queue rails is held too (owner, 2026-11-09): no visitor enters it.
  */
 export const GREETING_WAYS: XY[][] = [
   [
@@ -235,6 +248,22 @@ export const GREETING_WAYS: XY[][] = [
     [-107.2, -28.5],
     [-110.5, -35.2],
     [-110.8, -57],
+  ],
+  // The closed strip east of the way out (owner, 2026-11-09): the wall by Gate 41, the new
+  // barriers on the north and south, the red rail on the west and the queue rails on the east.
+  // Its east edge keeps a body's width off the rails, so those queuing in the first lane still
+  // stand clear of it.
+  [
+    [-0.5, -109.6],
+    [16.7, -109.6],
+    [16.7, -93.8],
+    [16.1, -93.8],
+    [16.1, 2.3],
+    [11.6, 2.3],
+    [10.7, -37.1],
+    [8.3, -60.8],
+    [4.5, -75.1],
+    [-0.5, -82],
   ],
 ];
 
