@@ -1,6 +1,9 @@
+import { assertRoutable } from '../data/provenance';
 import type { LatLng, Poi } from '../data/types';
 import { VERTICAL_NODES, type VerticalNode } from '../data-next/vertical-nodes';
 import { haversine } from '../domain/geo';
+
+assertRoutable('vertical-nodes');
 
 /** Comfortable walking pace for seniors and visitors with disabilities (60 m/min vs 80 m/min standard). */
 export const ACCESSIBLE_WALK_M_PER_MIN = 60;

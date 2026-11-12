@@ -1,8 +1,11 @@
 import { POIS, ROUTING } from '../data';
+import { assertRoutable } from '../data/provenance';
 import { ALHARAMAIN_MODELS } from '../data-next/alharamain-3d';
 import type { LatLng, Poi } from '../data/types';
 import { lngLatFromWalk, modelFromLngLat, walkFromLngLat, walkFromModel } from '../domain/frames';
 import { haversine } from '../domain/geo';
+
+assertRoutable('alharamain-3d');
 
 /**
  * Walking routes on the plaza walkway network: the main ring round the mosque plus the owner's

@@ -1,3 +1,4 @@
+import { assertRoutable } from '../data/provenance';
 import type { LatLng } from '../data/types';
 import { toM, type XY } from './walk';
 
@@ -448,7 +449,10 @@ let loaded: Promise<Streets | null> | null = null;
 /** The street network, loaded on first use (it is only needed for trips beyond the plazas). */
 export function loadStreets(): Promise<Streets | null> {
   loaded ??= import('../../data/streets.json')
-    .then((m) => new Streets((m.default ?? m) as unknown as StreetsData))
+    .then((m) => {
+      assertRoutable('streets.json');
+      return new Streets((m.default ?? m) as unknown as StreetsData);
+    })
     .catch(() => {
       loaded = null;
       return null;

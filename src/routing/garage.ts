@@ -1,7 +1,10 @@
 import garageJson from '../../data/garage.json';
+import { assertRoutable } from '../data/provenance';
 import type { LatLng, Poi } from '../data/types';
 import { lotLevels, parkingEntrances } from '../domain/parking';
 import { fromM, toM, type XY } from './walk';
+
+assertRoutable('garage.json');
 
 /**
  * The roads of the underground car park, from the owner's drawings (2026-10-13,
