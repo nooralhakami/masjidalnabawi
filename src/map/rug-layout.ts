@@ -1,6 +1,7 @@
 import type { Feature, FeatureCollection, Polygon } from 'geojson';
-import { ALHARAMAIN_MODELS, alharamainPlaza } from '../data-next/alharamain-3d';
+import { alharamainPlaza } from '../data-next/alharamain-3d';
 import { ALHARAMAIN_PRAYERS, PRAYER_CLEARINGS } from '../data-next/alharamain-prayers';
+import { QIBLA_BEARING } from '../domain/frames';
 import { lngLatFromMetres, metresFromOrigin } from './glb-layer';
 import { restroomFootprints, restroomWalkways } from './prayer-layout';
 
@@ -8,10 +9,10 @@ type XY = readonly [number, number];
 
 /**
  * The prayer carpets (owner, 2026-11-07): each 5 m across (east to west) and 1.2 m deep toward the
- * qibla (south), the proportions of his reference photograph; in groups of three rows with 80 cm of
- * floor between the groups. Only whole carpets are laid: one that does not fit, or would cross a
- * walkway, a cleared corridor, a restroom block or a column, is left out, and the prayer area is
- * what its carpets cover.
+ * qibla (bearing 176.24°, D5 2026-11-12), the proportions of his reference photograph; in groups of
+ * three rows with 80 cm of floor between the groups. Only whole carpets are laid: one that does not
+ * fit, or would cross a walkway, a cleared corridor, a restroom block or a column, is left out, and
+ * the prayer area is what its carpets cover.
  */
 export const RUG_W = 5;
 export const RUG_D = 1.2;
@@ -42,10 +43,13 @@ export interface RugLayout {
   blocked: XY[][];
 }
 
-/** The frame the carpets are laid in: turned with the canopies (and the paving), so rows run true. */
-const TURN = (ALHARAMAIN_MODELS[1].rotation * Math.PI) / 180;
-const toLaid = ([x, z]: XY): XY => [Math.cos(TURN) * x - Math.sin(TURN) * z, Math.sin(TURN) * x + Math.cos(TURN) * z];
-const fromLaid = ([u, v]: XY): XY => [Math.cos(TURN) * u + Math.sin(TURN) * v, -Math.sin(TURN) * u + Math.cos(TURN) * v];
+/**
+ * The frame the carpets are laid in: rows run toward the qibla, bearing 176.24° — 3.76° east of
+ * due south (D5, owner 2026-11-12), not the canopies' own 1° turn. The rug layer draws with it too.
+ */
+export const RUG_TURN = ((180 - QIBLA_BEARING) * Math.PI) / 180;
+const toLaid = ([x, z]: XY): XY => [Math.cos(RUG_TURN) * x - Math.sin(RUG_TURN) * z, Math.sin(RUG_TURN) * x + Math.cos(RUG_TURN) * z];
+const fromLaid = ([u, v]: XY): XY => [Math.cos(RUG_TURN) * u + Math.sin(RUG_TURN) * v, -Math.sin(RUG_TURN) * u + Math.cos(RUG_TURN) * v];
 
 function inside([x, y]: XY, ring: readonly XY[]): boolean {
   let c = false;

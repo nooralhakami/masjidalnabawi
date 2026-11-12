@@ -1,8 +1,7 @@
 import type { CustomLayerInterface, CustomRenderMethodInput, Map as MLMap } from 'maplibre-gl';
-import { ALHARAMAIN_MODELS } from '../data-next/alharamain-3d';
 import { frameMatrix, mulMat4 } from './glb-layer';
 import { cameraEye } from './plaza-layer';
-import { RUG_D, RUG_W, rugLayout } from './rug-layout';
+import { RUG_D, RUG_TURN, RUG_W, rugLayout } from './rug-layout';
 import type { SceneLight } from './scene-light';
 import { createShadowTexture, SHADOW_GLSL, sunShadow } from './sun-shadow';
 
@@ -18,7 +17,7 @@ out vec2 v_pos;
 out float v_tone;
 void main() {
   vec2 local = a_corner * u_size * 0.5;
-  // Laid with the canopies' turn: rows run with the paving.
+  // Laid toward the qibla (bearing 176.24°): rows run with the layout's turn.
   float c = cos(u_turn);
   float s = sin(u_turn);
   vec2 world = a_rug.xy + vec2(c * local.x + s * local.y, -s * local.x + c * local.y);
@@ -321,7 +320,7 @@ export class RugLayer implements CustomLayerInterface {
     gl.enable(gl.BLEND);
     gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     gl.uniformMatrix4fv(this.u.u_mvp, false, new Float32Array(mvp));
-    gl.uniform1f(this.u.u_turn, (ALHARAMAIN_MODELS[1].rotation * Math.PI) / 180);
+    gl.uniform1f(this.u.u_turn, RUG_TURN);
     gl.uniform2f(this.u.u_size, RUG_W, RUG_D);
     gl.uniform1f(this.u.u_night, this.light.night);
     const eye = this.map ? cameraEye(this.map) : ([0, 1000, 0] as const);

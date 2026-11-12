@@ -22,7 +22,7 @@
 .mc-compass {
   display: grid;
 }
-/* The needle (and the Kaaba mark opposite it) turns with true north on screen. */
+/* The needle turns with true north on screen; the Kaaba mark sits at the qibla (176.24°). */
 .mc-compass .ic {
   transform: rotate(var(--north, 0deg));
 }

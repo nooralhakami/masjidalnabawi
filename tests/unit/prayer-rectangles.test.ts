@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { ALHARAMAIN_MODELS } from '../../src/data-next/alharamain-3d';
 import { WOMEN_AREAS } from '../../src/data-next/women-areas';
 import { metresFromOrigin, nodePositions, parseGlbBuffer } from '../../src/map/glb-layer';
-import { MIN_RUGS, RUG_W, largestRectangle, rugLayout } from '../../src/map/rug-layout';
+import { MIN_RUGS, RUG_TURN, RUG_W, largestRectangle, rugLayout } from '../../src/map/rug-layout';
 import { PANEL, womenBarriers } from '../../src/map/women-barriers';
 
 describe('prayer areas only as squares and rectangles (owner, 2026-11-07)', () => {
@@ -45,10 +45,16 @@ describe('prayer areas only as squares and rectangles (owner, 2026-11-07)', () =
   const layout = rugLayout(nodePositions(ALHARAMAIN_MODELS.find((m) => m.url.includes('canopies'))!, gltf));
 
   it(`no small patch of carpets: every laid patch (carpets, the columns' spots, the gaps between groups) holds at least ${MIN_RUGS}`, () => {
+    // In the carpets' own laid frame, so the check does not depend on the qibla turn (D5).
+    const laid = (p: readonly [number, number]): [number, number] => [
+      Math.cos(RUG_TURN) * p[0] - Math.sin(RUG_TURN) * p[1],
+      Math.sin(RUG_TURN) * p[0] + Math.cos(RUG_TURN) * p[1],
+    ];
     // The laid cells: centre, and depth (a carpet's row or a group's gap).
     const cells = layout.covered.map((r) => {
-      const xs = r.map((p) => p[0]);
-      const zs = r.map((p) => p[1]);
+      const pts = r.map(laid);
+      const xs = pts.map((p) => p[0]);
+      const zs = pts.map((p) => p[1]);
       return { x: (Math.min(...xs) + Math.max(...xs)) / 2, z: (Math.min(...zs) + Math.max(...zs)) / 2, d: Math.max(...zs) - Math.min(...zs) - 0.09 };
     });
     const touch = (a: number, b: number) => {
@@ -59,7 +65,12 @@ describe('prayer areas only as squares and rectangles (owner, 2026-11-07)', () =
     const key = (x: number, z: number) => `${Math.floor(x / 6)}|${Math.floor(z / 6)}`;
     const hash = new Map<string, number[]>();
     cells.forEach((c, k) => hash.set(key(c.x, c.z), [...(hash.get(key(c.x, c.z)) ?? []), k]));
-    const rugAt = new Set(layout.rugs.map((r) => key(r.x, r.z) + '|' + Math.round(r.x * 2) + '|' + Math.round(r.z * 2)));
+    const rugAt = new Set(
+      layout.rugs.map((r) => {
+        const [x, z] = laid([r.x, r.z]);
+        return key(x, z) + '|' + Math.round(x * 2) + '|' + Math.round(z * 2);
+      }),
+    );
     const isRug = (c: (typeof cells)[number]) => rugAt.has(key(c.x, c.z) + '|' + Math.round(c.x * 2) + '|' + Math.round(c.z * 2));
     const seen = new Uint8Array(cells.length);
     let smallest = Number.POSITIVE_INFINITY;

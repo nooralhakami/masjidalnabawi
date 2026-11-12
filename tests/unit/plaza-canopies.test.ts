@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { ALHARAMAIN_MODELS, alharamainPlaza } from '../../src/data-next/alharamain-3d';
 import { ALHARAMAIN_PRAYERS, PRAYER_CLEARINGS } from '../../src/data-next/alharamain-prayers';
 import { restroomFootprints, restroomWalkways } from '../../src/map/prayer-layout';
-import { GROUP_GAP, RUG_D, RUG_W, rugLayout } from '../../src/map/rug-layout';
+import { GROUP_GAP, RUG_D, RUG_TURN, RUG_W, rugLayout } from '../../src/map/rug-layout';
+import { QIBLA_BEARING } from '../../src/domain/frames';
 import { CANOPY_MOVE_MS, canopyFoldAt, canopyFolding, foldCanopyVertex, metresFromOrigin, nodePositions, nodeShift, parseGlbBuffer } from '../../src/map/glb-layer';
 import { plazaMesh } from '../../src/map/plaza-layer';
 import { triangulate } from '../../src/map/polygon';
@@ -101,7 +102,8 @@ describe("the courtyards' prayer areas (navQ, owner 2026-11-06)", () => {
 });
 
 describe('the prayer carpets, laid whole (owner, 2026-11-07)', () => {
-  const t = (ALHARAMAIN_MODELS[1].rotation * Math.PI) / 180;
+  // The carpets' own frame: rows toward the qibla (D5, 2026-11-12), not the canopies' turn.
+  const t = RUG_TURN;
   const corners = (x: number, z: number): [number, number][] =>
     [
       [-RUG_W / 2, -RUG_D / 2],
@@ -153,6 +155,34 @@ describe('the prayer carpets, laid whole (owner, 2026-11-07)', () => {
     // Neighbours in a column: 1.2 m (in a group) or 2.0 m (across the gap between groups).
     expect(byRow.has(Math.round(RUG_D * 100))).toBe(true);
     expect(byRow.has(Math.round((RUG_D + GROUP_GAP) * 100))).toBe(true);
+  });
+
+  it('rows run toward the qibla: bearing 176.24°, within half a degree (D5, 2026-11-12)', () => {
+    const rugs = LAYOUT.rugs;
+    const hash = new Map<string, number[]>();
+    rugs.forEach((r, i) => {
+      const k = `${Math.floor(r.x / 6)}|${Math.floor(r.z / 6)}`;
+      hash.set(k, [...(hash.get(k) ?? []), i]);
+    });
+    let checked = 0;
+    for (let i = 0; i < rugs.length; i++) {
+      const hx = Math.floor(rugs[i].x / 6);
+      const hz = Math.floor(rugs[i].z / 6);
+      for (let a = -1; a <= 1; a++)
+        for (let b = -1; b <= 1; b++)
+          for (const j of hash.get(`${hx + a}|${hz + b}`) ?? []) {
+            if (j === i) continue;
+            const dx = rugs[j].x - rugs[i].x;
+            const dz = rugs[j].z - rugs[i].z;
+            if (Math.abs(Math.hypot(dx, dz) - RUG_D) > 0.01) continue; // the next carpet along the row
+            // Bearing in the model frame (x east, z south), either way along the row.
+            const bearing = ((Math.atan2(dx, -dz) * 180) / Math.PI + 360) % 360;
+            const off = Math.min(Math.abs(bearing - QIBLA_BEARING), Math.abs(bearing - ((QIBLA_BEARING + 180) % 360)));
+            expect(off).toBeLessThan(0.5);
+            checked++;
+          }
+    }
+    expect(checked).toBeGreaterThan(1000);
   });
 });
 
