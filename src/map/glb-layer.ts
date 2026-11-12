@@ -1,4 +1,4 @@
-import { type CustomLayerInterface, type CustomRenderMethodInput, type Map as MLMap } from 'maplibre-gl';
+import type { CustomLayerInterface, CustomRenderMethodInput, Map as MLMap } from 'maplibre-gl';
 import { ALHARAMAIN_MODELS, type AlharamainModel } from '../data-next/alharamain-3d';
 import { lngLatFromModel, MODEL_ORIGIN_MERCATOR, MODEL_PER_METRE, modelFromLngLat } from '../domain/frames';
 import { gateLattice, materialColor, materialGlow, minaretCrown, portalKind, type SceneLight } from './scene-light';

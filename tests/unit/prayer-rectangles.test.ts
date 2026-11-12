@@ -46,10 +46,7 @@ describe('prayer areas only as squares and rectangles (owner, 2026-11-07)', () =
 
   it(`no small patch of carpets: every laid patch (carpets, the columns' spots, the gaps between groups) holds at least ${MIN_RUGS}`, () => {
     // In the carpets' own laid frame, so the check does not depend on the qibla turn (D5).
-    const laid = (p: readonly [number, number]): [number, number] => [
-      Math.cos(RUG_TURN) * p[0] - Math.sin(RUG_TURN) * p[1],
-      Math.sin(RUG_TURN) * p[0] + Math.cos(RUG_TURN) * p[1],
-    ];
+    const laid = (p: readonly [number, number]): [number, number] => [Math.cos(RUG_TURN) * p[0] - Math.sin(RUG_TURN) * p[1], Math.sin(RUG_TURN) * p[0] + Math.cos(RUG_TURN) * p[1]];
     // The laid cells: centre, and depth (a carpet's row or a group's gap).
     const cells = layout.covered.map((r) => {
       const pts = r.map(laid);
