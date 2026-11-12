@@ -1,10 +1,8 @@
-import { MercatorCoordinate, type CustomLayerInterface, type CustomRenderMethodInput, type Map as MLMap } from 'maplibre-gl';
+import { type CustomLayerInterface, type CustomRenderMethodInput, type Map as MLMap } from 'maplibre-gl';
 import { ALHARAMAIN_MODELS, type AlharamainModel } from '../data-next/alharamain-3d';
+import { lngLatFromModel, MODEL_ORIGIN_MERCATOR, MODEL_PER_METRE, modelFromLngLat } from '../domain/frames';
 import { gateLattice, materialColor, materialGlow, minaretCrown, portalKind, type SceneLight } from './scene-light';
 import { createShadowTexture, SHADOW_GLSL, SHADOW_SIZE, sunMatrix, sunShadow } from './sun-shadow';
-
-/** glTF metres are measured from the Mosque's anchor (Venue 4 in `DataAPI_svc_GetVenues.json`). */
-const ORIGIN = ALHARAMAIN_MODELS[0].anchors[0] as [number, number];
 
 const GLB_MAGIC = 0x46546c67;
 const CHUNK_JSON = 0x4e4f534a;
@@ -465,27 +463,23 @@ export function parseGlbBuffer(buffer: ArrayBuffer): { gltf: GltfJson; bin: Uint
   return { gltf, bin };
 }
 
-/** Metres east and south of the Mosque's anchor, the frame every glTF node is drawn in. */
-export function metresFromOrigin([lng, lat]: readonly [number, number]): [number, number] {
-  const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
-  const here = MercatorCoordinate.fromLngLat([lng, lat], 0);
-  const perMetre = origin.meterInMercatorCoordinateUnits();
-  return [(here.x - origin.x) / perMetre, (here.y - origin.y) / perMetre];
+/** Metres east and south of the Mosque's anchor, the frame every glTF node is drawn in (domain/frames). */
+export function metresFromOrigin(ll: readonly [number, number]): [number, number] {
+  const [east, south] = modelFromLngLat(ll);
+  return [east, south];
 }
 
 /** `metresFromOrigin` the other way: `[east, south]` metres from the Mosque's anchor to `[lng, lat]`. */
-export function lngLatFromMetres([east, south]: readonly [number, number]): [number, number] {
-  const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
-  const perMetre = origin.meterInMercatorCoordinateUnits();
-  const ll = new MercatorCoordinate(origin.x + east * perMetre, origin.y + south * perMetre, 0).toLngLat();
-  return [ll.lng, ll.lat];
+export function lngLatFromMetres(es: readonly [number, number]): [number, number] {
+  const [lng, lat] = lngLatFromModel(es);
+  return [lng, lat];
 }
 
 /** Map the models' metres (X=East, Y=Up, Z=South) about the Mosque's anchor to Web Mercator (X=East, Y=South, Z=Up). */
 export function frameMatrix(): Float64Array {
-  const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
-  const s = origin.meterInMercatorCoordinateUnits();
-  return new Float64Array([s, 0, 0, 0, 0, 0, s, 0, 0, s, 0, 0, origin.x, origin.y, origin.z, 1]);
+  const s = MODEL_PER_METRE;
+  const [ox, oy] = MODEL_ORIGIN_MERCATOR;
+  return new Float64Array([s, 0, 0, 0, 0, 0, s, 0, 0, s, 0, 0, ox, oy, 0, 1]);
 }
 
 /**
@@ -609,8 +603,6 @@ export function nodeShift(model: AlharamainModel, east: number, south: number): 
 
 /** Where each node of a file stands on the ground, as `[lng, lat]` (one per node and anchor). */
 export function nodePositions(model: AlharamainModel, gltf: GltfJson): [number, number][] {
-  const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
-  const perMetre = origin.meterInMercatorCoordinateUnits();
   const turn = (model.rotation * Math.PI) / 180;
   const out: [number, number][] = [];
   for (const anchor of model.anchors) {
@@ -624,8 +616,7 @@ export function nodePositions(model: AlharamainModel, gltf: GltfJson): [number, 
       const [dEast, dSouth] = nodeShift(model, east0n, south0n);
       const east = east0n + dEast;
       const south = south0n + dSouth;
-      const ll = new MercatorCoordinate(origin.x + east * perMetre, origin.y + south * perMetre, 0).toLngLat();
-      out.push([ll.lng, ll.lat]);
+      out.push(lngLatFromMetres([east, south]));
     }
   }
   return out;

@@ -1,6 +1,7 @@
 import { POIS, ROUTING } from '../data';
 import { ALHARAMAIN_MODELS } from '../data-next/alharamain-3d';
 import type { LatLng, Poi } from '../data/types';
+import { lngLatFromWalk, modelFromLngLat, walkFromLngLat, walkFromModel } from '../domain/frames';
 import { haversine } from '../domain/geo';
 
 /**
@@ -9,15 +10,18 @@ import { haversine } from '../domain/geo';
  * areas). Shortest path on that graph; never crosses the mosque building or Al-Baqi' (outside the Haram).
  */
 
-// Local metric projection around the reference anchor (same as the reference app).
-const LAT0 = 24.4673;
-const LNG0 = 39.6111;
-const KY = 111_320;
-const KX = 111_320 * Math.cos((LAT0 * Math.PI) / 180);
-
+// Local metric projection around the reference anchor (same as the reference app), defined with
+// the model frame and the conversions between them in domain/frames (D6, 2026-11-12). The ported
+// LatLng is [lat, lng]; the frame's functions take [lng, lat].
 export type XY = [number, number];
-export const toM = (ll: LatLng): XY => [(ll[1] - LNG0) * KX, (ll[0] - LAT0) * KY];
-export const fromM = (m: XY): LatLng => [LAT0 + m[1] / KY, LNG0 + m[0] / KX];
+export const toM = (ll: LatLng): XY => {
+  const [east, north] = walkFromLngLat([ll[1], ll[0]]);
+  return [east, north];
+};
+export const fromM = (m: XY): LatLng => {
+  const [lng, lat] = lngLatFromWalk(m);
+  return [lat, lng];
+};
 
 export interface Rect {
   x0: number;
@@ -178,7 +182,6 @@ const DOOR_CLEAR_M = 1;
 let blockDoors: { c: XY; dir: XY }[] | null = null;
 function restroomBlocks(): { c: XY; dir: XY }[] {
   if (blockDoors) return blockDoors;
-  const R = 111_320;
   const out: { c: XY; dir: XY }[] = [];
   for (const model of ALHARAMAIN_MODELS) {
     const m = model.url.match(/restroom-(a|b)-(east|west|north|south)/);
@@ -188,7 +191,12 @@ function restroomBlocks(): { c: XY; dir: XY }[] {
     const east = x * Math.cos(t) - z * Math.sin(t);
     const south = x * Math.sin(t) + z * Math.cos(t);
     const dir: XY = m[2] === 'east' ? [1, 0] : m[2] === 'west' ? [-1, 0] : m[2] === 'north' ? [0, 1] : [0, -1];
-    for (const [lng, lat] of model.anchors) out.push({ c: toM([lat - south / R, lng + east / (R * Math.cos((lat * Math.PI) / 180))]), dir });
+    // The block's centre in the model frame, then the one sanctioned bridge to walk metres (D6).
+    for (const [lng, lat] of model.anchors) {
+      const [ax, az] = modelFromLngLat([lng, lat]);
+      const [cx, cy] = walkFromModel([ax + east, az + south]);
+      out.push({ c: [cx, cy], dir });
+    }
   }
   return (blockDoors = out);
 }
