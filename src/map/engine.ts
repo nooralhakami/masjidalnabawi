@@ -26,6 +26,7 @@ import { applyPoiView, entranceAt, entranceFeatures, markerImageIds, markerNear,
 import { RouteLayer, type RouteText } from './route';
 import { nearHaramRaster, sceneLight, sceneOverride, type SceneLight } from './scene-light';
 import { TerrainLayer } from './terrain-layer';
+import { URBAN_LAYER, UrbanLayer } from './urban-layer';
 import { LEGACY_MAX, LEGACY_MIN, fitView, haramBounds, legacyZoom, mapZoom } from './zoom';
 import { SelectPulse } from './pulse';
 import { TAP_ZOOM_STEP, tapChoice } from '../presentation/tap';
@@ -97,6 +98,7 @@ export class MapEngine {
   private crowd: CrowdLayer | null = null;
   private rugs: RugLayer | null = null;
   private terrain: TerrainLayer | null = null;
+  private urban: UrbanLayer | null = null;
   private marble: PlazaMarbleLayer | null = null;
   private glow: LampGlowLayer | null = null;
   private lightTimer: ReturnType<typeof setInterval> | null = null;
@@ -383,6 +385,11 @@ export class MapEngine {
         this.terrain = new TerrainLayer(this.currentLight());
         m.addLayer(this.terrain, before);
       }
+      // The verified buildings round the Haram, under the Mosque's models so it hides them; towers
+      // that block the view fade to 30% (owner, 2026-11-10). Empty until exact positions are approved.
+      if (!m.getLayer(URBAN_LAYER)) {
+        this.urban = new UrbanLayer(m, this.currentLight(), before);
+      }
       if (!m.getLayer('alharamain-3d-models')) {
         this.models = new HaramGlbLayer(this.currentLight(), (lamps) => {
           this.lamps = lamps;
@@ -415,6 +422,8 @@ export class MapEngine {
       this.crowd = null;
       this.rugs = null;
       this.terrain = null;
+      this.urban?.destroy();
+      this.urban = null;
       this.marble = null;
       this.glow = null;
       for (const id of [
@@ -427,6 +436,8 @@ export class MapEngine {
         'alharamain-3d-greeting-barriers',
         'alharamain-3d-glow',
         'alharamain-3d-terrain',
+        'alharamain-3d-urban',
+        'alharamain-3d-urban-faded',
         'alharamain-3d-lamps',
         'alharamain-3d-rugs',
         'alharamain-3d-marble',
@@ -461,6 +472,7 @@ export class MapEngine {
     this.crowd?.setLight(light);
     this.rugs?.setLight(light);
     this.terrain?.setLight(light);
+    this.urban?.setLight(light);
     this.marble?.setLight(light);
     this.glow?.setLight(light);
     for (const id of ['esri', 'light']) {
@@ -621,6 +633,8 @@ export class MapEngine {
       'alharamain-3d-glow',
       'alharamain-3d-models',
       'alharamain-3d-terrain',
+      'alharamain-3d-urban',
+      'alharamain-3d-urban-faded',
       'alharamain-3d-lamps',
       'alharamain-3d-marble',
       'alharamain-3d-plaza',
@@ -644,6 +658,8 @@ export class MapEngine {
       'hints',
     ])
       if (this.map.getLayer(id)) this.map.removeLayer(id);
+    this.urban?.destroy();
+    this.urban = null;
     for (const id of this.map.listImages()) if (id.endsWith(`@${old}`) && !id.startsWith('rt')) this.map.removeImage(id);
     this.route.restyle();
     this.addLayers();

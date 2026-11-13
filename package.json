@@ -15,7 +15,10 @@
     "format": "biome check --write .",
     "design:audit": "node scripts/design-audit.mjs",
     "test:e2e": "playwright test",
-    "perf": "npm run build && node scripts/perf.mjs"
+    "perf": "npm run build && node scripts/perf.mjs",
+    "build:urban:glb": "\"${BLENDER:-/Applications/Blender.app/Contents/MacOS/Blender}\" --background --python scripts/build-urban-glb.py",
+    "build:env:glb": "\"${BLENDER:-/Applications/Blender.app/Contents/MacOS/Blender}\" --background --python scripts/build-environment-glb.py",
+    "audit:urban:ring1:ms": "node scripts/audit-urban-ring1-ms.mjs"
   },
   "dependencies": {
     "@fontsource/ibm-plex-sans-arabic": "5.3.0",

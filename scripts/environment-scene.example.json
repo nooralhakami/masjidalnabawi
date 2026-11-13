@@ -1,0 +1,29 @@
+{
+  "meta": {
+    "synthetic": true,
+    "label": "SYNTHETIC EXAMPLE — abstract demo blocks, NOT real Haram geography, never shipped to the map. For tooling/preview only (owner-approved synthetic demo, 2026-11-11)."
+  },
+  "lighting": { "preset": "day" },
+  "ground": { "sizeM": 500 },
+  "streets": [
+    { "id": "demo-street-ew", "widthM": 14, "path": [[39.6095, 24.4668], [39.6140, 24.4668]] },
+    { "id": "demo-street-ns", "widthM": 12, "path": [[39.6117, 24.4648], [39.6117, 24.4688]] }
+  ],
+  "paths": [
+    { "id": "demo-path", "widthM": 3, "path": [[39.6100, 24.4655], [39.6117, 24.4668], [39.6134, 24.4681]] }
+  ],
+  "trees": [
+    { "id": "demo-t1", "pos": [39.6104, 24.4662], "heightM": 8, "canopyM": 4 },
+    { "id": "demo-t2", "pos": [39.6108, 24.4662], "heightM": 9, "canopyM": 4 },
+    { "id": "demo-t3", "pos": [39.6126, 24.4674], "heightM": 7, "canopyM": 3.5 },
+    { "id": "demo-t4", "pos": [39.6130, 24.4674], "heightM": 8, "canopyM": 4 },
+    { "id": "demo-t5", "pos": [39.6112, 24.4682], "heightM": 10, "canopyM": 4.5 },
+    { "id": "demo-t6", "pos": [39.6122, 24.4654], "heightM": 8, "canopyM": 4 }
+  ],
+  "buildings": [
+    { "id": "demo-block-a", "kind": "hotel", "heightM": 40, "footprint": [[39.6102, 24.4674], [39.6110, 24.4674], [39.6110, 24.4680], [39.6102, 24.4680]] },
+    { "id": "demo-block-b", "kind": "food", "heightM": 14, "footprint": [[39.6124, 24.4660], [39.6130, 24.4660], [39.6130, 24.4665], [39.6124, 24.4665]] },
+    { "id": "demo-block-c", "kind": "context", "heightM": 22, "footprint": [[39.6126, 24.4676], [39.6133, 24.4676], [39.6133, 24.4682], [39.6126, 24.4682]] },
+    { "id": "demo-block-d", "kind": "landmark", "heightM": 30, "footprint": [[39.6104, 24.4652], [39.6110, 24.4652], [39.6110, 24.4658], [39.6104, 24.4658]] }
+  ]
+}

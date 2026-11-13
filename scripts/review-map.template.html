@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<title>خريطة معاينة المحيط العمراني — الحلقة الأولى (0–250م)</title>
+<link rel="stylesheet" href="./vendor/maplibre-gl.css">
+<style>
+  :root{
+    --green-900:#081c15; --green-800:#0e2a21; --green-700:#142e27; --green-600:#1b4034; --green-500:#23503f;
+    --sand:#f4f1ea; --sand-dim:#b9c6bd; --gold:#d99a27; --teal:#258b83;
+    --hotel:#d99a27; --food:#a52727; --landmark:#258b83; --commercial:#8764b8; --service:#4c88b7; --context:#d6d0bf; --msonly:#7d8b98;
+    --danger:#c0392b; --warn:#d99a27; --ok:#2e9e5b; --info:#4c88b7;
+    --line:#23483c; --panel:#0e2a21; --shadow:0 18px 50px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--green-900);color:var(--sand);
+    font-family:"Segoe UI",Tahoma,"Noto Sans Arabic","Geeza Pro",sans-serif;font-size:14px;line-height:1.6;overflow:hidden}
+  button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-track{background:var(--green-900)}
+  ::-webkit-scrollbar-thumb{background:var(--green-500);border-radius:8px;border:2px solid var(--green-900)}
+  ::-webkit-scrollbar-thumb:hover{background:var(--gold)}
+  *{scrollbar-width:thin;scrollbar-color:var(--green-500) var(--green-900)}
+
+  .app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+  header{background:linear-gradient(180deg,var(--green-700),var(--green-800));border-bottom:2px solid var(--gold);
+    padding:12px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;z-index:30}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .dome{width:40px;height:40px;flex:0 0 auto;border-radius:50% 50% 46% 46%;
+    background:radial-gradient(circle at 35% 30%,#3fbf7f,#0e6b41 60%,#0a4d2e);box-shadow:0 0 0 2px var(--gold),0 6px 16px rgba(0,0,0,.4);position:relative}
+  .dome::after{content:"";position:absolute;top:-7px;left:50%;transform:translateX(-50%);width:3px;height:10px;background:var(--gold);border-radius:2px}
+  h1{font-size:18px;margin:0;font-weight:800;letter-spacing:.2px;white-space:nowrap}
+  .sub{font-size:12px;color:var(--sand-dim);margin:0}
+  .stats{display:flex;gap:8px;flex-wrap:wrap;margin-inline-start:auto}
+  .chip{background:var(--green-600);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:700;white-space:nowrap}
+  .chip b{color:var(--gold);font-size:14px}
+  .chip.ok b{color:var(--ok)} .chip.ms b{color:var(--msonly)} .chip.hotel b{color:var(--hotel)} .chip.food b{color:#e0705f}
+
+  .banner{background:#fff8df;color:#5c4a12;border-bottom:1px solid #d9bd65;padding:8px 18px;font-size:12.5px;font-weight:600;
+    display:flex;gap:10px;align-items:center;z-index:29}
+  .banner .dot{width:9px;height:9px;border-radius:50%;background:var(--warn);flex:0 0 auto;box-shadow:0 0 0 4px rgba(217,154,39,.25);animation:pulse 2s infinite}
+  @keyframes pulse{50%{box-shadow:0 0 0 8px rgba(217,154,39,0)}}
+
+  .body{flex:1;display:grid;grid-template-columns:344px 1fr;min-height:0}
+  .sidebar{background:var(--panel);border-inline-start:1px solid var(--line);overflow-y:auto;padding:14px 14px 40px;z-index:20}
+  .sec{margin-bottom:18px}
+  .sec>h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin:0 0 10px;
+    display:flex;align-items:center;gap:8px;font-weight:800}
+  .sec>h2::after{content:"";flex:1;height:1px;background:var(--line)}
+  .row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .seg{display:flex;background:var(--green-900);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+  .seg button{flex:1;border:0;background:transparent;color:var(--sand-dim);padding:7px 8px;border-radius:7px;cursor:pointer;font-weight:700;font-size:12.5px;transition:.15s}
+  .seg button:hover{color:var(--sand);background:var(--green-600)}
+  .seg button.on{background:var(--gold);color:#231a05}
+  .btn{background:var(--green-600);border:1px solid var(--line);color:var(--sand);padding:8px 12px;border-radius:9px;cursor:pointer;font-weight:700;font-size:12.5px;transition:.15s;display:inline-flex;align-items:center;gap:6px;justify-content:center}
+  .btn:hover{background:var(--green-500);border-color:var(--gold)}
+  .btn:active{transform:translateY(1px)}
+  .btn.gold{background:var(--gold);color:#231a05;border-color:var(--gold)}
+  .btn.gold:hover{filter:brightness(1.08)}
+  .btn.wide{width:100%}
+  .btn[disabled]{opacity:.4;cursor:not-allowed}
+  label.field{display:block;font-size:12px;color:var(--sand-dim);margin-bottom:5px;font-weight:600}
+  input[type=range]{width:100%;accent-color:var(--gold);cursor:pointer}
+  .val{color:var(--gold);font-weight:800}
+  .note{background:rgba(217,154,39,.1);border:1px solid rgba(217,154,39,.35);border-radius:9px;padding:8px 10px;font-size:11.5px;color:#e7d6a8;line-height:1.7}
+  .checks{display:flex;flex-direction:column;gap:7px}
+  .chk{display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13px;font-weight:600;padding:5px 8px;border-radius:8px;transition:.15s}
+  .chk:hover{background:var(--green-700)}
+  .chk input{width:17px;height:17px;accent-color:var(--teal);cursor:pointer}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .kchip{border:1.5px solid var(--line);background:var(--green-900);color:var(--sand-dim);border-radius:999px;padding:5px 11px;cursor:pointer;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:6px;transition:.15s}
+  .kchip .sw{width:11px;height:11px;border-radius:3px}
+  .kchip.on{color:#fff;border-color:transparent}
+  .search{display:flex;gap:6px}
+  .search input{flex:1;background:var(--green-900);border:1px solid var(--line);border-radius:9px;padding:9px 12px;color:var(--sand);outline:none}
+  .search input:focus{border-color:var(--gold)}
+  .legend{display:flex;flex-direction:column;gap:6px;font-size:12px}
+  .legend .li{display:flex;align-items:center;gap:9px;color:var(--sand-dim)}
+  .legend .sw{width:15px;height:15px;border-radius:4px;flex:0 0 auto}
+  .legend .sw.dash{background:repeating-linear-gradient(45deg,var(--msonly),var(--msonly) 3px,transparent 3px,transparent 6px);border:1px solid var(--msonly)}
+
+  .map-wrap{position:relative;dir:ltr;min-width:0;background:#0a1a14}
+  #map{position:absolute;inset:0}
+  .maplibregl-ctrl-attrib{font-size:10px;background:rgba(244,241,234,.85)!important;color:#222}
+  .maplibregl-ctrl-attrib a{color:#0e6b41}
+  .maplibregl-ctrl-group{background:var(--green-800)!important;border:1px solid var(--line)!important}
+  .maplibregl-ctrl-group button{background:var(--green-800)!important}
+  .maplibregl-ctrl-group button+button{border-top:1px solid var(--line)!important}
+  .maplibregl-ctrl button .maplibregl-ctrl-icon{filter:invert(1) sepia(.3) saturate(2) hue-rotate(60deg)}
+
+  .map-tools{position:absolute;top:14px;right:14px;display:flex;flex-direction:column;gap:8px;z-index:10}
+  .tool{width:42px;height:42px;border-radius:11px;background:rgba(14,42,33,.92);border:1px solid var(--line);color:var(--sand);
+    cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);transition:.15s;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+  .tool:hover{border-color:var(--gold);color:var(--gold)}
+  .tool.on{background:var(--gold);color:#231a05;border-color:var(--gold)}
+  .compass{position:absolute;top:14px;left:14px;z-index:10;width:54px;height:54px;border-radius:50%;
+    background:rgba(14,42,33,.92);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 4px 14px rgba(0,0,0,.3)}
+  .compass .needle{width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:24px solid var(--gold);position:relative;transition:transform .1s}
+  .compass .needle::after{content:"";position:absolute;top:24px;left:-7px;border-left:7px solid transparent;border-right:7px solid transparent;border-top:24px solid var(--sand-dim)}
+  .compass span{position:absolute;top:3px;font-size:9px;font-weight:800;color:var(--sand)}
+  .modebadge{position:absolute;bottom:34px;left:14px;z-index:10;background:rgba(8,28,21,.9);border:1px solid var(--gold);
+    color:var(--gold);padding:6px 12px;border-radius:999px;font-size:11.5px;font-weight:800;backdrop-filter:blur(6px)}
+
+  .drawer{position:absolute;left:16px;top:16px;width:344px;max-height:calc(100% - 32px);overflow-y:auto;z-index:15;
+    background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);
+    transform:translateX(-120%);opacity:0;transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .28s;pointer-events:none}
+  .drawer.open{transform:none;opacity:1;pointer-events:auto}
+  .drawer .dh{position:sticky;top:0;background:linear-gradient(180deg,var(--green-700),var(--green-800));padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:10px;z-index:2}
+  .drawer .dh .id{font-size:22px;font-weight:900;color:var(--gold);line-height:1}
+  .drawer .dh .nm{font-size:14px;font-weight:700;margin-top:4px}
+  .drawer .close{margin-inline-start:auto;background:var(--green-600);border:1px solid var(--line);color:var(--sand);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:16px;flex:0 0 auto}
+  .drawer .close:hover{border-color:var(--danger);color:#ff9b8a}
+  .drawer .db{padding:14px 16px}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:12.5px;margin-bottom:12px}
+  .kv dt{color:var(--sand-dim);font-weight:600}
+  .kv dd{margin:0;font-weight:700;text-align:end}
+  .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:800}
+  .badge.ok{background:rgba(46,158,91,.18);color:#7fe0a3;border:1px solid rgba(46,158,91,.4)}
+  .badge.ms{background:rgba(125,139,152,.18);color:#c3ced8;border:1px solid rgba(125,139,152,.4)}
+  .badge.warn{background:rgba(217,154,39,.16);color:#f0cd85;border:1px solid rgba(217,154,39,.4)}
+  .review{display:flex;flex-direction:column;gap:5px;margin:10px 0;font-size:12px}
+  .review .r{display:flex;justify-content:space-between;gap:8px;padding:5px 9px;background:var(--green-900);border-radius:7px}
+  .review .r span:last-child{color:var(--sand-dim);font-weight:700}
+  .decide{display:flex;gap:6px;margin-top:12px}
+  .decide button{flex:1;border:1px solid var(--line);background:var(--green-900);color:var(--sand-dim);padding:8px 4px;border-radius:8px;cursor:pointer;font-size:11.5px;font-weight:800;transition:.15s}
+  .decide button:hover{border-color:var(--gold)}
+  .decide button.sel-ok{background:var(--ok);color:#04150c;border-color:var(--ok)}
+  .decide button.sel-warn{background:var(--warn);color:#231a05;border-color:var(--warn)}
+  .decide button.sel-no{background:var(--danger);color:#fff;border-color:var(--danger)}
+  .decnote{font-size:10.5px;color:var(--sand-dim);margin-top:8px;line-height:1.6}
+
+  .mk{cursor:pointer;font-weight:800;font-size:11px;line-height:1;padding:4px 7px;border-radius:7px;color:#fff;
+    border:1.5px solid rgba(255,255,255,.85);box-shadow:0 2px 6px rgba(0,0,0,.4);white-space:nowrap;transition:transform .12s;direction:ltr}
+  .mk:hover{transform:scale(1.18);z-index:5}
+  .mk.b{background:#173d32}
+  .mk.b.ms{background:#5b6b78;border-style:dashed}
+  .mk.g{background:#0e6b41;border-radius:999px}
+  .mk.p-h{background:#a85f00;border-radius:999px}
+  .mk.p-f{background:#a52727;border-radius:999px}
+  .mk.sel{outline:3px solid var(--gold);outline-offset:1px}
+
+  .loading{position:absolute;inset:0;z-index:40;background:var(--green-900);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .5s}
+  .loading.hide{opacity:0;pointer-events:none}
+  .spin{width:46px;height:46px;border:4px solid var(--green-600);border-top-color:var(--gold);border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .loading p{color:var(--sand-dim);font-weight:600}
+
+  .menu-btn{display:none;position:absolute;top:14px;right:14px;z-index:25;width:46px;height:46px;border-radius:12px;
+    background:var(--gold);color:#231a05;border:0;font-size:22px;cursor:pointer;box-shadow:var(--shadow)}
+  .scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:19}
+
+  @media(max-width:900px){
+    .body{grid-template-columns:1fr}
+    .sidebar{position:fixed;top:0;bottom:0;inset-inline-start:0;width:312px;transform:translateX(100%);transition:transform .3s;box-shadow:var(--shadow)}
+    .sidebar.open{transform:none}
+    .scrim.show{display:block}
+    .menu-btn{display:flex;align-items:center;justify-content:center}
+    .map-tools{top:70px}
+    h1{font-size:15px;white-space:normal}
+    .stats{margin-inline-start:0;width:100%}
+    .drawer{left:0;right:0;top:auto;bottom:0;width:100%;max-height:62vh;border-radius:18px 18px 0 0;transform:translateY(120%)}
+    .drawer.open{transform:none}
+    .banner{font-size:11px;padding:7px 12px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="dome" aria-hidden="true"></div>
+      <div>
+        <h1>معاينة المحيط العمراني — الحلقة الأولى (0–250م)</h1>
+        <p class="sub">بصمات Microsoft ML فوق صور Esri · الأسماء من OSM/POI · أداة اعتماد محلية</p>
+      </div>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+  <div class="banner"><span class="dot"></span>
+    <span>معاينة قبل الاعتماد — لم تُعتمد أي بصمة ولم تُشحن في الخريطة الحيّة. وضع 3D يعرض ارتفاعًا افتراضيًا موحّدًا للعرض فقط (ليس بيانات حقيقية). الأسماء والارتفاعات والمداخل بانتظار تصديقك.</span>
+  </div>
+  <div class="body">
+    <aside class="sidebar" id="sidebar">
+      <div class="sec">
+        <h2>العرض</h2>
+        <label class="field">الخريطة الأساسية</label>
+        <div class="seg" id="basemap">
+          <button data-v="sat" class="on">قمر صناعي</button>
+          <button data-v="streets">شوارع</button>
+          <button data-v="dark">داكنة</button>
+        </div>
+        <label class="field" style="margin-top:10px">الوضع</label>
+        <div class="seg" id="mode">
+          <button data-v="2d">مسطّح 2D</button>
+          <button data-v="3d" class="on">مجسّم 3D</button>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn wide" id="reset">إعادة الضبط</button>
+          <button class="btn wide" id="fit">ملاءمة الحلقة</button>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h2>المعاينة ثلاثية الأبعاد</h2>
+        <label class="field">ارتفاع المعاينة (افتراضي موحّد): <span class="val" id="hval">14 م</span></label>
+        <input type="range" id="height" min="3" max="60" step="1" value="14">
+        <div class="note" style="margin:8px 0">هذا الارتفاع للعرض فقط وليس ارتفاعًا حقيقيًا لأي مبنى. بيانات Microsoft للسعودية بلا ارتفاع، ولا يُستنتج ارتفاع قبل اعتمادك.</div>
+        <label class="field">شفافية المضلعات (2D): <span class="val" id="oval">28%</span></label>
+        <input type="range" id="opacity" min="5" max="90" step="1" value="28">
+        <button class="btn wide" id="orbit" style="margin-top:10px">دوران تلقائي: متوقف</button>
+      </div>
+
+      <div class="sec">
+        <h2>الطبقات</h2>
+        <div class="checks" id="layers">
+          <label class="chk"><input type="checkbox" data-l="footprints" checked> المضلعات</label>
+          <label class="chk"><input type="checkbox" data-l="labels" checked> أرقام المباني</label>
+          <label class="chk"><input type="checkbox" data-l="fence" checked> سور الساحات</label>
+          <label class="chk"><input type="checkbox" data-l="gates" checked> البوابات (301–370)</label>
+          <label class="chk"><input type="checkbox" data-l="pois" checked> الفنادق والمطاعم (7xx/8xx)</label>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h2>التصفية</h2>
+        <label class="field">درجة التأكيد</label>
+        <div class="seg" id="confidence">
+          <button data-v="all" class="on">الكل</button>
+          <button data-v="corroborated">مدعوم</button>
+          <button data-v="msOnly">Microsoft فقط</button>
+        </div>
+        <label class="field" style="margin-top:10px">النوع</label>
+        <div class="chips" id="kinds"></div>
+        <label class="field" style="margin-top:10px">الجهة</label>
+        <div class="chips" id="dirs"></div>
+      </div>
+
+      <div class="sec">
+        <h2>البحث</h2>
+        <div class="search">
+          <input type="search" id="q" placeholder="رقم المبنى أو اسمه… مثال N001 أو شيراتون">
+          <button class="btn" id="qclear">مسح</button>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h2>التصدير</h2>
+        <button class="btn wide" id="expgeo" style="margin-bottom:8px">تصدير المضلعات المرشّحة (GeoJSON)</button>
+        <button class="btn wide" id="expdec" style="margin-bottom:8px">تصدير قراراتي المحلية (JSON)</button>
+        <button class="btn wide gold" id="shot">حفظ صورة الخريطة (PNG)</button>
+        <div class="decnote">القرارات المحلية للمعاينة فقط ولا تُكتب في بوابة الاعتماد (data/urban-approved.json). صدّرها وأرسلها لي إن رغبت أن أطبّقها.</div>
+      </div>
+
+      <div class="sec">
+        <h2>مفتاح الألوان</h2>
+        <div class="legend" id="legend"></div>
+      </div>
+    </aside>
+    <div class="scrim" id="scrim"></div>
+
+    <div class="map-wrap">
+      <div id="map"></div>
+      <button class="menu-btn" id="menu" aria-label="فتح لوحة التحكم">☰</button>
+      <div class="compass" id="compass" title="شمال"><span>N</span><div class="needle" id="needle"></div></div>
+      <div class="map-tools">
+        <button class="tool" id="zin" title="تقريب">+</button>
+        <button class="tool" id="zout" title="إبعاد">−</button>
+        <button class="tool" id="tiltup" title="زيادة الميل">⤢</button>
+        <button class="tool" id="tiltdn" title="تقليل الميل">⤡</button>
+        <button class="tool" id="rotl" title="تدوير يسار">⟲</button>
+        <button class="tool" id="rotr" title="تدوير يمين">⟳</button>
+      </div>
+      <div class="modebadge" id="modebadge">3D · ارتفاع معاينة 14 م</div>
+      <div class="drawer" id="drawer"></div>
+      <div class="loading" id="loading"><div class="spin"></div><p>جارٍ تحميل صور القمر الصناعي والمضلعات…</p></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import maplibregl from './vendor/maplibre-gl.mjs';
+
+const AUDIT = /*__DATA__*/null;
+
+const KIND_COLOR={hotel:'#d99a27',food:'#a52727',construction:'#d14b4b',landmark:'#258b83',commercial:'#8764b8',service:'#4c88b7',context:'#d6d0bf'};
+const MS_ONLY='#7d8b98';
+const KIND_AR={hotel:'فندق',food:'مطعم/مقهى',construction:'إنشاء',landmark:'معلم/خدمة عامة',commercial:'تجاري',service:'مرفق',context:'سياقي'};
+const IDENTITY_AR={poi_inside_footprint:'نقطة POI داخل المضلع',poi_link_unverified:'ربط POI غير موثق',osm_overlap_unverified:'تطابق OSM غير موثق',ms_only_unverified:'Microsoft فقط غير موثق'};
+const DIR_AR={north:'الشمال',south:'الجنوب',west:'الغرب',east:'الشرق'};
+const REVIEW_AR={pending_owner:'بانتظار المالك',not_supplied:'غير مزوّد',approved:'معتمد',rejected:'مرفوض'};
+const ALL_KINDS=Object.keys(KIND_COLOR);
+const ALL_DIRS=['north','south','west','east'];
+const ESRI='https://server.arcgisonline.com/ArcGIS/rest/services/';
+const ATTR='Tiles © Esri — Esri, Maxar, Earthstar Geographics, GIS User Community · Footprints © Microsoft (CDLA-Permissive-2.0) · Names © OpenStreetMap (ODbL)';
+
+const state={basemap:'sat',mode:'3d',height:14,opacity:0.28,
+  layers:{footprints:true,labels:true,fence:true,gates:true,pois:true},
+  confidence:'all',kinds:new Set(ALL_KINDS),directions:new Set(ALL_DIRS),query:'',selected:null,orbit:false,decisions:{}};
+
+const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=(id)=>document.getElementById(id);
+const buildings=AUDIT.buildings.features;
+const byId=new Map(buildings.map((f)=>[f.properties.id,f]));
+
+function colorExpr(){
+  return ['case',['==',['get','corroborated'],false],MS_ONLY,
+    ['match',['get','kind'],'hotel',KIND_COLOR.hotel,'food',KIND_COLOR.food,'construction',KIND_COLOR.construction,
+      'landmark',KIND_COLOR.landmark,'commercial',KIND_COLOR.commercial,'service',KIND_COLOR.service,KIND_COLOR.context]];
+}
+
+const map=new maplibregl.Map({
+  container:'map',
+  style:{version:8,sources:{
+    sat:{type:'raster',tiles:[ESRI+'World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:19,attribution:ATTR},
+    streets:{type:'raster',tiles:[ESRI+'World_Street_Map/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:19,attribution:'Tiles © Esri'},
+    dark:{type:'raster',tiles:[ESRI+'Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:16,attribution:'Tiles © Esri'}
+  },layers:[
+    {id:'dark',type:'raster',source:'dark',layout:{visibility:'none'}},
+    {id:'streets',type:'raster',source:'streets',layout:{visibility:'none'}},
+    {id:'sat',type:'raster',source:'sat'}
+  ]},
+  center:AUDIT.center,zoom:16.1,pitch:52,bearing:-22,maxPitch:85,
+  attributionControl:true,preserveDrawingBuffer:true,antialias:true
+});
+map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-right');
+map.addControl(new maplibregl.ScaleControl({maxWidth:120,unit:'metric'}),'bottom-left');
+
+const markers={b:[],g:[],p:[]};
+
+map.on('load',()=>{
+  map.addSource('buildings',{type:'geojson',data:AUDIT.buildings});
+  map.addSource('fence',{type:'geojson',data:AUDIT.fence});
+
+  map.addLayer({id:'buildings-fill',type:'fill',source:'buildings',
+    paint:{'fill-color':colorExpr(),'fill-opacity':state.opacity}});
+  map.addLayer({id:'buildings-outline-solid',type:'line',source:'buildings',filter:['==',['get','corroborated'],true],
+    paint:{'line-color':colorExpr(),'line-width':2.2}});
+  map.addLayer({id:'buildings-outline-dashed',type:'line',source:'buildings',filter:['==',['get','corroborated'],false],
+    paint:{'line-color':MS_ONLY,'line-width':1.7,'line-dasharray':[2,1.6]}});
+  map.addLayer({id:'buildings-extrusion',type:'fill-extrusion',source:'buildings',
+    paint:{'fill-extrusion-color':colorExpr(),'fill-extrusion-height':state.height,'fill-extrusion-base':0,
+      'fill-extrusion-opacity':0.94,'fill-extrusion-vertical-gradient':true,
+      'fill-extrusion-ambient-occlusion-intensity':0.45,'fill-extrusion-ambient-occlusion-radius':3}});
+  map.addLayer({id:'buildings-highlight',type:'line',source:'buildings',filter:['==',['get','id'],''],
+    paint:{'line-color':'#ffd479','line-width':4}});
+  map.addLayer({id:'buildings-highlight-3d',type:'fill-extrusion',source:'buildings',filter:['==',['get','id'],''],
+    paint:{'fill-extrusion-color':'#ffd479','fill-extrusion-height':state.height+0.6,'fill-extrusion-base':0,'fill-extrusion-opacity':1}});
+  map.addLayer({id:'fence-casing',type:'line',source:'fence',paint:{'line-color':'#ffffff','line-width':7,'line-opacity':0.8}});
+  map.addLayer({id:'fence-line',type:'line',source:'fence',paint:{'line-color':'#0e6b41','line-width':3.5}});
+
+  buildMarkers();
+  applyMode();
+  applyFilters();
+  setLight();
+  map.setFog({range:[0.5,11],color:'#cfd8d2','horizon-blend':0.08,'space-color':'#0b1f2a','star-intensity':0});
+  $('loading').classList.add('hide');
+  updateCompass();
+});
+
+map.on('error',(e)=>{ console.warn('map error',e && e.error ? e.error.message : e); });
+
+function buildMarkers(){
+  for(const f of buildings){
+    const p=f.properties;
+    const el=document.createElement('div');
+    el.className='mk b'+(p.corroborated?'':' ms');
+    el.textContent=p.id;
+    el.title=p.name||'بدون اسم';
+    el.addEventListener('click',(ev)=>{ev.stopPropagation();selectBuilding(p.id);});
+    const m=new maplibregl.Marker({element:el,anchor:'center'}).setLngLat(p.center).addTo(map);
+    markers.b.push({m,el,id:p.id,props:p});
+  }
+  for(const f of AUDIT.gates.features){
+    const el=document.createElement('div');el.className='mk g';el.textContent=f.properties.id;el.title='بوابة '+f.properties.id;
+    el.addEventListener('click',(ev)=>{ev.stopPropagation();openGate(f.properties);});
+    const m=new maplibregl.Marker({element:el,anchor:'center'}).setLngLat(f.geometry.coordinates).addTo(map);
+    markers.g.push({m,el});
+  }
+  for(const f of AUDIT.pois.features){
+    const p=f.properties;
+    const el=document.createElement('div');el.className='mk '+(p.category==='hotels'?'p-h':'p-f');el.textContent=p.id;el.title=p.name;
+    el.addEventListener('click',(ev)=>{ev.stopPropagation();openPoi(p);});
+    const m=new maplibregl.Marker({element:el,anchor:'center'}).setLngLat(f.geometry.coordinates).addTo(map);
+    markers.p.push({m,el});
+  }
+}
+
+function matchesFilter(p){
+  if(state.confidence==='corroborated'&&!p.corroborated)return false;
+  if(state.confidence==='msOnly'&&p.corroborated)return false;
+  if(!state.kinds.has(p.kind))return false;
+  if(!state.directions.has(p.direction))return false;
+  if(state.query){const q=state.query.toLowerCase();if(!((p.id||'')+' '+(p.name||'')).toLowerCase().includes(q))return false;}
+  return true;
+}
+function mapFilter(){
+  const c=[];
+  if(state.confidence==='corroborated')c.push(['==',['get','corroborated'],true]);
+  if(state.confidence==='msOnly')c.push(['==',['get','corroborated'],false]);
+  if(state.kinds.size<ALL_KINDS.length)c.push(['match',['get','kind'],[...state.kinds],true,false]);
+  if(state.directions.size<ALL_DIRS.length)c.push(['match',['get','direction'],[...state.directions],true,false]);
+  if(state.query){const q=state.query.toLowerCase();
+    c.push(['any',['in',q,['downcase',['get','id']]],['in',q,['downcase',['coalesce',['get','name'],'']]]]);}
+  return c.length?['all',...c]:null;
+}
+function applyFilters(){
+  const uf=mapFilter();
+  map.setFilter('buildings-fill',uf);
+  map.setFilter('buildings-extrusion',uf);
+  map.setFilter('buildings-outline-solid',uf?['all',uf,['==',['get','corroborated'],true]]:['==',['get','corroborated'],true]);
+  map.setFilter('buildings-outline-dashed',uf?['all',uf,['==',['get','corroborated'],false]]:['==',['get','corroborated'],false]);
+  updateMarkers();updateStats();
+}
+function updateMarkers(){
+  const z=map.getZoom();
+  const showB=state.layers.labels&&z>=15.4;
+  for(const x of markers.b){
+    const vis=showB&&matchesFilter(x.props);
+    x.el.style.display=vis?'':'none';
+    x.el.classList.toggle('sel',state.selected===x.id);
+  }
+  for(const x of markers.g)x.el.style.display=(state.layers.gates&&z>=14.6)?'':'none';
+  for(const x of markers.p)x.el.style.display=state.layers.pois?'':'none';
+}
+function updateStats(){
+  const vis=buildings.filter((f)=>matchesFilter(f.properties));
+  const co=vis.filter((f)=>f.properties.corroborated).length;
+  const ho=vis.filter((f)=>f.properties.kind==='hotel').length;
+  const fo=vis.filter((f)=>f.properties.kind==='food').length;
+  $('stats').innerHTML=
+    `<span class="chip">ظاهر <b>${vis.length}</b>/${buildings.length}</span>`+
+    `<span class="chip ok">مدعوم <b>${co}</b></span>`+
+    `<span class="chip ms">Microsoft فقط <b>${vis.length-co}</b></span>`+
+    `<span class="chip hotel">فنادق <b>${ho}</b></span>`+
+    `<span class="chip food">مطاعم <b>${fo}</b></span>`;
+}
+
+function setLight(){
+  map.setLight({anchor:'viewport',color:'#fff6e6',intensity:0.55,position:[1.4,210,32]});
+}
+function applyMode(){
+  const is3=state.mode==='3d';
+  map.setLayoutProperty('buildings-fill','visibility',is3?'none':'visible');
+  map.setLayoutProperty('buildings-outline-solid','visibility',is3?'none':'visible');
+  map.setLayoutProperty('buildings-outline-dashed','visibility',is3?'none':'visible');
+  map.setLayoutProperty('buildings-extrusion','visibility',is3?'visible':'none');
+  map.setLayoutProperty('buildings-highlight','visibility',is3?'none':'visible');
+  map.setLayoutProperty('buildings-highlight-3d','visibility',is3?'visible':'none');
+  $('height').disabled=!is3;$('orbit').disabled=!is3;
+  $('modebadge').textContent=is3?`3D · ارتفاع معاينة ${state.height} م`:'2D · مضلعات دقيقة';
+  if(!is3)setOrbit(false);
+}
+function setMode(m){
+  state.mode=m;
+  document.querySelectorAll('#mode button').forEach((b)=>b.classList.toggle('on',b.dataset.v===m));
+  applyMode();
+  map.easeTo({pitch:m==='3d'?52:0,bearing:m==='3d'?-22:0,duration:800});
+}
+function setBasemap(v){
+  state.basemap=v;
+  for(const id of ['sat','streets','dark'])map.setLayoutProperty(id,'visibility',id===v?'visible':'none');
+  document.querySelectorAll('#basemap button').forEach((b)=>b.classList.toggle('on',b.dataset.v===v));
+}
+function setHeight(h){
+  state.height=h;$('hval').textContent=h+' م';
+  map.setPaintProperty('buildings-extrusion','fill-extrusion-height',h);
+  map.setPaintProperty('buildings-highlight-3d','fill-extrusion-height',h+0.6);
+  if(state.mode==='3d')$('modebadge').textContent=`3D · ارتفاع معاينة ${h} م`;
+}
+function setOpacity(o){
+  state.opacity=o;$('oval').textContent=Math.round(o*100)+'%';
+  map.setPaintProperty('buildings-fill','fill-opacity',o);
+}
+
+let orbitRAF=null;
+function orbitLoop(){
+  if(!state.orbit||state.mode!=='3d'){orbitRAF=null;return;}
+  map.setBearing(map.getBearing()+0.12);
+  orbitRAF=requestAnimationFrame(orbitLoop);
+}
+function setOrbit(on){
+  state.orbit=on&&state.mode==='3d';
+  $('orbit').textContent='دوران تلقائي: '+(state.orbit?'يعمل':'متوقف');
+  $('orbit').classList.toggle('gold',state.orbit);
+  if(state.orbit&&!orbitRAF)orbitRAF=requestAnimationFrame(orbitLoop);
+}
+map.on('dragstart',()=>setOrbit(false));
+map.on('zoomend',updateMarkers);
+map.on('rotate',updateCompass);
+map.on('pitch',updateCompass);
+function updateCompass(){ $('needle').style.transform=`rotate(${-map.getBearing()}deg)`; }
+
+function selectBuilding(id){
+  const f=byId.get(id);if(!f)return;
+  state.selected=id;
+  map.setFilter('buildings-highlight',['==',['get','id'],id]);
+  map.setFilter('buildings-highlight-3d',['==',['get','id'],id]);
+  updateMarkers();
+  renderBuilding(f.properties);
+  $('drawer').classList.add('open');
+}
+function clearSelection(){
+  state.selected=null;
+  map.setFilter('buildings-highlight',['==',['get','id'],'']);
+  map.setFilter('buildings-highlight-3d',['==',['get','id'],'']);
+  updateMarkers();
+}
+function reviewRows(r){
+  if(!r)return '';
+  const items=[['البصمة',r.footprint],['الهوية',r.identity],['الارتفاع',r.height],['مدخل المشاة',r.pedestrianEntrance],['مدخل السيارات',r.carEntrance]];
+  return '<div class="review">'+items.map(([k,v])=>`<div class="r"><span>${k}</span><span>${REVIEW_AR[v]||esc(v)}</span></div>`).join('')+'</div>';
+}
+function renderBuilding(p){
+  const dec=state.decisions[p.id];
+  const badge=p.corroborated?'<span class="badge ok">مدعوم (OSM/POI)</span>':'<span class="badge ms">Microsoft فقط</span>';
+  $('drawer').innerHTML=`
+    <div class="dh"><div><div class="id">${esc(p.id)}</div><div class="nm">${esc(p.name||'بدون اسم')}</div></div>
+      <button class="close" id="dclose" aria-label="إغلاق">✕</button></div>
+    <div class="db">
+      <div style="margin-bottom:10px">${badge} <span class="badge warn">${KIND_AR[p.kind]||esc(p.kind)}</span></div>
+      <dl class="kv">
+        <dt>الجهة</dt><dd>${DIR_AR[p.direction]}</dd>
+        <dt>من السور</dt><dd>${p.distanceM} م</dd>
+        <dt>أقرب بوابة</dt><dd>${p.nearestGateId}</dd>
+        <dt>المساحة</dt><dd>${p.areaM2} م²</dd>
+        <dt>مصدر البصمة</dt><dd>Microsoft ML</dd>
+        <dt>الهوية</dt><dd style="font-size:11px">${IDENTITY_AR[p.identitySource]||esc(p.identitySource)}</dd>
+        <dt>ارتفاع حقيقي</dt><dd><span class="badge warn">غير موثّق</span></dd>
+        ${p.osmWay?`<dt>OSM way</dt><dd style="direction:ltr">${esc(p.osmWay)} (${p.osmOverlap})</dd>`:''}
+        ${p.candidatePoiIds&&p.candidatePoiIds.length?`<dt>POI مرشّح</dt><dd>${p.candidatePoiIds.join(', ')}</dd>`:''}
+      </dl>
+      <div style="font-size:12px;color:var(--sand-dim);font-weight:700;margin-bottom:4px">حالة المراجعة</div>
+      ${reviewRows(p.review)}
+      <div style="font-size:12px;color:var(--sand-dim);font-weight:700;margin-top:12px">قرارك (محلي للمعاينة)</div>
+      <div class="decide">
+        <button data-d="approved" class="${dec==='approved'?'sel-ok':''}">اعتماد مبدئي</button>
+        <button data-d="review" class="${dec==='review'?'sel-warn':''}">يحتاج مراجعة</button>
+        <button data-d="rejected" class="${dec==='rejected'?'sel-no':''}">رفض</button>
+      </div>
+      <div class="decnote">لا يُكتب أي قرار في بوابة الاعتماد.صدّره وأرسله لي لتطبيقه بعد مراجعتك.</div>
+      <button class="btn wide" id="dzoom" style="margin-top:12px">تقريب إلى هذا المبنى</button>
+    </div>`;
+  $('dclose').onclick=()=>{$('drawer').classList.remove('open');clearSelection();};
+  $('dzoom').onclick=()=>map.flyTo({center:p.center,zoom:18.4,pitch:state.mode==='3d'?58:0,duration:900});
+  $('drawer').querySelectorAll('.decide button').forEach((b)=>b.onclick=()=>{
+    state.decisions[p.id]=b.dataset.d;renderBuilding(p);
+  });
+}
+function openGate(p){
+  state.selected=null;
+  $('drawer').innerHTML=`<div class="dh"><div><div class="id">${esc(p.id)}</div><div class="nm">بوابة من بوابات الساحات</div></div>
+    <button class="close" id="dclose">✕</button></div>
+    <div class="db"><p style="font-size:13px">رقم البوابة كما في خريطة الهيئة المعتمدة (301–370). مواضع البوابات من سور الساحات الملتقط بتاريخ ${esc(AUDIT.sources.fence.captured)}.</p>
+    <div class="decnote">هذه البوابات مرجع للتوجيه وليست جزءًا من مباني المحيط المرشّحة.</div></div>`;
+  $('dclose').onclick=()=>$('drawer').classList.remove('open');
+  $('drawer').classList.add('open');
+}
+function openPoi(p){
+  const matched=p.matchedBuildingId?byId.get(p.matchedBuildingId):null;
+  $('drawer').innerHTML=`<div class="dh"><div><div class="id">${esc(p.id)}</div><div class="nm">${esc(p.name)}</div></div>
+    <button class="close" id="dclose">✕</button></div>
+    <div class="db">
+      <div style="margin-bottom:10px"><span class="badge ${p.category==='hotels'?'warn':'ms'}">${p.category==='hotels'?'فندق':'مطعم/مقهى'}</span></div>
+      <dl class="kv">
+        <dt>الجهة</dt><dd>${DIR_AR[p.direction]}</dd>
+        <dt>أقرب بوابة</dt><dd>${p.nearestGateId}</dd>
+        <dt>مبنى مرشّح</dt><dd>${p.matchedBuildingId||'—'}</dd>
+        <dt>بعد النقطة</dt><dd>${p.distanceToFootprintM??'—'} م</dd>
+        <dt>الحالة</dt><dd style="font-size:11px">نقطة مصدر، ليست مدخلًا</dd>
+      </dl>
+      <div class="decnote">النقطة موضع مصدر من OSM وليست مدخلًا موثقًا. الربط بالمبنى غير موثق وبانتظار اعتمادك.</div>
+      ${matched?'<button class="btn wide" id="dgoto" style="margin-top:12px">فتح المبنى المرشّح '+esc(p.matchedBuildingId)+'</button>':''}
+    </div>`;
+  $('dclose').onclick=()=>$('drawer').classList.remove('open');
+  if(matched)$('dgoto').onclick=()=>selectBuilding(p.matchedBuildingId);
+  $('drawer').classList.add('open');
+}
+
+map.on('click','buildings-fill',(e)=>{if(e.features[0])selectBuilding(e.features[0].properties.id);});
+map.on('click','buildings-extrusion',(e)=>{if(e.features[0])selectBuilding(e.features[0].properties.id);});
+for(const l of ['buildings-fill','buildings-extrusion']){
+  map.on('mouseenter',l,()=>map.getCanvas().style.cursor='pointer');
+  map.on('mouseleave',l,()=>map.getCanvas().style.cursor='');
+}
+map.on('click',(e)=>{
+  const f=map.queryRenderedFeatures(e.point,{layers:['buildings-fill','buildings-extrusion']});
+  if(!f.length){$('drawer').classList.remove('open');clearSelection();}
+});
+
+function download(href,name){const a=document.createElement('a');a.href=href;a.download=name;document.body.appendChild(a);a.click();a.remove();}
+function downloadJSON(obj,name){const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);download(url,name);setTimeout(()=>URL.revokeObjectURL(url),2000);}
+
+$('expgeo').onclick=()=>{
+  const feats=buildings.filter((f)=>matchesFilter(f.properties));
+  downloadJSON({type:'FeatureCollection',name:'ring1-ms-candidates-preview',features:feats},'ring1-candidates-preview.geojson');
+};
+$('expdec').onclick=()=>{
+  downloadJSON({generatedAt:new Date().toISOString(),note:'Local preview decisions only. NOT the approval gate (data/urban-approved.json).',ringM:AUDIT.ringM,decisions:state.decisions},'ring1-my-decisions.json');
+};
+$('shot').onclick=()=>{
+  map.once('idle',()=>{download(map.getCanvas().toDataURL('image/png'),'ring1-review-map.png');});
+  map.triggerRepaint();
+};
+
+$('basemap').querySelectorAll('button').forEach((b)=>b.onclick=()=>setBasemap(b.dataset.v));
+$('mode').querySelectorAll('button').forEach((b)=>b.onclick=()=>setMode(b.dataset.v));
+$('confidence').querySelectorAll('button').forEach((b)=>b.onclick=()=>{
+  state.confidence=b.dataset.v;
+  document.querySelectorAll('#confidence button').forEach((x)=>x.classList.toggle('on',x===b));
+  applyFilters();
+});
+$('height').oninput=(e)=>setHeight(Number(e.target.value));
+$('opacity').oninput=(e)=>setOpacity(Number(e.target.value)/100);
+$('orbit').onclick=()=>setOrbit(!state.orbit);
+$('reset').onclick=()=>{setOrbit(false);map.flyTo({center:AUDIT.center,zoom:16.1,pitch:state.mode==='3d'?52:0,bearing:state.mode==='3d'?-22:0,duration:900});};
+$('fit').onclick=()=>{const b=AUDIT.bbox;map.fitBounds([[b[0],b[1]],[b[2],b[3]]],{padding:70,pitch:state.mode==='3d'?45:0,duration:900});};
+$('zin').onclick=()=>map.zoomIn();
+$('zout').onclick=()=>map.zoomOut();
+$('tiltup').onclick=()=>map.easeTo({pitch:Math.min(85,map.getPitch()+12),duration:300});
+$('tiltdn').onclick=()=>map.easeTo({pitch:Math.max(0,map.getPitch()-12),duration:300});
+$('rotl').onclick=()=>map.easeTo({bearing:map.getBearing()-20,duration:300});
+$('rotr').onclick=()=>map.easeTo({bearing:map.getBearing()+20,duration:300});
+$('compass').onclick=()=>map.easeTo({bearing:0,pitch:state.mode==='3d'?52:0,duration:500});
+
+$('layers').querySelectorAll('input').forEach((c)=>c.onchange=()=>{
+  const l=c.dataset.l;state.layers[l]=c.checked;
+  if(l==='footprints'){
+    const vis=c.checked?'visible':'none';
+    for(const id of ['buildings-fill','buildings-outline-solid','buildings-outline-dashed','buildings-extrusion'])map.setLayoutProperty(id,'visibility',vis);
+    if(c.checked)applyMode();
+  }
+  if(l==='fence'){map.setLayoutProperty('fence-casing','visibility',c.checked?'visible':'none');map.setLayoutProperty('fence-line','visibility',c.checked?'visible':'none');}
+  updateMarkers();
+});
+
+const q=$('q');
+q.oninput=()=>{state.query=q.value.trim();applyFilters();};
+q.onkeydown=(e)=>{if(e.key==='Enter'){const m=buildings.filter((f)=>matchesFilter(f.properties));if(m.length){selectBuilding(m[0].properties.id);map.flyTo({center:m[0].properties.center,zoom:18,pitch:state.mode==='3d'?58:0,duration:900});}}};
+$('qclear').onclick=()=>{q.value='';state.query='';applyFilters();};
+
+function buildChips(){
+  $('kinds').innerHTML=ALL_KINDS.map((k)=>`<button class="kchip on" data-k="${k}" style="background:${KIND_COLOR[k]}"><span class="sw" style="background:rgba(255,255,255,.85)"></span>${KIND_AR[k]}</button>`).join('');
+  $('kinds').querySelectorAll('button').forEach((b)=>b.onclick=()=>{
+    const k=b.dataset.k;
+    if(state.kinds.has(k)){state.kinds.delete(k);b.classList.remove('on');b.style.background='';}
+    else{state.kinds.add(k);b.classList.add('on');b.style.background=KIND_COLOR[k];}
+    applyFilters();
+  });
+  $('dirs').innerHTML=ALL_DIRS.map((d)=>`<button class="kchip on" data-d="${d}" style="background:var(--teal)">${DIR_AR[d]}</button>`).join('');
+  $('dirs').querySelectorAll('button').forEach((b)=>b.onclick=()=>{
+    const d=b.dataset.d;
+    if(state.directions.has(d)){state.directions.delete(d);b.classList.remove('on');b.style.background='';}
+    else{state.directions.add(d);b.classList.add('on');b.style.background='var(--teal)';}
+    applyFilters();
+  });
+  $('legend').innerHTML=ALL_KINDS.map((k)=>`<div class="li"><span class="sw" style="background:${KIND_COLOR[k]}"></span>${KIND_AR[k]}</div>`).join('')+
+    '<div class="li"><span class="sw dash"></span>Microsoft فقط (غير موثق)</div>'+
+    '<div class="li"><span class="sw" style="background:#0e6b41"></span>سور الساحات والبوابات</div>'+
+    '<div class="li"><span class="sw" style="background:#a85f00;border-radius:50%"></span>فندق (7xx)</div>'+
+    '<div class="li"><span class="sw" style="background:#a52727;border-radius:50%"></span>مطعم/مقهى (8xx)</div>';
+}
+buildChips();
+
+const menu=$('menu'),sidebar=$('sidebar'),scrim=$('scrim');
+function toggleSidebar(open){sidebar.classList.toggle('open',open);scrim.classList.toggle('show',open);}
+menu.onclick=()=>toggleSidebar(!sidebar.classList.contains('open'));
+scrim.onclick=()=>toggleSidebar(false);
+document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){$('drawer').classList.remove('open');clearSelection();toggleSidebar(false);}});
+window.addEventListener('resize',()=>map.resize());
+updateStats();
+</script>
+</body>
+</html>
