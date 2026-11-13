@@ -143,12 +143,46 @@
   right: calc(var(--s-3) + env(safe-area-inset-right));
   bottom: calc(64px + env(safe-area-inset-bottom));
   z-index: 2;
+  display: grid;
+  gap: var(--s-2);
+  justify-items: center;
 }
 .map-overlay-left {
   position: absolute;
   left: calc(var(--s-3) + env(safe-area-inset-left));
   bottom: calc(64px + env(safe-area-inset-bottom));
   z-index: 2;
+}
+/* The building-floor switcher (Phase 1): a compact column above the map's own buttons, in the same
+   panel look. Each floor is a 44 px touch target; the chosen one is filled. Transitions use --m-fast,
+   which the reduced-motion rule zeroes. */
+.building-floors {
+  display: grid;
+  border-radius: var(--r-pill);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+.bf-btn {
+  min-width: var(--hit);
+  min-height: var(--hit);
+  padding: 0 var(--s-2);
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: 600 var(--fs-sm)/1 var(--font-ui);
+  transition: background var(--m-fast) var(--ease), color var(--m-fast) var(--ease);
+}
+.bf-btn + .bf-btn {
+  border-top: 1px solid var(--line);
+}
+.bf-btn[aria-pressed='true'] {
+  background: var(--field);
+  color: var(--heading);
+}
+.bf-btn:active {
+  background: var(--field);
 }
 /* MapLibre's own controls in the app's look; the credit line always readable. */
 /* The credit line reads left to right in every language (it is English). */

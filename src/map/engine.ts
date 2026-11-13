@@ -4,6 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
 import { POIS, RULES } from '../data';
 import { alharamainPlaza } from '../data-next/alharamain-3d';
+import { VERTICAL_NODES } from '../data-next/vertical-nodes';
 import { rugLayout } from './rug-layout';
 import { sunPosition } from '../domain/daylight';
 import type { Poi, Status } from '../data/types';
@@ -152,6 +153,7 @@ export class MapEngine {
           pairs: { type: 'geojson', data: pairFeatures() },
           carEntrances: { type: 'geojson', data: entranceFeatures({}) },
           hints: { type: 'geojson', data: EMPTY_HINTS },
+          floorLandings: { type: 'geojson', data: floorLandingFeatures(11) },
         },
         layers: [],
       },
@@ -214,6 +216,11 @@ export class MapEngine {
     (this.map.getSource('carEntrances') as GeoJSONSource | undefined)?.setData(entranceFeatures(this.entranceState));
   }
 
+  /** The building floor shown (Phase 1): its verified lift and escalator landings, redrawn at once. */
+  setFloor(floorId: number): void {
+    (this.map.getSource('floorLandings') as GeoJSONSource | undefined)?.setData(floorLandingFeatures(floorId));
+  }
+
   // ---------- layers ----------
 
   private addLayers() {
@@ -228,6 +235,18 @@ export class MapEngine {
     m.addLayer({ id: 'esri', type: 'raster', source: 'esri' });
     m.addLayer({ id: 'light', type: 'raster', source: 'light', layout: { visibility: 'none' } });
     addPoiLayers(m, this.palette, this.version);
+    // The chosen building floor's verified landings: lifts gold (step-free), escalators green.
+    m.addLayer({
+      id: 'floor-landings',
+      type: 'circle',
+      source: 'floorLandings',
+      paint: {
+        'circle-radius': 7,
+        'circle-color': ['match', ['get', 'kind'], 'elevator', this.palette.get('gold-500'), this.palette.get('route-walk')],
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#ffffff',
+      },
+    });
     if (this.mode3d) this.sync3DLayer();
     addHintLayer(m, this.version);
     // The route and the visitor's dot under the chosen place's pin.
@@ -806,4 +825,16 @@ const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 /** The canopies' lanterns as points, for the pools of light under them. */
 function lampFeatures(lngLats: [number, number][]): GeoJSON.FeatureCollection<GeoJSON.Point> {
   return { type: 'FeatureCollection', features: lngLats.map((coordinates) => ({ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates } })) };
+}
+
+/** One building floor's verified lift and escalator landings as points (the GF gates are not landings). */
+function floorLandingFeatures(floorId: number): GeoJSON.FeatureCollection<GeoJSON.Point> {
+  return {
+    type: 'FeatureCollection',
+    features: VERTICAL_NODES.filter((n) => n.floorId === floorId && !n.closed && n.type !== 'gate').map((n) => ({
+      type: 'Feature' as const,
+      properties: { kind: n.type, id: n.id },
+      geometry: { type: 'Point' as const, coordinates: [n.lng, n.lat] },
+    })),
+  };
 }

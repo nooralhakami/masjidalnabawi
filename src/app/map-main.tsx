@@ -19,8 +19,9 @@ import { loadLang } from '../i18n/load';
 import { CAR_ENTRANCES } from '../data-next/car-entrances';
 import { entranceOpen } from '../state/entrances';
 import { MapEngine } from '../map/engine';
-import { filter, headingUp, markersHidden, nav, notify, route, parkingSub, query, rawdahH, searching, selected, sheetH, toiletSub, view3d, weather } from '../state/store';
+import { filter, floor, headingUp, markersHidden, nav, notify, route, parkingSub, query, rawdahH, searching, selected, sheetH, toiletSub, view3d, weather } from '../state/store';
 import { LangContext } from '../ui/i18n';
+import { BuildingFloors } from '../ui/shell/BuildingFloors';
 import { MapControls, MapTools, NEXT_VIEW, type MapView } from '../ui/shell/MapControls';
 import { WeatherChip } from '../ui/shell/WeatherChip';
 import { MapError } from '../ui/shell/MapError';
@@ -125,6 +126,7 @@ async function main() {
   effect(() => void document.querySelector('.map-page')!.toggleAttribute('data-trip', route.value !== null));
   fac.onChange(() => engine.refreshStatus());
   effect(() => engine.setEntrances(entranceOpen.value));
+  effect(() => engine.setFloor(floor.value));
   addEventListener('resize', () => engine.refit());
 
   const watchNorth = (fn: (deg: number) => void) => {
@@ -189,6 +191,7 @@ async function main() {
           onTilt={(d) => engine.tilt(d)}
           watchNorth={watchNorth}
         />
+        <BuildingFloors />
       </LangContext.Provider>,
       document.getElementById('overlay')!,
     );

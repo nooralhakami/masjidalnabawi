@@ -6,6 +6,7 @@ import type { RouteSummary } from '../presentation/route-view';
 import type { GarageStart } from '../routing/plan';
 import type { FilterId, ParkingSub, ToiletSub } from '../domain/filters';
 import type { Weather } from '../domain/weather';
+import { FLOOR_IDS } from '../data-next/floors';
 import { load, save } from './persist';
 
 /**
@@ -41,9 +42,16 @@ export const level = signal<Level>(load('level') === 'A' ? 'A' : 'B');
 export const accessibleRoute = signal<boolean>(load('accessible-route') === '1');
 /** 3D camera and building extrusion mode (SPEC-3D.md §1). */
 export const view3d = signal<boolean>(false);
+/**
+ * The building floor shown on the map (Phase 1, plan §4.2): 24 ROF, 12 GF, 11 Plaza, 94 B1, 95 B2.
+ * Distinct from `level` (the car park's A/B for driving). Remembered on this device.
+ */
+const savedFloor = Number(load('building-floor'));
+export const floor = signal<number>(FLOOR_IDS.includes(savedFloor) ? savedFloor : 11);
 effect(() => save('travel', travel.value));
 effect(() => save('level', level.value));
 effect(() => save('accessible-route', accessibleRoute.value ? '1' : null));
+effect(() => save('building-floor', String(floor.value)));
 
 /** A short notice above the sheet. */
 export const toast = signal<{ text: string; tone: 'info' | 'ok' | 'error'; id: number } | null>(null);
