@@ -22,6 +22,8 @@ import {
 } from './garage';
 import { fromM, insideRect, network, openTogether, pathLength, restroomDoor, ringPath, segmentHits, toM, walkPath, walkPaths, type XY } from './walk';
 import { ACCESSIBLE_WALK_M_PER_MIN, accessibleNodeForPoi, pickAccessibleEntrance, type AccessibleNodeInfo } from './accessible';
+import { FLOOR_BY_ID } from '../data-next/floors';
+import { type FloorChange, type MFLevel, multifloorRoute, nearestLandingOnFloor } from './multifloor';
 
 export { ACCESSIBLE_WALK_M_PER_MIN, accessibleNodeForPoi, nearestVerticalNode, pickAccessibleEntrance, type AccessibleNodeInfo } from './accessible';
 
@@ -69,6 +71,8 @@ export interface Plan {
   /** Step-free accessible route for seniors and visitors with disabilities (SPEC-3D.md §2-a). */
   accessible?: boolean;
   accessibleNode?: AccessibleNodeInfo;
+  /** A cross-floor walk (Phase 1, plan §4.2): the target floor, each path point's level, and every floor change taken. */
+  floor?: { id: number; levels: MFLevel[]; changes: FloorChange[] };
 }
 
 export const WALK_M_PER_MIN = 80;
@@ -327,7 +331,38 @@ function approach(to: Poi): { end: LatLng; tail: LatLng[] } {
   return { end: restroomDoor(to) ?? at(to), tail: [] };
 }
 
-async function planWalks(from: LatLng, to: Poi, heading?: number | null, accessible = false): Promise<Plan[]> {
+/**
+ * A walk that changes floor (Phase 1, plan §4.2): from the visitor's ground point to the verified
+ * landing on `toFloor` nearest the place, over the multi-floor graph (routing/multifloor.ts).
+ * Accessible mode uses lifts only. The roof and car park have no captured horizontal walkways yet
+ * (Phase 2), so the route ends at the landing itself. [] when the floor is ground or none is reachable.
+ */
+function planCrossFloor(from: LatLng, to: Poi, toFloor: number, accessible: boolean): Plan[] {
+  const floor = FLOOR_BY_ID.get(toFloor);
+  if (!floor || floor.level === 0) return [];
+  const landing = nearestLandingOnFloor([to.lat, to.lng], floor.id, accessible);
+  if (!landing) return [];
+  const route = multifloorRoute(from, [landing.lat, landing.lng], { accessible, toLevel: floor.level as MFLevel });
+  if (!route || !route.changes.length) return [];
+  const speed = accessible ? ACCESSIBLE_WALK_M_PER_MIN : WALK_M_PER_MIN;
+  return [
+    {
+      mode: 'walk',
+      legs: [{ kind: 'walk', path: route.path }],
+      walkM: route.meters,
+      driveM: 0,
+      minutes: Math.max(1, Math.ceil(route.meters / speed)),
+      floor: { id: floor.id, levels: route.levels, changes: route.changes },
+      ...(accessible ? { accessible: true } : {}),
+    },
+  ];
+}
+
+async function planWalks(from: LatLng, to: Poi, heading?: number | null, accessible = false, toFloor?: number): Promise<Plan[]> {
+  // A cross-floor request takes the verified multi-floor graph; ground routes (no floor requested)
+  // are untouched, so the protected behaviour (parity) stands.
+  const cross = toFloor != null ? planCrossFloor(from, to, toFloor, accessible) : [];
+  if (cross.length) return cross;
   let target = to;
   let extra: Partial<Plan> = {};
   if (to.category === 'parking') {
@@ -587,13 +622,13 @@ export async function planRoutes(
   from: LatLng,
   to: Poi,
   mode: Mode = 'walk',
-  opts: { heading?: number | null; level?: Level; start?: GarageStart; accessible?: boolean } = {},
+  opts: { heading?: number | null; level?: Level; start?: GarageStart; accessible?: boolean; toFloor?: number } = {},
 ): Promise<Plan[]> {
   if (mode === 'drive') {
     const p = await planDrive(from, to, opts.level ?? 'B', opts.heading, opts.start);
     if (p.length) return p;
   }
-  return planWalks(from, to, opts.heading, opts.accessible);
+  return planWalks(from, to, opts.heading, opts.accessible, opts.toFloor);
 }
 
 /**

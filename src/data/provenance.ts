@@ -31,6 +31,8 @@ export const DATA_PROVENANCE: Readonly<Record<string, Provenance>> = {
   'alharamain-prayers': 'verified', // navQ's prayer areas + the owner's additions and clearings
   'car-entrances': 'verified', // the owner's car-entrance marks
   'vertical-nodes': 'verified', // navQ's vertical_nodes.geojson
+  floors: 'verified', // navQ's GetVenueFloors (the five floors, Phase 1)
+  'vertical-edges': 'verified', // floor-to-floor links derived from vertical-nodes by mutual nearest (Phase 1)
   'women-areas': 'verified', // the women's areas and their barriers (owner, 2026-11-07)
 };
 
