@@ -49,11 +49,20 @@
 - **A destination's node** (`accessibleNodeForPoi`): venue by kind (inner gates → 4, toilets and
   parking → 20), within 80 m, else any within 250 m. When the node stands 4–35 m from the
   destination it becomes a waypoint (`via`) the route passes through.
-- **Limits as built.** The nodes carry floor ids, but the routing graph is still the ground's:
-  no route yet climbs between floors, and the floor switcher does not exist. Multi-floor routing
-  on the 99 nodes' edges is Phase 1 of the comprehensive plan. Three route expectations remain
-  deferred as `it.fails` (owner, 2026-11-08, `docs/DECISIONS.md`): two ways from the east street to
-  restroom 233, east plaza → 327 within the same bound, and the north line inside gates 364–355.
+- **As built (Phase 1, 2026-11-13).** The walking graph is multi-floor (`routing/multifloor.ts`):
+  the ground network plus the 46 derived floor-to-floor links (`data-next/vertical-edges.ts`,
+  mutual nearest of the same kind within 25 m: 8 elevators, 38 escalators), the public-lot entrances
+  joined to the nearest verified car-park node, and the Mosque's ground landings joined to the
+  plaza. Step-free mode keeps elevators only. `planRoutes` carries `floor: { id, levels, changes }`
+  for cross-floor walks (`routing/plan.ts`), and the floor switcher (`ui/shell/BuildingFloors.tsx`,
+  26 languages, persisted `building-floor`) drives the map's landing layer (`map/engine.ts`
+  `setFloor`). Horizontal walkways on the roof and inside the car park are not captured yet: a
+  cross-floor route ends at the landing itself (Phase 2).
+- **Limits.** Four Mosque escalator landings and three gates have no captured partner and stay
+  openly unlinked (`UNLINKED_VERTICAL_NODES`); no edge is invented for them. Three ground-walkway
+  expectations remain deferred as `it.fails`, settled by owner decision 2026-11-13
+  (`docs/DECISIONS.md`) to the ground-walkways phase: two ways from the east street to restroom 233,
+  east plaza → 327 within the same bound, and the north line inside gates 364–355.
 
 ## Sources
 

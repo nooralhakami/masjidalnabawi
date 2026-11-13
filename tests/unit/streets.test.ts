@@ -229,6 +229,7 @@ describe('the best route and its alternatives (owner, 2026-10-11)', () => {
   // Pending the routes phase (owner, 2026-11-08: merge the fence now, fix these with the routes): restroom 233 opens north
   // (owner, 2026-11-06) since the doors follow the 3D blocks, and from the east street only one way
   // stays within 30%. It.fails reports once there are two again; then it goes back into the list below.
+  // Settled by owner decision 2026-11-13 (DECISIONS): deferred to the ground-walkways phase; fix plan there.
   it.fails('east street → a west restroom (233): at least two ways (pending)', async () => {
     expect((await planRoutes([24.4685, 39.615], P(233), 'walk')).length).toBeGreaterThanOrEqual(2);
   });

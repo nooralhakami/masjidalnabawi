@@ -116,6 +116,7 @@ describe('every reachable place, from every plaza side', () => {
   // Pending the routes phase (owner, 2026-11-08: merge the fence now, fix these with the routes): gate 327 now stands on
   // its opening at the north-west corner, 32 m beyond this bound from the east plaza. It.fails
   // reports as soon as it holds again, so this marker is then removed.
+  // Settled by owner decision 2026-11-13 (DECISIONS): deferred to the ground-walkways phase; fix plan there.
   it.fails('east plaza → 327 within the same bound (pending)', () => {
     const N = network();
     const start = SIDES.find(([n]) => n === 'east plaza')![1];
@@ -311,6 +312,9 @@ describe('the east side through the narrow neck (owner, 2026-10-25)', () => {
 
   // Pending the routes phase (owner, 2026-11-08: merge the fence now, fix these with the routes): with the gates on the real
   // fence, this walkway is about 12 m outside it. It.fails reports once it is moved inside.
+  // Settled by owner decision 2026-11-13 (DECISIONS): deferred to the ground-walkways phase. The two bounds conflict for a
+  // single straight line (inside the fence south of the mosque, off its wall north); the fix is a corner at the mosque's
+  // south-east corner, per the fix plan in DECISIONS.
   it.fails('the north line runs inside the gates 364–355, never outside them (owner: «the route must be inside the gates»)', () => {
     const ring = ROUTING.walkway_ring.map(toM);
     const gates = [364, 362, 361, 360, 359, 358, 357, 355].map((id) => toM(at(id)));
