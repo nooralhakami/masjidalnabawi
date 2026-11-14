@@ -9,6 +9,7 @@ import { sunPosition } from '../domain/daylight';
 import type { Poi, Status } from '../data/types';
 import { isHidden } from '../domain/filters';
 import { mosqueDoorBaysGeoJSON, subscribeMosqueDoors, toggleGateDoor, type DoorToggleResult } from '../domain/mosque-doors';
+import { parsePrayerDemoOverride } from '../domain/prayer-session';
 import { isTapName } from '../domain/route-hint';
 import { FEATURED_IDS } from '../domain/visits';
 import { lookOf } from '../presentation/markers';
@@ -532,7 +533,7 @@ export class MapEngine {
       }
       // People walking the courtyards, after the models so they share their depth (owner, 2026-11-06).
       if (!m.getLayer('alharamain-3d-crowd')) {
-        this.crowd = new CrowdLayer(this.currentLight());
+        this.crowd = new CrowdLayer(this.currentLight(), parsePrayerDemoOverride(location.search));
         if (this.lamps) this.crowd.setColumns(this.lamps);
         m.addLayer(this.crowd, before);
       }

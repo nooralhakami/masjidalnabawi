@@ -1,6 +1,7 @@
 import type { CustomLayerInterface, CustomRenderMethodInput, Map as MLMap } from 'maplibre-gl';
+import type { PrayerDemoOverride } from '../domain/prayer-session';
 import { Flows } from './crowd-flows';
-import { Crowd } from './crowd-sim';
+import { Crowd, POSTURE_CODE, Worshippers, worshipperPose } from './crowd-sim';
 import { crowdInput } from './crowd-world';
 import { frameMatrix, metresFromOrigin, mulMat4 } from './glb-layer';
 import type { SceneLight } from './scene-light';
@@ -21,14 +22,39 @@ layout(location = 2) in vec3 a_part;
 layout(location = 3) in vec4 a_inst;  // x, z, heading, gait phase
 layout(location = 4) in vec4 a_robe;  // robe colour, height
 layout(location = 5) in vec4 a_head;  // headwear colour, woman (1) + skin tone / 2
+// A worshipper at prayer: x 0 follows the session's posture, 1..4 a pose of its own (standing,
+// ruku, sujud, juloos); y the rehal before it, z a child.
+layout(location = 6) in vec4 a_pose;
 
 uniform mat4 u_mvp;
+uniform float u_posture;  // 0 standing, 1 ruku, 2 sujud, 3 juloos (the rows, all together)
 
 out vec3 v_normal;
 out vec3 v_color;
 out float v_mat;
 out vec2 v_local;
 out float v_y;
+
+// The body at prayer (owner, 2026-11-09): bent from the hips at ruku, laid low at sujud with the
+// head at the ground, sitting on folded legs at juloos. The shadow is never posed.
+vec3 poseBody(vec3 p, float pose, float s) {
+  if (pose < 0.5) return p;
+  float hip = 0.95 * s;
+  if (pose < 1.5) {
+    if (p.y <= hip) return p;
+    float a = 1.25;
+    float dy = p.y - hip;
+    return vec3(p.x * cos(a) + dy * sin(a), hip + dy * cos(a) - p.x * sin(a), p.z);
+  }
+  if (pose < 2.5) {
+    if (p.y <= hip) return vec3(p.x, p.y * 0.5, p.z);
+    float a = 2.05;
+    float dy = p.y - hip;
+    return vec3(p.x * cos(a) + dy * sin(a), 0.475 * s + dy * cos(a) - p.x * sin(a), p.z);
+  }
+  float base = 0.35 * s;
+  return vec3(p.x + (p.y < base ? 0.1 * s : 0.0), base + (p.y - base) * 0.62, p.z);
+}
 
 void main() {
   float woman = floor(a_head.w);
@@ -40,27 +66,31 @@ void main() {
   vec3 n = a_normal;
   float ph = a_inst.w;
   float swing = sin(ph);
-  if (a_part.x == 1.0 || a_part.x == 2.0) {
-    // The arms swing about the shoulder, against the feet.
-    float a = (a_part.x == 1.0 ? -0.42 : 0.42) * swing;
-    float py = 1.42 * s;
-    float dy = p.y - py;
-    p.xy = vec2(p.x * cos(a) - dy * sin(a), p.x * sin(a) + dy * cos(a) + py);
-    n.xy = vec2(n.x * cos(a) - n.y * sin(a), n.x * sin(a) + n.y * cos(a));
-  } else if (a_part.x == 3.0 || a_part.x == 4.0) {
-    float k = a_part.x == 3.0 ? 1.0 : -1.0;
-    p.x += 0.2 * swing * k;
-    p.y += 0.045 * max(0.0, cos(ph) * k);
+  float pose = a_pose.x < 0.5 ? u_posture : a_pose.x - 1.0;
+  if (pose < 0.5) {
+    if (a_part.x == 1.0 || a_part.x == 2.0) {
+      // The arms swing about the shoulder, against the feet.
+      float a = (a_part.x == 1.0 ? -0.42 : 0.42) * swing;
+      float py = 1.42 * s;
+      float dy = p.y - py;
+      p.xy = vec2(p.x * cos(a) - dy * sin(a), p.x * sin(a) + dy * cos(a) + py);
+      n.xy = vec2(n.x * cos(a) - n.y * sin(a), n.x * sin(a) + n.y * cos(a));
+    } else if (a_part.x == 3.0 || a_part.x == 4.0) {
+      float k = a_part.x == 3.0 ? 1.0 : -1.0;
+      p.x += 0.2 * swing * k;
+      p.y += 0.045 * max(0.0, cos(ph) * k);
+    }
+    if (a_part.y != 4.0) {
+      // The hem moves with the stride; the body rises a little at each step and sways.
+      if (a_part.y == 0.0 && a_part.x == 0.0) p.x += 0.03 * swing * clamp((0.5 - p.y) / 0.4, 0.0, 1.0);
+      p.y += 0.022 * abs(cos(ph));
+      p.z += 0.012 * swing;
+    }
   }
-  if (a_part.y != 4.0) {
-    // The hem moves with the stride; the body rises a little at each step and sways.
-    if (a_part.y == 0.0 && a_part.x == 0.0) p.x += 0.03 * swing * clamp((0.5 - p.y) / 0.4, 0.0, 1.0);
-    p.y += 0.022 * abs(cos(ph));
-    p.z += 0.012 * swing;
-  }
+  vec3 q = a_part.y == 4.0 ? p : poseBody(p, pose, s);
   float c = cos(a_inst.z);
   float sn = sin(a_inst.z);
-  vec3 world = vec3(a_inst.x + p.x * c - p.z * sn, p.y, a_inst.y + p.x * sn + p.z * c);
+  vec3 world = vec3(a_inst.x + q.x * c - q.z * sn, q.y, a_inst.y + q.x * sn + q.z * c);
   gl_Position = hidden ? vec4(0.0, 0.0, 2.0, 1.0) : u_mvp * vec4(world, 1.0);
   v_normal = vec3(n.x * c - n.z * sn, n.y, n.x * sn + n.z * c);
   vec3 skinCol = mix(vec3(0.86, 0.68, 0.55), vec3(0.36, 0.24, 0.17), skin);
@@ -367,11 +397,50 @@ const BIER_COVER: [number, number, number] = [0.08, 0.24, 0.16];
 const MAX_BIERS = 4;
 
 /**
+ * A rehal (owner, 2026-11-09): the low wooden stand an open Qur'an rests on before a reader sitting
+ * in the Mosque. About 0.3 m high, its leaves turned a little toward the reader; x forward.
+ */
+function rehalMesh(): { data: Float32Array; count: number } {
+  const out: number[] = [];
+  const quad = (a: V3, b: V3, c: V3, d: V3, n: V3, mat: number) => {
+    for (const p of [a, b, c, a, c, d]) out.push(...p, ...n, 0, mat, 0);
+  };
+  const norm = (x: number, y: number, z: number): V3 => {
+    const l = Math.hypot(x, y, z) || 1;
+    return [x / l, y / l, z / l];
+  };
+  // The board the book rests on, its face turned up toward the reader.
+  const near = 0.3;
+  const far = 0.46;
+  const low = 0.16;
+  const high = 0.28;
+  const half = 0.19;
+  const n = norm(-0.6, 0.8, 0);
+  quad([near, low, -half], [near, low, half], [far, high, half], [far, high, -half], n, 0);
+  // The open pages, a little above the wood and a little inside it.
+  const lift = 0.024;
+  const p = (x: number, y: number, z: number): V3 => [x + n[0] * lift, y + n[1] * lift, z + n[2] * lift];
+  quad(p(near, low, -half + 0.02), p(near, low, half - 0.02), p(far, high, half - 0.02), p(far, high, -half + 0.02), n, 2);
+  // Two short legs under it.
+  for (const side of [-1, 1]) {
+    quad([0.33, 0, side * 0.155], [0.37, 0, side * 0.155], [0.37, 0.2, side * 0.155], [0.33, 0.2, side * 0.155], [0, 0, side], 0);
+  }
+  return { data: new Float32Array(out), count: out.length / 9 };
+}
+
+/** The rehal's wood and its pages, for its draw. */
+const REHAL_WOOD: [number, number, number] = [0.36, 0.24, 0.14];
+const REHAL_PAGES: [number, number, number] = [0.9, 0.88, 0.82];
+/** The most figures at prayer the layer keeps places for (about what the scene draws well). */
+const MAX_WORSHIPPERS = 1200;
+
+/**
  * Who each walker is: robe, height, headwear, woman or man, skin (`data`, 8 floats each); and
  * `women`, 1 for each woman, which the walk keeps to (women only in the women's areas). About half
- * are women (owner, 2026-11-07: more women about their areas).
+ * are women (owner, 2026-11-07: more women about their areas). A worshipper's sex, and a child's
+ * smaller height, come from the place it was laid out at (`opts`).
  */
-export function looks(n: number, seed: number): { data: Float32Array; women: Uint8Array } {
+export function looks(n: number, seed: number, opts: { women?: ArrayLike<number>; scale?: ArrayLike<number> } = {}): { data: Float32Array; women: Uint8Array } {
   let s = seed;
   const r = () => {
     s = (s * 1664525 + 1013904223) >>> 0;
@@ -382,11 +451,13 @@ export function looks(n: number, seed: number): { data: Float32Array; women: Uin
   const women = new Uint8Array(n);
   for (let a = 0; a < n; a++) {
     const kind = r();
+    // 0 a man in a thobe, 1 a woman in an abaya, 2 a pilgrim in coloured clothes.
+    const branch = opts.women ? (r() < 0.18 ? 2 : opts.women[a] ? 1 : 0) : kind < 0.42 ? 0 : kind < 0.82 ? 1 : 2;
     let robe: number[];
     let head: number[];
     let woman = 0;
     let height: number;
-    if (kind < 0.42) {
+    if (branch === 0) {
       // A man in a white thobe (some off-white or light grey), with a white or red shemagh.
       const w = 0.88 + r() * 0.08;
       robe = pick([
@@ -402,7 +473,7 @@ export function looks(n: number, seed: number): { data: Float32Array; women: Uin
         [0.8, 0.3, 0.3],
       ]);
       height = 1.66 + r() * 0.18;
-    } else if (kind < 0.82) {
+    } else if (branch === 1) {
       // A woman in a black abaya and hijab; some in dark blue, beige or brown.
       woman = 1;
       const dark = r() < 0.75;
@@ -434,7 +505,7 @@ export function looks(n: number, seed: number): { data: Float32Array; women: Uin
         [0.56, 0.56, 0.58],
         [0.78, 0.6, 0.64],
       ]);
-      woman = r() < 0.45 ? 1 : 0;
+      woman = opts.women ? (opts.women[a] ? 1 : 0) : r() < 0.45 ? 1 : 0;
       head = woman
         ? pick([
             [0.92, 0.92, 0.9],
@@ -448,7 +519,8 @@ export function looks(n: number, seed: number): { data: Float32Array; women: Uin
       height = woman ? 1.52 + r() * 0.14 : 1.62 + r() * 0.16;
     }
     women[a] = woman;
-    out.set([...robe, height, ...head, woman + r() * 0.49], a * 8);
+    // A child is drawn at its place's scale (0.62, `prayer-session`), a grown worshipper at 1.
+    out.set([...robe, height * (opts.scale?.[a] ?? 1), ...head, woman + r() * 0.49], a * 8);
   }
   return { data: out, women };
 }
@@ -482,8 +554,27 @@ export class CrowdLayer implements CustomLayerInterface {
   private bierVao: WebGLVertexArrayObject | null = null;
   private bierInst: WebGLBuffer | null = null;
   private bierData = new Float32Array(MAX_BIERS * 4);
+  // The worshippers at prayer: their places are laid out now and then (`crowd-sim.ts`), and drawn
+  // from their own buffers, so an ordinary frame only submits them.
+  private worshippers = new Worshippers();
+  private worshipVao: WebGLVertexArrayObject | null = null;
+  private worshipInst: WebGLBuffer | null = null;
+  private worshipPose: WebGLBuffer | null = null;
+  private worshipLook: WebGLBuffer | null = null;
+  private worshipCount = 0;
+  private worshipInstData = new Float32Array(MAX_WORSHIPPERS * 4);
+  private worshipPoseData = new Float32Array(MAX_WORSHIPPERS * 4);
+  private rehal = rehalMesh();
+  private rehalVao: WebGLVertexArrayObject | null = null;
+  private rehalInst: WebGLBuffer | null = null;
+  private rehalCount = 0;
+  private rehalData = new Float32Array(MAX_WORSHIPPERS * 4);
 
-  constructor(private light: SceneLight) {}
+  /** `demo` names a prayer scene for a preview link (`?prayerDemo=fajr`); without it, the clock. */
+  constructor(
+    private light: SceneLight,
+    private demo: PrayerDemoOverride | null = null,
+  ) {}
 
   /** Where the canopy and lamp columns stand: the walkers can be placed once they are known. */
   setColumns(lngLats: [number, number][]): void {
@@ -513,7 +604,7 @@ export class CrowdLayer implements CustomLayerInterface {
     gl.deleteShader(vs);
     gl.deleteShader(fs);
     this.program = prog;
-    for (const name of ['u_mvp', 'u_sunDir', 'u_sun', 'u_ambient', 'u_night']) this.u[name] = gl.getUniformLocation(prog, name);
+    for (const name of ['u_mvp', 'u_sunDir', 'u_sun', 'u_ambient', 'u_night', 'u_posture']) this.u[name] = gl.getUniformLocation(prog, name);
 
     const vao = gl.createVertexArray()!;
     gl.bindVertexArray(vao);
@@ -571,7 +662,71 @@ export class CrowdLayer implements CustomLayerInterface {
     gl.bindVertexArray(null);
     this.bierVao = bvao;
     this.bierInst = binst;
-    this.buffers = [vbo, inst, look, bvbo, binst];
+    // The worshippers: the same figure, their own places, looks and pose.
+    const wvao = gl.createVertexArray()!;
+    gl.bindVertexArray(wvao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    for (const [loc, size, off] of [
+      [0, 3, 0],
+      [1, 3, 12],
+      [2, 3, 24],
+    ]) {
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 36, off);
+    }
+    const wInst = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, wInst);
+    gl.bufferData(gl.ARRAY_BUFFER, this.worshipInstData.byteLength, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(3);
+    gl.vertexAttribPointer(3, 4, gl.FLOAT, false, 16, 0);
+    gl.vertexAttribDivisor(3, 1);
+    const wLook = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, wLook);
+    gl.bufferData(gl.ARRAY_BUFFER, MAX_WORSHIPPERS * 8 * 4, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(4);
+    gl.vertexAttribPointer(4, 4, gl.FLOAT, false, 32, 0);
+    gl.vertexAttribDivisor(4, 1);
+    gl.enableVertexAttribArray(5);
+    gl.vertexAttribPointer(5, 4, gl.FLOAT, false, 32, 16);
+    gl.vertexAttribDivisor(5, 1);
+    const wPose = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, wPose);
+    gl.bufferData(gl.ARRAY_BUFFER, this.worshipPoseData.byteLength, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(6);
+    gl.vertexAttribPointer(6, 4, gl.FLOAT, false, 16, 0);
+    gl.vertexAttribDivisor(6, 1);
+    gl.bindVertexArray(null);
+    this.worshipVao = wvao;
+    this.worshipInst = wInst;
+    this.worshipLook = wLook;
+    this.worshipPose = wPose;
+    // The rehals: their own mesh and places; wood and pages are constant (attributes 4–6 left off).
+    const rvao = gl.createVertexArray()!;
+    gl.bindVertexArray(rvao);
+    const rvbo = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, rvbo);
+    gl.bufferData(gl.ARRAY_BUFFER, this.rehal.data, gl.STATIC_DRAW);
+    for (const [loc, size, off] of [
+      [0, 3, 0],
+      [1, 3, 12],
+      [2, 3, 24],
+    ]) {
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 36, off);
+    }
+    const rinst = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, rinst);
+    gl.bufferData(gl.ARRAY_BUFFER, this.rehalData.byteLength, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(3);
+    gl.vertexAttribPointer(3, 4, gl.FLOAT, false, 16, 0);
+    gl.vertexAttribDivisor(3, 1);
+    gl.disableVertexAttribArray(4);
+    gl.disableVertexAttribArray(5);
+    gl.disableVertexAttribArray(6);
+    gl.bindVertexArray(null);
+    this.rehalVao = rvao;
+    this.rehalInst = rinst;
+    this.buffers = [vbo, inst, look, bvbo, binst, wInst, wLook, wPose, rvbo, rinst];
   }
 
   onRemove(_map: MLMap, gl: WebGL2RenderingContext): void {
@@ -579,8 +734,18 @@ export class CrowdLayer implements CustomLayerInterface {
     this.timer = null;
     if (this.vao) gl.deleteVertexArray(this.vao);
     if (this.bierVao) gl.deleteVertexArray(this.bierVao);
+    if (this.worshipVao) gl.deleteVertexArray(this.worshipVao);
+    if (this.rehalVao) gl.deleteVertexArray(this.rehalVao);
     this.bierVao = null;
     this.bierInst = null;
+    this.worshipVao = null;
+    this.worshipInst = null;
+    this.worshipPose = null;
+    this.worshipLook = null;
+    this.rehalVao = null;
+    this.rehalInst = null;
+    this.worshipCount = 0;
+    this.rehalCount = 0;
     this.flows = null;
     for (const b of this.buffers) gl.deleteBuffer(b);
     if (this.program) gl.deleteProgram(this.program);
@@ -613,21 +778,21 @@ export class CrowdLayer implements CustomLayerInterface {
     const crowd = this.crowd;
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const now = performance.now();
+    const clock = new Date();
+    // The worshippers at prayer (owner, 2026-11-09): laid out when the scene changes, then drawn as they are.
+    if (this.worshippers.sync(clock, this.demo, { columns: this.columns ?? [] })) this.buildWorshippers(gl);
+    const prayer = this.worshippers.session;
+    // At the congregational prayer the courtyards are the rows; the walkers wait for it to end.
+    const congregational = prayer != null && (prayer.phase === 'fard_prayer' || prayer.phase === 'friday_khutbah' || prayer.phase === 'friday_prayer');
     const dt = Math.min(0.1, (now - this.last) / 1000);
     // The queues for the Rawdah, the greeting at the Prophet's chamber, a funeral now and then
     // (owner, 2026-11-08): while the view is about the south of the Mosque.
-    this.flows?.update(still ? 0 : dt, new Date(), Flows.near(cx, cz, radius));
+    this.flows?.update(still ? 0 : dt, clock, Flows.near(cx, cz, radius));
     if (!still) crowd.step(dt);
     this.last = now;
     // Each walker keeps its own looks (the looks buffer is by walker): one not placed is drawn far
     // below the ground, out of sight.
     const k = crowd.n;
-    for (let a = 0; a < crowd.n; a++) {
-      const off = Number.isNaN(crowd.px[a]);
-      this.inst.set([off ? 0 : crowd.px[a], off ? 1e6 : crowd.pz[a], crowd.heading[a], crowd.phase[a]], a * 4);
-    }
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.instBuf);
-    gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.inst.subarray(0, k * 4));
 
     const mvp = new Float64Array(16);
     mulMat4(mvp, projMatrix as unknown as ArrayLike<number>, this.frame);
@@ -637,18 +802,46 @@ export class CrowdLayer implements CustomLayerInterface {
     gl.uniform3fv(this.u.u_sun, this.light.sun);
     gl.uniform3fv(this.u.u_ambient, this.light.ambient);
     gl.uniform1f(this.u.u_night, this.light.night);
-    gl.bindVertexArray(this.vao);
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.disable(gl.CULL_FACE);
-    // The shadows first, blended on the ground; then the people, solid.
-    gl.enable(gl.BLEND);
     gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-    gl.depthMask(false);
-    gl.drawArraysInstanced(gl.TRIANGLES, this.mesh.shadowFirst, this.mesh.shadowCount, k);
-    gl.depthMask(true);
-    gl.disable(gl.BLEND);
-    gl.drawArraysInstanced(gl.TRIANGLES, 0, this.mesh.count, k);
+    if (!congregational) {
+      for (let a = 0; a < crowd.n; a++) {
+        const off = Number.isNaN(crowd.px[a]);
+        this.inst.set([off ? 0 : crowd.px[a], off ? 1e6 : crowd.pz[a], crowd.heading[a], crowd.phase[a]], a * 4);
+      }
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.instBuf);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.inst.subarray(0, k * 4));
+      gl.uniform1f(this.u.u_posture, 0);
+      gl.bindVertexArray(this.vao);
+      // The shadows first, blended on the ground; then the people, solid.
+      gl.enable(gl.BLEND);
+      gl.depthMask(false);
+      gl.drawArraysInstanced(gl.TRIANGLES, this.mesh.shadowFirst, this.mesh.shadowCount, k);
+      gl.depthMask(true);
+      gl.disable(gl.BLEND);
+      gl.drawArraysInstanced(gl.TRIANGLES, 0, this.mesh.count, k);
+    }
+    // The rows: the session's posture moves them all together (a uniform, not a new crowd).
+    if (this.worshipCount && this.worshipVao) {
+      gl.bindVertexArray(this.worshipVao);
+      gl.uniform1f(this.u.u_posture, POSTURE_CODE[prayer?.posture ?? 'standing']);
+      gl.enable(gl.BLEND);
+      gl.depthMask(false);
+      gl.drawArraysInstanced(gl.TRIANGLES, this.mesh.shadowFirst, this.mesh.shadowCount, this.worshipCount);
+      gl.depthMask(true);
+      gl.disable(gl.BLEND);
+      gl.drawArraysInstanced(gl.TRIANGLES, 0, this.mesh.count, this.worshipCount);
+    }
+    // The rehals before those reading; their wood and pages are constant colours.
+    if (this.rehalCount && this.rehalVao) {
+      gl.bindVertexArray(this.rehalVao);
+      gl.uniform1f(this.u.u_posture, 0);
+      gl.vertexAttrib4f(4, REHAL_WOOD[0], REHAL_WOOD[1], REHAL_WOOD[2], 1.75);
+      gl.vertexAttrib4f(5, REHAL_PAGES[0], REHAL_PAGES[1], REHAL_PAGES[2], 0);
+      gl.drawArraysInstanced(gl.TRIANGLES, 0, this.rehal.count, this.rehalCount);
+    }
     const biers = this.flows?.biers() ?? [];
     if (biers.length && this.bierVao && this.bierInst) {
       const nb = Math.min(MAX_BIERS, biers.length);
@@ -668,6 +861,42 @@ export class CrowdLayer implements CustomLayerInterface {
         this.timer = null;
         this.map?.triggerRepaint();
       }, FRAME_MS);
+    }
+  }
+
+  /**
+   * Lay the worshippers out from the places the prayer scene left: who they are (a man, a woman, a
+   * child at its place's scale), the pose they are drawn in, and the rehal before each reader.
+   */
+  private buildWorshippers(gl: WebGL2RenderingContext): void {
+    const places = this.worshippers.placements;
+    const n = Math.min(MAX_WORSHIPPERS, places.length);
+    const women = new Uint8Array(n);
+    const scale = new Float32Array(n);
+    let rehals = 0;
+    for (let a = 0; a < n; a++) {
+      const w = places[a];
+      women[a] = w.isWoman ? 1 : 0;
+      scale[a] = w.scale;
+      this.worshipInstData.set([w.x, w.z, w.heading, 0], a * 4);
+      this.worshipPoseData.set([worshipperPose(w), w.hasRehal ? 1 : 0, w.isChild ? 1 : 0, 0], a * 4);
+      if (w.hasRehal) {
+        this.rehalData.set([w.x + Math.cos(w.heading) * 0.5, w.z + Math.sin(w.heading) * 0.5, w.heading, 0], rehals * 4);
+        rehals++;
+      }
+    }
+    this.worshipCount = n;
+    this.rehalCount = rehals;
+    if (!this.worshipInst || !this.worshipPose || !this.worshipLook) return;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.worshipInst);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.worshipInstData.subarray(0, n * 4));
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.worshipPose);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.worshipPoseData.subarray(0, n * 4));
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.worshipLook);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, looks(n, 4321, { women, scale }).data.subarray(0, n * 8));
+    if (this.rehalInst) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.rehalInst);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.rehalData.subarray(0, rehals * 4));
     }
   }
 }

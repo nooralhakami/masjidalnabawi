@@ -13,6 +13,17 @@
  *   step is pushed apart, and no step lands off the walkable ground.
  */
 
+import {
+  generateWorshipperPlacements,
+  prayerSessionKey,
+  resolvePrayerSession,
+  type GenerateOptions,
+  type PrayerDemoOverride,
+  type PrayerPosture,
+  type PrayerSessionState,
+  type WorshipperPlacement,
+} from '../domain/prayer-session';
+
 export type XY = readonly [number, number];
 
 export interface CrowdInput {
@@ -900,5 +911,62 @@ export class Crowd {
         }
       }
     }
+  }
+}
+
+/** How each posture is drawn, as the vertex shader's `u_posture` reads it. */
+export const POSTURE_CODE: Readonly<Record<PrayerPosture, number>> = {
+  standing: 0,
+  ruku: 1,
+  sujud: 2,
+  juloos: 3,
+};
+
+/**
+ * A worshipper's own pose (owner, 2026-11-09): 0 follows the session, so a row bows and prostrates
+ * together when the time comes; 1–4 is a pose of its own (a reader, one praying alone), where the
+ * figure stays as it was placed.
+ */
+export function worshipperPose(placement: WorshipperPlacement): number {
+  const inRow = placement.activity === 'congregational_prayer' || placement.activity === 'khutbah_listening';
+  return inRow ? 0 : 1 + POSTURE_CODE[placement.posture];
+}
+
+/** How often the real clock is read for the prayer scene (about twice a minute; a demo changes faster). */
+const SESSION_EVERY_MS = 30_000;
+/**
+ * The most figures laid out at once, so the card of a phone is not asked for more than it draws well:
+ * rows at the prayer, fewer about the Mosque between the prayers.
+ */
+const CONGREGATION_MAX = 900;
+const QUIET_MAX = 420;
+
+/**
+ * The worshippers at prayer (owner, 2026-11-09): the places `generateWorshipperPlacements` lays out,
+ * kept as they are until the scene they were laid out for changes (a prayer, its end, Friday, the
+ * streets), so the layer rebuilds the rows now and then and not every frame. No WebGL here: the
+ * layer turns these into instanced attributes.
+ */
+export class Worshippers {
+  /** The session the places were laid out for (null before the first look at the clock). */
+  session: PrayerSessionState | null = null;
+  placements: readonly WorshipperPlacement[] = [];
+  /** What `placements` were laid out for. */
+  key = '';
+  private checkedAt = Number.NEGATIVE_INFINITY;
+
+  /** Read the prayer now, and lay the worshippers out again only when the scene has changed. */
+  sync(now: Date, demo: PrayerDemoOverride | null, opts: GenerateOptions = {}): boolean {
+    const t = now.getTime();
+    if (t - this.checkedAt < (demo ? 0 : SESSION_EVERY_MS)) return false;
+    this.checkedAt = t;
+    const session = resolvePrayerSession(now, undefined, demo);
+    this.session = session;
+    const key = prayerSessionKey(session);
+    if (key === this.key) return false;
+    this.key = key;
+    const quiet = session.phase === 'off_prayer' || session.phase === 'iqamah_wait';
+    this.placements = generateWorshipperPlacements(session, { ...opts, maxTotal: opts.maxTotal ?? (quiet ? QUIET_MAX : CONGREGATION_MAX) });
+    return true;
   }
 }

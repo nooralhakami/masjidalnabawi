@@ -1,13 +1,7 @@
 import { WOMEN_AREAS } from '../data-next/women-areas';
 import { fromModelMetres, toModelMetres } from './frames';
 import { QIBLA_BEARING_DEG } from './geo';
-import {
-  INTERIOR_MAIN_BOUNDS,
-  INTERIOR_SOUTH_BOUNDS,
-  RAWDAH_INTERIOR_BOUNDS,
-  interiorColumnCentres,
-  isPointOnInteriorWalkway,
-} from './interior-layout';
+import { INTERIOR_MAIN_BOUNDS, INTERIOR_SOUTH_BOUNDS, RAWDAH_INTERIOR_BOUNDS, interiorColumnCentres, isPointOnInteriorWalkway } from './interior-layout';
 import { MADINAH_UTC_OFFSET_MIN, PRAYERS, madinahDate, prayersOn, type PrayerName } from './prayer';
 import { currentRugLayout, rugLayout } from './rug-layout';
 
@@ -32,19 +26,9 @@ export const PRAYER_RAKAHS: Readonly<Record<PrayerName | 'jummah', number>> = {
 
 export type PrayerPhase = 'off_prayer' | 'iqamah_wait' | 'fard_prayer' | 'friday_khutbah' | 'friday_prayer';
 export type PrayerPosture = 'standing' | 'ruku' | 'sujud' | 'juloos';
-export type WorshipperActivity =
-  | 'congregational_prayer'
-  | 'khutbah_listening'
-  | 'individual_prayer'
-  | 'quran_reading'
-  | 'friends_circle'
-  | 'family_group';
+export type WorshipperActivity = 'congregational_prayer' | 'khutbah_listening' | 'individual_prayer' | 'quran_reading' | 'friends_circle' | 'family_group';
 
-export type PrayerDemoOverride =
-  | PrayerName
-  | 'jummah_khutbah'
-  | 'jummah_prayer'
-  | 'off_prayer';
+export type PrayerDemoOverride = PrayerName | 'jummah_khutbah' | 'jummah_prayer' | 'off_prayer';
 
 export interface PrayerSessionState {
   phase: PrayerPhase;
@@ -78,16 +62,7 @@ export interface GenerateOptions {
   maxTotal?: number;
 }
 
-const VALID_DEMOS = new Set<PrayerDemoOverride>([
-  'fajr',
-  'dhuhr',
-  'asr',
-  'maghrib',
-  'isha',
-  'jummah_khutbah',
-  'jummah_prayer',
-  'off_prayer',
-]);
+const VALID_DEMOS = new Set<PrayerDemoOverride>(['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', 'jummah_khutbah', 'jummah_prayer', 'off_prayer']);
 
 /** Facing angle toward Makkah (`176.24°`) in CrowdLayer radians (where PI/2 = 180° south). */
 export const QIBLA_HEADING_RAD = ((QIBLA_BEARING_DEG - 90) * Math.PI) / 180;
@@ -96,6 +71,14 @@ export function parsePrayerDemoOverride(search: string): PrayerDemoOverride | nu
   const value = new URLSearchParams(search).get('prayerDemo');
   if (!value || !VALID_DEMOS.has(value as PrayerDemoOverride)) return null;
   return value as PrayerDemoOverride;
+}
+
+/**
+ * What the worshippers' places depend on. The layer keeps the rows it laid out and rebuilds them
+ * only when this key changes: a bow, a prostration or a new rak'ah is a uniform, not a new crowd.
+ */
+export function prayerSessionKey(session: PrayerSessionState): string {
+  return `${session.phase}|${session.prayer ?? '-'}|${session.isFriday ? 'jummah' : 'weekday'}|${session.streetOverflow ? 'street' : 'inside'}`;
 }
 
 function postureAtProgress(rakahCount: number, elapsedPrayerMin: number): { currentRakah: number; posture: PrayerPosture } {
@@ -290,10 +273,7 @@ function hash01(seed: number): number {
  * Generates deterministic worshipper placements across the Mosque interior, courtyard carpets,
  * Western Annex areas, and Friday street overflow zones (`West` + `North` surrounding streets).
  */
-export function generateWorshipperPlacements(
-  session: PrayerSessionState,
-  opts: GenerateOptions = {},
-): WorshipperPlacement[] {
+export function generateWorshipperPlacements(session: PrayerSessionState, opts: GenerateOptions = {}): WorshipperPlacement[] {
   const layout = opts.columns ? rugLayout(opts.columns) : currentRugLayout();
   const cols = interiorColumnCentres();
   const out: WorshipperPlacement[] = [];
@@ -328,11 +308,7 @@ export function generateWorshipperPlacements(
     for (let z = INTERIOR_SOUTH_BOUNDS.zMin + 4; z <= INTERIOR_SOUTH_BOUNDS.zMax - 4 && out.length < cap * 0.5; z += 3.0) {
       for (let x = INTERIOR_SOUTH_BOUNDS.xMin + 4; x <= INTERIOR_SOUTH_BOUNDS.xMax - 4; x += 3.0) {
         if (nearInteriorColumn(x, z)) continue;
-        const inRawdah =
-          x >= RAWDAH_INTERIOR_BOUNDS.xMin &&
-          x <= RAWDAH_INTERIOR_BOUNDS.xMax &&
-          z >= RAWDAH_INTERIOR_BOUNDS.zMin &&
-          z <= RAWDAH_INTERIOR_BOUNDS.zMax;
+        const inRawdah = x >= RAWDAH_INTERIOR_BOUNDS.xMin && x <= RAWDAH_INTERIOR_BOUNDS.xMax && z >= RAWDAH_INTERIOR_BOUNDS.zMin && z <= RAWDAH_INTERIOR_BOUNDS.zMax;
         out.push({
           x,
           z,
