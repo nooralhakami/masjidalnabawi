@@ -5,8 +5,8 @@ import { RUG_D, RUG_TURN_DEG, RUG_W, rugLayout } from './rug-layout';
 import type { SceneLight } from './scene-light';
 import { createShadowTexture, SHADOW_GLSL, sunShadow } from './sun-shadow';
 
-/** Primary olive-green field colour of the Mosque's prayer carpets. */
-export const RUG_GREEN_HEX = '#6a7a2c';
+/** Primary olive-green field colour of the Mosque's prayer carpets (owner-selected #465319). */
+export const RUG_GREEN_HEX = '#465319';
 
 const VERT_SRC = `#version 300 es
 precision highp float;
@@ -257,7 +257,7 @@ export class RugLayer implements CustomLayerInterface {
       drawRug(ctx, canvas.width, canvas.height);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
     } else {
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([106, 122, 44, 255]));
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([70, 83, 25, 255]));
     }
     gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);

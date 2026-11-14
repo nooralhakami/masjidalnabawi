@@ -27,6 +27,7 @@ export type DataSourceId =
   | 'haram-fence'
   | 'vertical-nodes'
   | 'apple-maps-rug-ref'
+  | 'apple-maps-rug-closeup-ref'
   | 'pm-central-guide-2026'
   | 'crowd-sim'
   | 'scene-light';
@@ -129,7 +130,14 @@ export const DATA_PROVENANCE: Readonly<Record<DataSourceId, DataSourceRecord>> =
     tier: 'candidate',
     routingAllowed: false,
     path: 'docs/references/apple-maps-overview.jpg',
-    description: 'Candidate visual reference imagery from Apple Maps; display study only.',
+    description: 'مرجع بصري من المالك للتوزيع فقط (Apple Maps overview); layout visual reference only, never for routing.',
+  },
+  'apple-maps-rug-closeup-ref': {
+    id: 'apple-maps-rug-closeup-ref',
+    tier: 'candidate',
+    routingAllowed: false,
+    path: 'docs/references/apple-maps-closeup.jpg',
+    description: 'مرجع بصري من المالك للتوزيع فقط (Apple Maps closeup); layout visual reference only, never for routing.',
   },
   'pm-central-guide-2026': {
     id: 'pm-central-guide-2026',

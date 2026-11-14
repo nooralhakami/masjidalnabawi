@@ -17,6 +17,7 @@ describe('data provenance ledger and routing guards (A3)', () => {
     }
 
     expect(DATA_PROVENANCE['apple-maps-rug-ref'].tier).toBe('candidate');
+    expect(DATA_PROVENANCE['apple-maps-rug-closeup-ref'].tier).toBe('candidate');
     expect(DATA_PROVENANCE['pm-central-guide-2026'].tier).toBe('candidate');
     expect(DATA_PROVENANCE['crowd-sim'].tier).toBe('simulation');
     expect(DATA_PROVENANCE['scene-light'].tier).toBe('simulation');
@@ -26,7 +27,7 @@ describe('data provenance ledger and routing guards (A3)', () => {
     const verifiedIds = (Object.keys(DATA_PROVENANCE) as DataSourceId[]).filter((id) => DATA_PROVENANCE[id].tier === 'verified');
     expect(() => assertRoutingSourcesVerified(verifiedIds)).not.toThrow();
 
-    for (const id of ['apple-maps-rug-ref', 'pm-central-guide-2026', 'crowd-sim', 'scene-light'] as const) {
+    for (const id of ['apple-maps-rug-ref', 'apple-maps-rug-closeup-ref', 'pm-central-guide-2026', 'crowd-sim', 'scene-light'] as const) {
       expect(() => assertRoutingSourceVerified(id)).toThrow(/rejected (candidate|simulation) data source/);
       expect(() => assertRoutingSourcesVerified(['pois', id])).toThrow(/rejected (candidate|simulation) data source/);
     }

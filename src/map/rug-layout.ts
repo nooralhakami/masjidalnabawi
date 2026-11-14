@@ -164,24 +164,38 @@ export function rugLayout(columns: readonly (readonly [number, number])[]): RugL
   /** Each area's covered cells in the laid frame, to drop a barrier that would stand on another's. */
   const cells: { area: number; u0: number; v0: number; u1: number; v1: number }[] = [];
   const pieces: { area: number; u: number; v: number; corners: [number, number][] }[] = [];
+  let nextPatchId = 1;
   let seed = 7;
   const rnd = () => {
     seed = (seed * 1664525 + 1013904223) >>> 0;
     return seed / 4294967296;
   };
-  for (const [areaIndex, { ring, courtyard }] of areas.entries()) {
+  for (const { ring, courtyard } of areas) {
     const us = ring.map((p) => p[0]);
     const vs = ring.map((p) => p[1]);
     const [u0, u1, v0, v1] = [Math.min(...us), Math.max(...us), Math.min(...vs), Math.max(...vs)];
     const across = Math.floor((u1 - u0 - 2 * INSET) / RUG_W);
     if (across < 1) continue;
-    // Centred across the area; rows from its north edge, in groups.
+    // Centred across the area; align the northernmost row so a 1° tilted edge does not drop the first 3-row group.
     const left = u0 + (u1 - u0 - across * RUG_W) / 2;
+    let vStart = v0 + INSET;
+    for (let dv = 0; dv <= RUG_D + 1e-6; dv += 0.1) {
+      const v = v0 + INSET + dv;
+      let fits = 0;
+      for (let i = 0; i < across; i++) {
+        const a = left + i * RUG_W;
+        if (within(a, v, a + RUG_W, v + RUG_D, ring)) fits++;
+      }
+      if (fits >= Math.ceil(across * 0.75)) {
+        vStart = v;
+        break;
+      }
+    }
     const rows: { v: number; gapAfter: boolean }[] = [];
     for (let g = 0; ; g++) {
       let done = false;
       for (let k = 0; k < GROUP_ROWS; k++) {
-        const v = v0 + INSET + g * (GROUP_ROWS * RUG_D + GROUP_GAP) + k * RUG_D;
+        const v = vStart + g * (GROUP_ROWS * RUG_D + GROUP_GAP) + k * RUG_D;
         if (v + RUG_D > v1 - INSET) {
           done = true;
           break;
@@ -218,11 +232,11 @@ export function rugLayout(columns: readonly (readonly [number, number])[]): RugL
         return column ? 'column' : 'rug';
       }),
     );
-    // Only clean squares and rectangles (owner, 2026-11-07): the largest of whole groups of rows
-    // inside what could be laid, then the next largest clear of it (not touching, so no L or T
-    // shapes), each with at least MIN_RUGS carpets; what is left over is not laid.
+    // Extract clean, disjoint rectangles of whole 3-row groups inside this area. Clearing only the
+    // selected rows with a 1-column horizontal buffer avoids dropping the entire next 3-row group
+    // across a 0.8 m group gap, while each extracted rectangle keeps its own lattice and barriers.
     const free = laid.map((row) => row.map((x) => x !== false));
-    const keepCell = laid.map((row) => row.map(() => false));
+    const rects: { r0: number; r1: number; c0: number; c1: number }[] = [];
     for (;;) {
       const r = largestRectangle(
         free,
@@ -233,123 +247,71 @@ export function rugLayout(columns: readonly (readonly [number, number])[]): RugL
       let count = 0;
       for (let k = r.r0; k <= r.r1; k++) for (let i = r.c0; i <= r.c1; i++) if (laid[k][i] === 'rug') count++;
       if (count < MIN_RUGS) break;
-      for (let k = r.r0 - 1; k <= r.r1 + 1; k++) {
+      rects.push(r);
+      for (let k = r.r0; k <= r.r1; k++) {
         for (let i = r.c0 - 1; i <= r.c1 + 1; i++) {
-          if (k < 0 || i < 0 || k >= rows.length || i >= across) continue;
-          free[k][i] = false;
-          if (k >= r.r0 && k <= r.r1 && i >= r.c0 && i <= r.c1) keepCell[k][i] = true;
+          if (i >= 0 && i < across) free[k][i] = false;
         }
       }
     }
-    laid.forEach((row, k) =>
-      row.forEach((_, i) => {
-        if (!keepCell[k][i]) row[i] = false;
-      }),
-    );
-    const onArea = laid.map((row) => row.map((x) => x !== false));
-    // The lattice of the laid area: carpet rows, and between groups a gap row that belongs to the
-    // area where carpets lie on both sides of it.
-    type Cell = { v0: number; v1: number; on: boolean[] };
-    const lattice: Cell[] = [];
-    rows.forEach((r, k) => {
-      lattice.push({ v0: r.v, v1: r.v + RUG_D, on: onArea[k] });
-      if (r.gapAfter && k + 1 < rows.length) {
-        lattice.push({ v0: r.v + RUG_D, v1: rows[k + 1].v, on: onArea[k].map((x, i) => x && onArea[k + 1][i]) });
+    for (const rect of rects) {
+      const patchId = nextPatchId++;
+      for (let k = rect.r0; k <= rect.r1; k++) {
+        for (let i = rect.c0; i <= rect.c1; i++) {
+          if (laid[k][i] !== 'rug') continue;
+          const a = left + i * RUG_W;
+          const r = rows[k];
+          const key = `${Math.floor(a / RUG_W)}|${Math.floor(r.v / RUG_D)}`;
+          placed.set(key, [...(placed.get(key) ?? []), [a, r.v]]);
+          const [cx, cz] = fromLaid([left + (i + 0.5) * RUG_W, r.v + RUG_D / 2]);
+          rugs.push({ x: cx, z: cz, flip: rnd() < 0.5, courtyard });
+        }
       }
-    });
-    rows.forEach((r, k) =>
-      laid[k].forEach((x, i) => {
-        if (x !== 'rug') return;
-        const a = left + i * RUG_W;
-        const key = `${Math.floor(a / RUG_W)}|${Math.floor(r.v / RUG_D)}`;
-        placed.set(key, [...(placed.get(key) ?? []), [a, r.v]]);
-        const [cx, cz] = fromLaid([left + (i + 0.5) * RUG_W, r.v + RUG_D / 2]);
-        rugs.push({ x: cx, z: cz, flip: rnd() < 0.5, courtyard });
-      }),
-    );
-    for (const cell of lattice) {
-      cell.on.forEach((x, i) => {
-        if (!x) return;
-        const a = left + i * RUG_W;
-        cells.push({ area: areaIndex, u0: a, v0: cell.v0, u1: a + RUG_W, v1: cell.v1 });
-        blocked.push(
-          (
-            [
-              [a - 0.5, cell.v0 - 0.5],
-              [a + RUG_W + 0.5, cell.v0 - 0.5],
-              [a + RUG_W + 0.5, cell.v1 + 0.5],
-              [a - 0.5, cell.v1 + 0.5],
-            ] as XY[]
-          ).map(fromLaid),
-        );
-        covered.push(
-          (
-            [
-              [a, cell.v0],
-              [a + RUG_W, cell.v0],
-              [a + RUG_W, cell.v1],
-              [a, cell.v1],
-            ] as XY[]
-          ).map(fromLaid),
-        );
-      });
-    }
-    if (!courtyard) continue;
-    // The barrier: along every edge between a covered cell and an uncovered one, 0.3 m outside.
-    const isOn = (r: number, i: number) => r >= 0 && r < lattice.length && i >= 0 && i < across && lattice[r].on[i];
-    const segments: [XY, XY, XY][] = []; // from, to, outward normal (in the laid frame)
-    lattice.forEach((cell, r) => {
-      cell.on.forEach((x, i) => {
-        if (!x) return;
-        const a = left + i * RUG_W;
-        const b = a + RUG_W;
-        if (!isOn(r - 1, i))
-          segments.push([
-            [a, cell.v0],
-            [b, cell.v0],
-            [0, -1],
-          ]);
-        if (!isOn(r + 1, i))
-          segments.push([
-            [a, cell.v1],
-            [b, cell.v1],
-            [0, 1],
-          ]);
-        if (!isOn(r, i - 1))
-          segments.push([
-            [a, cell.v0],
-            [a, cell.v1],
-            [-1, 0],
-          ]);
-        if (!isOn(r, i + 1))
-          segments.push([
-            [b, cell.v0],
-            [b, cell.v1],
-            [1, 0],
-          ]);
-      });
-    });
-    // Joined into straight runs, so the sections are even.
-    const runs = new Map<string, [number, number][]>();
-    for (const [p, q, n] of segments) {
-      const horizontal = n[0] === 0;
-      const k = `${horizontal ? 'h' : 'v'}|${n[0]}|${n[1]}|${(horizontal ? p[1] : p[0]).toFixed(3)}`;
-      const list = runs.get(k) ?? [];
-      list.push(horizontal ? [p[0], q[0]] : [p[1], q[1]]);
-      runs.set(k, list);
-    }
-    for (const [k, list] of runs) {
-      const [dir, nu, nv, at] = k.split('|');
-      const line = Number(at);
-      const n: XY = [Number(nu), Number(nv)];
-      list.sort((p, q) => p[0] - q[0]);
-      const merged: [number, number][] = [];
-      for (const s of list) {
-        const last = merged[merged.length - 1];
-        if (last && s[0] <= last[1] + 1e-6) last[1] = Math.max(last[1], s[1]);
-        else merged.push([s[0], s[1]]);
+      // Lattice for this rectangle only: carpet rows, plus internal 0.8 m gaps between groups.
+      const lattice: { v0: number; v1: number }[] = [];
+      for (let k = rect.r0; k <= rect.r1; k++) {
+        const r = rows[k];
+        lattice.push({ v0: r.v, v1: r.v + RUG_D });
+        if (r.gapAfter && k < rect.r1) lattice.push({ v0: r.v + RUG_D, v1: rows[k + 1].v });
       }
-      for (const [s0, s1] of merged) {
+      for (const cell of lattice) {
+        for (let i = rect.c0; i <= rect.c1; i++) {
+          const a = left + i * RUG_W;
+          cells.push({ area: patchId, u0: a, v0: cell.v0, u1: a + RUG_W, v1: cell.v1 });
+          blocked.push(
+            (
+              [
+                [a - 0.5, cell.v0 - 0.5],
+                [a + RUG_W + 0.5, cell.v0 - 0.5],
+                [a + RUG_W + 0.5, cell.v1 + 0.5],
+                [a - 0.5, cell.v1 + 0.5],
+              ] as XY[]
+            ).map(fromLaid),
+          );
+          covered.push(
+            (
+              [
+                [a, cell.v0],
+                [a + RUG_W, cell.v0],
+                [a + RUG_W, cell.v1],
+                [a, cell.v1],
+              ] as XY[]
+            ).map(fromLaid),
+          );
+        }
+      }
+      if (!courtyard) continue;
+      const uStart = left + rect.c0 * RUG_W;
+      const uEnd = left + (rect.c1 + 1) * RUG_W;
+      const vTop = lattice[0].v0;
+      const vBot = lattice[lattice.length - 1].v1;
+      const edges: readonly ['h' | 'v', number, number, number, number, number][] = [
+        ['h', 0, -1, vTop, uStart, uEnd],
+        ['h', 0, 1, vBot, uStart, uEnd],
+        ['v', -1, 0, uStart, vTop, vBot],
+        ['v', 1, 0, uEnd, vTop, vBot],
+      ];
+      for (const [dir, nu, nv, line, s0, s1] of edges) {
         // Round the corners: the run reaches out to where the barrier of the next side runs.
         const e0 = s0 - 0.42;
         const e1 = s1 + 0.42;
@@ -359,10 +321,10 @@ export function rugLayout(columns: readonly (readonly [number, number])[]): RugL
         for (let s = 0; s < sections; s++) {
           const t0 = e0 + s * step + 0.05;
           const t1 = e0 + (s + 1) * step - 0.05;
-          const pt = (t: number, off: number): XY => (dir === 'h' ? [t, line + n[1] * off] : [line + n[0] * off, t]);
+          const pt = (t: number, off: number): XY => (dir === 'h' ? [t, line + nv * off] : [line + nu * off, t]);
           const mid = pt((t0 + t1) / 2, 0.36);
           const corners = [pt(t0, 0.3), pt(t1, 0.3), pt(t1, 0.42), pt(t0, 0.42)].map((p) => lngLatFromMetres(fromLaid(p)));
-          pieces.push({ area: areaIndex, u: mid[0], v: mid[1], corners });
+          pieces.push({ area: patchId, u: mid[0], v: mid[1], corners });
         }
       }
     }

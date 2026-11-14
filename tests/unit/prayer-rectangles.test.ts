@@ -117,12 +117,12 @@ describe('the beige barriers round the women’s areas (owner, 2026-11-07)', () 
   });
 });
 
-describe('prayer carpet alignment and qibla compass (A1, A4)', () => {
-  it('keeps the carpets aligned with the canopies at 1° (not tilted to qibla) and uses green #6a7a2c', () => {
+describe('prayer carpet alignment and qibla compass (A1, A4, Phase 1-B)', () => {
+  it('keeps the carpets aligned with the canopies at 1° (not tilted to qibla) and uses owner-selected green #465319', () => {
     const canopies = ALHARAMAIN_MODELS.find((m) => m.url.includes('canopies'))!;
     expect(RUG_TURN_DEG).toBe(canopies.rotation);
     expect(RUG_TURN_DEG).toBe(1);
-    expect(RUG_GREEN_HEX).toBe('#6a7a2c');
+    expect(RUG_GREEN_HEX).toBe('#465319');
   });
 
   it('points the compass Kaaba mark toward the qibla bearing 176.24° within 0.5°', () => {
