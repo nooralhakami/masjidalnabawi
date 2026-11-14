@@ -435,7 +435,9 @@ export class MapEngine {
               'fill-extrusion-color': ['get', 'color'],
               'fill-extrusion-base': ['get', 'base'],
               'fill-extrusion-height': ['get', 'height'],
-              'fill-extrusion-opacity': ['get', 'opacity'],
+              // A constant: MapLibre 6.11 refuses a data expression here (`['get', 'opacity']` fails
+              // validation and the whole layer is dropped), and the props' own opacity is 0.95–0.98.
+              'fill-extrusion-opacity': 0.96,
             },
           },
           before,
@@ -482,7 +484,8 @@ export class MapEngine {
               'fill-extrusion-color': ['get', 'color'],
               'fill-extrusion-height': ['get', 'height'],
               'fill-extrusion-base': ['get', 'base'],
-              'fill-extrusion-opacity': ['get', 'opacity'],
+              // Constant, not `['get', 'opacity']`: see the saqifah layer above (0.92 open, 0.96 shut).
+              'fill-extrusion-opacity': 0.94,
             },
           },
           before,
@@ -507,7 +510,8 @@ export class MapEngine {
               'fill-extrusion-color': ['get', 'color'],
               'fill-extrusion-height': ['get', 'height'],
               'fill-extrusion-base': ['get', 'base'],
-              'fill-extrusion-opacity': ['get', 'opacity'],
+              // Constant for the same reason (props' own opacity is 0.9–0.98).
+              'fill-extrusion-opacity': 0.96,
             },
           },
           before,
@@ -624,7 +628,7 @@ export class MapEngine {
     }
     // Lit plazas stand out of the dark city: their areas grow brighter as night falls.
     if (m.getLayer('alharamain-3d-plaza')) m.setPaintProperty('alharamain-3d-plaza', 'fill-opacity', ['min', 0.9, ['*', ['get', 'opacity'], 1 + 0.35 * light.night]]);
-    if (m.getLayer('saqifah-and-surroundings-3d')) m.setPaintProperty('saqifah-and-surroundings-3d', 'fill-extrusion-opacity', ['*', ['get', 'opacity'], 1 - 0.12 * light.night]);
+    if (m.getLayer('saqifah-and-surroundings-3d')) m.setPaintProperty('saqifah-and-surroundings-3d', 'fill-extrusion-opacity', 0.96 * (1 - 0.12 * light.night));
     if (m.getLayer('alharamain-3d-ground')) m.setPaintProperty('alharamain-3d-ground', 'background-color', light.ground);
     if (m.getLayer('alharamain-3d-lamps')) m.setPaintProperty('alharamain-3d-lamps', 'circle-opacity', 0.7 * light.night);
     m.setSky(light.sky);
