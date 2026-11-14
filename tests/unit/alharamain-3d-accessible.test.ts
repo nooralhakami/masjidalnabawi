@@ -17,12 +17,12 @@ function glbNodes(file: Buffer): { mesh?: number; name?: string }[] {
 describe('the Al-Haramain 3D view: plaza areas and 3D files', () => {
   const plaza = alharamainPlaza();
 
-  it('has the 5 plaza sectors, the western annex and its 6 + 6 prayer areas', () => {
+  it('has the 5 plaza sectors, the western annex and its 5 visible prayer areas (2 men + 3 women)', () => {
     const count = (kind: string) => plaza.features.filter((f) => f.properties.kind === kind).length;
     expect(count('sector')).toBe(5);
     expect(count('annex')).toBe(1);
-    expect(count('men')).toBe(6);
-    expect(count('women')).toBe(6);
+    expect(count('men')).toBe(2);
+    expect(count('women')).toBe(3);
   });
 
   it('every area is a closed ring in the Haram with a colour and an opacity', () => {

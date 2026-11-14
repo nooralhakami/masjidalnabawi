@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
 import { POIS, RULES } from '../data';
 import { alharamainPlaza } from '../data-next/alharamain-3d';
-import { rugLayout } from './rug-layout';
+import { buildInterCarpetAisles, rugLayout } from './rug-layout';
 import { sunPosition } from '../domain/daylight';
 import type { Poi, Status } from '../data/types';
 import { isHidden } from '../domain/filters';
@@ -14,7 +14,9 @@ import { lookOf } from '../presentation/markers';
 import type { IconName } from '../presentation/icons';
 import { CrowdLayer } from './crowd-layer';
 import { RugLayer } from './rug-layer';
-import { greetingBarriers, queueRails, womenBarriers } from './women-barriers';
+import { greetingBarriers, queueRails, womenBarriers, womenRawdahCorridorBarriers } from './women-barriers';
+import { interiorCorridors, interiorPrayerAreas } from './interior-layout';
+import { saqifahAndSurroundings3D, saqifahGround2D } from './saqifah-3d';
 import { HaramGlbLayer } from './glb-layer';
 import { IconAtlas, createDrawer, cssPalette, type Drawer } from './images';
 import { LampGlowLayer } from './lamp-glow-layer';
@@ -227,6 +229,55 @@ export class MapEngine {
     }
     m.addLayer({ id: 'esri', type: 'raster', source: 'esri' });
     m.addLayer({ id: 'light', type: 'raster', source: 'light', layout: { visibility: 'none' } });
+    if (!m.getSource('saqifah-2d')) m.addSource('saqifah-2d', { type: 'geojson', data: saqifahGround2D() });
+    if (!m.getLayer('saqifah-2d')) {
+      m.addLayer({
+        id: 'saqifah-2d',
+        type: 'fill',
+        source: 'saqifah-2d',
+        minzoom: 15,
+        paint: { 'fill-color': ['get', 'color'], 'fill-opacity': ['get', 'opacity'] },
+      });
+    }
+    if (!m.getSource('interior-prayer-areas')) m.addSource('interior-prayer-areas', { type: 'geojson', data: interiorPrayerAreas() });
+    if (!m.getLayer('interior-prayer-areas')) {
+      m.addLayer({
+        id: 'interior-prayer-areas',
+        type: 'fill',
+        source: 'interior-prayer-areas',
+        minzoom: 15.5,
+        paint: { 'fill-color': ['get', 'color'], 'fill-opacity': ['get', 'opacity'] },
+      });
+    }
+    if (!m.getSource('interior-corridors')) m.addSource('interior-corridors', { type: 'geojson', data: interiorCorridors() });
+    if (!m.getLayer('interior-corridors')) {
+      m.addLayer({
+        id: 'interior-corridors',
+        type: 'line',
+        source: 'interior-corridors',
+        minzoom: 16,
+        paint: {
+          'line-color': ['match', ['get', 'kind'], 'women_rawdah_corridor', '#c97b9e', '#94a3b8'],
+          'line-width': ['match', ['get', 'kind'], 'women_rawdah_corridor', 2.4, 1.8],
+          'line-dasharray': [3, 2],
+          'line-opacity': 0.85,
+        },
+      });
+    }
+    if (!m.getSource('inter-carpet-aisles')) m.addSource('inter-carpet-aisles', { type: 'geojson', data: buildInterCarpetAisles(this.lamps ?? undefined) });
+    if (!m.getLayer('inter-carpet-aisles')) {
+      m.addLayer({
+        id: 'inter-carpet-aisles',
+        type: 'line',
+        source: 'inter-carpet-aisles',
+        minzoom: 16.5,
+        paint: {
+          'line-color': '#d9d0be',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 16.5, 1.2, 18.5, 3],
+          'line-opacity': 0.72,
+        },
+      });
+    }
     addPoiLayers(m, this.palette, this.version);
     if (this.mode3d) this.sync3DLayer();
     addHintLayer(m, this.version);
@@ -350,6 +401,39 @@ export class MapEngine {
           before,
         );
       }
+      if (!m.getSource('alharamain-women-rawdah-barriers')) {
+        m.addSource('alharamain-women-rawdah-barriers', { type: 'geojson', data: womenRawdahCorridorBarriers() });
+      }
+      if (!m.getLayer('alharamain-3d-women-rawdah-barriers')) {
+        m.addLayer(
+          {
+            id: 'alharamain-3d-women-rawdah-barriers',
+            type: 'fill-extrusion',
+            source: 'alharamain-women-rawdah-barriers',
+            minzoom: 16,
+            paint: { 'fill-extrusion-color': '#d9c4a0', 'fill-extrusion-height': ['get', 'height'], 'fill-extrusion-opacity': 0.97 },
+          },
+          before,
+        );
+      }
+      if (!m.getSource('saqifah-3d')) m.addSource('saqifah-3d', { type: 'geojson', data: saqifahAndSurroundings3D() });
+      if (!m.getLayer('saqifah-and-surroundings-3d')) {
+        m.addLayer(
+          {
+            id: 'saqifah-and-surroundings-3d',
+            type: 'fill-extrusion',
+            source: 'saqifah-3d',
+            minzoom: 14.5,
+            paint: {
+              'fill-extrusion-color': ['get', 'color'],
+              'fill-extrusion-base': ['get', 'base'],
+              'fill-extrusion-height': ['get', 'height'],
+              'fill-extrusion-opacity': ['get', 'opacity'],
+            },
+          },
+          before,
+        );
+      }
       // The metal rails of the Rawdah's queues (owner, 2026-11-08), 1 m high.
       if (!m.getSource('alharamain-queue-rails')) m.addSource('alharamain-queue-rails', { type: 'geojson', data: queueRails() });
       if (!m.getLayer('alharamain-3d-queue-rails')) {
@@ -391,6 +475,7 @@ export class MapEngine {
           this.crowd?.setColumns(lamps);
           this.rugs?.setColumns(lamps);
           (m.getSource('alharamain-barriers') as GeoJSONSource | undefined)?.setData(rugLayout(lamps).barriers);
+          (m.getSource('inter-carpet-aisles') as GeoJSONSource | undefined)?.setData(buildInterCarpetAisles(lamps));
         });
         m.addLayer(this.models, before);
       }
@@ -423,8 +508,10 @@ export class MapEngine {
         'alharamain-3d-crowd',
         'alharamain-3d-barriers',
         'alharamain-3d-women-barriers',
+        'alharamain-3d-women-rawdah-barriers',
         'alharamain-3d-queue-rails',
         'alharamain-3d-greeting-barriers',
+        'saqifah-and-surroundings-3d',
         'alharamain-3d-glow',
         'alharamain-3d-terrain',
         'alharamain-3d-lamps',
@@ -481,6 +568,7 @@ export class MapEngine {
     }
     // Lit plazas stand out of the dark city: their areas grow brighter as night falls.
     if (m.getLayer('alharamain-3d-plaza')) m.setPaintProperty('alharamain-3d-plaza', 'fill-opacity', ['min', 0.9, ['*', ['get', 'opacity'], 1 + 0.35 * light.night]]);
+    if (m.getLayer('saqifah-and-surroundings-3d')) m.setPaintProperty('saqifah-and-surroundings-3d', 'fill-extrusion-opacity', ['*', ['get', 'opacity'], 1 - 0.12 * light.night]);
     if (m.getLayer('alharamain-3d-ground')) m.setPaintProperty('alharamain-3d-ground', 'background-color', light.ground);
     if (m.getLayer('alharamain-3d-lamps')) m.setPaintProperty('alharamain-3d-lamps', 'circle-opacity', 0.7 * light.night);
     m.setSky(light.sky);
@@ -622,9 +710,21 @@ export class MapEngine {
       'alharamain-3d-models',
       'alharamain-3d-terrain',
       'alharamain-3d-lamps',
+      'alharamain-3d-barriers',
+      'alharamain-3d-women-barriers',
+      'alharamain-3d-women-rawdah-barriers',
+      'alharamain-3d-queue-rails',
+      'alharamain-3d-greeting-barriers',
+      'alharamain-3d-crowd',
+      'alharamain-3d-rugs',
       'alharamain-3d-marble',
       'alharamain-3d-plaza',
       'alharamain-3d-ground',
+      'saqifah-and-surroundings-3d',
+      'saqifah-2d',
+      'interior-prayer-areas',
+      'interior-corridors',
+      'inter-carpet-aisles',
       'car-entrances',
       ...NEAR_IMAGERY.map(([near]) => near),
       'esri',
