@@ -7,7 +7,7 @@ import { render } from 'preact';
 import { useState } from 'preact/hooks';
 import '../styles/fonts';
 import '../styles/main.css';
-import { POI_BY_ID } from '../data';
+import { ALL_POI_BY_ID, POI_BY_ID } from '../data';
 import { Facilities } from '../domain/facilities';
 import { isHidden } from '../domain/filters';
 import { visiblePois } from '../domain/visible';
@@ -177,7 +177,7 @@ async function main() {
   // A shared link (map.html?poi=215) opens that place directly (shared links, printed signs). The
   // card opens it once mounted: an event sent before then would be lost.
   const linked = Number(new URLSearchParams(location.search).get('poi'));
-  const shared = Number.isInteger(linked) ? POI_BY_ID.get(linked) : undefined;
+  const shared = Number.isInteger(linked) ? ALL_POI_BY_ID.get(linked) : undefined;
   let initial = shared && !isHidden(shared) ? shared : undefined;
   // A shared story (?visit=543) or library entry (?lib=umar); ?admin=1 shows the status simulator.
   const params = new URLSearchParams(location.search);

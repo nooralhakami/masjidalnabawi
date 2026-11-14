@@ -1,4 +1,4 @@
-import { POI_BY_ID } from '../data';
+import { ALL_POI_BY_ID } from '../data';
 import type { LatLng, Poi } from '../data/types';
 import { nearestByAir, nearPool, pickTwo, WEAK_FIX_M, type NearKind, type NearWho } from '../domain/near';
 import { HintPicker } from '../domain/route-hint';
@@ -133,7 +133,7 @@ export class Trip {
     this.tracker.onChange((s) => {
       // Arrived: a gold ring at the place, as on choosing it (UI plan phase 4), once per arrival.
       if (s.state === 'arrived' && nav.value?.state !== 'arrived') {
-        const dest = selected.value !== null ? POI_BY_ID.get(selected.value) : undefined;
+        const dest = selected.value !== null ? ALL_POI_BY_ID.get(selected.value) : undefined;
         if (dest) engine.pulse.play(dest.lng, dest.lat);
       }
       nav.value = s.state === 'stopped' ? null : { ...s };
@@ -313,7 +313,7 @@ export class Trip {
 
   /** Draw the offered routes with `plans[i]` as the one to follow, and keep the card and navigation in step. */
   private updateShortcut(from: [number, number] | null): void {
-    const dest = selected.value !== null ? POI_BY_ID.get(selected.value) : undefined;
+    const dest = selected.value !== null ? ALL_POI_BY_ID.get(selected.value) : undefined;
     const active = this.plans[this.chosen];
     if (!from || !dest || !active || active.mode === 'drive') {
       this.engine.route.setShortcut(null);
@@ -357,7 +357,7 @@ export class Trip {
    */
   private reroute(from: LatLng, heading: number | null) {
     const id = selected.value;
-    const dest = id !== null ? POI_BY_ID.get(id) : undefined;
+    const dest = id !== null ? ALL_POI_BY_ID.get(id) : undefined;
     if (!dest || !this.engine.route.active) return;
     // In the car park (or on the way out of it) there is no other way to plan from the streets:
     // keep the drawn route; the visitor gets back on it (GPS underground can wander).

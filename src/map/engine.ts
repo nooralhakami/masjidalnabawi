@@ -1,8 +1,8 @@
-import { AttributionControl, Map as MLMap, ScaleControl, setWorkerUrl, type GeoJSONSource, type RasterSourceSpecification, type SkySpecification } from 'maplibre-gl';
+import { AttributionControl, Map as MLMap, ScaleControl, setWorkerUrl, type ExpressionSpecification, type GeoJSONSource, type RasterSourceSpecification, type SkySpecification } from 'maplibre-gl';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
-import { POI_BY_ID, POIS, RULES } from '../data';
+import { ALL_POI_BY_ID, POI_BY_ID, POIS, RULES } from '../data';
 import { alharamainPlaza } from '../data-next/alharamain-3d';
 import { buildInterCarpetAisles, rugLayout } from './rug-layout';
 import { sunPosition } from '../domain/daylight';
@@ -21,13 +21,27 @@ import { interiorCorridors, interiorPrayerAreas } from './interior-layout';
 import { buildMosqueInterior3D } from './mosque-interior-3d';
 import { saqifahAndSurroundings3D, saqifahGround2D } from './saqifah-3d';
 import { HaramGlbLayer } from './glb-layer';
+import type { Urban3DLayer } from './urban-3d';
 import { IconAtlas, createDrawer, cssPalette, type Drawer } from './images';
 import { LampGlowLayer } from './lamp-glow-layer';
 import { MeMarker } from './me';
 import { PlazaMarbleLayer } from './plaza-layer';
 import { addHintLayer, EMPTY_HINTS, HintLayer } from './hints';
 import { addPoiLayers } from './poi-layers';
-import { applyPoiView, entranceAt, entranceFeatures, markerImageIds, markerNear, pairFeatures, placesAt, poiFeatures, popMarkers, womenAreas, type PoiView } from './pois';
+import {
+  applyPoiView,
+  entranceAt,
+  entranceFeatures,
+  interiorPointFeatures,
+  markerImageIds,
+  markerNear,
+  pairFeatures,
+  placesAt,
+  poiFeatures,
+  popMarkers,
+  womenAreas,
+  type PoiView,
+} from './pois';
 import { RouteLayer, type RouteText } from './route';
 import { nearHaramRaster, sceneLight, sceneOverride, type SceneLight } from './scene-light';
 import { TerrainLayer } from './terrain-layer';
@@ -103,6 +117,8 @@ export class MapEngine {
   private unsubDoors: (() => void) | null = null;
   /** The 3D models' layer while 3D is on, and the minute timer that follows the sun meanwhile. */
   private models: HaramGlbLayer | null = null;
+  private urban: Urban3DLayer | null = null;
+  private urbanToken = 0;
   private crowd: CrowdLayer | null = null;
   private rugs: RugLayer | null = null;
   private terrain: TerrainLayer | null = null;
@@ -180,7 +196,7 @@ export class MapEngine {
     const ratio = Math.min(3, Math.max(1, devicePixelRatio || 1));
     this.route = new RouteLayer(this.map, this.palette, opts.routeText, ratio);
     this.pulse = new SelectPulse(this.map, this.palette);
-    this.hints = new HintLayer(this.map, (id) => POIS.find((p) => p.id === id));
+    this.hints = new HintLayer(this.map, (id) => ALL_POI_BY_ID.get(id));
     this.me = new MeMarker(
       this.map,
       () => opts.meLabel(),
@@ -190,8 +206,8 @@ export class MapEngine {
       palette: this.palette,
       icons: this.icons,
       ratio,
-      labelOf: (id) => this.opts.nameOf(POIS.find((p) => p.id === id)!),
-      dirOf: (id) => DIRS[POIS.find((p) => p.id === id)!.direction],
+      labelOf: (id) => this.opts.nameOf(ALL_POI_BY_ID.get(id)!),
+      dirOf: (id) => DIRS[ALL_POI_BY_ID.get(id)!.direction],
       entranceOf: (id, open) => this.opts.entranceText?.(id, open) ?? null,
     }));
     // Marker images are drawn the first time the map needs one (images.ts). MapLibre 6 resolves a
@@ -517,6 +533,45 @@ export class MapEngine {
           before,
         );
       }
+      // Interior navQ prayer halls (98 GF/ROF) and landmarks (14), shown only in interior cutaway mode.
+      if (!m.getSource('navq-interior')) m.addSource('navq-interior', { type: 'geojson', data: interiorPointFeatures() });
+      if (!m.getLayer('navq-interior-dots')) {
+        m.addLayer(
+          {
+            id: 'navq-interior-dots',
+            type: 'circle',
+            source: 'navq-interior',
+            minzoom: 16,
+            layout: { visibility: this.interiorMode ? 'visible' : 'none' },
+            paint: {
+              'circle-radius': ['match', ['get', 'kind'], 'landmark', 6.5, 4.2],
+              'circle-color': ['get', 'color'],
+              'circle-stroke-width': 1.5,
+              'circle-stroke-color': '#ffffff',
+            },
+          },
+          before,
+        );
+      }
+      if (!m.getLayer('navq-interior-labels')) {
+        m.addLayer(
+          {
+            id: 'navq-interior-labels',
+            type: 'symbol',
+            source: 'navq-interior',
+            minzoom: 17.5,
+            layout: {
+              visibility: this.interiorMode ? 'visible' : 'none',
+              'icon-image': ['concat', 'hint:', ['to-string', ['get', 'id']], ':s@', String(this.version)] as unknown as ExpressionSpecification,
+              'icon-anchor': 'top',
+              'icon-offset': [0, 8],
+              'icon-allow-overlap': false,
+              'symbol-sort-key': ['get', 'sortKey'],
+            },
+          },
+          before,
+        );
+      }
       // The mountains of Madinah on the horizon, under the Mosque's own models.
       if (!m.getLayer('alharamain-3d-terrain')) {
         this.terrain = new TerrainLayer(this.currentLight());
@@ -549,12 +604,20 @@ export class MapEngine {
       }
       this.applyLight();
       if (!this.lightTimer) this.lightTimer = setInterval(() => this.applyLight(), 60_000);
+      const urbanToken = ++this.urbanToken;
+      void import('./urban-3d').then(({ mountUrban3D }) => {
+        if (!this.mode3d || urbanToken !== this.urbanToken || this.map !== m) return;
+        const urbanBefore = m.getLayer('inner-dots') ? 'inner-dots' : undefined;
+        this.urban = mountUrban3D(m, this.currentLight(), urbanBefore);
+      });
     } else {
       if (this.lightTimer) clearInterval(this.lightTimer);
       this.lightTimer = null;
+      this.urbanToken++;
       this.unsubDoors?.();
       this.unsubDoors = null;
       this.models = null;
+      this.urban = null;
       this.crowd = null;
       this.rugs = null;
       this.terrain = null;
@@ -562,8 +625,12 @@ export class MapEngine {
       this.glow = null;
       for (const id of [
         ...NEAR_IMAGERY.map(([near]) => near),
+        'urban-south-stage5-3d',
+        'urban-south-streets-line',
         'alharamain-3d-models',
         'mosque-interior-3d',
+        'navq-interior-labels',
+        'navq-interior-dots',
         'mosque-door-bays',
         'alharamain-3d-crowd',
         'alharamain-3d-barriers',
@@ -605,6 +672,7 @@ export class MapEngine {
     if (!this.mode3d) return;
     const light = this.currentLight();
     this.models?.setLight(light);
+    this.urban?.setLight(light);
     this.crowd?.setLight(light);
     this.rugs?.setLight(light);
     this.terrain?.setLight(light);
@@ -687,7 +755,7 @@ export class MapEngine {
   }
 
   poi(id: number): Poi | undefined {
-    return POIS.find((p) => p.id === id);
+    return ALL_POI_BY_ID.get(id);
   }
 
   /** Show these places (a filter, a search): layer filters only, the data stays as it is. */
@@ -769,6 +837,8 @@ export class MapEngine {
       'alharamain-3d-glow',
       'alharamain-3d-models',
       'mosque-interior-3d',
+      'navq-interior-labels',
+      'navq-interior-dots',
       'mosque-door-bays',
       'alharamain-3d-terrain',
       'alharamain-3d-lamps',
@@ -783,6 +853,8 @@ export class MapEngine {
       'alharamain-3d-plaza',
       'alharamain-3d-ground',
       'saqifah-and-surroundings-3d',
+      'urban-south-stage5-3d',
+      'urban-south-streets-line',
       'saqifah-2d',
       'interior-prayer-areas',
       'interior-corridors',
@@ -807,6 +879,8 @@ export class MapEngine {
     ])
       if (this.map.getLayer(id)) this.map.removeLayer(id);
     for (const id of this.map.listImages()) if (id.endsWith(`@${old}`) && !id.startsWith('rt')) this.map.removeImage(id);
+    this.urban = null;
+    this.urbanToken++;
     this.route.restyle();
     this.addLayers();
     this.setBase(this.base);
@@ -869,8 +943,10 @@ export class MapEngine {
   setInteriorMode(on: boolean): boolean {
     this.interiorMode = on;
     if (on && !this.mode3d) this.toggle3DMode(true);
-    if (this.map.getLayer('mosque-interior-3d')) {
-      this.map.setLayoutProperty('mosque-interior-3d', 'visibility', on ? 'visible' : 'none');
+    for (const layerId of ['mosque-interior-3d', 'navq-interior-dots', 'navq-interior-labels']) {
+      if (this.map.getLayer(layerId)) {
+        this.map.setLayoutProperty(layerId, 'visibility', on ? 'visible' : 'none');
+      }
     }
     this.models?.setInterior(on);
     this.map.triggerRepaint();
@@ -989,6 +1065,15 @@ export class MapEngine {
       const result = toggleGateDoor(doorGateId);
       this.opts.onDoorToggle?.(result);
       return;
+    }
+    // In interior cutaway mode, allow tapping interior prayer zones or landmarks directly.
+    if (place === null && this.interiorMode && this.map.getLayer('navq-interior-dots')) {
+      const interiorHit = this.map.queryRenderedFeatures([x, y], { layers: ['navq-interior-dots'] });
+      const interiorId = Number(interiorHit[0]?.properties?.id);
+      if (Number.isFinite(interiorId) && interiorId > 0) {
+        this.opts.onPick?.(interiorId);
+        return;
+      }
     }
     // In 3D, a tap on no place but on a canopy opens or closes it (owner, 2026-11-06).
     if (place === null && this.mode3d && this.models?.toggleCanopyAt(x, y)) return;

@@ -1,5 +1,5 @@
-import { POIS, POI_BY_ID } from '../data';
-import type { Poi } from '../data/types';
+import { PARKING_SECTIONS, POIS, POI_BY_ID } from '../data';
+import type { ParkingSection, Poi } from '../data/types';
 import { parkingBetween } from '../i18n';
 
 export const PARKING: readonly Poi[] = POIS.filter((p) => p.category === 'parking');
@@ -26,4 +26,9 @@ export function parkingEntrances(p: Poi): Poi[] {
   if (p.category !== 'parking') return [];
   const ids = (between(p) ?? []).flatMap((pair) => pair.split('/').map(Number));
   return ids.map((id) => POI_BY_ID.get(id)).filter((entry): entry is Poi => Boolean(entry));
+}
+
+/** Underground navQ parking section zones (A/B polygons and codes) linked to a lot (901–913). */
+export function parkingSectionsForLot(lotId: number): readonly ParkingSection[] {
+  return PARKING_SECTIONS.filter((s) => s.lotId === lotId);
 }

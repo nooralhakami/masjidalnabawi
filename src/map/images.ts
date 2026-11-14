@@ -1,3 +1,4 @@
+import { outerGateNumber } from '../data/types';
 import { icon, type IconName } from '../presentation/icons';
 
 /**
@@ -209,7 +210,7 @@ export function createDrawer(opts: {
   const chip = (id: number): Drawn => {
     // Number chip with a dot in the side colour (.mk-chip at tier l: 19 px, 10.5 px bold).
     ctxMeasure.font = `600 10.5px ${FONT}`;
-    const text = String(id);
+    const text = String(outerGateNumber(id));
     const tw = ctxMeasure.measureText(text).width;
     const w = Math.ceil(5 + 6 + 3 + tw + 6);
     const [ctx, out] = canvas(w + 4, 23, ratio);

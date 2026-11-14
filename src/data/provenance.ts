@@ -28,6 +28,9 @@ export type DataSourceId =
   | 'vertical-nodes'
   | 'interior-layout'
   | 'mosque-interior-3d'
+  | 'navq-interior'
+  | 'navq-parking-sections'
+  | 'urban-approved'
   | 'saqifah-3d'
   | 'osm-buildings-2026-10-08'
   | 'apple-maps-rug-ref'
@@ -135,6 +138,27 @@ export const DATA_PROVENANCE: Readonly<Record<DataSourceId, DataSourceRecord>> =
     routingAllowed: true,
     path: 'src/domain/interior-layout.ts',
     description: 'Verified interior Mosque prayer halls, Gate 21 women Rawdah corridor, and men interior corridors.',
+  },
+  'navq-interior': {
+    id: 'navq-interior',
+    tier: 'verified',
+    routingAllowed: true,
+    path: 'data/navq-interior.json',
+    description: 'Verified navQ API interior GF/ROF prayer areas (98) and Mosque interior landmarks (14) for search and interior cutaway view.',
+  },
+  'navq-parking-sections': {
+    id: 'navq-parking-sections',
+    tier: 'verified',
+    routingAllowed: true,
+    path: 'data/navq-parking-sections.json',
+    description: 'Verified navQ API underground parking section polygons and codes (1A-11A, 1B-13B) linked to lots 901-913.',
+  },
+  'urban-approved': {
+    id: 'urban-approved',
+    tier: 'verified',
+    routingAllowed: true,
+    path: 'data/urban-approved.json',
+    description: 'Stage 5 owner-approved Southern Plaza buildings (7 hotels, flat pending owner floors, western facade entrances) and verified OSM street corridors.',
   },
   'mosque-interior-3d': {
     id: 'mosque-interior-3d',

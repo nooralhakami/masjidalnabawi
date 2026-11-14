@@ -20,9 +20,9 @@ export interface Bounds {
   east: number;
 }
 
-/** The Haram's bounds: the ring of outer gates (the live app's HARAM_BOUNDS). */
+/** The Haram's bounds: the 70 main courtyard outer gates (the live app's HARAM_BOUNDS). */
 export function haramBounds(pois: readonly Poi[]): Bounds {
-  const outer = pois.filter((p) => p.subCategory === 'gate_outer');
+  const outer = pois.filter((p) => p.subCategory === 'gate_outer' && p.id <= 370);
   return {
     south: Math.min(...outer.map((p) => p.lat)),
     north: Math.max(...outer.map((p) => p.lat)),

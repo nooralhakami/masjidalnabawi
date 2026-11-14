@@ -21,6 +21,7 @@ import {
   type Stretch,
 } from './garage';
 import { fromM, insideRect, network, openTogether, pathLength, restroomDoor, ringPath, segmentHits, toM, walkPath, walkPaths, type XY } from './walk';
+import { approvedHotelInfo, approvedHotelTarget, clearApprovedBuildings, isApprovedHotel, pathHitsApprovedBuilding } from '../domain/urban-approval';
 import { ACCESSIBLE_WALK_M_PER_MIN, accessibleNodeForPoi, pickAccessibleEntrance, type AccessibleNodeInfo } from './accessible';
 
 export { ACCESSIBLE_WALK_M_PER_MIN, accessibleNodeForPoi, nearestVerticalNode, pickAccessibleEntrance, type AccessibleNodeInfo } from './accessible';
@@ -173,7 +174,7 @@ function crossesObstacle(path: LatLng[]): boolean {
       }
     }
   }
-  return false;
+  return pathHitsApprovedBuilding(path);
 }
 
 /**
@@ -277,7 +278,7 @@ async function walkOptions(a: LatLng, b: LatLng): Promise<LatLng[][]> {
       options.push([...toGate, ...best.plaza.slice(1), ...fromGate.slice(1)]);
     }
   }
-  return options.filter((p) => !crossesObstacle(p));
+  return options.map((p) => clearApprovedBuildings(p)).filter((p) => !crossesObstacle(p));
 }
 
 /** How many gates (or pairs of gates) are tried as alternatives. */
@@ -285,7 +286,7 @@ const GATE_OPTIONS = 4;
 
 /** Walk a → b, the shortest sensible way. */
 async function walkLegs(a: LatLng, b: LatLng): Promise<LatLng[]> {
-  return pickRoutes((await walkOptions(a, b)).map((path) => ({ path, item: path })))[0] ?? walkPath(a, b);
+  return pickRoutes((await walkOptions(a, b)).map((path) => ({ path, item: path })))[0] ?? clearApprovedBuildings(walkPath(a, b));
 }
 
 /** The public lot (not subscribers-only) whose stairs are nearest a place on foot. */
@@ -322,6 +323,7 @@ export function nearestEntrance(from: LatLng, p: Poi): { entrance: Poi; path: La
  * gate, not across the mosque (owner, 2026-10-14, rules.json gate_via). `tail`: the way on from `end`.
  */
 function approach(to: Poi): { end: LatLng; tail: LatLng[] } {
+  if (isApprovedHotel(to.id)) return { end: approvedHotelTarget(to, 'walk'), tail: [] };
   const via = POI_BY_ID.get(Number(RULES.rules.gate_via?.[String(to.id)]));
   if (via) return { end: at(via), tail: [at(to)] };
   return { end: restroomDoor(to) ?? at(to), tail: [] };
@@ -354,7 +356,13 @@ async function planWalks(from: LatLng, to: Poi, heading?: number | null, accessi
     }
     return [...path, ...tail];
   });
-  const paths = pickRoutes((rawOptions.length ? rawOptions : [[...walkPath(from, end), ...tail]]).map((path) => ({ path, item: path, penalty: turnPenalty(path, heading) })));
+  const paths = pickRoutes(
+    (rawOptions.length ? rawOptions : [clearApprovedBuildings([...walkPath(from, end), ...tail])]).map((path) => ({
+      path,
+      item: path,
+      penalty: turnPenalty(path, heading),
+    })),
+  );
   const speed = accessible ? ACCESSIBLE_WALK_M_PER_MIN : WALK_M_PER_MIN;
   return paths.map((path) => {
     const walkM = len(path);
@@ -450,7 +458,10 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B', heading?: nu
   // A place outside the Haram (a historic site, a hotel, a restaurant): drive on public roads to the
   // nearest public car park by it (within 300 m), or else to the public road at its door, and walk.
   if (to.category !== 'parking' && !inHaram(at(to))) {
-    const T = toM(at(to));
+    const hotel = approvedHotelInfo(to.id);
+    const driveDest = hotel ? hotel.dropoff : at(to);
+    const walkDest = hotel ? hotel.entrance : at(to);
+    const T = toM(walkDest);
     let k = -1;
     let carPark = false;
     let bestCost = Infinity;
@@ -469,11 +480,19 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B', heading?: nu
         carPark = true;
       }
     }
-    if (k < 0) k = bestNear(S, r, at(to), 'drive');
+    if (k < 0) k = bestNear(S, r, driveDest, 'drive');
     if (!Number.isFinite(r.dist[k])) return [];
     const drive = streetPath(S, r, k, from, false);
-    const kerb = fromM(S.xy[k]);
-    const walk = len([kerb, at(to)]) > 2 ? await walkLegs(kerb, at(to)) : [];
+    const rawKerb = fromM(S.xy[k]);
+    if (hotel) {
+      const kerbGap = len([rawKerb, hotel.dropoff]);
+      if (kerbGap > 1 && kerbGap <= 60 && !pathHitsApprovedBuilding([rawKerb, hotel.dropoff])) {
+        drive.push(hotel.dropoff);
+      }
+    }
+    const kerb = drive[drive.length - 1];
+    const rawWalk = len([kerb, walkDest]) > 2 ? await walkLegs(kerb, walkDest) : [];
+    const walk = hotel && rawWalk.length ? clearApprovedBuildings(rawWalk) : rawWalk;
     const driveM = len(drive);
     const walkM = len(walk);
     return [

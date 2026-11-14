@@ -1,7 +1,7 @@
 import type { FeatureCollection, Point } from 'geojson';
 import type { ExpressionSpecification, FilterSpecification, Map as MLMap } from 'maplibre-gl';
 import { CAR_ENTRANCES } from '../data-next/car-entrances';
-import { POIS, ROUTING } from '../data';
+import { INTERIOR_POIS, POIS, ROUTING } from '../data';
 import type { Poi, Status } from '../data/types';
 import { isClosed } from '../domain/facilities';
 import type { FilterId } from '../domain/filters';
@@ -106,6 +106,25 @@ export function womenAreas(): FeatureCollection {
       type: 'Feature',
       properties: { id: a.id },
       geometry: { type: 'Polygon', coordinates: [[...a.polygon, a.polygon[0]].map(([lat, lng]) => [lng, lat])] },
+    })),
+  };
+}
+
+/** Verified interior GF/ROF prayer halls (98) and landmarks (14) shown in manual cutaway mode (?interior=1). */
+export function interiorPointFeatures(): FeatureCollection<Point> {
+  return {
+    type: 'FeatureCollection',
+    features: INTERIOR_POIS.map((p) => ({
+      type: 'Feature',
+      properties: {
+        id: p.id,
+        kind: p.kind ?? 'landmark',
+        floor: p.floor ?? 'GF',
+        gender: p.gender ?? 'all',
+        color: p.kind === 'landmark' ? '#c59b27' : p.gender === 'women' ? '#7e57c2' : '#0e7490',
+        sortKey: p.kind === 'landmark' ? 1 : p.floor === 'GF' ? 2 : 3,
+      },
+      geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
     })),
   };
 }

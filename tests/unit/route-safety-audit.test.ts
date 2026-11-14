@@ -444,16 +444,16 @@ describe('Phase 3 route safety audit (D12-a: read-only audit without changing ro
         writeFileSync(outPath, md, 'utf8');
       }
     }
-    // Phase 3 baseline (D12-a, read-only audit before Phase 4 routing fixes):
-    expect(audit.startCount).toBe(151);
-    expect(audit.destCount).toBe(147);
-    expect(audit.totalRoutes).toBe(22_050);
+    // Phase 3 baseline updated after navQ outer gates (1401–1420) & 251–254 center nudge (pre-Phase 4 fixes):
+    expect(audit.startCount).toBe(171);
+    expect(audit.destCount).toBe(167);
+    expect(audit.totalRoutes).toBe(28_390);
     expect(audit.cleanRoutes + audit.violatingRoutes).toBe(audit.totalRoutes);
-    expect(audit.cleanRoutes).toBe(21_042);
-    expect(audit.violatingRoutes).toBe(1_008);
+    expect(audit.cleanRoutes).toBe(26_640);
+    expect(audit.violatingRoutes).toBe(1_750);
     expect(audit.counts).toEqual({
-      carpet: 717,
-      barrier: 296,
+      carpet: 1_423,
+      barrier: 800,
       women_transit: 0,
       women_barrier_cross: 0,
     });

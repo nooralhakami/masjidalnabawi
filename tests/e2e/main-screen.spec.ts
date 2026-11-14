@@ -28,13 +28,14 @@ test.describe('filters', () => {
   // The live app's counts (tests/e2e/app.spec.ts there), in the order of the pills. Hotels (43) and
   // restaurants (44) are hidden with their pills until the owner adds them again (2026-11-04).
   const EXPECTED: [string, number][] = [
-    ['all', 217],
-    ['gates', 112],
+    ['all', 244],
+    ['gates', 132],
     ['women', 35],
     ['toilets', 40],
     // Historic sites and car parks after the restrooms (owner, 2026-10-17).
     ['historic', 17],
     ['parking', 13],
+    ['hotels', 7],
     ['shopping', 15],
     ['landmarks', 39],
     ['emergency', 9],
@@ -42,7 +43,7 @@ test.describe('filters', () => {
 
   test('every filter pill shows its places, and the map is given exactly those', async ({ page, errors: _ }) => {
     await openMap(page);
-    // Pills of hidden places (hotels, restaurants) are left out of the row.
+    // Pills of completely hidden places (restaurants) are left out of the row.
     await expect(page.locator('.cat-row .cat-btn:not(.cat-eye)')).toHaveCount(EXPECTED.length);
     for (const [i, [id, n]] of EXPECTED.entries()) {
       await pill(page, i).click();
@@ -75,7 +76,7 @@ test.describe('filters', () => {
 
   test('key services: one pill for health centres, police, lost children, lost & found and service centres', async ({ page, errors: _ }) => {
     await openMap(page);
-    await pill(page, 8).click();
+    await pill(page, 9).click();
     await expect.poll(() => mapCount(page)).toBe(9);
     // Only the women's police with lost & found at gate 30 remains.
     await search(page, 'شرطة');

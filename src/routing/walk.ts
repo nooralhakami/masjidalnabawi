@@ -4,6 +4,7 @@ import { WOMEN_AREAS } from '../data-next/women-areas';
 import { assertRoutingSourcesVerified } from '../data/provenance';
 import type { LatLng, Poi } from '../data/types';
 import { fromWalkMetres, modelToWalkMetres, toModelMetres, toWalkMetres, type XY } from '../domain/frames';
+import { clearApprovedBuildings } from '../domain/urban-approval';
 import { haversine } from '../domain/geo';
 import { interiorCorridors } from '../domain/interior-layout';
 import { WOMEN_RAWDAH_CORRIDOR_BOUNDS } from '../domain/rawdah-layout';
@@ -423,7 +424,7 @@ function crossesInterior(a: XY, b: XY, r: Rect, ends: XY[]): boolean {
 
 export function network(): Network {
   if (net) return net;
-  assertRoutingSourcesVerified(['pois', 'routing', 'overrides', 'alharamain-3d', 'women-areas', 'interior-layout']);
+  assertRoutingSourcesVerified(['pois', 'routing', 'overrides', 'alharamain-3d', 'women-areas', 'interior-layout', 'urban-approved']);
   const ring = ROUTING.walkway_ring.map(toM);
   const seg: Segment[] = [];
   let P = 0;
@@ -1002,8 +1003,8 @@ export function walkPath(a: LatLng, b: LatLng): LatLng[] {
     const l = clean[clean.length - 1];
     if (Math.hypot(pts[i][0] - l[0], pts[i][1] - l[1]) > 0.5) clean.push(pts[i]);
   }
-  return (insideMosque ? roundCorners(clean, corner_radius_m) : roundCornersSafe(clean, corner_radius_m, allowedZones, carpetEndpts)).map(
-    fromM,
+  return clearApprovedBuildings(
+    (insideMosque ? roundCorners(clean, corner_radius_m) : roundCornersSafe(clean, corner_radius_m, allowedZones, carpetEndpts)).map(fromM),
   );
 }
 

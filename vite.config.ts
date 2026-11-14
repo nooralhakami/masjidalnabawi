@@ -6,12 +6,20 @@ import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { HIDDEN_SUBCATEGORIES } from './src/data/hidden';
 
-const POIS: { category: string; subCategory: string }[] = JSON.parse(readFileSync(resolve(import.meta.dirname, 'data/pois.json'), 'utf8'));
+const POIS: { id: number; category: string; subCategory: string }[] = JSON.parse(readFileSync(resolve(import.meta.dirname, 'data/pois.json'), 'utf8'));
+const URBAN_APPROVED: { tier?: string; approvedBy?: string; buildings?: { poiId: number }[] } = JSON.parse(
+  readFileSync(resolve(import.meta.dirname, 'data/urban-approved.json'), 'utf8'),
+);
+const APPROVED_HOTEL_IDS = new Set(
+  URBAN_APPROVED.tier === 'verified' && URBAN_APPROVED.approvedBy === 'owner'
+    ? (URBAN_APPROVED.buildings ?? []).map((b) => b.poiId)
+    : [],
+);
 /** The landing page's numbers, computed from the data at build time (the live app's vite.config.ts). */
 const DEFINE = {
   __POI_COUNTS__: JSON.stringify({
-    // The places a visitor can actually find (hidden ones, such as the wheelchair areas, are not counted).
-    places: POIS.filter((p) => !HIDDEN_SUBCATEGORIES.has(p.subCategory)).length,
+    // The places a visitor can actually find (hidden ones, such as unapproved hotels and wheelchair areas, are not counted).
+    places: POIS.filter((p) => !HIDDEN_SUBCATEGORIES.has(p.subCategory) || (p.subCategory === 'hotel' && APPROVED_HOTEL_IDS.has(p.id))).length,
     gates: POIS.filter((p) => p.category === 'gates').length,
     parking: POIS.filter((p) => p.category === 'parking').length,
   }),
