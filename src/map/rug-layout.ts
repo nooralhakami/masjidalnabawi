@@ -1,4 +1,5 @@
-import type { Feature, FeatureCollection, Polygon } from 'geojson';
+import type { Feature, FeatureCollection, LineString, Polygon } from 'geojson';
+import routing from '../../data/routing.json';
 import { ALHARAMAIN_MODELS, alharamainPlaza } from '../data-next/alharamain-3d';
 import { ALHARAMAIN_PRAYERS, PRAYER_CLEARINGS } from '../data-next/alharamain-prayers';
 import { lngLatFromMetres, metresFromOrigin } from './glb-layer';
@@ -6,17 +7,34 @@ import { restroomFootprints, restroomWalkways } from './prayer-layout';
 
 type XY = readonly [number, number];
 
+function stripPoly(a: XY, b: XY, halfW: number): XY[] | null {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const len = Math.hypot(dx, dy);
+  if (len < 1e-3) return null;
+  const nx = (-dy / len) * halfW;
+  const ny = (dx / len) * halfW;
+  return [
+    [a[0] + nx, a[1] + ny],
+    [b[0] + nx, b[1] + ny],
+    [b[0] - nx, b[1] - ny],
+    [a[0] - nx, a[1] - ny],
+  ];
+}
+
 /**
- * The prayer carpets (owner, 2026-11-07): each 5 m across (east to west) and 1.2 m deep toward the
- * qibla (south), the proportions of his reference photograph; in groups of three rows with 80 cm of
- * floor between the groups. Only whole carpets are laid: one that does not fit, or would cross a
- * walkway, a cleared corridor, a restroom block or a column, is left out, and the prayer area is
- * what its carpets cover.
+ * The prayer carpets (owner, 2026-11-07 / updated 2026-11-14): each 5 m across (east to west) and
+ * 1.2 m deep toward the qibla (south). Partial rows (1, 2, or 3+ rows) and narrow wall strips are
+ * allowed without requiring full 3-row groups, and small/medium walking aisles (`1.8 m` longitudinal
+ * and `1.2 m`–`2.0 m` transverse) are carved inside large carpet blocks so visitors can take short
+ * cuts across the courtyard prayer bays.
  */
 export const RUG_W = 5;
 export const RUG_D = 1.2;
 export const GROUP_ROWS = 3;
 export const GROUP_GAP = 0.8;
+/** Width of carved longitudinal inter-carpet walking aisles (metres). */
+export const AISLE_LONG_W = 1.8;
 /** Kept between a carpet and its area's edge. */
 const INSET = 0.3;
 const COLUMN_CLEAR = 1.05;
@@ -32,6 +50,11 @@ export interface Rug {
   courtyard: boolean;
 }
 
+export interface AisleProps {
+  kind: 'long' | 'cross';
+  widthM: number;
+}
+
 export interface RugLayout {
   rugs: Rug[];
   /** The ground each laid area covers (carpets and the gaps inside it), four corners each, in metres. */
@@ -40,6 +63,8 @@ export interface RugLayout {
   barriers: FeatureCollection<Polygon, { height: number }>;
   /** Where walkers may not go: the covered ground with half a metre round it (the barriers' line). */
   blocked: XY[][];
+  /** Small and medium walking aisles carved between sub-blocks inside prayer areas (for rendering & shortcuts). */
+  aisles: FeatureCollection<LineString, AisleProps>;
 }
 
 /** Rotation of the prayer carpets (degrees clockwise): aligned with the canopies, never tilted to the qibla. */
@@ -97,17 +122,17 @@ function within(u0: number, v0: number, u1: number, v1: number, poly: readonly X
 
 let cache: { key: number; layout: RugLayout } | null = null;
 
-/** The fewest carpets an area may hold (owner, 2026-11-07: no small patches of three or seven). */
-export const MIN_RUGS = 12;
+/** The fewest carpets an area or split sub-block may hold (2026-11-14: allows narrow wall strips and 1–2 row patches). */
+export const MIN_RUGS = 3;
 
 /**
  * The largest rectangle of `on` cells (rows × columns) whose first row passes `top` and last row
- * passes `bottom` (whole groups of rows); null if there is none.
+ * passes `bottom`; null if there is none.
  */
 export function largestRectangle(
   on: readonly (readonly boolean[])[],
-  top: (row: number) => boolean,
-  bottom: (row: number) => boolean,
+  top: (row: number) => boolean = () => true,
+  bottom: (row: number) => boolean = () => true,
 ): { r0: number; r1: number; c0: number; c1: number } | null {
   let best: { r0: number; r1: number; c0: number; c1: number } | null = null;
   let bestArea = 0;
@@ -150,6 +175,12 @@ export function rugLayout(columns: readonly (readonly [number, number])[]): RugL
   const cols = columns.map(m);
   const avoid = [...restroomWalkways(), ...restroomFootprints(0.3)].map((r) => r.map(toLaid));
   for (const r of PRAYER_CLEARINGS) avoid.push(r.map(m));
+  for (const w of routing.walkways) {
+    for (let i = 1; i < w.path.length; i++) {
+      const p = stripPoly(m([w.path[i - 1][1], w.path[i - 1][0]]), m([w.path[i][1], w.path[i][0]]), 1.0);
+      if (p) avoid.push(p);
+    }
+  }
   const annex = alharamainPlaza().features.filter((f) => f.properties.kind === 'men' || f.properties.kind === 'women');
   const areas = [
     ...ALHARAMAIN_PRAYERS.map((r) => ({ ring: r.map(m), courtyard: true })),
@@ -159,6 +190,7 @@ export function rugLayout(columns: readonly (readonly [number, number])[]): RugL
   const covered: XY[][] = [];
   const blocked: XY[][] = [];
   const features: Feature<Polygon, { height: number }>[] = [];
+  const aisleFeatures: Feature<LineString, AisleProps>[] = [];
   /** The carpets laid so far, by their north-west corner in the laid frame, hashed by size. */
   const placed = new Map<string, [number, number][]>();
   /** Each area's covered cells in the laid frame, to drop a barrier that would stand on another's. */
@@ -174,16 +206,22 @@ export function rugLayout(columns: readonly (readonly [number, number])[]): RugL
     const us = ring.map((p) => p[0]);
     const vs = ring.map((p) => p[1]);
     const [u0, u1, v0, v1] = [Math.min(...us), Math.max(...us), Math.min(...vs), Math.max(...vs)];
-    const across = Math.floor((u1 - u0 - 2 * INSET) / RUG_W);
-    if (across < 1) continue;
-    // Centred across the area; align the northernmost row so a 1° tilted edge does not drop the first 3-row group.
-    const left = u0 + (u1 - u0 - across * RUG_W) / 2;
+    const spanU = u1 - u0 - 2 * INSET;
+    const rawAcross = Math.floor(spanU / RUG_W);
+    if (rawAcross < 1) continue;
+    // Wide blocks (≥ 30 m across) open a 1.8 m central walking aisle between left and right bays.
+    const hasLongAisle = courtyard && rawAcross >= 6 && Math.floor((spanU - AISLE_LONG_W) / RUG_W) >= 5;
+    const across = hasLongAisle ? Math.floor((spanU - AISLE_LONG_W) / RUG_W) : rawAcross;
+    const splitCol = hasLongAisle ? Math.floor(across / 2) : -1;
+    const totalW = across * RUG_W + (hasLongAisle ? AISLE_LONG_W : 0);
+    const left = u0 + (u1 - u0 - totalW) / 2;
+    const colU = (i: number) => left + i * RUG_W + (hasLongAisle && i >= splitCol ? AISLE_LONG_W : 0);
     let vStart = v0 + INSET;
     for (let dv = 0; dv <= RUG_D + 1e-6; dv += 0.1) {
       const v = v0 + INSET + dv;
       let fits = 0;
       for (let i = 0; i < across; i++) {
-        const a = left + i * RUG_W;
+        const a = colU(i);
         if (within(a, v, a + RUG_W, v + RUG_D, ring)) fits++;
       }
       if (fits >= Math.ceil(across * 0.75)) {
@@ -207,7 +245,7 @@ export function rugLayout(columns: readonly (readonly [number, number])[]): RugL
     // Which carpets are laid: whole, inside the area, clear of everything in the way.
     const laid = rows.map(({ v }) =>
       Array.from({ length: across }, (_, i) => {
-        const a = left + i * RUG_W;
+        const a = colU(i);
         if (!within(a, v, a + RUG_W, v + RUG_D, ring)) return false;
         // Half a metre off a walkway, a cleared corridor or a restroom: room for the barrier.
         const c = KEEP_OFF;
@@ -232,38 +270,93 @@ export function rugLayout(columns: readonly (readonly [number, number])[]): RugL
         return column ? 'column' : 'rug';
       }),
     );
-    // Extract clean, disjoint rectangles of whole 3-row groups inside this area. Clearing only the
-    // selected rows with a 1-column horizontal buffer avoids dropping the entire next 3-row group
-    // across a 0.8 m group gap, while each extracted rectangle keeps its own lattice and barriers.
+    const rugsIn = (r0: number, r1: number, c0: number, c1: number) => {
+      let n = 0;
+      for (let k = r0; k <= r1; k++) for (let i = c0; i <= c1; i++) if (laid[k][i] === 'rug') n++;
+      return n;
+    };
+    // Extract clean, disjoint rectangles (1-row, 2-row, 3-row, or deeper strips are all allowed).
     const free = laid.map((row) => row.map((x) => x !== false));
     const rects: { r0: number; r1: number; c0: number; c1: number }[] = [];
     for (;;) {
-      const r = largestRectangle(
-        free,
-        (k) => k % GROUP_ROWS === 0,
-        (k) => k % GROUP_ROWS === GROUP_ROWS - 1 || k === rows.length - 1,
-      );
+      const r = largestRectangle(free);
       if (!r) break;
-      let count = 0;
-      for (let k = r.r0; k <= r.r1; k++) for (let i = r.c0; i <= r.c1; i++) if (laid[k][i] === 'rug') count++;
-      if (count < MIN_RUGS) break;
-      rects.push(r);
+      const total = rugsIn(r.r0, r.r1, r.c0, r.c1);
+      if (total < MIN_RUGS) break;
+      // Split across any central longitudinal aisle, and split deep blocks (≥ 7 rows) across a middle row aisle.
+      const horizParts =
+        hasLongAisle && r.c0 < splitCol && r.c1 >= splitCol
+          ? [
+              { r0: r.r0, r1: r.r1, c0: r.c0, c1: splitCol - 1 },
+              { r0: r.r0, r1: r.r1, c0: splitCol, c1: r.c1 },
+            ]
+          : [r];
+      let added = 0;
+      const pushedParts: typeof rects = [];
+      for (const hPart of horizParts) {
+        if (rugsIn(hPart.r0, hPart.r1, hPart.c0, hPart.c1) < MIN_RUGS) continue;
+        const depth = hPart.r1 - hPart.r0 + 1;
+        if (courtyard && depth >= 7) {
+          let splitRow = Math.floor((hPart.r0 + hPart.r1) / 2);
+          for (let dr = 0; dr <= 2; dr++) {
+            if (splitRow - dr - hPart.r0 >= 2 && rows[splitRow - dr].gapAfter) {
+              splitRow = splitRow - dr;
+              break;
+            }
+            if (hPart.r1 - (splitRow + dr + 1) >= 2 && rows[splitRow + dr]?.gapAfter) {
+              splitRow = splitRow + dr;
+              break;
+            }
+          }
+          const top = { r0: hPart.r0, r1: splitRow, c0: hPart.c0, c1: hPart.c1 };
+          const bot = { r0: splitRow + 2, r1: hPart.r1, c0: hPart.c0, c1: hPart.c1 };
+          if (bot.r0 <= bot.r1 && rugsIn(top.r0, top.r1, top.c0, top.c1) >= MIN_RUGS && rugsIn(bot.r0, bot.r1, bot.c0, bot.c1) >= MIN_RUGS) {
+            rects.push(top, bot);
+            pushedParts.push(top, bot);
+            added += 2;
+            const midV = (rows[splitRow].v + RUG_D + rows[splitRow + 2].v) / 2;
+            const widthM = rows[splitRow + 2].v - (rows[splitRow].v + RUG_D);
+            const uStartA = colU(hPart.c0);
+            const uEndA = colU(hPart.c1) + RUG_W;
+            aisleFeatures.push({
+              type: 'Feature',
+              properties: { kind: 'cross', widthM },
+              geometry: { type: 'LineString', coordinates: [lngLatFromMetres(fromLaid([uStartA, midV])), lngLatFromMetres(fromLaid([uEndA, midV]))] },
+            });
+            continue;
+          }
+        }
+        rects.push(hPart);
+        pushedParts.push(hPart);
+        added++;
+      }
+      if (hasLongAisle && r.c0 < splitCol && r.c1 >= splitCol && pushedParts.some((p) => p.c1 < splitCol) && pushedParts.some((p) => p.c0 >= splitCol)) {
+        const midU = colU(splitCol - 1) + RUG_W + AISLE_LONG_W / 2;
+        const vTopA = rows[r.r0].v;
+        const vBotA = rows[r.r1].v + RUG_D;
+        aisleFeatures.push({
+          type: 'Feature',
+          properties: { kind: 'long', widthM: AISLE_LONG_W },
+          geometry: { type: 'LineString', coordinates: [lngLatFromMetres(fromLaid([midU, vTopA])), lngLatFromMetres(fromLaid([midU, vBotA]))] },
+        });
+      }
       for (let k = r.r0; k <= r.r1; k++) {
         for (let i = r.c0 - 1; i <= r.c1 + 1; i++) {
           if (i >= 0 && i < across) free[k][i] = false;
         }
       }
+      if (added === 0 && horizParts.length === 1) break;
     }
     for (const rect of rects) {
       const patchId = nextPatchId++;
       for (let k = rect.r0; k <= rect.r1; k++) {
         for (let i = rect.c0; i <= rect.c1; i++) {
           if (laid[k][i] !== 'rug') continue;
-          const a = left + i * RUG_W;
+          const a = colU(i);
           const r = rows[k];
           const key = `${Math.floor(a / RUG_W)}|${Math.floor(r.v / RUG_D)}`;
           placed.set(key, [...(placed.get(key) ?? []), [a, r.v]]);
-          const [cx, cz] = fromLaid([left + (i + 0.5) * RUG_W, r.v + RUG_D / 2]);
+          const [cx, cz] = fromLaid([a + RUG_W / 2, r.v + RUG_D / 2]);
           rugs.push({ x: cx, z: cz, flip: rnd() < 0.5, courtyard });
         }
       }
@@ -276,7 +369,7 @@ export function rugLayout(columns: readonly (readonly [number, number])[]): RugL
       }
       for (const cell of lattice) {
         for (let i = rect.c0; i <= rect.c1; i++) {
-          const a = left + i * RUG_W;
+          const a = colU(i);
           cells.push({ area: patchId, u0: a, v0: cell.v0, u1: a + RUG_W, v1: cell.v1 });
           blocked.push(
             (
@@ -301,8 +394,8 @@ export function rugLayout(columns: readonly (readonly [number, number])[]): RugL
         }
       }
       if (!courtyard) continue;
-      const uStart = left + rect.c0 * RUG_W;
-      const uEnd = left + (rect.c1 + 1) * RUG_W;
+      const uStart = colU(rect.c0);
+      const uEnd = colU(rect.c1) + RUG_W;
       const vTop = lattice[0].v0;
       const vBot = lattice[lattice.length - 1].v1;
       const edges: readonly ['h' | 'v', number, number, number, number, number][] = [
@@ -345,7 +438,22 @@ export function rugLayout(columns: readonly (readonly [number, number])[]): RugL
     if (others.some((c) => c.area !== p.area && p.u > c.u0 - 1 && p.u < c.u1 + 1 && p.v > c.v0 - 1 && p.v < c.v1 + 1)) continue;
     features.push({ type: 'Feature', properties: { height: 1.05 }, geometry: { type: 'Polygon', coordinates: [[...p.corners, p.corners[0]]] } });
   }
-  const layout = { rugs, covered, blocked, barriers: { type: 'FeatureCollection' as const, features } };
+  const layout: RugLayout = {
+    rugs,
+    covered,
+    blocked,
+    barriers: { type: 'FeatureCollection', features },
+    aisles: { type: 'FeatureCollection', features: aisleFeatures },
+  };
   cache = { key, layout };
   return layout;
+}
+
+/**
+ * Small and medium walking aisles carved between sub-blocks inside prayer areas, used both for
+ * subtle visual lane rendering on the map and for optional secondary shortcut paths (`مسار فرعي`).
+ */
+export function buildInterCarpetAisles(columns?: readonly (readonly [number, number])[]): FeatureCollection<LineString, AisleProps> {
+  if (!columns && cache) return cache.layout.aisles;
+  return rugLayout(columns ?? []).aisles;
 }
