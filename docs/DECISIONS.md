@@ -407,3 +407,12 @@
     - من الساحة الشرقية إلى 327.
     - البدائل من الشارع الشرقي إلى 233.
   - **في الموقع الحي حتى تُصلح المسارات:** الممر الشرقي يبقى كما هو اليوم.
+- **2026-11-14 — المرحلة 1: إعادة البناء على فرع نظيف من `main` (`rebuild/from-main`):**
+  - **نقطة البداية وخط الأساس:** تفرّع `rebuild/from-main` من `main` المنشور (`90ede90`) دون لمس الفروع المهجورة أو نسخة `~/.local/share/nabawi-phase0`. خط الأساس على `90ede90`: `npx tsc --noEmit` ناجح، `npm run lint` بلا أخطاء (تحذير واحد مسبق في `scripts/fence-model.mjs:395`)، `npm test`: **36 ملفًا، 1086 ناجحًا + 3 متوقع فشلها (1089)**، `npm run build` ناجح (`check-build` سليم، 72 ملفًا مسبق التخزين).
+  - **حالة `main` المتحقَّق منها:** لون سجاد المصليات `#6a7a2c` (`RUG_GREEN_HEX` في `src/map/rug-layer.ts`)، وزاوية السجاد `1°` مطابقة لدوران المظلات (`ALHARAMAIN_MODELS[1].rotation`)، ولا وجود لأي مبدّل طوابق في المبنى (الموجود فقط `FloorSwitch` لمستويي المواقف A/B عند اختيار القيادة). كل الملفات المرجعية اللازمة للمراحل التالية موجودة على `main` (`rug-layer.ts`، `walk.ts`، `crowd-sim.ts`، `streets.ts`، `garage.ts`، `data/streets.json`، حدود المصليات في `alharamain-prayers.ts`، `docs/PERF.md`، `docs/DECISIONS.md`، وملفا `haram-service-a/b.glb`).
+  - **البناء المنجز (A1–A5، كل بند في إيداع مستقل دون نسخ من فروع مهجورة؛ A6 مؤجّل بانتظار صورتي باب 41):**
+    - `1fbe872` (**A1 + A4**): توحيد زاوية السجاد (`RUG_TURN_DEG`) على `1°` مع المظلات وتصدير `RUG_GREEN_HEX = '#6a7a2c'`، وتوجيه علامة الكعبة في البوصلة إلى `QIBLA_BEARING_DEG = 176.24` (`rotate(-3.76 12 12)` في `src/presentation/icons.ts`).
+    - `24252fb` (**A2**): توحيد الإطارين المتريين للمشي والمجسمات في `src/domain/frames.ts` مع ربطهما عبر `modelToWalkMetres`/`walkToModelMetres` وتحديث `walk.ts` و`glb-layer.ts` دون تغيير أي مسار (`parity.test.ts` مطابق تمامًا).
+    - `3b67f00` (**A3**): إنشاء سجل مصادر البيانات `src/data/provenance.ts` بالرتب الثلاث (`verified`, `candidate`, `simulation`) وإضافة حارس التحقق `assertRoutingSourcesVerified` عند بناء شبكات `walk.ts` و`streets.ts` و`garage.ts`.
+    - `ee8864e` (**A5 + المراجع**): استعادة الوثائق الأربع حرفيًا من `origin/legacy-v1-leaflet` (`GARAGE.md`، `NETWORK.md`، `VISIT-PHOTOS.md`، `PLAN-ISLAMIC-LIBRARY.md`) وحفظ مراجع المرحلة 1-ب في `docs/references/` (`apple-maps-overview.jpg`، `apple-maps-closeup.jpg`، `pm-central-guide-ar-2026.pdf`).
+  - **قرار الدرجة اللونية (تمهيد المرحلة 1-ب):** عرض 3 درجات خضراء أغمق قليلًا (`#5c6b24`، `#51601e`، `#465319`) مقارنةً بالحالي `#6a7a2c` على مشهد الساحة الغربية 3D، وبقاء الكود على `#6a7a2c` بانتظار اختيار المالك.
