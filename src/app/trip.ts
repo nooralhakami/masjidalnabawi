@@ -9,7 +9,9 @@ import type { MapEngine } from '../map/engine';
 import { mapZoom } from '../map/zoom';
 import { NavigationTracker, type NavigationHost } from '../navigation/tracker';
 import { lotsToAsk, planExit, planFromLot, planRoutes, type GarageStart, type Plan } from '../routing/plan';
+import { rawdahState } from '../domain/rawdah';
 import { spotOf } from '../routing/spot';
+import { isBehindRawdahPoi, isWomenPoi, walkShortcutPath } from '../routing/walk';
 import { bearing } from '../presentation/route-view';
 import { accessibleRoute, garageQ, headingUp, level, nav, notify, route, selected, setHeadingUp, sheet, travel, whereQ, type WhereAnswer } from '../state/store';
 
@@ -127,6 +129,11 @@ export class Trip {
       // The place the visitor goes by is named, faintly, over itself (owner, 2026-10-25).
       engine.hints.setNear(s.state === 'stopped' ? null : this.hint.pick(s.position, s.accuracy, this.plans[this.chosen]?.mode ?? 'walk', Date.now()));
       engine.route.focus(s.state === 'stopped' ? null : this.tracker.ahead(AHEAD_M), this.plans[this.chosen]?.mode ?? 'walk');
+      if (s.state === 'arrived' || this.plans.length === 0) {
+        engine.route.setShortcut(null);
+      } else if (s.state !== 'stopped' && s.position) {
+        this.updateShortcut(s.position);
+      }
     });
     // The visitor moved the map themself: stop following them (the bar's button brings it back).
     engine.map.on('dragstart', (e) => e.originalEvent && this.tracker.userMovedMap());
@@ -294,10 +301,30 @@ export class Trip {
   }
 
   /** Draw the offered routes with `plans[i]` as the one to follow, and keep the card and navigation in step. */
+  private updateShortcut(from: [number, number] | null): void {
+    const dest = selected.value !== null ? POI_BY_ID.get(selected.value) : undefined;
+    const active = this.plans[this.chosen];
+    if (!from || !dest || !active || active.mode === 'drive') {
+      this.engine.route.setShortcut(null);
+      return;
+    }
+    const womenTrip = isWomenPoi(dest);
+    const behindRawdah = isBehindRawdahPoi(dest);
+    const allowWomenRawdahCorridor = behindRawdah && rawdahState(new Date()).turn === 'women';
+    const shortcut = walkShortcutPath(from, [dest.lat, dest.lng], {
+      isWomen: womenTrip,
+      allowWomenRawdahCorridor,
+    });
+    this.engine.route.setShortcut(shortcut?.path ?? null);
+  }
+
   private showPlans(next: Plan[], i: number, animate: boolean) {
     this.plans = next;
     this.chosen = i;
     const info = this.engine.route.show(next, i, { animate, onPick: (j) => this.pick(j) });
+    const leg = next[i]?.legs[next[i].legs.length - 1];
+    const start = leg?.kind === 'walk' ? (leg.path[0] ?? null) : null;
+    this.updateShortcut(start);
     this.engine.setRouteNames(true);
     const { bounds: _, ...summary } = info;
     route.value = summary;

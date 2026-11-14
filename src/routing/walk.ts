@@ -1,9 +1,13 @@
 import { POIS, ROUTING } from '../data';
 import { ALHARAMAIN_MODELS } from '../data-next/alharamain-3d';
+import { WOMEN_AREAS } from '../data-next/women-areas';
 import { assertRoutingSourcesVerified } from '../data/provenance';
 import type { LatLng, Poi } from '../data/types';
 import { fromWalkMetres, modelToWalkMetres, toModelMetres, toWalkMetres, type XY } from '../domain/frames';
 import { haversine } from '../domain/geo';
+import { interiorCorridors } from '../domain/interior-layout';
+import { WOMEN_RAWDAH_CORRIDOR_BOUNDS } from '../domain/rawdah-layout';
+import { buildInterCarpetAisles } from '../domain/rug-layout';
 
 /**
  * Walking routes on the plaza walkway network: the main ring round the mosque plus the owner's
@@ -42,6 +46,24 @@ interface Edge {
   u: number;
   v: number;
   l: number;
+  kind?: 'exterior' | 'aisle' | 'men_interior' | 'women_rawdah';
+}
+
+export interface WalkOptions {
+  /** Protect women visitors from being routed into men's Mosque interior corridors (default: true). */
+  womenSafe?: boolean;
+  /** Allow inter-carpet aisles and interior Mosque corridors (default: false on primary route — exterior priority). */
+  allowShortcuts?: boolean;
+  /** Allow the enclosed Gate 21 -> Behind Rawdah women's corridor. */
+  allowWomenRawdahCorridor?: boolean;
+}
+
+export type ShortcutKind = 'aisle' | 'interior' | 'women_rawdah';
+
+export interface ShortcutResult {
+  path: LatLng[];
+  savedM: number;
+  kind: ShortcutKind;
 }
 
 export interface Network {
@@ -339,7 +361,7 @@ function crossesInterior(a: XY, b: XY, r: Rect, ends: XY[]): boolean {
 
 export function network(): Network {
   if (net) return net;
-  assertRoutingSourcesVerified(['pois', 'routing', 'overrides', 'alharamain-3d']);
+  assertRoutingSourcesVerified(['pois', 'routing', 'overrides', 'alharamain-3d', 'women-areas', 'interior-layout']);
   const ring = ROUTING.walkway_ring.map(toM);
   const seg: Segment[] = [];
   let P = 0;
@@ -642,3 +664,230 @@ export function pathLength(path: LatLng[]): number {
 
 /** Walking minutes at the configured pace (80 m/min), at least 1. */
 export const walkMinutes = (meters: number): number => Math.max(1, Math.ceil(meters / ROUTING.rules.walk_speed_m_per_min));
+
+// ---------- secondary shortcuts, inter-carpet aisles, and women's interior protection ----------
+
+export function isBehindRawdahPoi(poi: Poi | null | undefined): boolean {
+  if (!poi) return false;
+  return poi.id === 604 || /خلف الروضة/i.test(poi.name_ar);
+}
+
+export function isWomenPoi(poi: Poi | null | undefined): boolean {
+  if (!poi) return false;
+  if (poi.category === 'women' || isBehindRawdahPoi(poi)) return true;
+  if (/نساء|النساء|للسيدات|مصلى نساء/i.test(poi.name_ar)) return true;
+  const pM = toM([poi.lat, poi.lng]);
+  return WOMEN_AREAS.some((area) => {
+    const poly = area.zone.map(([lat, lng]) => toM([lat, lng]));
+    return inPolygon(pM, poly);
+  });
+}
+
+function isWomenRawdahPoint([lat, lng]: LatLng): boolean {
+  const b = WOMEN_RAWDAH_CORRIDOR_BOUNDS;
+  return lng >= b.westLng - 0.00018 && lng <= b.eastLng + 0.00018 && lat >= b.southLat - 0.00018 && lat <= b.northLat + 0.00035;
+}
+
+interface TaggedSeg {
+  pts: XY[];
+  kind: NonNullable<Edge['kind']>;
+}
+
+const shortcutCache = new Map<string, { nodes: XY[]; edges: Edge[]; mainCount: number }>();
+
+function buildShortcutNetwork(isWomen: boolean, allowWomenRawdahCorridor: boolean): { nodes: XY[]; edges: Edge[]; mainCount: number } {
+  const key = `${isWomen ? 'W' : 'M'}|${allowWomenRawdahCorridor ? 'R1' : 'R0'}`;
+  const cached = shortcutCache.get(key);
+  if (cached) return cached;
+
+  const base = network();
+  const nodes: XY[] = base.nodes.map((p) => [p[0], p[1]]);
+  const edges: Edge[] = base.edges.map((e) => ({ u: e.u, v: e.v, l: e.l, kind: 'exterior' }));
+  const mainCount = nodes.length;
+
+  const node = (p: XY): number => {
+    const k = nodes.findIndex((n) => dist(n, p) < MERGE_M);
+    if (k >= 0) return k;
+    nodes.push(p);
+    return nodes.length - 1;
+  };
+
+  const linkToExterior = (endIdx: number, allowAcrossMosque: boolean) => {
+    const p = nodes[endIdx];
+    const maxJoin = allowAcrossMosque ? 35 : 28;
+    let best: { targetIdx: number; d: number } | null = null;
+    for (let i = 0; i < mainCount; i++) {
+      const d = dist(p, nodes[i]);
+      if (d > maxJoin) continue;
+      const hitBlock = (allowAcrossMosque ? base.buildings : base.blocks).some((r) => !insideRect(p, r) && segmentHits(p, nodes[i], r));
+      if (hitBlock) continue;
+      if (!best || d < best.d) best = { targetIdx: i, d };
+    }
+    if (best && best.targetIdx !== endIdx && best.d > 0.2) {
+      edges.push({ u: endIdx, v: best.targetIdx, l: best.d, kind: allowAcrossMosque ? 'exterior' : 'aisle' });
+    }
+  };
+
+  const tagged: TaggedSeg[] = [];
+  for (const f of buildInterCarpetAisles().features) {
+    if (f.geometry.coordinates.length >= 2) {
+      tagged.push({
+        pts: f.geometry.coordinates.map(([lng, lat]) => toM([lat, lng])),
+        kind: 'aisle',
+      });
+    }
+  }
+  for (const f of interiorCorridors().features) {
+    if (f.properties.kind === 'men_interior') {
+      // Women visitors must NEVER be routed into men's interior Mosque corridors.
+      if (!isWomen) tagged.push({ pts: f.geometry.coordinates.map(([lng, lat]) => toM([lat, lng])), kind: 'men_interior' });
+    } else if (f.properties.kind === 'women_rawdah_corridor') {
+      if (allowWomenRawdahCorridor) tagged.push({ pts: f.geometry.coordinates.map(([lng, lat]) => toM([lat, lng])), kind: 'women_rawdah' });
+    }
+  }
+
+  for (const seg of tagged) {
+    const ids = seg.pts.map(node);
+    for (let i = 1; i < ids.length; i++) {
+      if (ids[i] === ids[i - 1]) continue;
+      edges.push({ u: ids[i - 1], v: ids[i], l: dist(nodes[ids[i - 1]], nodes[ids[i]]), kind: seg.kind });
+    }
+    if (seg.kind === 'aisle') {
+      linkToExterior(ids[0], false);
+      linkToExterior(ids[ids.length - 1], false);
+    } else {
+      linkToExterior(ids[0], true);
+      linkToExterior(ids[ids.length - 1], true);
+    }
+  }
+
+  const out = { nodes, edges, mainCount };
+  shortcutCache.set(key, out);
+  return out;
+}
+
+/**
+ * Compute an optional secondary shortcut route (`مسار فرعي`) through inter-carpet aisles
+ * or permitted interior Mosque corridors:
+ * - Always yields default priority to the main exterior route (`walkPath`).
+ * - Strictly forbids women (`isWomen !== false`) from entering men's interior Mosque halls,
+ *   allowing only the enclosed Gate 21 → Behind Rawdah corridor (`women_rawdah`) when permitted.
+ * - Updates automatically as the visitor moves (`route-shortcut` layer in `RouteLayer`).
+ */
+export function walkShortcutPath(a: LatLng, b: LatLng, opts: { isWomen?: boolean; allowWomenRawdahCorridor?: boolean } = {}): ShortcutResult | null {
+  const isWomen = opts.isWomen ?? true;
+  const allowRawdah = opts.allowWomenRawdahCorridor ?? (isWomenRawdahPoint(a) || isWomenRawdahPoint(b));
+  const netInfo = buildShortcutNetwork(isWomen, allowRawdah);
+  const base = network();
+  const A = toM(a);
+  const B = toM(b);
+
+  const mainLen = pathLength(walkPath(a, b));
+  const n = netInfo.nodes.length;
+  const S = n;
+  const T = n + 1;
+  const adj: { to: number; w: number; kind: NonNullable<Edge['kind']> }[][] = Array.from({ length: n + 2 }, () => []);
+  for (const e of netInfo.edges) {
+    // Exterior edges keep priority slightly higher when length is identical; aisles/corridors stay true metres.
+    adj[e.u].push({ to: e.v, w: e.l, kind: e.kind ?? 'exterior' });
+    adj[e.v].push({ to: e.u, w: e.l, kind: e.kind ?? 'exterior' });
+  }
+
+  const connectPoint = (p: XY, isStart: boolean) => {
+    const blocking = base.blocks.filter((r) => !insideRect(p, r));
+    const candidates: { idx: number; q: XY; d: number; e: Edge; along: number }[] = [];
+    for (const e of netInfo.edges) {
+      const pr = project(p, netInfo.nodes[e.u], netInfo.nodes[e.v]);
+      const allowInsideHook = e.kind === 'women_rawdah' || (e.kind === 'men_interior' && !isWomen);
+      const blockers = allowInsideHook ? base.buildings.filter((r) => !insideRect(p, r)) : blocking;
+      if (blockers.some((r) => segmentHits(p, pr.q, r))) continue;
+      candidates.push({ idx: isStart ? S : T, q: pr.q, d: pr.d, e, along: pr.u * e.l });
+    }
+    if (!candidates.length) return [];
+    const bestD = Math.min(...candidates.map((c) => c.d));
+    return candidates.filter((c) => c.d <= bestD + 45);
+  };
+
+  const hs = connectPoint(A, true);
+  const ht = connectPoint(B, false);
+  if (!hs.length || !ht.length) return null;
+
+  for (const h of hs) {
+    const k = h.e.kind ?? 'exterior';
+    adj[S].push({ to: h.e.u, w: h.d + h.along, kind: k }, { to: h.e.v, w: h.d + h.e.l - h.along, kind: k });
+  }
+  for (const h of ht) {
+    const k = h.e.kind ?? 'exterior';
+    adj[h.e.u].push({ to: T, w: h.d + h.along, kind: k });
+    adj[h.e.v].push({ to: T, w: h.d + h.e.l - h.along, kind: k });
+  }
+
+  const D = new Array<number>(n + 2).fill(Infinity);
+  const prev = new Array<number>(n + 2).fill(-1);
+  const prevKind = new Array<NonNullable<Edge['kind']> | null>(n + 2).fill(null);
+  const done = new Array<boolean>(n + 2).fill(false);
+  D[S] = 0;
+  for (;;) {
+    let k = -1;
+    for (let i = 0; i < n + 2; i++) if (!done[i] && D[i] < Infinity && (k < 0 || D[i] < D[k])) k = i;
+    if (k < 0 || k === T) break;
+    done[k] = true;
+    for (const edge of adj[k]) {
+      if (D[k] + edge.w < D[edge.to]) {
+        D[edge.to] = D[k] + edge.w;
+        prev[edge.to] = k;
+        prevKind[edge.to] = edge.kind;
+      }
+    }
+  }
+  if (!Number.isFinite(D[T])) return null;
+
+  const chain: number[] = [];
+  const usedKinds = new Set<NonNullable<Edge['kind']>>();
+  for (let k = prev[T]; k !== S && k >= 0; k = prev[k]) {
+    chain.unshift(k);
+    const pk = prevKind[k];
+    if (pk) usedKinds.add(pk);
+  }
+  if (prevKind[T]) usedKinds.add(prevKind[T]!);
+  if (!chain.length) return null;
+
+  const first = chain[0];
+  const last = chain[chain.length - 1];
+  const hS = hs.reduce(
+    (m, h) => {
+      const c = h.e.u === first ? h.d + h.along : h.e.v === first ? h.d + h.e.l - h.along : Infinity;
+      return c < m.c ? { h, c } : m;
+    },
+    { h: hs[0], c: Infinity },
+  ).h;
+  const hT = ht.reduce(
+    (m, h) => {
+      const c = h.e.u === last ? h.d + h.along : h.e.v === last ? h.d + h.e.l - h.along : Infinity;
+      return c < m.c ? { h, c } : m;
+    },
+    { h: ht[0], c: Infinity },
+  ).h;
+
+  usedKinds.add(hS.e.kind ?? 'exterior');
+  usedKinds.add(hT.e.kind ?? 'exterior');
+
+  const usesShortcut = usedKinds.has('aisle') || usedKinds.has('men_interior') || usedKinds.has('women_rawdah');
+  if (!usesShortcut) return null;
+
+  const pts: XY[] = [A, hS.q, ...chain.map((k) => netInfo.nodes[k]), hT.q, B];
+  const clean: XY[] = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    const l = clean[clean.length - 1];
+    if (Math.hypot(pts[i][0] - l[0], pts[i][1] - l[1]) > 0.5) clean.push(pts[i]);
+  }
+  const rounded = roundCorners(clean, 3).map(fromM);
+  const shortLen = pathLength(rounded);
+  const savedM = Math.round(mainLen - shortLen);
+  const insideWomenRawdah = usedKinds.has('women_rawdah');
+  const nearAisle = hs.some((h) => h.e.kind === 'aisle' && h.d < 20);
+  if (!insideWomenRawdah && savedM < 3 && !(nearAisle && shortLen <= mainLen + 2)) return null;
+
+  const kind: ShortcutKind = insideWomenRawdah ? 'women_rawdah' : usedKinds.has('men_interior') ? 'interior' : 'aisle';
+  return { path: rounded, savedM: Math.max(0, savedM), kind };
+}

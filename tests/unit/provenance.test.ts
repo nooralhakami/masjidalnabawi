@@ -56,7 +56,8 @@ describe('data provenance ledger and routing guards (A3)', () => {
           spec === '../../data/garage.json' ||
           spec === '../../data/streets.json' ||
           spec === '../data-next/alharamain-3d' ||
-          spec === '../data-next/vertical-nodes';
+          spec === '../data-next/vertical-nodes' ||
+          spec === '../data-next/women-areas';
 
         expect(isVerifiedDataImport, `${file} imports unverified/unlisted module "${spec}"`).toBe(true);
       }

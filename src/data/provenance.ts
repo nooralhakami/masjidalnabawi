@@ -26,6 +26,9 @@ export type DataSourceId =
   | 'women-areas'
   | 'haram-fence'
   | 'vertical-nodes'
+  | 'interior-layout'
+  | 'saqifah-3d'
+  | 'osm-buildings-2026-10-08'
   | 'apple-maps-rug-ref'
   | 'apple-maps-rug-closeup-ref'
   | 'pm-central-guide-2026'
@@ -124,6 +127,27 @@ export const DATA_PROVENANCE: Readonly<Record<DataSourceId, DataSourceRecord>> =
     routingAllowed: true,
     path: 'src/data-next/vertical-nodes.ts',
     description: 'Verified elevators, escalators, and accessible ramps.',
+  },
+  'interior-layout': {
+    id: 'interior-layout',
+    tier: 'verified',
+    routingAllowed: true,
+    path: 'src/domain/interior-layout.ts',
+    description: 'Verified interior Mosque prayer halls, Gate 21 women Rawdah corridor, and men interior corridors.',
+  },
+  'saqifah-3d': {
+    id: 'saqifah-3d',
+    tier: 'candidate',
+    routingAllowed: false,
+    path: 'src/map/saqifah-3d.ts',
+    description: '3D Saqifat Bani Sa idah garden walls, greenery, paths, heritage buildings, trees, and surrounding West buildings (visual only, never for routing).',
+  },
+  'osm-buildings-2026-10-08': {
+    id: 'osm-buildings-2026-10-08',
+    tier: 'candidate',
+    routingAllowed: false,
+    path: 'docs/routes/osm/buildings-2026-10-08.json',
+    description: 'Filtered OpenStreetMap building footprints surrounding the Western plaza (visual 3D extrusion only, never for routing).',
   },
   'apple-maps-rug-ref': {
     id: 'apple-maps-rug-ref',

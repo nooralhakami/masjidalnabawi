@@ -35,12 +35,12 @@ export interface RouteText {
 }
 
 /** Layers of the route, bottom to top (all under the selected place's pin). */
-const LINE_LAYERS = ['route-alt', 'route-casing', 'route-edge', 'route-walk', 'route-flow', 'route-car', 'route-garage-dash'] as const;
+const LINE_LAYERS = ['route-alt', 'route-shortcut-casing', 'route-shortcut', 'route-casing', 'route-edge', 'route-walk', 'route-flow', 'route-car', 'route-garage-dash'] as const;
 const BASE_LAYERS = ['route-casing', 'route-edge', 'route-walk', 'route-flow', 'route-car', 'route-garage-dash'] as const;
 const FOCUS_LAYERS = ['route-focus-casing', 'route-focus'] as const;
 const TOP_LAYERS = [...FOCUS_LAYERS, 'route-arrows', 'route-marks'] as const;
 export const ROUTE_LAYERS = [...LINE_LAYERS, ...TOP_LAYERS];
-const SOURCES = ['route-lines', 'route-alts', 'route-focus', 'route-arrows', 'route-marks'] as const;
+const SOURCES = ['route-lines', 'route-alts', 'route-shortcut', 'route-focus', 'route-arrows', 'route-marks'] as const;
 
 /** The route draws itself from the visitor to the place (UI plan phase 4: about 600 ms). */
 const DRAW_MS = 600;
@@ -75,6 +75,7 @@ export class RouteLayer {
   private plans: Plan[] = [];
   private chosen = 0;
   private path: LatLng[] = [];
+  private shortcutPath: LatLng[] = [];
   private others: { i: number; path: LatLng[] }[] = [];
   private marks: Mark[] = [];
   private images: string[] = [];
@@ -130,6 +131,22 @@ export class RouteLayer {
     // The other routes: barely there (a faint trace); a tap near one chooses it (hitAlternative).
     if (this.plans.length > 1)
       add({ id: 'route-alt', type: 'line', source: 'route-alts', layout: round, paint: { 'line-color': c('muted'), 'line-opacity': 0.16, 'line-width': 6 } });
+    // Secondary dynamic shortcut route (`مسار فرعي`) through inter-carpet aisles / permitted corridors:
+    // deliberately thinner (`2.5px` dashed inside `5px` casing) than the primary exterior route (`6px`).
+    add({
+      id: 'route-shortcut-casing',
+      type: 'line',
+      source: 'route-shortcut',
+      layout: round,
+      paint: { 'line-color': '#ffffff', 'line-opacity': 0.82, 'line-width': 5 },
+    });
+    add({
+      id: 'route-shortcut',
+      type: 'line',
+      source: 'route-shortcut',
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': '#10b981', 'line-opacity': 0.92, 'line-width': 2.5, 'line-dasharray': [2, 1.5] },
+    });
     add({
       id: 'route-casing',
       type: 'line',
@@ -234,6 +251,17 @@ export class RouteLayer {
     return this.path;
   }
 
+  /** The optional dynamic secondary shortcut route (`مسار فرعي`), start to end. */
+  get shortcut(): LatLng[] {
+    return this.shortcutPath;
+  }
+
+  /** Update the optional secondary shortcut route (`مسار فرعي`) in place as the visitor moves. */
+  setShortcut(path: LatLng[] | null): void {
+    this.shortcutPath = path && path.length > 1 ? path : [];
+    this.set('route-shortcut', this.shortcutPath.length > 1 ? [line(this.shortcutPath, { part: 'shortcut' })] : []);
+  }
+
   /** The alternative routes on the map, in plan order without the chosen one (as the live app). */
   get alternatives(): LatLng[][] {
     return this.others.map((o) => o.path);
@@ -313,6 +341,7 @@ export class RouteLayer {
     for (const mk of marks) mk.img ??= mk.kind === 'start' || mk.kind === 'end' ? this.endImage(mk.kind) : mk.kind === 'step' ? this.stepImage(mk) : this.chip(mk);
     this.marks = marks;
     this.set('route-lines', lines);
+    this.set('route-shortcut', this.shortcutPath.length > 1 ? [line(this.shortcutPath, { part: 'shortcut' })] : []);
     this.set(
       'route-alts',
       this.others.map((o) => line(o.path, { i: o.i })),
@@ -385,6 +414,7 @@ export class RouteLayer {
     this.dropImages();
     this.plans = [];
     this.path = [];
+    this.shortcutPath = [];
     this.others = [];
     this.marks = [];
   }
