@@ -1,5 +1,6 @@
 import { POIS, ROUTING } from '../data';
 import { ALHARAMAIN_MODELS } from '../data-next/alharamain-3d';
+import { assertRoutingSourcesVerified } from '../data/provenance';
 import type { LatLng, Poi } from '../data/types';
 import { fromWalkMetres, modelToWalkMetres, toModelMetres, toWalkMetres, type XY } from '../domain/frames';
 import { haversine } from '../domain/geo';
@@ -338,6 +339,7 @@ function crossesInterior(a: XY, b: XY, r: Rect, ends: XY[]): boolean {
 
 export function network(): Network {
   if (net) return net;
+  assertRoutingSourcesVerified(['pois', 'routing', 'overrides', 'alharamain-3d']);
   const ring = ROUTING.walkway_ring.map(toM);
   const seg: Segment[] = [];
   let P = 0;
