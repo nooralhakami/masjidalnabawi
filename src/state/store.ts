@@ -132,3 +132,9 @@ export function markHintsSeen(): void {
   hintsSeen.value = true;
   save('hints-seen', '1');
 }
+
+/** Manual 3D Mosque interior cutaway mode (never activated automatically by GPS). */
+export const interiorView = signal<boolean>(false);
+/** True when the latest live location fix sits inside the Mosque footprint; triggers only a gentle banner suggestion. */
+export const insideMosque = signal<boolean>(false);
+export const interiorSuggestionDismissed = signal<boolean>(false);

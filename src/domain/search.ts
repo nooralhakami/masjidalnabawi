@@ -1,4 +1,4 @@
-import type { Poi } from '../data/types';
+import { outerGateNumber, type Poi } from '../data/types';
 import { ds, enName, latinDigits, nm, t } from '../i18n';
 import { parkingAccess } from './parking';
 
@@ -14,14 +14,15 @@ export function normalize(s: string): string {
 export function matchRank(p: Poi, query: string): number {
   const q = normalize(query);
   if (!q) return 0;
-  const id = String(p.id);
-  if (id === q) return 100;
-  const tags = (p.alias ?? '').toLowerCase().split(' ').filter(Boolean);
+  const shownId = String(outerGateNumber(p.id));
+  const rawId = String(p.id);
+  if (shownId === q || rawId === q) return 100;
+  const tags = `${p.alias ?? ''} ${p.code ?? ''}`.toLowerCase().split(/\s+/).filter(Boolean);
   if (tags.some((w) => w === q)) return 90;
   const access = p.category === 'parking' ? parkingAccess(p) : '';
   const accessText = p.category === 'parking' ? `${t(access === 'subscribers' ? 'park_sub' : 'park_public')} subscribers public مشتركين للجميع بالساعة` : '';
   const names = normalize(`${p.name_ar} ${nm(p)} ${enName(p)} ${access} ${accessText}`);
-  if (id.startsWith(q)) return 80;
+  if (shownId.startsWith(q) || rawId.startsWith(q)) return 80;
   if (names.split(' ').some((w) => w.startsWith(q))) return 60;
   if (names.includes(q)) return 50;
   if (q.length > 3 && tags.some((w) => w.startsWith(q))) return 40;

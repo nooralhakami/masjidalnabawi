@@ -1,4 +1,4 @@
-import type { Poi, Status } from '../data/types';
+import { outerGateNumber, type Poi, type Status } from '../data/types';
 import type { FilterId } from '../domain/filters';
 import { isClosed } from '../domain/facilities';
 import { icon, type IconName } from './icons';
@@ -109,7 +109,7 @@ export const PIN_ANCHOR: [number, number] = [24, 57];
 
 /** Approximate on-screen size of an outer-gate chip, for decluttering. */
 export function chipSize(p: Poi, tier: Tier): [number, number] {
-  const digits = String(p.id).length;
+  const digits = String(outerGateNumber(p.id)).length;
   const lock = p.category === 'parking' && p.access === 'subscribers' ? 14 : 0;
   return tier === 'm' ? [digits * 6.2 + 22 + lock, 17] : [digits * 7 + 24 + lock, 19];
 }
@@ -135,7 +135,10 @@ export function markerSpec(p: Poi, tier: Tier, status: Status | undefined, selec
 
   if (p.subCategory === 'gate_outer') {
     // Number chip edged in the side colour; a 6px dot when zoomed out.
-    inner = (tier === 's' || compact) && !selected ? `<span class="mk-gdot" style="--c:${look.color}"></span>` : `<span class="mk-chip" style="--c:${look.color}">${p.id}</span>`;
+    inner =
+      (tier === 's' || compact) && !selected
+        ? `<span class="mk-gdot" style="--c:${look.color}"></span>`
+        : `<span class="mk-chip" style="--c:${look.color}">${outerGateNumber(p.id)}</span>`;
     z = 100;
   } else if (p.subCategory === 'gate_inner') {
     const c = p.women ? 'var(--cat-women)' : look.color;

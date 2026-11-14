@@ -1,7 +1,24 @@
 import { POIS, ROUTING } from '../data';
 import { ALHARAMAIN_MODELS } from '../data-next/alharamain-3d';
+import { WOMEN_AREAS } from '../data-next/women-areas';
+import { assertRoutingSourcesVerified } from '../data/provenance';
 import type { LatLng, Poi } from '../data/types';
+import { fromWalkMetres, modelToWalkMetres, toModelMetres, toWalkMetres, type XY } from '../domain/frames';
+import { clearApprovedBuildings } from '../domain/urban-approval';
 import { haversine } from '../domain/geo';
+import { interiorCorridors } from '../domain/interior-layout';
+import { WOMEN_RAWDAH_CORRIDOR_BOUNDS } from '../domain/rawdah-layout';
+import {
+  pointInCarpet,
+  safetyWorld,
+  segmentHasViolation,
+  segmentHitsBarrier,
+  segmentHitsCarpet,
+  womenZonesContaining,
+  type BarrierSource,
+  type SafetyWorld,
+} from '../domain/route-safety';
+import { buildInterCarpetAisles } from '../domain/rug-layout';
 
 /**
  * Walking routes on the plaza walkway network: the main ring round the mosque plus the owner's
@@ -9,15 +26,9 @@ import { haversine } from '../domain/geo';
  * areas). Shortest path on that graph; never crosses the mosque building or Al-Baqi' (outside the Haram).
  */
 
-// Local metric projection around the reference anchor (same as the reference app).
-const LAT0 = 24.4673;
-const LNG0 = 39.6111;
-const KY = 111_320;
-const KX = 111_320 * Math.cos((LAT0 * Math.PI) / 180);
-
-export type XY = [number, number];
-export const toM = (ll: LatLng): XY => [(ll[1] - LNG0) * KX, (ll[0] - LAT0) * KY];
-export const fromM = (m: XY): LatLng => [LAT0 + m[1] / KY, LNG0 + m[0] / KX];
+export type { XY };
+export const toM = toWalkMetres;
+export const fromM = fromWalkMetres;
 
 export interface Rect {
   x0: number;
@@ -46,6 +57,28 @@ interface Edge {
   u: number;
   v: number;
   l: number;
+  kind?: 'exterior' | 'aisle' | 'men_interior' | 'women_rawdah';
+  womenZones?: string[];
+  hitsCarpet?: boolean;
+  hitsHardBarrier?: boolean;
+  hitsSoftBarrier?: boolean;
+}
+
+export interface WalkOptions {
+  /** Protect women visitors from being routed into men's Mosque interior corridors (default: true). */
+  womenSafe?: boolean;
+  /** Allow inter-carpet aisles and interior Mosque corridors (default: false on primary route — exterior priority). */
+  allowShortcuts?: boolean;
+  /** Allow the enclosed Gate 21 -> Behind Rawdah women's corridor. */
+  allowWomenRawdahCorridor?: boolean;
+}
+
+export type ShortcutKind = 'aisle' | 'interior' | 'women_rawdah';
+
+export interface ShortcutResult {
+  path: LatLng[];
+  savedM: number;
+  kind: ShortcutKind;
 }
 
 export interface Network {
@@ -141,7 +174,55 @@ function buildGraph(lines: XY[][]): { nodes: XY[]; edges: Edge[] } {
       edges.push({ u: seq[i - 1], v: seq[i], l: dist(nodes[seq[i - 1]], nodes[seq[i]]) });
     }
   }
+  tagEdgesSafety(nodes, edges);
   return { nodes, edges };
+}
+
+const SOFT_BARRIERS = new Set<BarrierSource>(['greeting_barrier', 'queue_rail']);
+const HARD_BARRIERS = new Set<BarrierSource>(['prayer_barrier', 'women_fence']);
+
+function sampleWomenZones(a: XY, b: XY): string[] {
+  const w = safetyWorld();
+  const len = dist(a, b);
+  const steps = Math.max(1, Math.ceil(len / 1.5));
+  const found = new Set<string>();
+  for (let k = 0; k <= steps; k++) {
+    const u = k / steps;
+    const p: XY = [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
+    for (const id of womenZonesContaining(p, w)) found.add(id);
+  }
+  return [...found];
+}
+
+function tagEdgesSafety(nodes: XY[], edges: Edge[]): void {
+  const w = safetyWorld();
+  for (const e of edges) {
+    const a = nodes[e.u];
+    const b = nodes[e.v];
+    e.womenZones = sampleWomenZones(a, b);
+    e.hitsCarpet = segmentHitsCarpet(a, b, [], w);
+    e.hitsHardBarrier = segmentHitsBarrier(a, b, w, SOFT_BARRIERS);
+    e.hitsSoftBarrier = segmentHitsBarrier(a, b, w, HARD_BARRIERS);
+  }
+}
+
+function edgeSafetyPenalty(e: Edge, allowedZones: Set<string>): number {
+  let pen = 0;
+  if (e.womenZones?.some((id) => !allowedZones.has(id))) pen += 20_000;
+  if (e.hitsCarpet) pen += 12_000;
+  if (e.hitsHardBarrier) pen += 10_000;
+  if (e.hitsSoftBarrier) pen += 1_200;
+  return pen;
+}
+
+function segmentPenalty(a: XY, b: XY, allowedZones: Set<string>, carpetEndpts: readonly XY[]): number {
+  const w = safetyWorld();
+  let pen = 0;
+  if (sampleWomenZones(a, b).some((id) => !allowedZones.has(id))) pen += 20_000;
+  if (segmentHitsCarpet(a, b, carpetEndpts, w)) pen += 12_000;
+  if (segmentHitsBarrier(a, b, w, SOFT_BARRIERS)) pen += 10_000;
+  if (segmentHitsBarrier(a, b, w, HARD_BARRIERS)) pen += 1_200;
+  return pen;
 }
 
 // ---------- restroom buildings ----------
@@ -178,7 +259,6 @@ const DOOR_CLEAR_M = 1;
 let blockDoors: { c: XY; dir: XY }[] | null = null;
 function restroomBlocks(): { c: XY; dir: XY }[] {
   if (blockDoors) return blockDoors;
-  const R = 111_320;
   const out: { c: XY; dir: XY }[] = [];
   for (const model of ALHARAMAIN_MODELS) {
     const m = model.url.match(/restroom-(a|b)-(east|west|north|south)/);
@@ -188,7 +268,10 @@ function restroomBlocks(): { c: XY; dir: XY }[] {
     const east = x * Math.cos(t) - z * Math.sin(t);
     const south = x * Math.sin(t) + z * Math.cos(t);
     const dir: XY = m[2] === 'east' ? [1, 0] : m[2] === 'west' ? [-1, 0] : m[2] === 'north' ? [0, 1] : [0, -1];
-    for (const [lng, lat] of model.anchors) out.push({ c: toM([lat - south / R, lng + east / (R * Math.cos((lat * Math.PI) / 180))]), dir });
+    for (const [lng, lat] of model.anchors) {
+      const [ax, az] = toModelMetres([lng, lat]);
+      out.push({ c: modelToWalkMetres([ax + east, az + south]), dir });
+    }
   }
   return (blockDoors = out);
 }
@@ -341,6 +424,7 @@ function crossesInterior(a: XY, b: XY, r: Rect, ends: XY[]): boolean {
 
 export function network(): Network {
   if (net) return net;
+  assertRoutingSourcesVerified(['pois', 'routing', 'overrides', 'alharamain-3d', 'women-areas', 'interior-layout', 'urban-approved']);
   const ring = ROUTING.walkway_ring.map(toM);
   const seg: Segment[] = [];
   let P = 0;
@@ -353,7 +437,73 @@ export function network(): Network {
   // The mosque is shrunk 3 m so paths may hug its walls, as in the reference.
   const big = Object.entries(ROUTING.obstacles).map(([name, poly]) => rectOf(poly, name === 'mosque_building' ? 3 : 0));
   const buildings = toiletBuildings(big);
-  const lines = [[...ring, ring[0]], ...(ROUTING.walkways ?? []).map((w) => w.path.map(toM))].map((l) => aroundBuildings(l, buildings));
+  const bypasses: XY[][] = (
+    [
+      // South bypass keeping clear of Rawdah greeting barriers & queue rails while connecting east to south-inner-walk.
+      [
+        [-202.3, -30.3],
+        [-122, 24.0],
+      ],
+      [
+        [-122, 20.7],
+        [-122, 24.0],
+        [128, 24.0],
+        [128, 20.3],
+      ],
+      [
+        [128, 24.0],
+        [143.8, 24.0],
+        [143.8, -30.3],
+      ],
+      [
+        [35.5, 24.0],
+        [35.5, 2.9],
+      ],
+      [
+        [-123.5, -30.3],
+        [-123.5, -24.5],
+      ],
+      // West plaza carpet skirt onto west-cross-213.
+      [
+        [-352, -188.4],
+        [-352, -156.5],
+        [-293.4, -156.5],
+      ],
+      // North-west women's zone gate bridge through the northern perimeter opening.
+      [
+        [-228.7, -408],
+        [-239.5, -408],
+        [-239.5, -394],
+        [-228.7, -380.7],
+      ],
+      // North wall apron corridors serving Gate 15 and north-east wheelchair zone 406 cleanly through northern aisles.
+      [
+        [-228.3, -340],
+        [-150, -340],
+        [-150, -368],
+        [-164, -368],
+        [-164, -434],
+      ],
+      [
+        [-150, -340],
+        [-51.4, -340],
+        [-51.4, -373.1],
+      ],
+      [
+        [63.2, -381.2],
+        [63.2, -340],
+      ],
+    ] as XY[][]
+  ).map((line) => line.map(modelToWalkMetres));
+  const rawWalkways = (ROUTING.walkways ?? []).map((w) => {
+    const pts = w.path.map(toM);
+    // Split south-inner-walk at greeting/queue barrier boundaries so barrier-free stretches (serving 201, 203, 205) remain 0-penalty.
+    if (w.id === 'south-inner-walk' && pts.length === 2) {
+      return [pts[0], modelToWalkMetres([-123.5, -30.3]), modelToWalkMetres([-105, -30.3]), modelToWalkMetres([-3, -30.3]), modelToWalkMetres([45, -30.3]), pts[1]];
+    }
+    return pts;
+  });
+  const lines = [[...ring, ring[0]], ...rawWalkways, ...bypasses].map((l) => aroundBuildings(l, buildings));
   return (net = { ring, seg, P, obstacles: big, buildings, blocks: [...big, ...buildings], ...buildGraph(lines) });
 }
 
@@ -386,28 +536,64 @@ export function projectOnRing(p: XY, N: Network): { d: number; p: XY; t: number 
   return best!;
 }
 
-/** Replace each corner with a quadratic curve of radius r (metres). */
+function roundCornerCurve(a: XY, v: XY, b: XY, r: number): XY[] | null {
+  const l1 = Math.hypot(v[0] - a[0], v[1] - a[1]);
+  const l2 = Math.hypot(b[0] - v[0], b[1] - v[1]);
+  if (!l1 || !l2) return null;
+  const d1 = Math.min(r, l1 / 2);
+  const d2 = Math.min(r, l2 / 2);
+  const s: XY = [v[0] + ((a[0] - v[0]) * d1) / l1, v[1] + ((a[1] - v[1]) * d1) / l1];
+  const e: XY = [v[0] + ((b[0] - v[0]) * d2) / l2, v[1] + ((b[1] - v[1]) * d2) / l2];
+  const pts: XY[] = [];
+  for (let k = 0; k <= 6; k++) {
+    const u = k / 6;
+    pts.push([(1 - u) * (1 - u) * s[0] + 2 * u * (1 - u) * v[0] + u * u * e[0], (1 - u) * (1 - u) * s[1] + 2 * u * (1 - u) * v[1] + u * u * e[1]]);
+  }
+  return pts;
+}
+
 export function roundCorners(P: XY[], r: number): XY[] {
   if (P.length < 3) return P;
   const out: XY[] = [P[0]];
   for (let i = 1; i < P.length - 1; i++) {
+    const c = roundCornerCurve(P[i - 1], P[i], P[i + 1], r);
+    if (c) out.push(...c);
+    else out.push(P[i]);
+  }
+  out.push(P[P.length - 1]);
+  return out;
+}
+
+/** Replace each corner with a quadratic curve of radius r (metres), falling back when rounding would clip a safety zone. */
+function roundCornersSafe(P: XY[], r: number, allowedZones: Set<string>, carpetEndpts: readonly XY[]): XY[] {
+  if (P.length < 3) return P;
+  const w = safetyWorld();
+  const out: XY[] = [P[0]];
+  const curveSafe = (curve: XY[]) => {
+    for (let k = 1; k < curve.length; k++) {
+      if (segmentHasViolation(curve[k - 1], curve[k], allowedZones, carpetEndpts, w)) return false;
+    }
+    return true;
+  };
+  for (let i = 1; i < P.length - 1; i++) {
     const v = P[i];
     const a = P[i - 1];
     const b = P[i + 1];
-    const l1 = Math.hypot(v[0] - a[0], v[1] - a[1]);
-    const l2 = Math.hypot(b[0] - v[0], b[1] - v[1]);
-    if (!l1 || !l2) {
+    const cFull = roundCornerCurve(a, v, b, r);
+    if (!cFull) {
       out.push(v);
       continue;
     }
-    const d1 = Math.min(r, l1 / 2);
-    const d2 = Math.min(r, l2 / 2);
-    const s: XY = [v[0] + ((a[0] - v[0]) * d1) / l1, v[1] + ((a[1] - v[1]) * d1) / l1];
-    const e: XY = [v[0] + ((b[0] - v[0]) * d2) / l2, v[1] + ((b[1] - v[1]) * d2) / l2];
-    for (let k = 0; k <= 6; k++) {
-      const u = k / 6;
-      out.push([(1 - u) * (1 - u) * s[0] + 2 * u * (1 - u) * v[0] + u * u * e[0], (1 - u) * (1 - u) * s[1] + 2 * u * (1 - u) * v[1] + u * u * e[1]]);
+    if (curveSafe(cFull)) {
+      out.push(...cFull);
+      continue;
     }
+    const cTight = roundCornerCurve(a, v, b, Math.min(r, 1.5));
+    if (cTight && curveSafe(cTight)) {
+      out.push(...cTight);
+      continue;
+    }
+    out.push(v);
   }
   out.push(P[P.length - 1]);
   return out;
@@ -431,29 +617,206 @@ export function openTogether(a: XY, b: XY): boolean {
 }
 
 interface Hook {
-  /** Where the visitor joins the walkway, and the walk to it. */
+  /** Where the visitor joins the walkway, and total walk distance from p to q. */
   q: XY;
   d: number;
+  /** Intermediate detour waypoints strictly between p and q (from p toward q). */
+  via: XY[];
+  /** Soft penalty when only violation/soft-barrier access exists. */
+  penalty: number;
   /** The edge it joins and how far along it. */
   e: Edge;
   along: number;
 }
 
-/**
- * Where a point may join the network: the nearest point of every edge it can reach in a straight
- * line without crossing an obstacle (one it stands inside does not count), up to 40 m further than
- * the nearest such edge, so the shortest path can pick the best one.
- */
-function hooks(p: XY, N: Network): Hook[] {
+const hookCache = new Map<string, Hook[]>();
+let cachedHookWorld: SafetyWorld | null = null;
+
+function ensureSafetyFresh(N: Network): SafetyWorld {
+  const w = safetyWorld();
+  if (w !== cachedHookWorld) {
+    cachedHookWorld = w;
+    hookCache.clear();
+    tagEdgesSafety(N.nodes, N.edges);
+  }
+  return w;
+}
+
+function obstacleHooks(p: XY, N: Network): Hook[] {
   const blocking = N.blocks.filter((r) => !insideRect(p, r));
   const all = N.edges.map((e) => {
     const pr = project(p, N.nodes[e.u], N.nodes[e.v]);
-    return { q: pr.q, d: pr.d, e, along: pr.u * e.l, clear: !blocking.some((r) => segmentHits(p, pr.q, r)) };
+    return { q: pr.q, d: pr.d, via: [] as XY[], penalty: 0, e, along: pr.u * e.l, clear: !blocking.some((r) => segmentHits(p, pr.q, r)) };
   });
   const ok = all.filter((h) => h.clear);
   const pool = ok.length ? ok : all;
   const best = Math.min(...pool.map((h) => h.d));
   return pool.filter((h) => h.d <= best + 40);
+}
+
+function localDetourHooks(
+  p: XY,
+  N: Network,
+  blocking: Rect[],
+  allowedZones: Set<string>,
+  carpetEndpts: readonly XY[],
+  allowedBarrierSources: Set<BarrierSource> | undefined,
+  penalty: number,
+  w: SafetyWorld,
+): Hook[] {
+  const radius = 115;
+  const bldgCorners: XY[] = [];
+  for (const r of blocking) {
+    const cx = (r.x0 + r.x1) / 2;
+    const cy = (r.y0 + r.y1) / 2;
+    if (Math.hypot(cx - p[0], cy - p[1]) > radius) continue;
+    bldgCorners.push([r.x0 - 1.2, r.y0 - 1.2], [r.x1 + 1.2, r.y0 - 1.2], [r.x1 + 1.2, r.y1 + 1.2], [r.x0 - 1.2, r.y1 + 1.2]);
+  }
+  const nearAnchors = [...w.detourAnchors, ...bldgCorners]
+    .filter((a) => {
+      if (Math.hypot(a[0] - p[0], a[1] - p[1]) > radius) return false;
+      if (blocking.some((r) => insideRect(a, r))) return false;
+      if (pointInCarpet(a, w)) return false;
+      for (const zId of womenZonesContaining(a, w)) {
+        if (!allowedZones.has(zId)) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => dist(p, a) - dist(p, b))
+    .slice(0, 65);
+
+  const verts: XY[] = [p, ...nearAnchors];
+  const m = verts.length;
+  const adj: [number, number][][] = Array.from({ length: m }, () => []);
+  const segClear = (a: XY, b: XY) => !blocking.some((r) => segmentHits(a, b, r)) && !segmentHasViolation(a, b, allowedZones, carpetEndpts, w, allowedBarrierSources);
+
+  for (let i = 0; i < m; i++) {
+    for (let j = i + 1; j < m; j++) {
+      const len = dist(verts[i], verts[j]);
+      if (len > 95) continue;
+      if (!segClear(verts[i], verts[j])) continue;
+      adj[i].push([j, len]);
+      adj[j].push([i, len]);
+    }
+  }
+
+  const D = new Array<number>(m).fill(Infinity);
+  const prev = new Array<number>(m).fill(-1);
+  const done = new Array<boolean>(m).fill(false);
+  D[0] = 0;
+  for (;;) {
+    let k = -1;
+    for (let i = 0; i < m; i++) if (!done[i] && D[i] < Infinity && (k < 0 || D[i] < D[k])) k = i;
+    if (k < 0) break;
+    done[k] = true;
+    for (const [j, len] of adj[k]) {
+      if (D[k] + len < D[j]) {
+        D[j] = D[k] + len;
+        prev[j] = k;
+      }
+    }
+  }
+
+  const viaOf = (idx: number): XY[] => {
+    const chain: XY[] = [];
+    for (let k = idx; k > 0; k = prev[k]) chain.unshift(verts[k]);
+    return chain;
+  };
+
+  const nearEdges = N.edges
+    .map((e) => {
+      const pr = project(p, N.nodes[e.u], N.nodes[e.v]);
+      return { e, pr };
+    })
+    .filter((x) => x.pr.d <= radius)
+    .sort((a, b) => a.pr.d - b.pr.d)
+    .slice(0, 40);
+
+  const bestByEdge = new Map<Edge, Hook>();
+  for (let i = 0; i < m; i++) {
+    if (D[i] === Infinity) continue;
+    const v = verts[i];
+    const baseVia = i === 0 ? [] : viaOf(i);
+    for (const { e } of nearEdges) {
+      const pr = project(v, N.nodes[e.u], N.nodes[e.v]);
+      if (pr.d > 95) continue;
+      if (!segClear(v, pr.q)) continue;
+      const totalD = D[i] + pr.d;
+      const prevHook = bestByEdge.get(e);
+      if (!prevHook || totalD < prevHook.d) {
+        const via = baseVia.filter((pt) => dist(pt, pr.q) > 0.3 && dist(pt, p) > 0.3);
+        bestByEdge.set(e, { q: pr.q, d: totalD, via, penalty, e, along: pr.u * e.l });
+      }
+    }
+  }
+  return [...bestByEdge.values()];
+}
+
+/**
+ * Where a point may join the network cleanly without crossing obstacles, carpets, barriers, or women's zones.
+ * Falls back to multi-point anchor detours, then soft barriers (e.g. inside Greeting alcoves), then raw hooks.
+ */
+function safeHooks(p: XY, N: Network, allowedZones: Set<string>): Hook[] {
+  const w = ensureSafetyFresh(N);
+  const zoneKey = [...allowedZones].sort().join(',');
+  const cacheKey = `${p[0].toFixed(2)},${p[1].toFixed(2)}|${zoneKey}`;
+  const cached = hookCache.get(cacheKey);
+  if (cached) return cached;
+
+  const carpetEndpts = pointInCarpet(p, w) ? [p] : [];
+  const blocking = N.blocks.filter((r) => !insideRect(p, r));
+
+  const directClean: Hook[] = [];
+  const rawClear: Hook[] = [];
+  const rawAll: Hook[] = [];
+
+  for (const e of N.edges) {
+    const pr = project(p, N.nodes[e.u], N.nodes[e.v]);
+    const blockClear = !blocking.some((r) => segmentHits(p, pr.q, r));
+    const base = { q: pr.q, d: pr.d, via: [] as XY[], e, along: pr.u * e.l };
+    rawAll.push({ ...base, penalty: 50_000 });
+    if (blockClear) {
+      rawClear.push({ ...base, penalty: 30_000 });
+      if (!segmentHasViolation(p, pr.q, allowedZones, carpetEndpts, w)) {
+        directClean.push({ ...base, penalty: 0 });
+      }
+    }
+  }
+
+  let cleanPool = directClean;
+  const bestDirect = cleanPool.length ? Math.min(...cleanPool.map((h) => h.d)) : Infinity;
+  if (!cleanPool.length || bestDirect > 25) {
+    const detours = localDetourHooks(p, N, blocking, allowedZones, carpetEndpts, undefined, 0, w);
+    if (detours.length) {
+      const merged = new Map<Edge, Hook>();
+      for (const h of [...cleanPool, ...detours]) {
+        const cur = merged.get(h.e);
+        if (!cur || h.d < cur.d) merged.set(h.e, h);
+      }
+      cleanPool = [...merged.values()];
+    }
+  }
+
+  let chosen: Hook[];
+  if (cleanPool.length) {
+    const best = Math.min(...cleanPool.map((h) => h.d));
+    const span = best < 25 ? 10 : 45;
+    chosen = cleanPool.filter((h) => h.d <= best + span);
+  } else {
+    const softHooks = localDetourHooks(p, N, blocking, allowedZones, carpetEndpts, SOFT_BARRIERS, 1_200, w);
+    if (softHooks.length) {
+      const best = Math.min(...softHooks.map((h) => h.d));
+      chosen = softHooks.filter((h) => h.d <= best + 45);
+    } else {
+      const pool = rawClear.length ? rawClear : rawAll;
+      const best = Math.min(...pool.map((h) => h.d));
+      chosen = pool.filter((h) => h.d <= best + 40);
+    }
+  }
+
+  if (hookCache.size > 512) hookCache.clear();
+  hookCache.set(cacheKey, chosen);
+  return chosen;
 }
 
 /**
@@ -462,27 +825,34 @@ function hooks(p: XY, N: Network): Hook[] {
  * `length` is then the real length, and `nodes` the network nodes the walk passes.
  */
 function graphRoute(A: XY, B: XY, N: Network, avoid?: Uint8Array): { pts: XY[]; length: number; nodes: number[] } | null {
+  const w = ensureSafetyFresh(N);
+  const insideMosque = N.obstacles.length > 0 && (insideRect(A, N.obstacles[0]) || insideRect(B, N.obstacles[0]));
+  const allowedZones = new Set<string>([...womenZonesContaining(A, w), ...womenZonesContaining(B, w)]);
+  const carpetEndpts: XY[] = [];
+  if (pointInCarpet(A, w)) carpetEndpts.push(A);
+  if (pointInCarpet(B, w)) carpetEndpts.push(B);
+
   const n = N.nodes.length;
   const S = n;
   const T = n + 1;
   const adj: [number, number][][] = Array.from({ length: n + 2 }, () => []);
   for (const e of N.edges) {
-    const w = avoid && avoid[e.u] && avoid[e.v] ? e.l * AVOID_FACTOR : e.l;
-    adj[e.u].push([e.v, w]);
-    adj[e.v].push([e.u, w]);
+    const base = avoid && avoid[e.u] && avoid[e.v] ? e.l * AVOID_FACTOR : e.l;
+    const weight = insideMosque ? base : base + edgeSafetyPenalty(e, allowedZones);
+    adj[e.u].push([e.v, weight]);
+    adj[e.v].push([e.u, weight]);
   }
-  const hs = hooks(A, N);
-  const ht = hooks(B, N);
-  // Joining through a hook: S → q → edge end, edge end → q → T.
-  const via = new Map<string, XY>();
+  const hs = insideMosque ? obstacleHooks(A, N) : safeHooks(A, N, allowedZones);
+  const ht = insideMosque ? obstacleHooks(B, N) : safeHooks(B, N, allowedZones);
+  const endPenalty = (h: Hook, nodeIdx: number) =>
+    !insideMosque && edgeSafetyPenalty(h.e, allowedZones) > 0 ? segmentPenalty(h.q, N.nodes[nodeIdx], allowedZones, carpetEndpts) : 0;
+
   for (const h of hs) {
-    adj[S].push([h.e.u, h.d + h.along], [h.e.v, h.d + h.e.l - h.along]);
-    via.set(`S${h.e.u}`, via.get(`S${h.e.u}`) ?? h.q);
-    via.set(`S${h.e.v}`, via.get(`S${h.e.v}`) ?? h.q);
+    adj[S].push([h.e.u, h.penalty + h.d + h.along + endPenalty(h, h.e.u)], [h.e.v, h.penalty + h.d + h.e.l - h.along + endPenalty(h, h.e.v)]);
   }
   for (const h of ht) {
-    adj[h.e.u].push([T, h.d + h.along]);
-    adj[h.e.v].push([T, h.d + h.e.l - h.along]);
+    adj[h.e.u].push([T, h.penalty + h.d + h.along + endPenalty(h, h.e.u)]);
+    adj[h.e.v].push([T, h.penalty + h.d + h.e.l - h.along + endPenalty(h, h.e.v)]);
   }
   // Dijkstra (the graph is a few dozen nodes).
   const D = new Array(n + 2).fill(Infinity);
@@ -494,20 +864,23 @@ function graphRoute(A: XY, B: XY, N: Network, avoid?: Uint8Array): { pts: XY[]; 
     for (let i = 0; i < n + 2; i++) if (!done[i] && D[i] < Infinity && (k < 0 || D[i] < D[k])) k = i;
     if (k < 0 || k === T) break;
     done[k] = true;
-    for (const [j, w] of adj[k]) {
-      if (D[k] + w < D[j]) {
-        D[j] = D[k] + w;
+    for (const [j, weight] of adj[k]) {
+      if (D[k] + weight < D[j]) {
+        D[j] = D[k] + weight;
         prev[j] = k;
       }
     }
   }
   let best: { pts: XY[]; length: number; nodes: number[] } | null = null;
-  // Both ends on the same edge: walk along it directly.
+  // Both ends on the same edge: walk along it directly if that stretch is also clean/cheaper.
   for (const s of hs) {
     for (const t of ht) {
       if (s.e !== t.e) continue;
-      const length = s.d + Math.abs(s.along - t.along) + t.d;
-      if (!best || length < best.length) best = { pts: [A, s.q, t.q, B], length, nodes: [] };
+      const stretchPen = edgeSafetyPenalty(s.e, allowedZones) > 0 ? segmentPenalty(s.q, t.q, allowedZones, carpetEndpts) : 0;
+      const cost = s.penalty + t.penalty + stretchPen + s.d + Math.abs(s.along - t.along) + t.d;
+      if (!best || cost < best.length) {
+        best = { pts: [A, ...s.via, s.q, t.q, ...[...t.via].reverse(), B], length: cost, nodes: [] };
+      }
     }
   }
   if (D[T] < Infinity && (!best || D[T] < best.length)) {
@@ -518,19 +891,19 @@ function graphRoute(A: XY, B: XY, N: Network, avoid?: Uint8Array): { pts: XY[]; 
     // The hooks used at each end: the ones that give the costs Dijkstra settled on.
     const hS = hs.reduce(
       (m, h) => {
-        const c = h.e.u === first ? h.d + h.along : h.e.v === first ? h.d + h.e.l - h.along : Infinity;
+        const c = h.penalty + (h.e.u === first ? h.d + h.along + endPenalty(h, h.e.u) : h.e.v === first ? h.d + h.e.l - h.along + endPenalty(h, h.e.v) : Infinity);
         return c < m.c ? { h, c } : m;
       },
       { h: hs[0], c: Infinity },
     ).h;
     const hT = ht.reduce(
       (m, h) => {
-        const c = h.e.u === last ? h.d + h.along : h.e.v === last ? h.d + h.e.l - h.along : Infinity;
+        const c = h.penalty + (h.e.u === last ? h.d + h.along + endPenalty(h, h.e.u) : h.e.v === last ? h.d + h.e.l - h.along + endPenalty(h, h.e.v) : Infinity);
         return c < m.c ? { h, c } : m;
       },
       { h: ht[0], c: Infinity },
     ).h;
-    const pts: XY[] = [A, hS.q, ...chain.map((k) => N.nodes[k]), hT.q, B];
+    const pts: XY[] = [A, ...hS.via, hS.q, ...chain.map((k) => N.nodes[k]), hT.q, ...[...hT.via].reverse(), B];
     best = { pts, length: avoid ? lengthOf(pts) : D[T], nodes: chain };
   }
   return best;
@@ -549,14 +922,22 @@ export function walkPath(a: LatLng, b: LatLng): LatLng[] {
   const { short_L_route_max_m, corner_radius_m } = ROUTING.rules;
   const A = toM(a);
   const B = toM(b);
+  const w = ensureSafetyFresh(N);
+  const insideMosque = N.obstacles.length > 0 && (insideRect(A, N.obstacles[0]) || insideRect(B, N.obstacles[0]));
+  const allowedZones = new Set<string>([...womenZonesContaining(A, w), ...womenZonesContaining(B, w)]);
+  const carpetEndpts: XY[] = [];
+  if (pointInCarpet(A, w)) carpetEndpts.push(A);
+  if (pointInCarpet(B, w)) carpetEndpts.push(B);
+  const pathSafe = (poly: XY[]) => insideMosque || !poly.some((p, i) => i > 0 && segmentHasViolation(poly[i - 1], p, allowedZones, carpetEndpts, w));
+
   let pts: XY[] | null = null;
   const graph = graphRoute(A, B, N);
 
   // Open ground (the west plaza): with both ends on it, walk straight across — beside any restroom
-  // building in the way, never over it (the mosque and Al-Baqi' are not on the open ground).
+  // building in the way, never over it or through carpets, barriers, or women's areas.
   if (openTogether(A, B) && !N.obstacles.some((r) => segmentHits(A, B, r))) {
     const open = aroundBuildings([A, B], N.buildings);
-    if (!open.some((p, i) => i > 0 && N.blocks.some((r) => crossesInterior(open[i - 1], p, r, [A, B]))) && (!graph || pathLen(open) < graph.length)) pts = open;
+    if (!open.some((p, i) => i > 0 && N.blocks.some((r) => crossesInterior(open[i - 1], p, r, [A, B]))) && pathSafe(open) && (!graph || pathLen(open) < graph.length)) pts = open;
   }
 
   if (!pts && dist(A, B) < short_L_route_max_m) {
@@ -565,7 +946,12 @@ export function walkPath(a: LatLng, b: LatLng): LatLng[] {
       [A[0], B[1]],
     ] as XY[]) {
       const L = dist(A, c) + dist(c, B);
-      if (!hitsAny(A, c, N) && !hitsAny(c, B, N) && (!graph || L < graph.length / 1.5)) {
+      if (
+        !hitsAny(A, c, N) &&
+        !hitsAny(c, B, N) &&
+        (insideMosque || (!segmentHasViolation(A, c, allowedZones, carpetEndpts, w) && !segmentHasViolation(c, B, allowedZones, carpetEndpts, w))) &&
+        (!graph || L < graph.length / 1.5)
+      ) {
         pts = [A, c, B];
         break;
       }
@@ -586,7 +972,7 @@ export function walkPath(a: LatLng, b: LatLng): LatLng[] {
     const l = clean[clean.length - 1];
     if (Math.hypot(pts[i][0] - l[0], pts[i][1] - l[1]) > 0.5) clean.push(pts[i]);
   }
-  return roundCorners(clean, corner_radius_m).map(fromM);
+  return clearApprovedBuildings((insideMosque ? roundCorners(clean, corner_radius_m) : roundCornersSafe(clean, corner_radius_m, allowedZones, carpetEndpts)).map(fromM));
 }
 
 /**
@@ -603,12 +989,17 @@ export function walkPaths(a: LatLng, b: LatLng): LatLng[][] {
   const N = network();
   const A = toM(a);
   const B = toM(b);
+  const w = safetyWorld();
+  const allowedZones = new Set<string>([...womenZonesContaining(A, w), ...womenZonesContaining(B, w)]);
+  const carpetEndpts: XY[] = [];
+  if (pointInCarpet(A, w)) carpetEndpts.push(A);
+  if (pointInCarpet(B, w)) carpetEndpts.push(B);
   const avoid = new Uint8Array(N.nodes.length);
   let route = graphRoute(A, B, N);
   for (let i = 0; i < 2 && route?.nodes.length; i++) {
     route.nodes.forEach((k) => (avoid[k] = 1));
     route = graphRoute(A, B, N, avoid);
-    if (route) out.push(roundCorners(route.pts, ROUTING.rules.corner_radius_m).map(fromM));
+    if (route) out.push(roundCornersSafe(route.pts, ROUTING.rules.corner_radius_m, allowedZones, carpetEndpts).map(fromM));
   }
   return out;
 }
@@ -631,7 +1022,7 @@ export function ringPath(a: LatLng, b: LatLng): LatLng[] {
   const pts: XY[] = [A, qa.p, ...mid.sort((x, y) => x[0] - y[0]).map((m) => m[1]), qb.p, B];
   const clean: XY[] = [pts[0]];
   for (const p of pts.slice(1)) if (dist(p, clean[clean.length - 1]) > 0.5) clean.push(p);
-  return roundCorners(clean, ROUTING.rules.corner_radius_m).map(fromM);
+  return roundCornersSafe(clean, ROUTING.rules.corner_radius_m, new Set(), []).map(fromM);
 }
 
 /** Path length in metres. */
@@ -643,3 +1034,230 @@ export function pathLength(path: LatLng[]): number {
 
 /** Walking minutes at the configured pace (80 m/min), at least 1. */
 export const walkMinutes = (meters: number): number => Math.max(1, Math.ceil(meters / ROUTING.rules.walk_speed_m_per_min));
+
+// ---------- secondary shortcuts, inter-carpet aisles, and women's interior protection ----------
+
+export function isBehindRawdahPoi(poi: Poi | null | undefined): boolean {
+  if (!poi) return false;
+  return poi.id === 604 || /خلف الروضة/i.test(poi.name_ar);
+}
+
+export function isWomenPoi(poi: Poi | null | undefined): boolean {
+  if (!poi) return false;
+  if (poi.category === 'women' || isBehindRawdahPoi(poi)) return true;
+  if (/نساء|النساء|للسيدات|مصلى نساء/i.test(poi.name_ar)) return true;
+  const pM = toM([poi.lat, poi.lng]);
+  return WOMEN_AREAS.some((area) => {
+    const poly = area.zone.map(([lat, lng]) => toM([lat, lng]));
+    return inPolygon(pM, poly);
+  });
+}
+
+function isWomenRawdahPoint([lat, lng]: LatLng): boolean {
+  const b = WOMEN_RAWDAH_CORRIDOR_BOUNDS;
+  return lng >= b.westLng - 0.00018 && lng <= b.eastLng + 0.00018 && lat >= b.southLat - 0.00018 && lat <= b.northLat + 0.00035;
+}
+
+interface TaggedSeg {
+  pts: XY[];
+  kind: NonNullable<Edge['kind']>;
+}
+
+const shortcutCache = new Map<string, { nodes: XY[]; edges: Edge[]; mainCount: number }>();
+
+function buildShortcutNetwork(isWomen: boolean, allowWomenRawdahCorridor: boolean): { nodes: XY[]; edges: Edge[]; mainCount: number } {
+  const key = `${isWomen ? 'W' : 'M'}|${allowWomenRawdahCorridor ? 'R1' : 'R0'}`;
+  const cached = shortcutCache.get(key);
+  if (cached) return cached;
+
+  const base = network();
+  const nodes: XY[] = base.nodes.map((p) => [p[0], p[1]]);
+  const edges: Edge[] = base.edges.map((e) => ({ u: e.u, v: e.v, l: e.l, kind: 'exterior' }));
+  const mainCount = nodes.length;
+
+  const node = (p: XY): number => {
+    const k = nodes.findIndex((n) => dist(n, p) < MERGE_M);
+    if (k >= 0) return k;
+    nodes.push(p);
+    return nodes.length - 1;
+  };
+
+  const linkToExterior = (endIdx: number, allowAcrossMosque: boolean) => {
+    const p = nodes[endIdx];
+    const maxJoin = allowAcrossMosque ? 35 : 28;
+    let best: { targetIdx: number; d: number } | null = null;
+    for (let i = 0; i < mainCount; i++) {
+      const d = dist(p, nodes[i]);
+      if (d > maxJoin) continue;
+      const hitBlock = (allowAcrossMosque ? base.buildings : base.blocks).some((r) => !insideRect(p, r) && segmentHits(p, nodes[i], r));
+      if (hitBlock) continue;
+      if (!best || d < best.d) best = { targetIdx: i, d };
+    }
+    if (best && best.targetIdx !== endIdx && best.d > 0.2) {
+      edges.push({ u: endIdx, v: best.targetIdx, l: best.d, kind: allowAcrossMosque ? 'exterior' : 'aisle' });
+    }
+  };
+
+  const tagged: TaggedSeg[] = [];
+  for (const f of buildInterCarpetAisles().features) {
+    if (f.geometry.coordinates.length >= 2) {
+      tagged.push({
+        pts: f.geometry.coordinates.map(([lng, lat]) => toM([lat, lng])),
+        kind: 'aisle',
+      });
+    }
+  }
+  for (const f of interiorCorridors().features) {
+    if (f.properties.kind === 'men_interior') {
+      // Women visitors must NEVER be routed into men's interior Mosque corridors.
+      if (!isWomen) tagged.push({ pts: f.geometry.coordinates.map(([lng, lat]) => toM([lat, lng])), kind: 'men_interior' });
+    } else if (f.properties.kind === 'women_rawdah_corridor') {
+      if (allowWomenRawdahCorridor) tagged.push({ pts: f.geometry.coordinates.map(([lng, lat]) => toM([lat, lng])), kind: 'women_rawdah' });
+    }
+  }
+
+  for (const seg of tagged) {
+    const ids = seg.pts.map(node);
+    for (let i = 1; i < ids.length; i++) {
+      if (ids[i] === ids[i - 1]) continue;
+      edges.push({ u: ids[i - 1], v: ids[i], l: dist(nodes[ids[i - 1]], nodes[ids[i]]), kind: seg.kind });
+    }
+    if (seg.kind === 'aisle') {
+      linkToExterior(ids[0], false);
+      linkToExterior(ids[ids.length - 1], false);
+    } else {
+      linkToExterior(ids[0], true);
+      linkToExterior(ids[ids.length - 1], true);
+    }
+  }
+
+  const out = { nodes, edges, mainCount };
+  shortcutCache.set(key, out);
+  return out;
+}
+
+/**
+ * Compute an optional secondary shortcut route (`مسار فرعي`) through inter-carpet aisles
+ * or permitted interior Mosque corridors:
+ * - Always yields default priority to the main exterior route (`walkPath`).
+ * - Strictly forbids women (`isWomen !== false`) from entering men's interior Mosque halls,
+ *   allowing only the enclosed Gate 21 → Behind Rawdah corridor (`women_rawdah`) when permitted.
+ * - Updates automatically as the visitor moves (`route-shortcut` layer in `RouteLayer`).
+ */
+export function walkShortcutPath(a: LatLng, b: LatLng, opts: { isWomen?: boolean; allowWomenRawdahCorridor?: boolean } = {}): ShortcutResult | null {
+  const isWomen = opts.isWomen ?? true;
+  const allowRawdah = opts.allowWomenRawdahCorridor ?? (isWomenRawdahPoint(a) || isWomenRawdahPoint(b));
+  const netInfo = buildShortcutNetwork(isWomen, allowRawdah);
+  const base = network();
+  const A = toM(a);
+  const B = toM(b);
+
+  const mainLen = pathLength(walkPath(a, b));
+  const n = netInfo.nodes.length;
+  const S = n;
+  const T = n + 1;
+  const adj: { to: number; w: number; kind: NonNullable<Edge['kind']> }[][] = Array.from({ length: n + 2 }, () => []);
+  for (const e of netInfo.edges) {
+    // Exterior edges keep priority slightly higher when length is identical; aisles/corridors stay true metres.
+    adj[e.u].push({ to: e.v, w: e.l, kind: e.kind ?? 'exterior' });
+    adj[e.v].push({ to: e.u, w: e.l, kind: e.kind ?? 'exterior' });
+  }
+
+  const connectPoint = (p: XY, isStart: boolean) => {
+    const blocking = base.blocks.filter((r) => !insideRect(p, r));
+    const candidates: { idx: number; q: XY; d: number; e: Edge; along: number }[] = [];
+    for (const e of netInfo.edges) {
+      const pr = project(p, netInfo.nodes[e.u], netInfo.nodes[e.v]);
+      const allowInsideHook = e.kind === 'women_rawdah' || (e.kind === 'men_interior' && !isWomen);
+      const blockers = allowInsideHook ? base.buildings.filter((r) => !insideRect(p, r)) : blocking;
+      if (blockers.some((r) => segmentHits(p, pr.q, r))) continue;
+      candidates.push({ idx: isStart ? S : T, q: pr.q, d: pr.d, e, along: pr.u * e.l });
+    }
+    if (!candidates.length) return [];
+    const bestD = Math.min(...candidates.map((c) => c.d));
+    return candidates.filter((c) => c.d <= bestD + 45);
+  };
+
+  const hs = connectPoint(A, true);
+  const ht = connectPoint(B, false);
+  if (!hs.length || !ht.length) return null;
+
+  for (const h of hs) {
+    const k = h.e.kind ?? 'exterior';
+    adj[S].push({ to: h.e.u, w: h.d + h.along, kind: k }, { to: h.e.v, w: h.d + h.e.l - h.along, kind: k });
+  }
+  for (const h of ht) {
+    const k = h.e.kind ?? 'exterior';
+    adj[h.e.u].push({ to: T, w: h.d + h.along, kind: k });
+    adj[h.e.v].push({ to: T, w: h.d + h.e.l - h.along, kind: k });
+  }
+
+  const D = new Array<number>(n + 2).fill(Infinity);
+  const prev = new Array<number>(n + 2).fill(-1);
+  const prevKind = new Array<NonNullable<Edge['kind']> | null>(n + 2).fill(null);
+  const done = new Array<boolean>(n + 2).fill(false);
+  D[S] = 0;
+  for (;;) {
+    let k = -1;
+    for (let i = 0; i < n + 2; i++) if (!done[i] && D[i] < Infinity && (k < 0 || D[i] < D[k])) k = i;
+    if (k < 0 || k === T) break;
+    done[k] = true;
+    for (const edge of adj[k]) {
+      if (D[k] + edge.w < D[edge.to]) {
+        D[edge.to] = D[k] + edge.w;
+        prev[edge.to] = k;
+        prevKind[edge.to] = edge.kind;
+      }
+    }
+  }
+  if (!Number.isFinite(D[T])) return null;
+
+  const chain: number[] = [];
+  const usedKinds = new Set<NonNullable<Edge['kind']>>();
+  for (let k = prev[T]; k !== S && k >= 0; k = prev[k]) {
+    chain.unshift(k);
+    const pk = prevKind[k];
+    if (pk) usedKinds.add(pk);
+  }
+  if (prevKind[T]) usedKinds.add(prevKind[T]!);
+  if (!chain.length) return null;
+
+  const first = chain[0];
+  const last = chain[chain.length - 1];
+  const hS = hs.reduce(
+    (m, h) => {
+      const c = h.e.u === first ? h.d + h.along : h.e.v === first ? h.d + h.e.l - h.along : Infinity;
+      return c < m.c ? { h, c } : m;
+    },
+    { h: hs[0], c: Infinity },
+  ).h;
+  const hT = ht.reduce(
+    (m, h) => {
+      const c = h.e.u === last ? h.d + h.along : h.e.v === last ? h.d + h.e.l - h.along : Infinity;
+      return c < m.c ? { h, c } : m;
+    },
+    { h: ht[0], c: Infinity },
+  ).h;
+
+  usedKinds.add(hS.e.kind ?? 'exterior');
+  usedKinds.add(hT.e.kind ?? 'exterior');
+
+  const usesShortcut = usedKinds.has('aisle') || usedKinds.has('men_interior') || usedKinds.has('women_rawdah');
+  if (!usesShortcut) return null;
+
+  const pts: XY[] = [A, hS.q, ...chain.map((k) => netInfo.nodes[k]), hT.q, B];
+  const clean: XY[] = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    const l = clean[clean.length - 1];
+    if (Math.hypot(pts[i][0] - l[0], pts[i][1] - l[1]) > 0.5) clean.push(pts[i]);
+  }
+  const rounded = roundCorners(clean, 3).map(fromM);
+  const shortLen = pathLength(rounded);
+  const savedM = Math.round(mainLen - shortLen);
+  const insideWomenRawdah = usedKinds.has('women_rawdah');
+  const nearAisle = hs.some((h) => h.e.kind === 'aisle' && h.d < 20);
+  if (!insideWomenRawdah && savedM < 3 && !(nearAisle && shortLen <= mainLen + 2)) return null;
+
+  const kind: ShortcutKind = insideWomenRawdah ? 'women_rawdah' : usedKinds.has('men_interior') ? 'interior' : 'aisle';
+  return { path: rounded, savedM: Math.max(0, savedM), kind };
+}

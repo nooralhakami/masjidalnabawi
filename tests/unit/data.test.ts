@@ -64,18 +64,18 @@ describe('inner gate names and descriptions', () => {
 });
 
 describe('pois.json', () => {
-  it('has 325 POIs with unique ids (police stations at Gates 2 and 34, 523–524, removed by the owner 2026-10-10)', () => {
-    expect(POIS).toHaveLength(325);
+  it('has 345 POIs with unique ids (including 20 west expansion outer gates 401–420 as 1401–1420)', () => {
+    expect(POIS).toHaveLength(345);
     expect(POI_BY_ID.has(523)).toBe(false);
     expect(POI_BY_ID.has(524)).toBe(false);
-    expect(POI_BY_ID.size).toBe(325);
+    expect(POI_BY_ID.size).toBe(345);
     expect(POI_BY_ID.has(409)).toBe(false);
     expect(POI_BY_ID.has(410)).toBe(false);
     expect(POI_BY_ID.get(604)?.category).toBe('landmarks');
   });
 
   it.each([
-    ['gates', 112],
+    ['gates', 132],
     ['toilets', 40],
     ['parking', 13],
     ['landmarks', 39],
@@ -89,8 +89,8 @@ describe('pois.json', () => {
     expect(count((p) => p.category === cat)).toBe(n);
   });
 
-  it('gates: 70 outer (301–370) and 42 inner (1–42)', () => {
-    expect(ids((p) => p.subCategory === 'gate_outer')).toEqual(range(301, 370));
+  it('gates: 90 outer (301–370 plus west expansion 1401–1420 for 401–420) and 42 inner (1–42)', () => {
+    expect(ids((p) => p.subCategory === 'gate_outer')).toEqual([...range(301, 370), ...range(1401, 1420)]);
     expect(ids((p) => p.subCategory === 'gate_inner')).toEqual(range(1, 42));
   });
 
@@ -172,11 +172,12 @@ describe('pois.json', () => {
 });
 
 describe('overrides', () => {
-  it("only the owner-requested POIs are nudged (every outer gate 301–370 onto its opening in the courtyards' fence (2026-11-08); restrooms 201–236 (centred on their blocks, 2026-11-06), except 251–254; service buildings 501, 504–507; centres 511 and 604; women prayer halls 601–602; mosque doors 2–5 (2026-11-07)); everything else is untouched", () => {
+  it("only the owner-requested POIs are nudged (every outer gate 301–370 onto its opening in the courtyards' fence (2026-11-08); restrooms 201–236 and 251–254 (centred on their blocks, 2026-11-06 / 2026-11-14); service buildings 501, 504–507; centres 511 and 604; women prayer halls 601–602; mosque doors 2–5 (2026-11-07)); everything else is untouched", () => {
     const raw = rawPois as Poi[];
     const moved = (id: number) =>
       (id >= 301 && id <= 370) ||
       (id >= 201 && id <= 236) ||
+      (id >= 251 && id <= 254) ||
       id === 501 ||
       (id >= 504 && id <= 507) ||
       id === 511 ||

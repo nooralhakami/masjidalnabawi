@@ -1,3 +1,4 @@
+import { assertRoutingSourcesVerified } from '../data/provenance';
 import type { LatLng } from '../data/types';
 import { toM, type XY } from './walk';
 
@@ -121,6 +122,7 @@ export class Streets {
   private onlyTurn = new Map<string, Set<number>>();
 
   constructor(data: StreetsData) {
+    assertRoutingSourcesVerified(['streets']);
     this.xy = data.nodes.map(toM);
     const n = this.xy.length;
     this.out = { walk: Array.from({ length: n }, () => []), drive: Array.from({ length: n }, () => []) };

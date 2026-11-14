@@ -3,6 +3,7 @@ import type { Category, Poi } from '../data/types';
 import type { Facilities } from './facilities';
 import { isClosed } from './facilities';
 import { parkingAccess } from './parking';
+import { isApprovedHotel } from './urban-approval';
 
 export type FilterId = 'all' | 'gates' | 'women' | 'toilets' | 'hotels' | 'food' | 'shopping' | 'landmarks' | 'historic' | 'parking' | 'emergency';
 export type ToiletSub = 'all' | 'open' | 'closed';
@@ -45,7 +46,7 @@ export interface FilterState {
 
 export { HIDDEN_SUBCATEGORIES };
 
-export const isHidden = (p: Poi): boolean => HIDDEN_SUBCATEGORIES.has(p.subCategory);
+export const isHidden = (p: Poi): boolean => HIDDEN_SUBCATEGORIES.has(p.subCategory) && !(p.subCategory === 'hotel' && isApprovedHotel(p.id));
 
 const SAME_CATEGORY: readonly Category[] = ['hotels', 'food', 'shopping', 'landmarks', 'emergency', 'gates'];
 

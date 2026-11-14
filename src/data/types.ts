@@ -1,5 +1,8 @@
 export type Direction = 'south' | 'west' | 'north' | 'east';
 
+/** Maps internal Western-Expansion gate IDs (1401–1420) back to their public gate numbers (401–420). */
+export const outerGateNumber = (id: number): number => (id >= 1401 && id <= 1420 ? id - 1000 : id);
+
 export type Category = 'gates' | 'toilets' | 'parking' | 'landmarks' | 'wheelchair' | 'emergency' | 'women' | 'hotels' | 'food' | 'shopping';
 
 export type SubCategory =
@@ -66,6 +69,29 @@ export interface Poi {
   source?: string;
   /** Wikidata item that confirms a historic site (Q123). */
   wikidata?: string;
+  /** Interior-only POI floor from navQ (Ground floor GF or Roof level ROF). */
+  floor?: 'GF' | 'ROF';
+  /** True for interior prayer halls/landmarks shown only in search and interior cutaway mode. */
+  interiorOnly?: boolean;
+  /** NavQ interior sub-kind (prayer zone vs landmark). */
+  kind?: 'prayer' | 'landmark';
+  /** NavQ prayer sector code (e.g. A19, B34). */
+  code?: string;
+  /** Original NavQ polygon/POI ID. */
+  navqId?: number;
+}
+
+/** Underground parking section extracted from navQ floor 94 (A) / floor 95 (B). */
+export interface ParkingSection {
+  navqId: number;
+  lotId: number;
+  level: 'A' | 'B';
+  code: string;
+  rawCode: string;
+  name_ar: string;
+  name_en: string;
+  center: [number, number];
+  polygon: [number, number][];
 }
 
 /** One text slide of a must-visit site. `ar` and `en` are required; other languages are added after the texts are approved. */

@@ -1,5 +1,6 @@
 import type { SkySpecification } from 'maplibre-gl';
 import type { SunPosition } from '../domain/daylight';
+import { openDoorwayBayCentres } from '../domain/mosque-doors';
 
 /**
  * How the 3D view is lit for a given sun position: noon light, the golden hour, the blue hour and
@@ -278,4 +279,9 @@ export function portalKind(file: string, mesh: string | undefined, material: str
 /** The gates whose photograph has a lattice lunette above the door, lit from behind at night. */
 export function gateLattice(file: string, material: string | undefined): boolean {
   return file.includes('haram-3d') && (material === 'Gate1' || material === 'GateR');
+}
+
+/** Open Mosque doorway bay centres in model metres for portal lighting and doorway cues. */
+export function doorPositionsFromPois(): Array<{ x: number; y: number; gateId: number; bayIndex: number }> {
+  return openDoorwayBayCentres().map(({ x, y, gateId, bayIndex }) => ({ x, y, gateId, bayIndex }));
 }

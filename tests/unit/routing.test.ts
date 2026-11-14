@@ -116,7 +116,7 @@ describe('every reachable place, from every plaza side', () => {
   // Pending the routes phase (owner, 2026-11-08: merge the fence now, fix these with the routes): gate 327 now stands on
   // its opening at the north-west corner, 32 m beyond this bound from the east plaza. It.fails
   // reports as soon as it holds again, so this marker is then removed.
-  it.fails('east plaza → 327 within the same bound (pending)', () => {
+  it('east plaza → 327 within the same bound', () => {
     const N = network();
     const start = SIDES.find(([n]) => n === 'east plaza')![1];
     const p = POI_BY_ID.get(327)!;

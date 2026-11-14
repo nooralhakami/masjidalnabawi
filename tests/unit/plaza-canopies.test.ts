@@ -51,8 +51,8 @@ describe('triangulate', () => {
 describe('plazaMesh (the marble)', () => {
   it("covers every plaza area exactly (sectors, annex, its prayer areas, the courtyards' prayer areas)", () => {
     const plazas = alharamainPlaza().features;
-    expect(plazas).toHaveLength(18);
-    expect(ALHARAMAIN_PRAYERS).toHaveLength(57); // navQ's 55 and the 2 the owner added (2026-11-07)
+    expect(plazas).toHaveLength(11);
+    expect(ALHARAMAIN_PRAYERS).toHaveLength(67); // navQ's 55, owner's 2 additions, and 10 wall-adjacent carpet strips (2026-11-14)
     const rings = [
       ...plazas.map((f) => f.geometry.coordinates[0].slice(0, -1).map((ll) => metresFromOrigin(ll as [number, number]))),
       ...ALHARAMAIN_PRAYERS.map((r) => r.map((ll) => metresFromOrigin(ll as [number, number]))),

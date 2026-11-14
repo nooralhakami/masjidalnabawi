@@ -4,6 +4,7 @@ import type { LatLng, Poi } from '../data/types';
 import { parkingAccess } from '../domain/parking';
 import { ARROW_EVERY_M, arrowsAlong, boundsOf, pointAlong, routeSummary, stepMarks, type RouteSummary, type StepTurn } from '../presentation/route-view';
 import { fullPath, type Plan } from '../routing/plan';
+import type { ShortcutKind, ShortcutResult } from '../routing/walk';
 import type { Palette } from './images';
 
 /**
@@ -35,12 +36,12 @@ export interface RouteText {
 }
 
 /** Layers of the route, bottom to top (all under the selected place's pin). */
-const LINE_LAYERS = ['route-alt', 'route-casing', 'route-edge', 'route-walk', 'route-flow', 'route-car', 'route-garage-dash'] as const;
+const LINE_LAYERS = ['route-alt', 'route-shortcut-casing', 'route-shortcut', 'route-casing', 'route-edge', 'route-walk', 'route-flow', 'route-car', 'route-garage-dash'] as const;
 const BASE_LAYERS = ['route-casing', 'route-edge', 'route-walk', 'route-flow', 'route-car', 'route-garage-dash'] as const;
 const FOCUS_LAYERS = ['route-focus-casing', 'route-focus'] as const;
 const TOP_LAYERS = [...FOCUS_LAYERS, 'route-arrows', 'route-marks'] as const;
 export const ROUTE_LAYERS = [...LINE_LAYERS, ...TOP_LAYERS];
-const SOURCES = ['route-lines', 'route-alts', 'route-focus', 'route-arrows', 'route-marks'] as const;
+const SOURCES = ['route-lines', 'route-alts', 'route-shortcut', 'route-focus', 'route-arrows', 'route-marks'] as const;
 
 /** The route draws itself from the visitor to the place (UI plan phase 4: about 600 ms). */
 const DRAW_MS = 600;
@@ -56,8 +57,24 @@ const line = (path: readonly LatLng[], properties: Record<string, unknown>): Fea
 });
 const point = (at: LatLng, properties: Record<string, unknown>): Feature<Point> => ({ type: 'Feature', geometry: { type: 'Point', coordinates: lngLat(at) }, properties });
 
+/** Faded secondary shortcut line appearance so it never visually competes with the primary route (D15). */
+export const SHORTCUT_PAINT = {
+  casingOpacity: 0.24,
+  casingWidth: 3.6,
+  lineOpacity: 0.42,
+  lineWidth: 2.0,
+  dasharray: [2, 1.8] as [number, number],
+} as const;
+
+export function shortcutBadgeMeta(kind: ShortcutKind): { glyph: string; label: string; color: string } {
+  if (kind === 'interior') return { glyph: '♂', label: 'للرجال', color: '#2563eb' };
+  if (kind === 'women_rawdah') return { glyph: '♀', label: 'للنساء · باب ٢١', color: '#c026d3' };
+  return { glyph: '⇣', label: 'ممر فرعي', color: '#10b981' };
+}
+
 interface Mark {
-  kind: 'alt' | 'ramp' | 'lot-gate' | 'level-ramp' | 'level-label' | 'entrance' | 'entrance-label' | 'step' | 'start' | 'end';
+  kind: 'alt' | 'ramp' | 'lot-gate' | 'level-ramp' | 'level-label' | 'entrance' | 'entrance-label' | 'step' | 'shortcut-badge' | 'start' | 'end';
+  shortcutKind?: ShortcutKind;
   /** A numbered step: its number (the note is `text`). */
   n?: number;
   /** Drawn under its point rather than over it (a step that ends at the place, whose pin stands over the point). */
@@ -75,6 +92,8 @@ export class RouteLayer {
   private plans: Plan[] = [];
   private chosen = 0;
   private path: LatLng[] = [];
+  private shortcutPath: LatLng[] = [];
+  private shortcutKind: ShortcutKind = 'aisle';
   private others: { i: number; path: LatLng[] }[] = [];
   private marks: Mark[] = [];
   private images: string[] = [];
@@ -130,6 +149,27 @@ export class RouteLayer {
     // The other routes: barely there (a faint trace); a tap near one chooses it (hitAlternative).
     if (this.plans.length > 1)
       add({ id: 'route-alt', type: 'line', source: 'route-alts', layout: round, paint: { 'line-color': c('muted'), 'line-opacity': 0.16, 'line-width': 6 } });
+    // Secondary dynamic shortcut route (`مسار فرعي`) through inter-carpet aisles / permitted corridors:
+    // deliberately faded and thin so the primary exterior route remains dominant (`D15`).
+    add({
+      id: 'route-shortcut-casing',
+      type: 'line',
+      source: 'route-shortcut',
+      layout: round,
+      paint: { 'line-color': '#ffffff', 'line-opacity': SHORTCUT_PAINT.casingOpacity, 'line-width': SHORTCUT_PAINT.casingWidth },
+    });
+    add({
+      id: 'route-shortcut',
+      type: 'line',
+      source: 'route-shortcut',
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: {
+        'line-color': ['match', ['get', 'kind'], 'interior', '#2563eb', 'women_rawdah', '#c026d3', '#10b981'],
+        'line-opacity': SHORTCUT_PAINT.lineOpacity,
+        'line-width': SHORTCUT_PAINT.lineWidth,
+        'line-dasharray': [...SHORTCUT_PAINT.dasharray],
+      },
+    });
     add({
       id: 'route-casing',
       type: 'line',
@@ -234,6 +274,38 @@ export class RouteLayer {
     return this.path;
   }
 
+  /** The optional dynamic secondary shortcut route (`مسار فرعي`), start to end. */
+  get shortcut(): LatLng[] {
+    return this.shortcutPath;
+  }
+
+  /** Update the optional secondary shortcut route (`مسار فرعي`) in place as the visitor moves. */
+  setShortcut(input: ShortcutResult | LatLng[] | null): void {
+    if (Array.isArray(input)) {
+      this.shortcutPath = input.length > 1 ? input : [];
+      this.shortcutKind = 'aisle';
+    } else if (input && input.path.length > 1) {
+      this.shortcutPath = input.path;
+      this.shortcutKind = input.kind;
+    } else {
+      this.shortcutPath = [];
+      this.shortcutKind = 'aisle';
+    }
+    this.set('route-shortcut', this.shortcutPath.length > 1 ? [line(this.shortcutPath, { part: 'shortcut', kind: this.shortcutKind })] : []);
+    if (!this.plans.length) return;
+    this.marks = this.marks.filter((m) => m.kind !== 'shortcut-badge');
+    if (this.shortcutPath.length > 1) {
+      this.marks.push({
+        kind: 'shortcut-badge',
+        shortcutKind: this.shortcutKind,
+        at: pointAlong(this.shortcutPath, 0.5),
+        z: 960,
+        img: this.shortcutBadgeImage(this.shortcutKind),
+      });
+    }
+    this.writeMarks();
+  }
+
   /** The alternative routes on the map, in plan order without the chosen one (as the live app). */
   get alternatives(): LatLng[][] {
     return this.others.map((o) => o.path);
@@ -309,10 +381,29 @@ export class RouteLayer {
       }
     }
     for (const o of this.others) marks.push({ kind: 'alt', at: pointAlong(o.path, 0.5), text: this.text.minutes(this.plans[o.i].minutes), alt: o.i, path: o.path, z: 950 });
+    if (this.shortcutPath.length > 1) {
+      marks.push({
+        kind: 'shortcut-badge',
+        shortcutKind: this.shortcutKind,
+        at: pointAlong(this.shortcutPath, 0.5),
+        z: 960,
+        img: this.shortcutBadgeImage(this.shortcutKind),
+      });
+    }
     marks.push({ kind: 'start', at: this.path[0], z: 0 }, { kind: 'end', at: this.path[this.path.length - 1], z: 0 });
-    for (const mk of marks) mk.img ??= mk.kind === 'start' || mk.kind === 'end' ? this.endImage(mk.kind) : mk.kind === 'step' ? this.stepImage(mk) : this.chip(mk);
+    for (const mk of marks) {
+      mk.img ??=
+        mk.kind === 'start' || mk.kind === 'end'
+          ? this.endImage(mk.kind)
+          : mk.kind === 'step'
+            ? this.stepImage(mk)
+            : mk.kind === 'shortcut-badge'
+              ? this.shortcutBadgeImage(mk.shortcutKind ?? 'aisle')
+              : this.chip(mk);
+    }
     this.marks = marks;
     this.set('route-lines', lines);
+    this.set('route-shortcut', this.shortcutPath.length > 1 ? [line(this.shortcutPath, { part: 'shortcut', kind: this.shortcutKind })] : []);
     this.set(
       'route-alts',
       this.others.map((o) => line(o.path, { i: o.i })),
@@ -385,6 +476,8 @@ export class RouteLayer {
     this.dropImages();
     this.plans = [];
     this.path = [];
+    this.shortcutPath = [];
+    this.shortcutKind = 'aisle';
     this.others = [];
     this.marks = [];
   }
@@ -622,6 +715,41 @@ export class RouteLayer {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('➜', r + 3, r + 4);
+    return this.add(id, cv);
+  }
+
+  /** Faded secondary shortcut pill showing men/women/aisle access icon (`D15`). */
+  private shortcutBadgeImage(kind: ShortcutKind): string {
+    const id = `rt:shortcut-badge:${kind}@${this.version}`;
+    if (this.images.includes(id) && this.map.hasImage(id)) return id;
+    const meta = shortcutBadgeMeta(kind);
+    const label = `${meta.glyph} ${meta.label}`;
+    const font = '600 11px "IBM Plex Sans Arabic", system-ui, sans-serif';
+    const probe = this.canvas(1, 1).ctx;
+    probe.font = font;
+    const tw = Math.ceil(probe.measureText(label).width);
+    const pad = 4;
+    const h = 21;
+    const w = Math.max(58, tw + 16) + 2 * pad;
+    const { cv, ctx } = this.canvas(w, h + 2 * pad);
+    ctx.globalAlpha = 0.85;
+    ctx.shadowColor = 'rgba(0,0,0,0.18)';
+    ctx.shadowBlur = 2.5;
+    ctx.shadowOffsetY = 1;
+    ctx.beginPath();
+    ctx.roundRect(pad + 0.5, pad + 0.5, w - 2 * pad - 1, h - 1, h / 2);
+    ctx.fillStyle = mix(meta.color, 0.14);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.lineWidth = 1.25;
+    ctx.strokeStyle = meta.color;
+    ctx.stroke();
+    ctx.font = font;
+    ctx.fillStyle = meta.color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.direction = 'rtl';
+    ctx.fillText(label, w / 2, pad + h / 2 + 0.5, w - 2 * pad - 8);
     return this.add(id, cv);
   }
 

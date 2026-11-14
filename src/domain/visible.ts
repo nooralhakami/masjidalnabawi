@@ -1,4 +1,4 @@
-import { POIS } from '../data';
+import { INTERIOR_POIS, POIS } from '../data';
 import type { Poi } from '../data/types';
 import type { Facilities } from './facilities';
 import { passesFilter, type FilterId, type ParkingSub, type ToiletSub } from './filters';
@@ -18,7 +18,9 @@ export function visiblePois(filter: FilterId, toiletSub: ToiletSub, query: strin
   const state = { filter, toiletSub, parkingSub, searching: q.length > 0 };
   if (!q) return pois.filter((p) => passesFilter(p, state, fac));
   const any = { filter: 'all' as FilterId, toiletSub: 'all' as ToiletSub, parkingSub: 'all' as ParkingSub, searching: true };
-  return pois
+  // Interior prayer areas (98) and Mosque landmarks (14) are searchable, never shown as default exterior 2D pins.
+  const pool = pois === POIS ? [...pois, ...INTERIOR_POIS] : pois;
+  return pool
     .filter((p) => passesFilter(p, any, fac))
     .map((p, i) => ({ p, i, r: matchRank(p, q) }))
     .filter((x) => x.r > 0)

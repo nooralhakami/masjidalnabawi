@@ -1,10 +1,12 @@
 import type { CustomLayerInterface, CustomRenderMethodInput, Map as MLMap } from 'maplibre-gl';
-import { ALHARAMAIN_MODELS } from '../data-next/alharamain-3d';
 import { frameMatrix, mulMat4 } from './glb-layer';
 import { cameraEye } from './plaza-layer';
-import { RUG_D, RUG_W, rugLayout } from './rug-layout';
+import { RUG_D, RUG_TURN_DEG, RUG_W, rugLayout } from './rug-layout';
 import type { SceneLight } from './scene-light';
 import { createShadowTexture, SHADOW_GLSL, sunShadow } from './sun-shadow';
+
+/** Primary olive-green field colour of the Mosque's prayer carpets (owner-selected #465319). */
+export const RUG_GREEN_HEX = '#465319';
 
 const VERT_SRC = `#version 300 es
 precision highp float;
@@ -68,7 +70,7 @@ export function drawRug(ctx: CanvasRenderingContext2D, W: number, H: number): vo
     return seed / 4294967296;
   };
   const NAVY = '#1c2a4f';
-  const GREEN = '#6a7a2c';
+  const GREEN = RUG_GREEN_HEX;
   const CREAM = '#efe4c4';
   const GOLD = '#c9a85a';
   const SKY = '#8fb2c9';
@@ -255,7 +257,7 @@ export class RugLayer implements CustomLayerInterface {
       drawRug(ctx, canvas.width, canvas.height);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
     } else {
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([106, 122, 44, 255]));
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([70, 83, 25, 255]));
     }
     gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
@@ -321,7 +323,7 @@ export class RugLayer implements CustomLayerInterface {
     gl.enable(gl.BLEND);
     gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     gl.uniformMatrix4fv(this.u.u_mvp, false, new Float32Array(mvp));
-    gl.uniform1f(this.u.u_turn, (ALHARAMAIN_MODELS[1].rotation * Math.PI) / 180);
+    gl.uniform1f(this.u.u_turn, (RUG_TURN_DEG * Math.PI) / 180);
     gl.uniform2f(this.u.u_size, RUG_W, RUG_D);
     gl.uniform1f(this.u.u_night, this.light.night);
     const eye = this.map ? cameraEye(this.map) : ([0, 1000, 0] as const);

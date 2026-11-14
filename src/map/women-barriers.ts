@@ -1,7 +1,7 @@
 import type { FeatureCollection, Polygon } from 'geojson';
 import { WOMEN_AREAS } from '../data-next/women-areas';
 import { lngLatFromMetres, metresFromOrigin } from './glb-layer';
-import { GREETING_BARRIERS, QUEUE_RAILS } from './rawdah-layout';
+import { GREETING_BARRIERS, QUEUE_RAILS, WOMEN_RAWDAH_CORRIDOR_BARRIERS } from './rawdah-layout';
 
 /** A barrier panel: 2 m long, 0.15 m thick, 1.1 m high, with a hand's gap to the next (owner, 2026-11-07). */
 export const PANEL = { length: 2, thick: 0.15, height: 1.1, gap: 0.08 };
@@ -27,6 +27,14 @@ export function queueRails(): FeatureCollection<Polygon, { height: number }> {
 export const GREEN_PANEL = { length: 2, thick: 0.15, height: 1.0, gap: 0.08 };
 export function greetingBarriers(): FeatureCollection<Polygon, { height: number }> {
   return panels(GREETING_BARRIERS, GREEN_PANEL);
+}
+
+/**
+ * حواجز العزل الشرقية والغربية التي تغلق الممر المغلق للنساء من باب 21 حتى خلف الروضة الشريفة
+ * بحيث لا يدخل هذا النطاق إلا النساء أثناء فترة دخولهن من باب 21.
+ */
+export function womenRawdahCorridorBarriers(): FeatureCollection<Polygon, { height: number }> {
+  return panels(WOMEN_RAWDAH_CORRIDOR_BARRIERS, PANEL);
 }
 
 /** Panels along runs given in the models' metres: whole panels, centred on each run. */

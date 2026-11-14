@@ -40,8 +40,8 @@ describe('the outer fence of the courtyards (owner, 2026-11-08)', () => {
     for (let i = 1; i < fence.runs.length; i++) expect(fence.runs[i].kind).not.toBe(fence.runs[i - 1].kind);
   });
 
-  it('the seventy outer gates of the map, each on an opening of the fence', () => {
-    const outer = POIS.filter((p) => p.subCategory === 'gate_outer').map((p) => p.id);
+  it('the seventy outer gates of the main plaza fence, each on an opening of the fence', () => {
+    const outer = POIS.filter((p) => p.subCategory === 'gate_outer' && p.id <= 370).map((p) => p.id);
     expect(fence.gates.map((g) => g.id).sort()).toEqual(outer.sort());
     for (const g of fence.gates) {
       expect(fence.runs[g.opening].kind, `gate ${g.id}`).toBe('gate');

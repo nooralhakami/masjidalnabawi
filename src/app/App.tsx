@@ -1,6 +1,6 @@
 import { useComputed, useSignal } from '@preact/signals';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { POI_BY_ID, RULES } from '../data';
+import { ALL_POI_BY_ID, POI_BY_ID, RULES } from '../data';
 import type { Poi } from '../data/types';
 import type { Facilities } from '../domain/facilities';
 import { FILTERS, type FilterId, type ParkingSub, type ToiletSub } from '../domain/filters';
@@ -16,6 +16,9 @@ import {
   filter,
   garageQ,
   headingUp,
+  insideMosque,
+  interiorSuggestionDismissed,
+  interiorView,
   level,
   markersHidden,
   nav,
@@ -177,6 +180,8 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
   const select = (p: Poi, fly: boolean) => {
     // A new destination ends the current walk entirely (GPS watch, wake lock, the bar).
     if (selected.value !== p.id) trip.end();
+    // Choosing an interior prayer hall or landmark opens the manual interior cutaway automatically.
+    if (p.interiorOnly && !interiorView.value) interiorView.value = true;
     // Tapped on the map: the card grows out of the marker. From a list or a link: from the middle.
     if (!fly) {
       const q = engine.map.project([p.lng, p.lat]);
@@ -244,7 +249,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
 
   useEffect(() => {
     const onPick = (id: number | null) => {
-      const p = id !== null ? POI_BY_ID.get(id) : undefined;
+      const p = id !== null ? ALL_POI_BY_ID.get(id) : undefined;
       // On a route, a tap on a gate or a restroom block says its name for two seconds and does not open its card (owner, 2026-10-25).
       if (p && trip.active && isTapName(p)) trip.nameTapped(p.id);
       else if (p) {
@@ -306,7 +311,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
     }
   };
 
-  const place = selected.value !== null ? POI_BY_ID.get(selected.value) : undefined;
+  const place = selected.value !== null ? ALL_POI_BY_ID.get(selected.value) : undefined;
   // Anything else on screen ends the hints: they are about the bare map.
   const hintsOn =
     hints &&
@@ -508,6 +513,30 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
         />
       ) : null}
       {hintsOn ? <FirstHints target={hintTarget} onDone={() => setHints(false)} /> : null}
+      {insideMosque.value && !interiorView.value && !interiorSuggestionDismissed.value ? (
+        <div class="interior-suggest" role="status">
+          <span>{t('interior_suggest_title')}</span>
+          <button
+            type="button"
+            class="interior-suggest-go"
+            onClick={() => {
+              interiorView.value = true;
+            }}
+          >
+            {t('interior_suggest_action')}
+          </button>
+          <button
+            type="button"
+            class="interior-suggest-no"
+            aria-label={t('interior_suggest_dismiss')}
+            onClick={() => {
+              interiorSuggestionDismissed.value = true;
+            }}
+          >
+            {t('interior_suggest_dismiss')}
+          </button>
+        </div>
+      ) : null}
       {/* Notices rise above the navigation bar too, never on it. */}
       <div class="toast-host" style={{ '--sheet-h': `${(place ? sheetH.value : 0) + (nav.value || garageQ.value || whereQ.value || whoQ ? navH + 12 : 0)}px` }}>
         {toast.value ? (

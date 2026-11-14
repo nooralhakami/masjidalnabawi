@@ -1,4 +1,5 @@
 import garageJson from '../../data/garage.json';
+import { assertRoutingSourcesVerified } from '../data/provenance';
 import type { LatLng, Poi } from '../data/types';
 import { lotLevels, parkingEntrances } from '../domain/parking';
 import { fromM, toM, type XY } from './walk';
@@ -144,6 +145,7 @@ interface Graph {
  * lot is entered and left. The ramps join the two levels.
  */
 function buildGraph(data: GarageData): Graph {
+  assertRoutingSourcesVerified(['garage', 'pois']);
   const roads = data.lanes.filter((l) => !l.from_level);
   const ramps = data.lanes.filter((l) => l.from_level && l.to_level);
   const nodes: Graph['nodes'] = [];

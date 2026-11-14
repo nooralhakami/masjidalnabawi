@@ -1,8 +1,9 @@
-import type { Poi } from '../../data/types';
+import { outerGateNumber, type Poi } from '../../data/types';
 import { elevatorBadge, isClosed, pairOf, type Facilities } from '../../domain/facilities';
 import { nearestOuterGate } from '../../domain/nearby';
-import { lotLevels } from '../../domain/parking';
+import { lotLevels, parkingSectionsForLot } from '../../domain/parking';
 import { rawdahState } from '../../domain/rawdah';
+import { isApprovedHotel } from '../../domain/urban-approval';
 import { num } from '../../i18n';
 import { lookOf } from '../../presentation/markers';
 import { kindLabel } from '../../presentation/search-view';
@@ -67,6 +68,7 @@ export function PlaceCard({ p, fac, travel, level, accessible = false, onTravel,
   const alt = closed ? fac.nearestOpen(p) : null;
   const gate = nearestOuterGate(p);
   const by = status === 'works' ? fac.worksBy(p.id) : undefined;
+  const parkingSections = p.category === 'parking' ? parkingSectionsForLot(p.id) : [];
   return (
     <article class="place-card" aria-label={nm(p)} style={{ '--c': placeColor(p, closed) }}>
       <header class="pc-head" data-sheet-drag>
@@ -106,7 +108,23 @@ export function PlaceCard({ p, fac, travel, level, accessible = false, onTravel,
             {t('a_works')}
           </Chip>
         ) : null}
-        <Chip>{t('num_label', { id: p.id })}</Chip>
+        <Chip>{t('num_label', { id: outerGateNumber(p.id) })}</Chip>
+        {isApprovedHotel(p.id) ? (
+          <>
+            <Chip tone="ok" icon="check">
+              {t('verified_badge')}
+            </Chip>
+            <Chip>{t('west_facade_door')}</Chip>
+            <Chip tone="info">{t('floors_pending')}</Chip>
+          </>
+        ) : null}
+        {p.interiorOnly ? (
+          <>
+            <Chip tone="info">{t(p.floor === 'ROF' ? 'floor_rof' : 'floor_gf')}</Chip>
+            <Chip>{t('interior_only')}</Chip>
+          </>
+        ) : null}
+        {parkingSections.length > 0 ? <Chip>{t('park_sections', { codes: parkingSections.map((s) => s.code).join(' · ') })}</Chip> : null}
         {p.category === 'parking' ? (
           p.access === 'subscribers' ? (
             <Chip tone="sub" icon="lock">
@@ -168,7 +186,7 @@ export function PlaceCard({ p, fac, travel, level, accessible = false, onTravel,
             <Icon name="gate" size={16} />
             {t('near_gate')}
           </dt>
-          <dd>{gate ? `${t('gate_n', { id: gate.poi.id })} · ${t('meters', { m: num(gate.meters) })}` : '—'}</dd>
+          <dd>{gate ? `${t('gate_n', { id: outerGateNumber(gate.poi.id) })} · ${t('meters', { m: num(gate.meters) })}` : '—'}</dd>
         </div>
         <div class="pc-fact">
           <dt>

@@ -1,6 +1,6 @@
 // Imported directly (not via ../data) so pages that only need text don't bundle the POI list.
 import i18nJson from '../../data/i18n.json';
-import type { Direction, I18n, LangCode, LangPack, Poi } from '../data/types';
+import { outerGateNumber, type Direction, type I18n, type LangCode, type LangPack, type Poi } from '../data/types';
 
 /**
  * Menu order (owner, 2026-10-10): Arabic, English, then by how widely known and spoken a language
@@ -93,11 +93,12 @@ function pkey(p: Poi): string {
   return p.subCategory;
 }
 
-/** Number shown in a templated name: wheelchair 401→1, accessible 409→1, parking 901→1. */
+/** Number shown in a templated name: wheelchair 401→1, accessible 409→1, parking 901→1, west outer gates 1401–1420→401–420. */
 export function displayNumber(p: Poi): number {
   if (p.category === 'parking') return p.id - 900;
   if (p.subCategory === 'wheelchair_zone') return p.id - 400;
   if (p.subCategory === 'toilet_accessible') return p.id - 408;
+  if (p.subCategory === 'gate_outer') return outerGateNumber(p.id);
   return p.id;
 }
 
@@ -107,6 +108,10 @@ export function nm(p: Poi, l: LangCode = current): string {
   const L = PACKS[l];
   if (p.subCategory === 'gate_inner' && L.gi?.[p.id]) return L.gi[p.id];
   if (L.names?.[p.name_ar]) return L.names[p.name_ar];
+  if (p.interiorOnly && p.kind === 'prayer' && p.code) {
+    const key = p.floor === 'ROF' ? 'interior_prayer_rof' : p.gender === 'women' ? 'interior_prayer_gf_women' : 'interior_prayer_gf_men';
+    return t(key, { code: p.code }, l);
+  }
   const tpl = L.nt?.[pkey(p)];
   return tpl ? tpl.replace('{id}', String(displayNumber(p))) : stripEmoji(p.name_ar);
 }
@@ -125,6 +130,10 @@ export function ds(p: Poi, l: LangCode = current): string {
   if (l === 'ar') return stripEmoji(p.description_ar);
   const L = PACKS[l];
   const dt = L.dt ?? {};
+  if (p.interiorOnly && !L.descs?.[p.name_ar]) {
+    const fl = t(p.floor === 'ROF' ? 'floor_rof' : 'floor_gf', undefined, l);
+    return `${fl} · ${t('interior_only', undefined, l)}`;
+  }
   if (p.category === 'parking') {
     const b = parkingBetween(p);
     // A lot on one level only (12 and 13, on B; owner 2026-10-25) is not described as on two.

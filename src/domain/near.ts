@@ -1,5 +1,5 @@
 import { POIS } from '../data';
-import type { LatLng, Poi, SubCategory } from '../data/types';
+import { outerGateNumber, type LatLng, type Poi, type SubCategory } from '../data/types';
 import { haversine, ll } from './geo';
 
 /**
@@ -58,5 +58,9 @@ export function pickTwo<T extends { poi: Poi; meters: number }>(ranked: readonly
 
 /** The places a visitor can name as «I am here» by the number in front of them: outer gates, mosque doors, restroom blocks. */
 export function placeByNumber(n: number, pois: readonly Poi[] = POIS): Poi | undefined {
-  return pois.find((p) => p.id === n && (p.subCategory === 'gate_outer' || p.subCategory === 'gate_inner' || p.category === 'toilets'));
+  return pois.find(
+    (p) =>
+      (p.id === n || (p.subCategory === 'gate_outer' && outerGateNumber(p.id) === n)) &&
+      (p.subCategory === 'gate_outer' || p.subCategory === 'gate_inner' || p.category === 'toilets'),
+  );
 }

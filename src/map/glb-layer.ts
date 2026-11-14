@@ -1,10 +1,12 @@
 import { MercatorCoordinate, type CustomLayerInterface, type CustomRenderMethodInput, type Map as MLMap } from 'maplibre-gl';
 import { ALHARAMAIN_MODELS, type AlharamainModel } from '../data-next/alharamain-3d';
+import { fromModelMetres, MODEL_ORIGIN_LNGLAT, toModelMetres } from '../domain/frames';
+import { toggleNearestMosqueDoor } from '../domain/mosque-doors';
 import { gateLattice, materialColor, materialGlow, minaretCrown, portalKind, type SceneLight } from './scene-light';
 import { createShadowTexture, SHADOW_GLSL, SHADOW_SIZE, sunMatrix, sunShadow } from './sun-shadow';
 
 /** glTF metres are measured from the Mosque's anchor (Venue 4 in `DataAPI_svc_GetVenues.json`). */
-const ORIGIN = ALHARAMAIN_MODELS[0].anchors[0] as [number, number];
+const ORIGIN = MODEL_ORIGIN_LNGLAT as [number, number];
 
 const GLB_MAGIC = 0x46546c67;
 const CHUNK_JSON = 0x4e4f534a;
@@ -94,11 +96,23 @@ interface GpuPrimitive {
   lattice: boolean;
   /** Alpha under this is cut out (glTF `MASK`); 0 draws every pixel. */
   cutoff: number;
+  /** Interior cutaway visibility role: `keep` (minarets/domes), `wall`, or `roof`. */
+  interiorRole: 'keep' | 'wall' | 'roof';
   /**
    * When it is drawn: always, only while the canopies are open (day) or folded (night), or `anim`:
    * the canopies a visitor opened or closed with a tap, folded in the vertex shader.
    */
   when: 'always' | 'day' | 'night' | 'anim';
+}
+
+const INTERIOR_KEEP_MATERIALS = new Set(['MINTEX', 'MINTEX.001', 'MIN2TEX2', 'GREENDOME', 'GREENDOME2', 'SilverDome']);
+const INTERIOR_ROOF_MATERIALS = new Set(['roof', 'tile', 'domeblue', 'Domes', 'tent', 'uMB', 'silver', 'windowDome', 'dark']);
+
+function classifyInteriorRole(url: string, materialName?: string): 'keep' | 'wall' | 'roof' {
+  if (!url.includes('haram-3d')) return 'keep';
+  if (materialName && INTERIOR_KEEP_MATERIALS.has(materialName)) return 'keep';
+  if (materialName && INTERIOR_ROOF_MATERIALS.has(materialName)) return 'roof';
+  return 'wall';
 }
 
 /** A parsed file waiting for the next frame: WebGL state is only ours while MapLibre renders this layer. */
@@ -466,19 +480,13 @@ export function parseGlbBuffer(buffer: ArrayBuffer): { gltf: GltfJson; bin: Uint
 }
 
 /** Metres east and south of the Mosque's anchor, the frame every glTF node is drawn in. */
-export function metresFromOrigin([lng, lat]: readonly [number, number]): [number, number] {
-  const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
-  const here = MercatorCoordinate.fromLngLat([lng, lat], 0);
-  const perMetre = origin.meterInMercatorCoordinateUnits();
-  return [(here.x - origin.x) / perMetre, (here.y - origin.y) / perMetre];
+export function metresFromOrigin(lngLat: readonly [number, number]): [number, number] {
+  return toModelMetres(lngLat);
 }
 
 /** `metresFromOrigin` the other way: `[east, south]` metres from the Mosque's anchor to `[lng, lat]`. */
-export function lngLatFromMetres([east, south]: readonly [number, number]): [number, number] {
-  const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
-  const perMetre = origin.meterInMercatorCoordinateUnits();
-  const ll = new MercatorCoordinate(origin.x + east * perMetre, origin.y + south * perMetre, 0).toLngLat();
-  return [ll.lng, ll.lat];
+export function lngLatFromMetres(eastSouth: readonly [number, number]): [number, number] {
+  return fromModelMetres(eastSouth);
 }
 
 /** Map the models' metres (X=East, Y=Up, Z=South) about the Mosque's anchor to Web Mercator (X=East, Y=South, Z=Up). */
@@ -689,6 +697,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
   private animFolds: WebGLBuffer | null = null;
   private animCount = 0;
   private folded = false;
+  private interior = false;
   /** The last frame's projection (metres to clip space), to find the canopy under a tap. */
   private lastMvp: Float64Array | null = null;
 
@@ -1016,11 +1025,26 @@ export class HaramGlbLayer implements CustomLayerInterface {
           ...portalOf(gltf, bin, prim, portalKind(model.url, gltf.meshes[meshIndex].name, material?.name)),
           lattice: gateLattice(model.url, material?.name),
           cutoff: material?.alphaMode === 'MASK' ? (material.alphaCutoff ?? 0.5) : 0,
+          interiorRole: classifyInteriorRole(model.url, material?.name),
           instances: matrices.length / 16,
           when,
         });
       }
     }
+  }
+
+  /** Enable or disable translucent interior cutaway mode on the Mosque building while keeping minarets and domes opaque. */
+  setInterior(on: boolean): void {
+    this.interior = on;
+    this.map?.triggerRepaint();
+  }
+
+  /** Toggle the nearest Mosque doorway bay under screen `[x, y]` CSS pixels. */
+  toggleDoorAt(x: number, y: number): ReturnType<typeof toggleNearestMosqueDoor> | null {
+    if (!this.map) return null;
+    const ll = this.map.unproject([x, y]);
+    const [mx, mz] = toModelMetres([ll.lng, ll.lat]);
+    return toggleNearestMosqueDoor(mx, mz, 14);
   }
 
   /**
@@ -1255,34 +1279,42 @@ export class HaramGlbLayer implements CustomLayerInterface {
     let boundTex: WebGLTexture | null = null;
     // Folded from about sunset (the light is then half way to night) until morning.
     const folded = light.night >= 0.5;
-    for (const prim of this.prims) {
-      if ((prim.when === 'day' && folded) || (prim.when === 'night' && !folded)) continue;
-      const instances = prim.when === 'anim' ? this.animCount : prim.instances;
-      if (!instances) continue;
-      gl.uniform4fv(this.uCanopy, prim.when === 'anim' ? this.canopyAxis : [0, 0, 0, 0]);
-      gl.uniform4fv(this.uBaseColor, prim.baseColor);
-      gl.uniform3fv(this.uGlow, prim.glow);
-      gl.uniform1f(this.uGlowTint, prim.glowTint);
-      gl.uniform1f(this.uGlowRise, prim.glowRise);
-      gl.uniform2fv(this.uCrown, prim.crown);
-      gl.uniform1i(this.uPortal, prim.portal);
-      gl.uniform4fv(this.uPortalRect, prim.portalRect);
-      gl.uniform2fv(this.uPortalSize, prim.portalSize);
-      gl.uniform1f(this.uLattice, prim.lattice ? 1 : 0);
-      gl.uniform1f(this.uCutoff, prim.cutoff);
+    const passes: readonly ('all' | 'keep' | 'fade')[] = this.interior ? ['keep', 'fade'] : ['all'];
+    for (const pass of passes) {
+      gl.depthMask(pass !== 'fade');
+      for (const prim of this.prims) {
+        if ((prim.when === 'day' && folded) || (prim.when === 'night' && !folded)) continue;
+        if (pass === 'keep' && prim.interiorRole !== 'keep') continue;
+        if (pass === 'fade' && prim.interiorRole === 'keep') continue;
+        const instances = prim.when === 'anim' ? this.animCount : prim.instances;
+        if (!instances) continue;
+        const alphaScale = !this.interior ? 1 : prim.interiorRole === 'roof' ? 0.14 : prim.interiorRole === 'wall' ? 0.24 : 1;
+        gl.uniform4fv(this.uCanopy, prim.when === 'anim' ? this.canopyAxis : [0, 0, 0, 0]);
+        gl.uniform4fv(this.uBaseColor, [prim.baseColor[0], prim.baseColor[1], prim.baseColor[2], prim.baseColor[3] * alphaScale]);
+        gl.uniform3fv(this.uGlow, prim.glow);
+        gl.uniform1f(this.uGlowTint, prim.glowTint);
+        gl.uniform1f(this.uGlowRise, prim.glowRise);
+        gl.uniform2fv(this.uCrown, prim.crown);
+        gl.uniform1i(this.uPortal, prim.portal);
+        gl.uniform4fv(this.uPortalRect, prim.portalRect);
+        gl.uniform2fv(this.uPortalSize, prim.portalSize);
+        gl.uniform1f(this.uLattice, prim.lattice ? 1 : 0);
+        gl.uniform1f(this.uCutoff, prim.cutoff);
 
-      const texture = prim.hasUv && prim.textureIndex >= 0 ? this.textures[prim.textureIndex] : undefined;
-      gl.uniform1i(this.uHasTex, texture ? 1 : 0);
-      const target = texture ?? this.fallbackTex;
-      if (target && target !== boundTex) {
-        gl.bindTexture(gl.TEXTURE_2D, target);
-        boundTex = target;
+        const texture = prim.hasUv && prim.textureIndex >= 0 ? this.textures[prim.textureIndex] : undefined;
+        gl.uniform1i(this.uHasTex, texture ? 1 : 0);
+        const target = texture ?? this.fallbackTex;
+        if (target && target !== boundTex) {
+          gl.bindTexture(gl.TEXTURE_2D, target);
+          boundTex = target;
+        }
+
+        gl.bindVertexArray(prim.vao);
+        if (prim.hasIndices) gl.drawElementsInstanced(prim.mode, prim.count, prim.indexType, 0, instances);
+        else gl.drawArraysInstanced(prim.mode, 0, prim.count, instances);
       }
-
-      gl.bindVertexArray(prim.vao);
-      if (prim.hasIndices) gl.drawElementsInstanced(prim.mode, prim.count, prim.indexType, 0, instances);
-      else gl.drawArraysInstanced(prim.mode, 0, prim.count, instances);
     }
+    gl.depthMask(true);
     gl.bindVertexArray(null);
   }
 }

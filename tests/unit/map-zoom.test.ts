@@ -21,8 +21,8 @@ describe('zoom scale', () => {
 
 describe('opening view: fitBounds over the outer gates, 16 px padding, whole zooms', () => {
   const b = haramBounds(POIS);
-  it('the bounds are the 70 outer gates, with the owner’s position nudges (overrides.json) applied', () => {
-    expect(POIS.filter((p) => p.subCategory === 'gate_outer')).toHaveLength(70);
+  it('the bounds are the 70 main-plaza outer gates, with the owner’s position nudges (overrides.json) applied', () => {
+    expect(POIS.filter((p) => p.subCategory === 'gate_outer' && p.id <= 370)).toHaveLength(70);
     // Each gate on its opening in the courtyards' fence (owner, 2026-11-08).
     expect(b.south).toBeCloseTo(24.4660554, 7);
     expect(b.north).toBeCloseTo(24.4710365, 7);

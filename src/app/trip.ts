@@ -1,4 +1,4 @@
-import { POI_BY_ID } from '../data';
+import { ALL_POI_BY_ID } from '../data';
 import type { LatLng, Poi } from '../data/types';
 import { nearestByAir, nearPool, pickTwo, WEAK_FIX_M, type NearKind, type NearWho } from '../domain/near';
 import { HintPicker } from '../domain/route-hint';
@@ -9,9 +9,20 @@ import type { MapEngine } from '../map/engine';
 import { mapZoom } from '../map/zoom';
 import { NavigationTracker, type NavigationHost } from '../navigation/tracker';
 import { lotsToAsk, planExit, planFromLot, planRoutes, type GarageStart, type Plan } from '../routing/plan';
+import { rawdahState } from '../domain/rawdah';
 import { spotOf } from '../routing/spot';
+import { isBehindRawdahPoi, isWomenPoi, walkShortcutPath } from '../routing/walk';
+import { toModelMetres } from '../domain/frames';
+import { MOSQUE_MAIN, MOSQUE_SOUTH } from '../domain/prayer-layout';
 import { bearing } from '../presentation/route-view';
-import { accessibleRoute, garageQ, headingUp, level, nav, notify, route, selected, setHeadingUp, sheet, travel, whereQ, type WhereAnswer } from '../state/store';
+import { accessibleRoute, garageQ, headingUp, insideMosque, level, nav, notify, route, selected, setHeadingUp, sheet, travel, whereQ, type WhereAnswer } from '../state/store';
+
+/** Check whether a WGS84 point `[lat, lng]` lies inside the main or old southern Mosque footprint. */
+export function isLatLngInsideMosque(lat: number, lng: number): boolean {
+  const [x, z] = toModelMetres([lng, lat]);
+  const inBox = (b: readonly [number, number, number, number]) => Math.abs(x - b[0]) <= b[2] && Math.abs(z - b[1]) <= b[3];
+  return inBox(MOSQUE_MAIN) || inBox(MOSQUE_SOUTH);
+}
 
 /** Within this distance of the car park leg, the visitor is in the car park: no re-planning from the streets. */
 const IN_CAR_PARK_M = 60;
@@ -67,6 +78,8 @@ export class Trip {
     this.geo.onFix((f) => {
       // During navigation the tracker draws the dot (snapped to the route when close).
       if (!this.tracker.active) me.update(f.lat, f.lng, f.accuracy, f.heading);
+      // Only surface an optional banner when inside the Mosque; never auto-enable interiorView.
+      insideMosque.value = isLatLngInsideMosque(f.lat, f.lng);
     });
     this.geo.onStatus((s, extra) => {
       if (s === 'locating') notify(t('locating'), 'info', 2500);
@@ -120,13 +133,18 @@ export class Trip {
     this.tracker.onChange((s) => {
       // Arrived: a gold ring at the place, as on choosing it (UI plan phase 4), once per arrival.
       if (s.state === 'arrived' && nav.value?.state !== 'arrived') {
-        const dest = selected.value !== null ? POI_BY_ID.get(selected.value) : undefined;
+        const dest = selected.value !== null ? ALL_POI_BY_ID.get(selected.value) : undefined;
         if (dest) engine.pulse.play(dest.lng, dest.lat);
       }
       nav.value = s.state === 'stopped' ? null : { ...s };
       // The place the visitor goes by is named, faintly, over itself (owner, 2026-10-25).
       engine.hints.setNear(s.state === 'stopped' ? null : this.hint.pick(s.position, s.accuracy, this.plans[this.chosen]?.mode ?? 'walk', Date.now()));
       engine.route.focus(s.state === 'stopped' ? null : this.tracker.ahead(AHEAD_M), this.plans[this.chosen]?.mode ?? 'walk');
+      if (s.state === 'arrived' || this.plans.length === 0) {
+        engine.route.setShortcut(null);
+      } else if (s.state !== 'stopped' && s.position) {
+        this.updateShortcut(s.position);
+      }
     });
     // The visitor moved the map themself: stop following them (the bar's button brings it back).
     engine.map.on('dragstart', (e) => e.originalEvent && this.tracker.userMovedMap());
@@ -294,10 +312,30 @@ export class Trip {
   }
 
   /** Draw the offered routes with `plans[i]` as the one to follow, and keep the card and navigation in step. */
+  private updateShortcut(from: [number, number] | null): void {
+    const dest = selected.value !== null ? ALL_POI_BY_ID.get(selected.value) : undefined;
+    const active = this.plans[this.chosen];
+    if (!from || !dest || !active || active.mode === 'drive') {
+      this.engine.route.setShortcut(null);
+      return;
+    }
+    const womenTrip = isWomenPoi(dest);
+    const behindRawdah = isBehindRawdahPoi(dest);
+    const allowWomenRawdahCorridor = behindRawdah && rawdahState(new Date()).turn === 'women';
+    const shortcut = walkShortcutPath(from, [dest.lat, dest.lng], {
+      isWomen: womenTrip,
+      allowWomenRawdahCorridor,
+    });
+    this.engine.route.setShortcut(shortcut);
+  }
+
   private showPlans(next: Plan[], i: number, animate: boolean) {
     this.plans = next;
     this.chosen = i;
     const info = this.engine.route.show(next, i, { animate, onPick: (j) => this.pick(j) });
+    const leg = next[i]?.legs[next[i].legs.length - 1];
+    const start = leg?.kind === 'walk' ? (leg.path[0] ?? null) : null;
+    this.updateShortcut(start);
     this.engine.setRouteNames(true);
     const { bounds: _, ...summary } = info;
     route.value = summary;
@@ -319,7 +357,7 @@ export class Trip {
    */
   private reroute(from: LatLng, heading: number | null) {
     const id = selected.value;
-    const dest = id !== null ? POI_BY_ID.get(id) : undefined;
+    const dest = id !== null ? ALL_POI_BY_ID.get(id) : undefined;
     if (!dest || !this.engine.route.active) return;
     // In the car park (or on the way out of it) there is no other way to plan from the streets:
     // keep the drawn route; the visitor gets back on it (GPS underground can wander).

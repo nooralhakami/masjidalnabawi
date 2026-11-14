@@ -20,13 +20,14 @@ beforeEach(() => {
 const shown = (filter: FilterId, toiletSub: 'all' | 'open' | 'closed' = 'all') => POIS.filter((p) => passesFilter(p, { filter, toiletSub, searching: false }, fac));
 
 describe('filters', () => {
-  it('"all" shows everything except parking and the hidden places (wheelchair zones, hotels, restaurants)', () => {
+  it('"all" shows everything except parking and the hidden places (wheelchair zones, unapproved hotels, restaurants)', () => {
     const all = shown('all');
-    // 325 places, less 13 car parks, 8 wheelchair zones, and the 43 hotels and 44 restaurants hidden
-    // until the owner adds them again with exact positions (2026-11-04).
-    expect(all).toHaveLength(325 - 13 - 8 - 43 - 44);
+    // 345 places (including 401–420 west expansion gates 1401–1420), less 13 car parks, 8 wheelchair zones,
+    // 36 unapproved hotels (7 Stage 5 Southern Plaza hotels verified & visible), and 44 restaurants.
+    expect(all).toHaveLength(345 - 13 - 8 - 36 - 44);
     expect(all.some((p) => p.category === 'parking')).toBe(false);
-    expect(all.some((p) => p.category === 'hotels' || p.category === 'food')).toBe(false);
+    expect(all.some((p) => p.category === 'food')).toBe(false);
+    expect(all.filter((p) => p.category === 'hotels').map((p) => p.id)).toEqual([711, 713, 722, 724, 725, 728, 735]);
   });
 
   it('parking appears only with its pill or while searching', () => {
@@ -83,9 +84,9 @@ describe('filters', () => {
   });
 
   it('category pills match their category', () => {
-    expect(shown('gates')).toHaveLength(112);
-    // Hidden (owner, 2026-11-04): their pills show nothing and are left out of the row.
-    expect(shown('hotels')).toHaveLength(0);
+    expect(shown('gates')).toHaveLength(132);
+    // Stage 5: 7 owner-approved Southern Plaza hotels are visible; remaining 36 hotels and all food stay hidden.
+    expect(shown('hotels')).toHaveLength(7);
     expect(shown('food')).toHaveLength(0);
     expect(shown('shopping')).toHaveLength(15);
     expect(shown('emergency')).toHaveLength(9);

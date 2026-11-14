@@ -4,8 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { ALHARAMAIN_MODELS } from '../../src/data-next/alharamain-3d';
 import { PRAYER_CLEARINGS } from '../../src/data-next/alharamain-prayers';
 import { Flows } from '../../src/map/crowd-flows';
-import { BODY_R, CELL, COLUMN_R, Crowd, FIXED, FREE, HIDDEN } from '../../src/map/crowd-sim';
+import { BODY_R, CELL, COLUMN_R, Crowd, FIXED, FREE, HIDDEN, POSTURE_CODE, Worshippers, worshipperPose } from '../../src/map/crowd-sim';
 import { crowdInput } from '../../src/map/crowd-world';
+import { generateWorshipperPlacements, parsePrayerDemoOverride, resolvePrayerSession } from '../../src/domain/prayer-session';
 import { metresFromOrigin, nodePositions, parseGlbBuffer } from '../../src/map/glb-layer';
 import { restroomFootprints, restroomWalkways } from '../../src/map/prayer-layout';
 import { GREETING_BARRIERS, QUEUE_LANES, QUEUE_MOUTH_Z, QUEUE_RAILS } from '../../src/map/rawdah-layout';
@@ -294,5 +295,57 @@ describe('funerals come now and then, not all the time (owner, 2026-11-08)', () 
     expect(most).toBeLessThanOrEqual(2);
     // Each comes out of the door of block 203, on its north side (owner, 2026-11-08).
     for (const [x, z] of firstAt) expect(Math.hypot(x - -6, z - -16)).toBeLessThan(5);
+  });
+});
+
+describe('the worshippers at prayer (owner, 2026-11-09)', () => {
+  const file = readFileSync(resolve(__dirname, '../../public/models/haram-canopies.glb'));
+  const { gltf } = parseGlbBuffer(file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength) as ArrayBuffer);
+  const columnsLL = nodePositions(ALHARAMAIN_MODELS.find((m) => m.url.includes('canopies'))!, gltf);
+  // 08:00 in Madinah.
+  const at = new Date('2026-11-08T05:00:00Z');
+
+  it('the four postures are the four codes the shader draws, and a row follows the session', () => {
+    expect(POSTURE_CODE).toEqual({ standing: 0, ruku: 1, sujud: 2, juloos: 3 });
+    const rows = generateWorshipperPlacements(resolvePrayerSession(at, undefined, 'asr'), { columns: columnsLL });
+    const inRow = rows.filter((p) => p.activity === 'congregational_prayer');
+    expect(inRow.length).toBeGreaterThan(100);
+    for (const p of inRow) expect(worshipperPose(p)).toBe(0);
+    // Between the prayers: a reader sits with its own pose, which no uniform moves.
+    const quiet = generateWorshipperPlacements(resolvePrayerSession(at, undefined, 'off_prayer'), { columns: columnsLL });
+    const readers = quiet.filter((p) => p.activity === 'quran_reading');
+    expect(readers.length).toBeGreaterThan(0);
+    for (const p of readers) expect(worshipperPose(p)).toBe(1 + POSTURE_CODE[p.posture]);
+    expect(readers.every((p) => p.posture === 'juloos')).toBe(true);
+  });
+
+  it('a child is drawn at 0.62 of a grown figure, and a reader has a rehal before it', () => {
+    const places = generateWorshipperPlacements(resolvePrayerSession(at, undefined, 'off_prayer'), { columns: columnsLL });
+    const children = places.filter((p) => p.isChild);
+    expect(children.length).toBeGreaterThan(0);
+    for (const c of children) expect(c.scale).toBe(0.62);
+    expect(places.some((p) => p.hasRehal && p.posture === 'juloos')).toBe(true);
+  });
+
+  it('the places are laid out once for a scene, and kept until the scene changes', () => {
+    const w = new Worshippers();
+    expect(w.sync(at, 'dhuhr', { columns: columnsLL })).toBe(true);
+    const kept = w.placements;
+    expect(kept.length).toBeGreaterThan(100);
+    // A bow, a prostration, another rak'ah: the rows stay as they are, the posture is a uniform.
+    expect(w.sync(new Date(at.getTime() + 60_000), 'dhuhr', { columns: columnsLL })).toBe(false);
+    expect(w.placements).toBe(kept);
+    // Another scene (the khutbah) is laid out again.
+    expect(w.sync(new Date(at.getTime() + 120_000), 'jummah_khutbah', { columns: columnsLL })).toBe(true);
+    expect(w.placements).not.toBe(kept);
+    expect(w.session?.phase).toBe('friday_khutbah');
+  });
+
+  it('a preview link names the scene, and nothing else does', () => {
+    expect(parsePrayerDemoOverride('?prayerDemo=fajr')).toBe('fajr');
+    expect(parsePrayerDemoOverride('?prayerDemo=jummah_prayer')).toBe('jummah_prayer');
+    expect(parsePrayerDemoOverride('?prayerDemo=off_prayer')).toBe('off_prayer');
+    expect(parsePrayerDemoOverride('?prayerDemo=noon')).toBeNull();
+    expect(parsePrayerDemoOverride('')).toBeNull();
   });
 });

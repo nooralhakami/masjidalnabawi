@@ -1,28 +1,56 @@
-import { AttributionControl, Map as MLMap, ScaleControl, setWorkerUrl, type GeoJSONSource, type RasterSourceSpecification, type SkySpecification } from 'maplibre-gl';
+import {
+  AttributionControl,
+  Map as MLMap,
+  ScaleControl,
+  setWorkerUrl,
+  type ExpressionSpecification,
+  type GeoJSONSource,
+  type RasterSourceSpecification,
+  type SkySpecification,
+} from 'maplibre-gl';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
-import { POIS, RULES } from '../data';
+import { ALL_POI_BY_ID, POI_BY_ID, POIS, RULES } from '../data';
 import { alharamainPlaza } from '../data-next/alharamain-3d';
-import { rugLayout } from './rug-layout';
+import { buildInterCarpetAisles, rugLayout } from './rug-layout';
 import { sunPosition } from '../domain/daylight';
 import type { Poi, Status } from '../data/types';
 import { isHidden } from '../domain/filters';
+import { mosqueDoorBaysGeoJSON, subscribeMosqueDoors, toggleGateDoor, type DoorToggleResult } from '../domain/mosque-doors';
+import { parsePrayerDemoOverride } from '../domain/prayer-session';
 import { isTapName } from '../domain/route-hint';
 import { FEATURED_IDS } from '../domain/visits';
 import { lookOf } from '../presentation/markers';
 import type { IconName } from '../presentation/icons';
 import { CrowdLayer } from './crowd-layer';
 import { RugLayer } from './rug-layer';
-import { greetingBarriers, queueRails, womenBarriers } from './women-barriers';
+import { greetingBarriers, queueRails, womenBarriers, womenRawdahCorridorBarriers } from './women-barriers';
+import { interiorCorridors, interiorPrayerAreas } from './interior-layout';
+import { buildMosqueInterior3D } from './mosque-interior-3d';
+import { saqifahAndSurroundings3D, saqifahGround2D } from './saqifah-3d';
 import { HaramGlbLayer } from './glb-layer';
+import type { Urban3DLayer } from './urban-3d';
 import { IconAtlas, createDrawer, cssPalette, type Drawer } from './images';
 import { LampGlowLayer } from './lamp-glow-layer';
 import { MeMarker } from './me';
 import { PlazaMarbleLayer } from './plaza-layer';
 import { addHintLayer, EMPTY_HINTS, HintLayer } from './hints';
 import { addPoiLayers } from './poi-layers';
-import { applyPoiView, entranceAt, entranceFeatures, markerImageIds, markerNear, pairFeatures, placesAt, poiFeatures, popMarkers, womenAreas, type PoiView } from './pois';
+import {
+  applyPoiView,
+  entranceAt,
+  entranceFeatures,
+  interiorPointFeatures,
+  markerImageIds,
+  markerNear,
+  pairFeatures,
+  placesAt,
+  poiFeatures,
+  popMarkers,
+  womenAreas,
+  type PoiView,
+} from './pois';
 import { RouteLayer, type RouteText } from './route';
 import { nearHaramRaster, sceneLight, sceneOverride, type SceneLight } from './scene-light';
 import { TerrainLayer } from './terrain-layer';
@@ -63,6 +91,8 @@ export interface MapEngineOptions {
   entranceText?(id: string, open: boolean): { name: string; state: string } | null;
   /** A tap on one of those entrances. */
   onEntrance?(id: string): void;
+  /** A tap on a Mosque doorway bay that opened, closed, or stayed locked. */
+  onDoorToggle?(result: DoorToggleResult): void;
 }
 
 const DIRS: Record<string, string> = { south: 'dir-south', west: 'dir-west', north: 'dir-north', east: 'dir-east' };
@@ -92,8 +122,12 @@ export class MapEngine {
   private touched = false;
   private base: BaseLayer = 'satellite';
   private mode3d = false;
+  private interiorMode = false;
+  private unsubDoors: (() => void) | null = null;
   /** The 3D models' layer while 3D is on, and the minute timer that follows the sun meanwhile. */
   private models: HaramGlbLayer | null = null;
+  private urban: Urban3DLayer | null = null;
+  private urbanToken = 0;
   private crowd: CrowdLayer | null = null;
   private rugs: RugLayer | null = null;
   private terrain: TerrainLayer | null = null;
@@ -171,7 +205,7 @@ export class MapEngine {
     const ratio = Math.min(3, Math.max(1, devicePixelRatio || 1));
     this.route = new RouteLayer(this.map, this.palette, opts.routeText, ratio);
     this.pulse = new SelectPulse(this.map, this.palette);
-    this.hints = new HintLayer(this.map, (id) => POIS.find((p) => p.id === id));
+    this.hints = new HintLayer(this.map, (id) => ALL_POI_BY_ID.get(id));
     this.me = new MeMarker(
       this.map,
       () => opts.meLabel(),
@@ -181,8 +215,8 @@ export class MapEngine {
       palette: this.palette,
       icons: this.icons,
       ratio,
-      labelOf: (id) => this.opts.nameOf(POIS.find((p) => p.id === id)!),
-      dirOf: (id) => DIRS[POIS.find((p) => p.id === id)!.direction],
+      labelOf: (id) => this.opts.nameOf(ALL_POI_BY_ID.get(id)!),
+      dirOf: (id) => DIRS[ALL_POI_BY_ID.get(id)!.direction],
       entranceOf: (id, open) => this.opts.entranceText?.(id, open) ?? null,
     }));
     // Marker images are drawn the first time the map needs one (images.ts). MapLibre 6 resolves a
@@ -227,6 +261,55 @@ export class MapEngine {
     }
     m.addLayer({ id: 'esri', type: 'raster', source: 'esri' });
     m.addLayer({ id: 'light', type: 'raster', source: 'light', layout: { visibility: 'none' } });
+    if (!m.getSource('saqifah-2d')) m.addSource('saqifah-2d', { type: 'geojson', data: saqifahGround2D() });
+    if (!m.getLayer('saqifah-2d')) {
+      m.addLayer({
+        id: 'saqifah-2d',
+        type: 'fill',
+        source: 'saqifah-2d',
+        minzoom: 15,
+        paint: { 'fill-color': ['get', 'color'], 'fill-opacity': ['get', 'opacity'] },
+      });
+    }
+    if (!m.getSource('interior-prayer-areas')) m.addSource('interior-prayer-areas', { type: 'geojson', data: interiorPrayerAreas() });
+    if (!m.getLayer('interior-prayer-areas')) {
+      m.addLayer({
+        id: 'interior-prayer-areas',
+        type: 'fill',
+        source: 'interior-prayer-areas',
+        minzoom: 15.5,
+        paint: { 'fill-color': ['get', 'color'], 'fill-opacity': ['get', 'opacity'] },
+      });
+    }
+    if (!m.getSource('interior-corridors')) m.addSource('interior-corridors', { type: 'geojson', data: interiorCorridors() });
+    if (!m.getLayer('interior-corridors')) {
+      m.addLayer({
+        id: 'interior-corridors',
+        type: 'line',
+        source: 'interior-corridors',
+        minzoom: 16,
+        paint: {
+          'line-color': ['match', ['get', 'kind'], 'women_rawdah_corridor', '#c97b9e', '#94a3b8'],
+          'line-width': ['match', ['get', 'kind'], 'women_rawdah_corridor', 2.4, 1.8],
+          'line-dasharray': [3, 2],
+          'line-opacity': 0.85,
+        },
+      });
+    }
+    if (!m.getSource('inter-carpet-aisles')) m.addSource('inter-carpet-aisles', { type: 'geojson', data: buildInterCarpetAisles(this.lamps ?? undefined) });
+    if (!m.getLayer('inter-carpet-aisles')) {
+      m.addLayer({
+        id: 'inter-carpet-aisles',
+        type: 'line',
+        source: 'inter-carpet-aisles',
+        minzoom: 16.5,
+        paint: {
+          'line-color': '#d9d0be',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 16.5, 1.2, 18.5, 3],
+          'line-opacity': 0.72,
+        },
+      });
+    }
     addPoiLayers(m, this.palette, this.version);
     if (this.mode3d) this.sync3DLayer();
     addHintLayer(m, this.version);
@@ -350,6 +433,41 @@ export class MapEngine {
           before,
         );
       }
+      if (!m.getSource('alharamain-women-rawdah-barriers')) {
+        m.addSource('alharamain-women-rawdah-barriers', { type: 'geojson', data: womenRawdahCorridorBarriers() });
+      }
+      if (!m.getLayer('alharamain-3d-women-rawdah-barriers')) {
+        m.addLayer(
+          {
+            id: 'alharamain-3d-women-rawdah-barriers',
+            type: 'fill-extrusion',
+            source: 'alharamain-women-rawdah-barriers',
+            minzoom: 16,
+            paint: { 'fill-extrusion-color': '#d9c4a0', 'fill-extrusion-height': ['get', 'height'], 'fill-extrusion-opacity': 0.97 },
+          },
+          before,
+        );
+      }
+      if (!m.getSource('saqifah-3d')) m.addSource('saqifah-3d', { type: 'geojson', data: saqifahAndSurroundings3D() });
+      if (!m.getLayer('saqifah-and-surroundings-3d')) {
+        m.addLayer(
+          {
+            id: 'saqifah-and-surroundings-3d',
+            type: 'fill-extrusion',
+            source: 'saqifah-3d',
+            minzoom: 14.5,
+            paint: {
+              'fill-extrusion-color': ['get', 'color'],
+              'fill-extrusion-base': ['get', 'base'],
+              'fill-extrusion-height': ['get', 'height'],
+              // A constant: MapLibre 6.11 refuses a data expression here (`['get', 'opacity']` fails
+              // validation and the whole layer is dropped), and the props' own opacity is 0.95–0.98.
+              'fill-extrusion-opacity': 0.96,
+            },
+          },
+          before,
+        );
+      }
       // The metal rails of the Rawdah's queues (owner, 2026-11-08), 1 m high.
       if (!m.getSource('alharamain-queue-rails')) m.addSource('alharamain-queue-rails', { type: 'geojson', data: queueRails() });
       if (!m.getLayer('alharamain-3d-queue-rails')) {
@@ -378,6 +496,91 @@ export class MapEngine {
           before,
         );
       }
+      // Interactive multi-bay Mosque gates (`gate_inner` 1..42): golden threshold when open, carved teak doors when closed.
+      if (!m.getSource('mosque-door-bays')) m.addSource('mosque-door-bays', { type: 'geojson', data: mosqueDoorBaysGeoJSON() });
+      if (!m.getLayer('mosque-door-bays')) {
+        m.addLayer(
+          {
+            id: 'mosque-door-bays',
+            type: 'fill-extrusion',
+            source: 'mosque-door-bays',
+            minzoom: 16.5,
+            paint: {
+              'fill-extrusion-color': ['get', 'color'],
+              'fill-extrusion-height': ['get', 'height'],
+              'fill-extrusion-base': ['get', 'base'],
+              // Constant, not `['get', 'opacity']`: see the saqifah layer above (0.92 open, 0.96 shut).
+              'fill-extrusion-opacity': 0.94,
+            },
+          },
+          before,
+        );
+      }
+      if (!this.unsubDoors) {
+        this.unsubDoors = subscribeMosqueDoors(() => {
+          (m.getSource('mosque-door-bays') as GeoJSONSource | undefined)?.setData(mosqueDoorBaysGeoJSON());
+        });
+      }
+      // Manual 3D Mosque interior hall (columns, Ablaq arches, chandeliers, carpets, walkways).
+      if (!m.getSource('mosque-interior-3d')) m.addSource('mosque-interior-3d', { type: 'geojson', data: buildMosqueInterior3D() });
+      if (!m.getLayer('mosque-interior-3d')) {
+        m.addLayer(
+          {
+            id: 'mosque-interior-3d',
+            type: 'fill-extrusion',
+            source: 'mosque-interior-3d',
+            minzoom: 15.5,
+            layout: { visibility: this.interiorMode ? 'visible' : 'none' },
+            paint: {
+              'fill-extrusion-color': ['get', 'color'],
+              'fill-extrusion-height': ['get', 'height'],
+              'fill-extrusion-base': ['get', 'base'],
+              // Constant for the same reason (props' own opacity is 0.9–0.98).
+              'fill-extrusion-opacity': 0.96,
+            },
+          },
+          before,
+        );
+      }
+      // Interior navQ prayer halls (98 GF/ROF) and landmarks (14), shown only in interior cutaway mode.
+      if (!m.getSource('navq-interior')) m.addSource('navq-interior', { type: 'geojson', data: interiorPointFeatures() });
+      if (!m.getLayer('navq-interior-dots')) {
+        m.addLayer(
+          {
+            id: 'navq-interior-dots',
+            type: 'circle',
+            source: 'navq-interior',
+            minzoom: 16,
+            layout: { visibility: this.interiorMode ? 'visible' : 'none' },
+            paint: {
+              'circle-radius': ['match', ['get', 'kind'], 'landmark', 6.5, 4.2],
+              'circle-color': ['get', 'color'],
+              'circle-stroke-width': 1.5,
+              'circle-stroke-color': '#ffffff',
+            },
+          },
+          before,
+        );
+      }
+      if (!m.getLayer('navq-interior-labels')) {
+        m.addLayer(
+          {
+            id: 'navq-interior-labels',
+            type: 'symbol',
+            source: 'navq-interior',
+            minzoom: 17.5,
+            layout: {
+              visibility: this.interiorMode ? 'visible' : 'none',
+              'icon-image': ['concat', 'hint:', ['to-string', ['get', 'id']], ':s@', String(this.version)] as unknown as ExpressionSpecification,
+              'icon-anchor': 'top',
+              'icon-offset': [0, 8],
+              'icon-allow-overlap': false,
+              'symbol-sort-key': ['get', 'sortKey'],
+            },
+          },
+          before,
+        );
+      }
       // The mountains of Madinah on the horizon, under the Mosque's own models.
       if (!m.getLayer('alharamain-3d-terrain')) {
         this.terrain = new TerrainLayer(this.currentLight());
@@ -391,12 +594,14 @@ export class MapEngine {
           this.crowd?.setColumns(lamps);
           this.rugs?.setColumns(lamps);
           (m.getSource('alharamain-barriers') as GeoJSONSource | undefined)?.setData(rugLayout(lamps).barriers);
+          (m.getSource('inter-carpet-aisles') as GeoJSONSource | undefined)?.setData(buildInterCarpetAisles(lamps));
         });
+        this.models.setInterior(this.interiorMode);
         m.addLayer(this.models, before);
       }
       // People walking the courtyards, after the models so they share their depth (owner, 2026-11-06).
       if (!m.getLayer('alharamain-3d-crowd')) {
-        this.crowd = new CrowdLayer(this.currentLight());
+        this.crowd = new CrowdLayer(this.currentLight(), parsePrayerDemoOverride(location.search));
         if (this.lamps) this.crowd.setColumns(this.lamps);
         m.addLayer(this.crowd, before);
       }
@@ -408,10 +613,20 @@ export class MapEngine {
       }
       this.applyLight();
       if (!this.lightTimer) this.lightTimer = setInterval(() => this.applyLight(), 60_000);
+      const urbanToken = ++this.urbanToken;
+      void import('./urban-3d').then(({ mountUrban3D }) => {
+        if (!this.mode3d || urbanToken !== this.urbanToken || this.map !== m) return;
+        const urbanBefore = m.getLayer('inner-dots') ? 'inner-dots' : undefined;
+        this.urban = mountUrban3D(m, this.currentLight(), urbanBefore);
+      });
     } else {
       if (this.lightTimer) clearInterval(this.lightTimer);
       this.lightTimer = null;
+      this.urbanToken++;
+      this.unsubDoors?.();
+      this.unsubDoors = null;
       this.models = null;
+      this.urban = null;
       this.crowd = null;
       this.rugs = null;
       this.terrain = null;
@@ -419,12 +634,20 @@ export class MapEngine {
       this.glow = null;
       for (const id of [
         ...NEAR_IMAGERY.map(([near]) => near),
+        'urban-south-stage5-3d',
+        'urban-south-streets-line',
         'alharamain-3d-models',
+        'mosque-interior-3d',
+        'navq-interior-labels',
+        'navq-interior-dots',
+        'mosque-door-bays',
         'alharamain-3d-crowd',
         'alharamain-3d-barriers',
         'alharamain-3d-women-barriers',
+        'alharamain-3d-women-rawdah-barriers',
         'alharamain-3d-queue-rails',
         'alharamain-3d-greeting-barriers',
+        'saqifah-and-surroundings-3d',
         'alharamain-3d-glow',
         'alharamain-3d-terrain',
         'alharamain-3d-lamps',
@@ -458,6 +681,7 @@ export class MapEngine {
     if (!this.mode3d) return;
     const light = this.currentLight();
     this.models?.setLight(light);
+    this.urban?.setLight(light);
     this.crowd?.setLight(light);
     this.rugs?.setLight(light);
     this.terrain?.setLight(light);
@@ -481,6 +705,7 @@ export class MapEngine {
     }
     // Lit plazas stand out of the dark city: their areas grow brighter as night falls.
     if (m.getLayer('alharamain-3d-plaza')) m.setPaintProperty('alharamain-3d-plaza', 'fill-opacity', ['min', 0.9, ['*', ['get', 'opacity'], 1 + 0.35 * light.night]]);
+    if (m.getLayer('saqifah-and-surroundings-3d')) m.setPaintProperty('saqifah-and-surroundings-3d', 'fill-extrusion-opacity', 0.96 * (1 - 0.12 * light.night));
     if (m.getLayer('alharamain-3d-ground')) m.setPaintProperty('alharamain-3d-ground', 'background-color', light.ground);
     if (m.getLayer('alharamain-3d-lamps')) m.setPaintProperty('alharamain-3d-lamps', 'circle-opacity', 0.7 * light.night);
     m.setSky(light.sky);
@@ -539,7 +764,7 @@ export class MapEngine {
   }
 
   poi(id: number): Poi | undefined {
-    return POIS.find((p) => p.id === id);
+    return ALL_POI_BY_ID.get(id);
   }
 
   /** Show these places (a filter, a search): layer filters only, the data stays as it is. */
@@ -620,11 +845,29 @@ export class MapEngine {
     for (const id of [
       'alharamain-3d-glow',
       'alharamain-3d-models',
+      'mosque-interior-3d',
+      'navq-interior-labels',
+      'navq-interior-dots',
+      'mosque-door-bays',
       'alharamain-3d-terrain',
       'alharamain-3d-lamps',
+      'alharamain-3d-barriers',
+      'alharamain-3d-women-barriers',
+      'alharamain-3d-women-rawdah-barriers',
+      'alharamain-3d-queue-rails',
+      'alharamain-3d-greeting-barriers',
+      'alharamain-3d-crowd',
+      'alharamain-3d-rugs',
       'alharamain-3d-marble',
       'alharamain-3d-plaza',
       'alharamain-3d-ground',
+      'saqifah-and-surroundings-3d',
+      'urban-south-stage5-3d',
+      'urban-south-streets-line',
+      'saqifah-2d',
+      'interior-prayer-areas',
+      'interior-corridors',
+      'inter-carpet-aisles',
       'car-entrances',
       ...NEAR_IMAGERY.map(([near]) => near),
       'esri',
@@ -645,6 +888,8 @@ export class MapEngine {
     ])
       if (this.map.getLayer(id)) this.map.removeLayer(id);
     for (const id of this.map.listImages()) if (id.endsWith(`@${old}`) && !id.startsWith('rt')) this.map.removeImage(id);
+    this.urban = null;
+    this.urbanToken++;
     this.route.restyle();
     this.addLayers();
     this.setBase(this.base);
@@ -697,6 +942,28 @@ export class MapEngine {
 
   get is3D(): boolean {
     return this.mode3d;
+  }
+
+  /**
+   * Manual interior architectural cutaway mode: never enabled automatically on GPS arrival inside
+   * the Mosque. Shows hypostyle marble columns, Ablaq arches, brass chandeliers, green carpets,
+   * walkways, and translucent Mosque walls/roof while keeping minarets and domes opaque.
+   */
+  setInteriorMode(on: boolean): boolean {
+    this.interiorMode = on;
+    if (on && !this.mode3d) this.toggle3DMode(true);
+    for (const layerId of ['mosque-interior-3d', 'navq-interior-dots', 'navq-interior-labels']) {
+      if (this.map.getLayer(layerId)) {
+        this.map.setLayoutProperty(layerId, 'visibility', on ? 'visible' : 'none');
+      }
+    }
+    this.models?.setInterior(on);
+    this.map.triggerRepaint();
+    return this.interiorMode;
+  }
+
+  get isInterior(): boolean {
+    return this.interiorMode;
   }
 
   /**
@@ -771,6 +1038,13 @@ export class MapEngine {
 
   // ---------- picking ----------
 
+  private doorAt(x: number, y: number): number | null {
+    if (!this.map.getLayer('mosque-door-bays')) return null;
+    const hit = this.map.queryRenderedFeatures([x, y], { layers: ['mosque-door-bays'] });
+    const gateId = Number(hit[0]?.properties?.gateId);
+    return Number.isFinite(gateId) && gateId > 0 ? gateId : null;
+  }
+
   /** The place under a tap: the nearest marker within 16 px (the live app's 32 px hit area). */
   private pick(x: number, y: number) {
     // An alternative route (its line or its time label) is chosen before any place.
@@ -784,17 +1058,32 @@ export class MapEngine {
       this.opts.onEntrance?.(ent);
       return;
     }
+    const doorGateId = this.mode3d && this.map.getZoom() >= 17 ? this.doorAt(x, y) : null;
     // Markers stay where they are (owner); a tap on a tight group zooms in there until they part.
     const max = this.map.getMaxZoom();
     const choice = tapChoice(placesAt(this.map, x, y), this.map.getZoom() < max - 0.5);
-    if ('zoomIn' in choice) {
+    if ('zoomIn' in choice && doorGateId === null) {
       const around = this.map.unproject([x, y]);
       const zoom = Math.min(max, this.map.getZoom() + TAP_ZOOM_STEP);
       if (reduce()) this.map.jumpTo({ center: around, zoom });
       else this.map.easeTo({ center: around, zoom, duration: 300 });
       return;
     }
-    const place = choice.open;
+    const place = 'open' in choice ? choice.open : null;
+    if (doorGateId !== null && (place === null || POI_BY_ID.get(place)?.subCategory === 'gate_inner')) {
+      const result = toggleGateDoor(doorGateId);
+      this.opts.onDoorToggle?.(result);
+      return;
+    }
+    // In interior cutaway mode, allow tapping interior prayer zones or landmarks directly.
+    if (place === null && this.interiorMode && this.map.getLayer('navq-interior-dots')) {
+      const interiorHit = this.map.queryRenderedFeatures([x, y], { layers: ['navq-interior-dots'] });
+      const interiorId = Number(interiorHit[0]?.properties?.id);
+      if (Number.isFinite(interiorId) && interiorId > 0) {
+        this.opts.onPick?.(interiorId);
+        return;
+      }
+    }
     // In 3D, a tap on no place but on a canopy opens or closes it (owner, 2026-11-06).
     if (place === null && this.mode3d && this.models?.toggleCanopyAt(x, y)) return;
     this.opts.onPick?.(place);
