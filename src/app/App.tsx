@@ -16,6 +16,9 @@ import {
   filter,
   garageQ,
   headingUp,
+  insideMosque,
+  interiorSuggestionDismissed,
+  interiorView,
   level,
   markersHidden,
   nav,
@@ -508,6 +511,30 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
         />
       ) : null}
       {hintsOn ? <FirstHints target={hintTarget} onDone={() => setHints(false)} /> : null}
+      {insideMosque.value && !interiorView.value && !interiorSuggestionDismissed.value ? (
+        <div class="interior-suggest" role="status">
+          <span>{t('interior_suggest_title')}</span>
+          <button
+            type="button"
+            class="interior-suggest-go"
+            onClick={() => {
+              interiorView.value = true;
+            }}
+          >
+            {t('interior_suggest_action')}
+          </button>
+          <button
+            type="button"
+            class="interior-suggest-no"
+            aria-label={t('interior_suggest_dismiss')}
+            onClick={() => {
+              interiorSuggestionDismissed.value = true;
+            }}
+          >
+            {t('interior_suggest_dismiss')}
+          </button>
+        </div>
+      ) : null}
       {/* Notices rise above the navigation bar too, never on it. */}
       <div class="toast-host" style={{ '--sheet-h': `${(place ? sheetH.value : 0) + (nav.value || garageQ.value || whereQ.value || whoQ ? navH + 12 : 0)}px` }}>
         {toast.value ? (

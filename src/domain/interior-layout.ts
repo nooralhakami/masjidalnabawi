@@ -226,3 +226,42 @@ export function interiorCorridors(): FeatureCollection<LineString, InteriorCorri
     })),
   };
 }
+
+/** Calibrated interior floor bounds in glTF model metres `[east, south]`. */
+export const INTERIOR_MAIN_BOUNDS = { xMin: -254, xMax: 134, zMin: -344, zMax: -118 } as const;
+export const INTERIOR_SOUTH_BOUNDS = { xMin: -104, xMax: -16, zMin: -108, zMax: -62 } as const;
+export const RAWDAH_INTERIOR_BOUNDS = { xMin: -54, xMax: -16, zMin: -102, zMax: -64 } as const;
+
+export const INTERIOR_WALKWAY_X = [-201.3, -151.9, -115.9, -60.5, -2.8, 54.9, 104.3] as const;
+export const INTERIOR_WALKWAY_Z = [-310, -265, -216, -165, -124] as const;
+export const INTERIOR_WALKWAY_HALF_W = 2.6;
+export const INTERIOR_COL_STEP_M = 18;
+
+export function isPointOnInteriorWalkway(x: number, z: number, pad = 0): boolean {
+  const hw = INTERIOR_WALKWAY_HALF_W + pad;
+  for (const wx of INTERIOR_WALKWAY_X) {
+    if (Math.abs(x - wx) <= hw) return true;
+  }
+  for (const wz of INTERIOR_WALKWAY_Z) {
+    if (Math.abs(z - wz) <= hw && x >= INTERIOR_MAIN_BOUNDS.xMin && x <= INTERIOR_MAIN_BOUNDS.xMax) return true;
+  }
+  return false;
+}
+
+/** Deterministic hypostyle column centres in glTF model metres avoiding major walkways. */
+export function interiorColumnCentres(): readonly (readonly [number, number])[] {
+  const cols: [number, number][] = [];
+  for (let x = INTERIOR_MAIN_BOUNDS.xMin + 8; x <= INTERIOR_MAIN_BOUNDS.xMax - 8; x += INTERIOR_COL_STEP_M) {
+    for (let z = INTERIOR_MAIN_BOUNDS.zMin + 8; z <= INTERIOR_MAIN_BOUNDS.zMax - 8; z += INTERIOR_COL_STEP_M) {
+      if (isPointOnInteriorWalkway(x, z, 1.8)) continue;
+      cols.push([x, z]);
+    }
+  }
+  for (let x = INTERIOR_SOUTH_BOUNDS.xMin + 8; x <= INTERIOR_SOUTH_BOUNDS.xMax - 8; x += INTERIOR_COL_STEP_M) {
+    for (let z = INTERIOR_SOUTH_BOUNDS.zMin + 8; z <= INTERIOR_SOUTH_BOUNDS.zMax - 8; z += INTERIOR_COL_STEP_M) {
+      if (isPointOnInteriorWalkway(x, z, 1.8)) continue;
+      cols.push([x, z]);
+    }
+  }
+  return cols;
+}

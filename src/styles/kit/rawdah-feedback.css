@@ -197,6 +197,46 @@
   font-size: var(--fs-sm);
 }
 
+/* ---------- Interior Cutaway Suggestion Banner ---------- */
+.interior-suggest {
+  position: fixed;
+  inset-inline: 0;
+  margin-inline: auto;
+  top: max(68px, calc(env(safe-area-inset-top, 0px) + 62px));
+  z-index: 35;
+  width: fit-content;
+  max-width: min(92vw, 440px);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 6px 10px 6px 14px;
+  border-radius: var(--r-pill);
+  background: var(--panel);
+  border: 1px solid var(--brand, #146c43);
+  box-shadow: var(--shadow-2);
+  font-size: var(--fs-sm);
+}
+.interior-suggest-go {
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--brand, #146c43);
+  color: #fff;
+  padding: 5px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.interior-suggest-no {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.mc-interior.is-active {
+  background: var(--brand, #146c43);
+  color: #fff;
+}
+
 /* ---------- Toast ---------- */
 .toast {
   display: inline-flex;

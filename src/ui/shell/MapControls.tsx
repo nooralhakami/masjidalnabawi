@@ -2,7 +2,7 @@ import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { IconButton } from '../kit/Button';
 import { Icon } from '../kit/Icon';
-import { view3d } from '../../state/store';
+import { interiorView, view3d } from '../../state/store';
 import { useI18n } from '../i18n';
 
 export interface MapControlsProps {
@@ -12,6 +12,8 @@ export interface MapControlsProps {
   onNorth(): void;
   /** Tilt the 3D view by `deg` (shown in 3D only). */
   onTilt?(deg: 10 | -10): void;
+  /** Manual toggle for 3D Mosque interior cutaway view. */
+  onInterior?(): void;
   /** Subscribe to where true north points on screen (deg clockwise); returns an unsubscribe. */
   watchNorth(fn: (deg: number) => void): () => void;
 }
@@ -43,7 +45,7 @@ function usePopover(open: boolean, close: () => void, box: { current: HTMLElemen
  * points to the qibla; a tap turns north up), and one button that opens turning (and in 3D tilting)
  * beside it. The needle is turned by writing one transform, never a render.
  */
-export function MapControls({ onZoom, onTurn, onNorth, onTilt, watchNorth }: MapControlsProps) {
+export function MapControls({ onZoom, onTurn, onNorth, onTilt, onInterior, watchNorth }: MapControlsProps) {
   const { t } = useI18n();
   const compass = useRef<HTMLSpanElement>(null);
   const box = useRef<HTMLDivElement>(null);
@@ -60,6 +62,7 @@ export function MapControls({ onZoom, onTurn, onNorth, onTilt, watchNorth }: Map
     [watchNorth],
   );
   const tilt = !!onTilt && view3d.value;
+  const interior = interiorView.value;
   const label = t(tilt ? 'map_turn_tilt' : 'map_turn');
   return (
     <div class="map-controls">
@@ -67,6 +70,18 @@ export function MapControls({ onZoom, onTurn, onNorth, onTilt, watchNorth }: Map
         <IconButton icon="plus" label={t('zoom_in')} onClick={() => onZoom(1)} />
         <IconButton icon="minus" label={t('zoom_out')} onClick={() => onZoom(-1)} />
       </div>
+      {onInterior ? (
+        <button
+          type="button"
+          class={`icon-btn mc-interior${interior ? ' is-active' : ''}`}
+          aria-pressed={interior}
+          aria-label={t(interior ? 'interior_exit' : 'interior_view')}
+          title={t(interior ? 'interior_exit' : 'interior_view')}
+          onClick={onInterior}
+        >
+          <Icon name="dome" />
+        </button>
+      ) : null}
       <div class="mc-group mc-view" ref={box}>
         <span ref={compass} class="mc-compass">
           <IconButton icon="rotate-reset" label={t('rot_reset')} onClick={onNorth} />

@@ -2,12 +2,13 @@ import { AttributionControl, Map as MLMap, ScaleControl, setWorkerUrl, type GeoJ
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
-import { POIS, RULES } from '../data';
+import { POI_BY_ID, POIS, RULES } from '../data';
 import { alharamainPlaza } from '../data-next/alharamain-3d';
 import { buildInterCarpetAisles, rugLayout } from './rug-layout';
 import { sunPosition } from '../domain/daylight';
 import type { Poi, Status } from '../data/types';
 import { isHidden } from '../domain/filters';
+import { mosqueDoorBaysGeoJSON, subscribeMosqueDoors, toggleGateDoor, type DoorToggleResult } from '../domain/mosque-doors';
 import { isTapName } from '../domain/route-hint';
 import { FEATURED_IDS } from '../domain/visits';
 import { lookOf } from '../presentation/markers';
@@ -16,6 +17,7 @@ import { CrowdLayer } from './crowd-layer';
 import { RugLayer } from './rug-layer';
 import { greetingBarriers, queueRails, womenBarriers, womenRawdahCorridorBarriers } from './women-barriers';
 import { interiorCorridors, interiorPrayerAreas } from './interior-layout';
+import { buildMosqueInterior3D } from './mosque-interior-3d';
 import { saqifahAndSurroundings3D, saqifahGround2D } from './saqifah-3d';
 import { HaramGlbLayer } from './glb-layer';
 import { IconAtlas, createDrawer, cssPalette, type Drawer } from './images';
@@ -65,6 +67,8 @@ export interface MapEngineOptions {
   entranceText?(id: string, open: boolean): { name: string; state: string } | null;
   /** A tap on one of those entrances. */
   onEntrance?(id: string): void;
+  /** A tap on a Mosque doorway bay that opened, closed, or stayed locked. */
+  onDoorToggle?(result: DoorToggleResult): void;
 }
 
 const DIRS: Record<string, string> = { south: 'dir-south', west: 'dir-west', north: 'dir-north', east: 'dir-east' };
@@ -94,6 +98,8 @@ export class MapEngine {
   private touched = false;
   private base: BaseLayer = 'satellite';
   private mode3d = false;
+  private interiorMode = false;
+  private unsubDoors: (() => void) | null = null;
   /** The 3D models' layer while 3D is on, and the minute timer that follows the sun meanwhile. */
   private models: HaramGlbLayer | null = null;
   private crowd: CrowdLayer | null = null;
@@ -462,6 +468,50 @@ export class MapEngine {
           before,
         );
       }
+      // Interactive multi-bay Mosque gates (`gate_inner` 1..42): golden threshold when open, carved teak doors when closed.
+      if (!m.getSource('mosque-door-bays')) m.addSource('mosque-door-bays', { type: 'geojson', data: mosqueDoorBaysGeoJSON() });
+      if (!m.getLayer('mosque-door-bays')) {
+        m.addLayer(
+          {
+            id: 'mosque-door-bays',
+            type: 'fill-extrusion',
+            source: 'mosque-door-bays',
+            minzoom: 16.5,
+            paint: {
+              'fill-extrusion-color': ['get', 'color'],
+              'fill-extrusion-height': ['get', 'height'],
+              'fill-extrusion-base': ['get', 'base'],
+              'fill-extrusion-opacity': ['get', 'opacity'],
+            },
+          },
+          before,
+        );
+      }
+      if (!this.unsubDoors) {
+        this.unsubDoors = subscribeMosqueDoors(() => {
+          (m.getSource('mosque-door-bays') as GeoJSONSource | undefined)?.setData(mosqueDoorBaysGeoJSON());
+        });
+      }
+      // Manual 3D Mosque interior hall (columns, Ablaq arches, chandeliers, carpets, walkways).
+      if (!m.getSource('mosque-interior-3d')) m.addSource('mosque-interior-3d', { type: 'geojson', data: buildMosqueInterior3D() });
+      if (!m.getLayer('mosque-interior-3d')) {
+        m.addLayer(
+          {
+            id: 'mosque-interior-3d',
+            type: 'fill-extrusion',
+            source: 'mosque-interior-3d',
+            minzoom: 15.5,
+            layout: { visibility: this.interiorMode ? 'visible' : 'none' },
+            paint: {
+              'fill-extrusion-color': ['get', 'color'],
+              'fill-extrusion-height': ['get', 'height'],
+              'fill-extrusion-base': ['get', 'base'],
+              'fill-extrusion-opacity': ['get', 'opacity'],
+            },
+          },
+          before,
+        );
+      }
       // The mountains of Madinah on the horizon, under the Mosque's own models.
       if (!m.getLayer('alharamain-3d-terrain')) {
         this.terrain = new TerrainLayer(this.currentLight());
@@ -477,6 +527,7 @@ export class MapEngine {
           (m.getSource('alharamain-barriers') as GeoJSONSource | undefined)?.setData(rugLayout(lamps).barriers);
           (m.getSource('inter-carpet-aisles') as GeoJSONSource | undefined)?.setData(buildInterCarpetAisles(lamps));
         });
+        this.models.setInterior(this.interiorMode);
         m.addLayer(this.models, before);
       }
       // People walking the courtyards, after the models so they share their depth (owner, 2026-11-06).
@@ -496,6 +547,8 @@ export class MapEngine {
     } else {
       if (this.lightTimer) clearInterval(this.lightTimer);
       this.lightTimer = null;
+      this.unsubDoors?.();
+      this.unsubDoors = null;
       this.models = null;
       this.crowd = null;
       this.rugs = null;
@@ -505,6 +558,8 @@ export class MapEngine {
       for (const id of [
         ...NEAR_IMAGERY.map(([near]) => near),
         'alharamain-3d-models',
+        'mosque-interior-3d',
+        'mosque-door-bays',
         'alharamain-3d-crowd',
         'alharamain-3d-barriers',
         'alharamain-3d-women-barriers',
@@ -708,6 +763,8 @@ export class MapEngine {
     for (const id of [
       'alharamain-3d-glow',
       'alharamain-3d-models',
+      'mosque-interior-3d',
+      'mosque-door-bays',
       'alharamain-3d-terrain',
       'alharamain-3d-lamps',
       'alharamain-3d-barriers',
@@ -800,6 +857,26 @@ export class MapEngine {
   }
 
   /**
+   * Manual interior architectural cutaway mode: never enabled automatically on GPS arrival inside
+   * the Mosque. Shows hypostyle marble columns, Ablaq arches, brass chandeliers, green carpets,
+   * walkways, and translucent Mosque walls/roof while keeping minarets and domes opaque.
+   */
+  setInteriorMode(on: boolean): boolean {
+    this.interiorMode = on;
+    if (on && !this.mode3d) this.toggle3DMode(true);
+    if (this.map.getLayer('mosque-interior-3d')) {
+      this.map.setLayoutProperty('mosque-interior-3d', 'visibility', on ? 'visible' : 'none');
+    }
+    this.models?.setInterior(on);
+    this.map.triggerRepaint();
+    return this.interiorMode;
+  }
+
+  get isInterior(): boolean {
+    return this.interiorMode;
+  }
+
+  /**
    * The laptop's ways to turn and tilt the 3D view (owner, 2026-11-07), besides a right-button or
    * Ctrl drag: Option/Alt with a two-finger scroll tilts (up and down) and turns (left and right);
    * Safari's two-finger turn on the trackpad turns the map. A plain scroll still zooms, and touch
@@ -871,6 +948,13 @@ export class MapEngine {
 
   // ---------- picking ----------
 
+  private doorAt(x: number, y: number): number | null {
+    if (!this.map.getLayer('mosque-door-bays')) return null;
+    const hit = this.map.queryRenderedFeatures([x, y], { layers: ['mosque-door-bays'] });
+    const gateId = Number(hit[0]?.properties?.gateId);
+    return Number.isFinite(gateId) && gateId > 0 ? gateId : null;
+  }
+
   /** The place under a tap: the nearest marker within 16 px (the live app's 32 px hit area). */
   private pick(x: number, y: number) {
     // An alternative route (its line or its time label) is chosen before any place.
@@ -884,17 +968,23 @@ export class MapEngine {
       this.opts.onEntrance?.(ent);
       return;
     }
+    const doorGateId = this.mode3d && this.map.getZoom() >= 17 ? this.doorAt(x, y) : null;
     // Markers stay where they are (owner); a tap on a tight group zooms in there until they part.
     const max = this.map.getMaxZoom();
     const choice = tapChoice(placesAt(this.map, x, y), this.map.getZoom() < max - 0.5);
-    if ('zoomIn' in choice) {
+    if ('zoomIn' in choice && doorGateId === null) {
       const around = this.map.unproject([x, y]);
       const zoom = Math.min(max, this.map.getZoom() + TAP_ZOOM_STEP);
       if (reduce()) this.map.jumpTo({ center: around, zoom });
       else this.map.easeTo({ center: around, zoom, duration: 300 });
       return;
     }
-    const place = choice.open;
+    const place = 'open' in choice ? choice.open : null;
+    if (doorGateId !== null && (place === null || POI_BY_ID.get(place)?.subCategory === 'gate_inner')) {
+      const result = toggleGateDoor(doorGateId);
+      this.opts.onDoorToggle?.(result);
+      return;
+    }
     // In 3D, a tap on no place but on a canopy opens or closes it (owner, 2026-11-06).
     if (place === null && this.mode3d && this.models?.toggleCanopyAt(x, y)) return;
     this.opts.onPick?.(place);

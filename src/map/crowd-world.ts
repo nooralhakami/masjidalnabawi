@@ -2,6 +2,7 @@ import { POIS } from '../data';
 import { alharamainPlaza } from '../data-next/alharamain-3d';
 import { PRAYER_CLEARINGS } from '../data-next/alharamain-prayers';
 import { WOMEN_AREAS } from '../data-next/women-areas';
+import { openDoorwayBayCentres } from '../domain/mosque-doors';
 import type { CrowdInput, XY } from './crowd-sim';
 import { metresFromOrigin } from './glb-layer';
 import { MOSQUE_MAIN, MOSQUE_SOUTH, restroomFootprints, restroomWalkways } from './prayer-layout';
@@ -11,6 +12,49 @@ import { rugLayout } from './rug-layout';
 const m = (ll: readonly [number, number]): XY => metresFromOrigin(ll as [number, number]);
 /** The women's areas are drawn as [lat, lng]. */
 const mLatLng = ([lat, lng]: readonly [number, number]): XY => metresFromOrigin([lng, lat]);
+
+function pointInPoly(x: number, z: number, poly: readonly XY[]): boolean {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [ax, az] = poly[i];
+    const [bx, bz] = poly[j];
+    if (az > z !== bz > z && x < ((bx - ax) * (z - az)) / (bz - az) + ax) inside = !inside;
+  }
+  return inside;
+}
+
+function inBox(x: number, z: number, box: readonly [number, number, number, number], pad = 1.5): boolean {
+  return Math.abs(x - box[0]) <= box[2] + pad && Math.abs(z - box[1]) <= box[3] + pad;
+}
+
+/**
+ * Walkable plaza points immediately outside open Mosque doorway bays so courtyard flow fields
+ * gravitate naturally toward currently open central bays without entering closed doors, carpets,
+ * or building solids.
+ */
+export function buildDoorwayGoals(columns: readonly (readonly [number, number])[] = []): XY[] {
+  const plaza = alharamainPlaza().features;
+  const ring = (f: (typeof plaza)[number]) => f.geometry.coordinates[0].slice(0, -1).map((ll) => m(ll as [number, number]));
+  const sectors = plaza.filter((f) => f.properties.kind === 'sector' || f.properties.kind === 'annex').map(ring);
+  const blocked = rugLayout(columns).blocked;
+  const colPts = columns.map(m);
+  const out: XY[] = [];
+
+  for (const bay of openDoorwayBayCentres()) {
+    // Try stepping outward (4m..22m) so portals recessed slightly inside the roof box still land on open marble plaza.
+    for (const step of [5, 10, 16, 22]) {
+      const gx = bay.x + bay.outward[0] * step;
+      const gz = bay.y + bay.outward[1] * step;
+      if (inBox(gx, gz, MOSQUE_MAIN, 1.5) || inBox(gx, gz, MOSQUE_SOUTH, 1.5)) continue;
+      if (!sectors.some((s) => pointInPoly(gx, gz, s))) continue;
+      if (blocked.some((b) => pointInPoly(gx, gz, b))) continue;
+      if (colPts.some(([cx, cz]) => Math.hypot(gx - cx, gz - cz) < 1.5)) continue;
+      out.push([gx, gz]);
+      break;
+    }
+  }
+  return out;
+}
 
 /** Points about 25 m apart inside a ring: where women walk to in their areas. */
 function inside(ring: readonly XY[], step = 25): XY[] {
@@ -59,7 +103,7 @@ export function crowdInput(columns: readonly (readonly [number, number])[]): Cro
     // Buildings stay closed even where a cleared corridor crosses them.
     solid: [box(MOSQUE_MAIN, 0.5), box(MOSQUE_SOUTH, 0.5), ...restroomFootprints(0.5)],
     columns: columns.map(m),
-    goals: POIS.filter((p) => p.category === 'gates').map((p) => m([p.lng, p.lat])),
+    goals: [...POIS.filter((p) => p.category === 'gates').map((p) => m([p.lng, p.lat])), ...buildDoorwayGoals(columns)],
     womenOnly: WOMEN_AREAS.map((a) => a.zone.map(mLatLng)),
     // The women's barriers, the rails of the Rawdah's queues and the greeting's barriers (owner, 2026-11-08).
     fences: [...WOMEN_AREAS.flatMap((a) => a.barriers.map((line) => line.map(mLatLng))), ...QUEUE_RAILS, ...GREETING_BARRIERS],

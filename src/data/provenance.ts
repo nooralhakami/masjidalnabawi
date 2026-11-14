@@ -27,6 +27,7 @@ export type DataSourceId =
   | 'haram-fence'
   | 'vertical-nodes'
   | 'interior-layout'
+  | 'mosque-interior-3d'
   | 'saqifah-3d'
   | 'osm-buildings-2026-10-08'
   | 'apple-maps-rug-ref'
@@ -134,6 +135,13 @@ export const DATA_PROVENANCE: Readonly<Record<DataSourceId, DataSourceRecord>> =
     routingAllowed: true,
     path: 'src/domain/interior-layout.ts',
     description: 'Verified interior Mosque prayer halls, Gate 21 women Rawdah corridor, and men interior corridors.',
+  },
+  'mosque-interior-3d': {
+    id: 'mosque-interior-3d',
+    tier: 'candidate',
+    routingAllowed: false,
+    path: 'src/map/mosque-interior-3d.ts',
+    description: '3D interior architectural model (hypostyle columns, gilded capitals, Ablaq arches, chandeliers, carpets, and walkways; manual cutaway view only).',
   },
   'saqifah-3d': {
     id: 'saqifah-3d',

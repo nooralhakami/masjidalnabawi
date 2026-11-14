@@ -12,8 +12,17 @@ import { lotsToAsk, planExit, planFromLot, planRoutes, type GarageStart, type Pl
 import { rawdahState } from '../domain/rawdah';
 import { spotOf } from '../routing/spot';
 import { isBehindRawdahPoi, isWomenPoi, walkShortcutPath } from '../routing/walk';
+import { toModelMetres } from '../domain/frames';
+import { MOSQUE_MAIN, MOSQUE_SOUTH } from '../domain/prayer-layout';
 import { bearing } from '../presentation/route-view';
-import { accessibleRoute, garageQ, headingUp, level, nav, notify, route, selected, setHeadingUp, sheet, travel, whereQ, type WhereAnswer } from '../state/store';
+import { accessibleRoute, garageQ, headingUp, insideMosque, level, nav, notify, route, selected, setHeadingUp, sheet, travel, whereQ, type WhereAnswer } from '../state/store';
+
+/** Check whether a WGS84 point `[lat, lng]` lies inside the main or old southern Mosque footprint. */
+export function isLatLngInsideMosque(lat: number, lng: number): boolean {
+  const [x, z] = toModelMetres([lng, lat]);
+  const inBox = (b: readonly [number, number, number, number]) => Math.abs(x - b[0]) <= b[2] && Math.abs(z - b[1]) <= b[3];
+  return inBox(MOSQUE_MAIN) || inBox(MOSQUE_SOUTH);
+}
 
 /** Within this distance of the car park leg, the visitor is in the car park: no re-planning from the streets. */
 const IN_CAR_PARK_M = 60;
@@ -69,6 +78,8 @@ export class Trip {
     this.geo.onFix((f) => {
       // During navigation the tracker draws the dot (snapped to the route when close).
       if (!this.tracker.active) me.update(f.lat, f.lng, f.accuracy, f.heading);
+      // Only surface an optional banner when inside the Mosque; never auto-enable interiorView.
+      insideMosque.value = isLatLngInsideMosque(f.lat, f.lng);
     });
     this.geo.onStatus((s, extra) => {
       if (s === 'locating') notify(t('locating'), 'info', 2500);

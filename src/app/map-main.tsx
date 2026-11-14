@@ -19,7 +19,7 @@ import { loadLang } from '../i18n/load';
 import { CAR_ENTRANCES } from '../data-next/car-entrances';
 import { entranceOpen } from '../state/entrances';
 import { MapEngine } from '../map/engine';
-import { filter, headingUp, markersHidden, nav, notify, route, parkingSub, query, rawdahH, searching, selected, sheetH, toiletSub, view3d, weather } from '../state/store';
+import { filter, headingUp, insideMosque, interiorView, markersHidden, nav, notify, route, parkingSub, query, rawdahH, searching, selected, sheetH, toiletSub, view3d, weather } from '../state/store';
 import { LangContext } from '../ui/i18n';
 import { MapControls, MapTools, NEXT_VIEW, type MapView } from '../ui/shell/MapControls';
 import { WeatherChip } from '../ui/shell/WeatherChip';
@@ -70,6 +70,13 @@ async function main() {
         if (!e) return;
         const open = entranceOpen.value[e.id];
         notify(`${t(e.name)} · ${open ? t('a_open') : t('ent_closed')}${e.note ? ` — ${t(e.note)}` : ''}`, 'info', 7000);
+      },
+      onDoorToggle: (res) => {
+        const poi = res.gate ? POI_BY_ID.get(res.gate.id) : undefined;
+        const name = poi ? nm(poi) : res.gate ? res.gate.nameAr : '';
+        if (res.reason === 'always_closed') notify(t('door_always_closed', { name }), 'info', 3500);
+        else if (res.reason === 'never_closed') notify(t('door_never_closed', { name }), 'ok', 3500);
+        else if (res.ok) notify(t(res.open ? 'door_opened' : 'door_closed', { name }), res.open ? 'ok' : 'info', 3000);
       },
     });
   } catch {
@@ -125,6 +132,11 @@ async function main() {
   effect(() => void document.querySelector('.map-page')!.toggleAttribute('data-trip', route.value !== null));
   fac.onChange(() => engine.refreshStatus());
   effect(() => engine.setEntrances(entranceOpen.value));
+  effect(() => {
+    const on = interiorView.value;
+    if (on && !engine.is3D) view3d.value = engine.toggle3DMode(true);
+    engine.setInteriorMode(on);
+  });
   addEventListener('resize', () => engine.refit());
 
   const watchNorth = (fn: (deg: number) => void) => {
@@ -173,6 +185,8 @@ async function main() {
   let initialVisit = visitAt >= 0 ? visitAt : undefined;
   let initialLib = params.get('lib') ?? undefined;
   const admin = params.get('admin') === '1';
+  if (params.get('interior') === '1') interiorView.value = true;
+  if (params.get('insideMosque') === '1') insideMosque.value = true;
 
   const draw = () => {
     const lang = getLang();
@@ -187,6 +201,9 @@ async function main() {
             engine.resetNorth();
           }}
           onTilt={(d) => engine.tilt(d)}
+          onInterior={() => {
+            interiorView.value = !interiorView.value;
+          }}
           watchNorth={watchNorth}
         />
       </LangContext.Provider>,
