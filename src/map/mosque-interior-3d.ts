@@ -24,7 +24,20 @@ import { WOMEN_RAWDAH_CORRIDOR_BOUNDS } from '../domain/rawdah-layout';
  */
 
 export interface Interior3DProps {
-  part: 'carpet' | 'carpet_stripe' | 'rawdah' | 'walkway' | 'walkway_inlay' | 'plinth' | 'ac_brass' | 'column' | 'capital' | 'arch' | 'chandelier' | 'stanchion_post' | 'stanchion_rope';
+  part:
+    | 'carpet'
+    | 'carpet_stripe'
+    | 'rawdah'
+    | 'walkway'
+    | 'walkway_inlay'
+    | 'plinth'
+    | 'ac_brass'
+    | 'column'
+    | 'capital'
+    | 'arch'
+    | 'chandelier'
+    | 'stanchion_post'
+    | 'stanchion_rope';
   color: string;
   height: number;
   base: number;
@@ -34,14 +47,7 @@ export interface Interior3DProps {
 const RAD = Math.PI / 180;
 const QIBLA_ROT_RAD = (QIBLA_BEARING_DEG - 180) * RAD;
 
-function rectModelFeature(
-  cx: number,
-  cz: number,
-  hx: number,
-  hz: number,
-  props: Interior3DProps,
-  rotRad = 0,
-): Feature<Polygon, Interior3DProps> {
+function rectModelFeature(cx: number, cz: number, hx: number, hz: number, props: Interior3DProps, rotRad = 0): Feature<Polygon, Interior3DProps> {
   const cos = Math.cos(rotRad);
   const sin = Math.sin(rotRad);
   const corners: [number, number][] = [
@@ -125,8 +131,18 @@ export function buildMosqueInterior3D(): FeatureCollection<Polygon, Interior3DPr
   };
 
   // Carve main expansion between the major N-S and E-W white marble walkways
-  const xEdges = [INTERIOR_MAIN_BOUNDS.xMin, ...INTERIOR_WALKWAY_X.map((w) => w - INTERIOR_WALKWAY_HALF_W), ...INTERIOR_WALKWAY_X.map((w) => w + INTERIOR_WALKWAY_HALF_W), INTERIOR_MAIN_BOUNDS.xMax].sort((a, b) => a - b);
-  const zEdges = [INTERIOR_MAIN_BOUNDS.zMin, ...INTERIOR_WALKWAY_Z.map((w) => w - INTERIOR_WALKWAY_HALF_W), ...INTERIOR_WALKWAY_Z.map((w) => w + INTERIOR_WALKWAY_HALF_W), INTERIOR_MAIN_BOUNDS.zMax].sort((a, b) => a - b);
+  const xEdges = [
+    INTERIOR_MAIN_BOUNDS.xMin,
+    ...INTERIOR_WALKWAY_X.map((w) => w - INTERIOR_WALKWAY_HALF_W),
+    ...INTERIOR_WALKWAY_X.map((w) => w + INTERIOR_WALKWAY_HALF_W),
+    INTERIOR_MAIN_BOUNDS.xMax,
+  ].sort((a, b) => a - b);
+  const zEdges = [
+    INTERIOR_MAIN_BOUNDS.zMin,
+    ...INTERIOR_WALKWAY_Z.map((w) => w - INTERIOR_WALKWAY_HALF_W),
+    ...INTERIOR_WALKWAY_Z.map((w) => w + INTERIOR_WALKWAY_HALF_W),
+    INTERIOR_MAIN_BOUNDS.zMax,
+  ].sort((a, b) => a - b);
   for (let i = 0; i + 1 < xEdges.length; i += 2) {
     for (let j = 0; j + 1 < zEdges.length; j += 2) {
       addCarpetBlock(xEdges[i] + 0.4, xEdges[i + 1] - 0.4, zEdges[j] + 0.4, zEdges[j + 1] - 0.4, false);
@@ -228,19 +244,13 @@ export function buildMosqueInterior3D(): FeatureCollection<Polygon, Interior3DPr
         const archHalfSpan = (INTERIOR_COL_STEP_M / segments) * 0.46;
         const archElev = s === 0 || s === 4 ? 7.6 : s === 1 || s === 3 ? 8.15 : 8.55;
         features.push(
-          rectModelFeature(
-            sx,
-            sz,
-            horizontal ? archHalfSpan : 0.42,
-            horizontal ? 0.42 : archHalfSpan,
-            {
-              part: 'arch',
-              color: ablaqPalette[s % ablaqPalette.length],
-              base: archElev,
-              height: archElev + 0.95,
-              opacity: 0.92,
-            },
-          ),
+          rectModelFeature(sx, sz, horizontal ? archHalfSpan : 0.42, horizontal ? 0.42 : archHalfSpan, {
+            part: 'arch',
+            color: ablaqPalette[s % ablaqPalette.length],
+            base: archElev,
+            height: archElev + 0.95,
+            opacity: 0.92,
+          }),
         );
       }
       // Chandelier centered in bays whose neighbor diagonally exists (avoids double chandeliers)

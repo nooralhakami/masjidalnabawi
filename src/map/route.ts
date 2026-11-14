@@ -291,10 +291,7 @@ export class RouteLayer {
       this.shortcutPath = [];
       this.shortcutKind = 'aisle';
     }
-    this.set(
-      'route-shortcut',
-      this.shortcutPath.length > 1 ? [line(this.shortcutPath, { part: 'shortcut', kind: this.shortcutKind })] : [],
-    );
+    this.set('route-shortcut', this.shortcutPath.length > 1 ? [line(this.shortcutPath, { part: 'shortcut', kind: this.shortcutKind })] : []);
     if (!this.plans.length) return;
     this.marks = this.marks.filter((m) => m.kind !== 'shortcut-badge');
     if (this.shortcutPath.length > 1) {
@@ -406,10 +403,7 @@ export class RouteLayer {
     }
     this.marks = marks;
     this.set('route-lines', lines);
-    this.set(
-      'route-shortcut',
-      this.shortcutPath.length > 1 ? [line(this.shortcutPath, { part: 'shortcut', kind: this.shortcutKind })] : [],
-    );
+    this.set('route-shortcut', this.shortcutPath.length > 1 ? [line(this.shortcutPath, { part: 'shortcut', kind: this.shortcutKind })] : []);
     this.set(
       'route-alts',
       this.others.map((o) => line(o.path, { i: o.i })),

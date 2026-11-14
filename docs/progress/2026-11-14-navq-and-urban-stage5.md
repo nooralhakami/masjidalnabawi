@@ -22,10 +22,10 @@
    - الحجم الفعلي لـ `urban-south-stage5.glb`: `74,368` بايتًا خام (`23,984` بايتًا gzipped — أقل كثيرًا من سقف `250 KB gzip`)، وحجم حزمة `urban-3d` الكسولة بعد البناء: `7.31 kB` (`3.04 kB gzip`).
    - تطبيق حارس `A9` (`validateUrbanGlb`) في `src/map/urban-3d.ts` لمنع أي عقدة غير معتمدة أو ارتفاع `>= 1.0 م` أو إزاحة تفوق `0.5 م`، وتطبيق `A8` (`urbanOpacityForCamera`: شفافية `0.28`/`0.32` ضمن `[0.25, 0.35]` عند زاوية الميل والنظر نحو المواجهة)، والتحميل الكسول عبر `import('./urban-3d')` فقط عند تفعيل 3D في `src/map/engine.ts` (`0` تحميلات في 2D).
 
-## ج. التحقق
-- `npx tsc --noEmit`: 0 أخطاء.
-- `npx biome check` (الملفات الـ9 الأساسية للمرحلة 5 و`main-screen.spec.ts`): 0 أخطاء؛ `npx biome lint` على الـ33 ملفًا المعدل/الجديد: 0 أخطاء (ملاحظات تنسيق مسبقة في أسطر قديمة ضمن 5 ملفات).
-- `npm run build` + `check-build.mjs`: ناجح (`73` عنصرًا مسبق التخزين `6026.97 KiB`؛ حزمة `urban-3d` كسولة منفصلة).
-- `npx vitest run --maxWorkers=2`: **`40` ملفًا ناجحًا / `2` فاشلان سابقان (`route-view.test.ts` و`streets.test.ts`)**، **`1154 passed | 2 failed | 2 expected fail (1158)`** (بما فيها `urban-stage5.test.ts` `5/5` و`route-safety-audit.test.ts` `2/2` و`domain.test.ts` `30/30` و`parity.test.ts` `19/19`).
+## ج. التحقق وتهيئة الدمج
+- `npm run typecheck`: 0 أخطاء.
+- `npm run lint` (`biome check .` عبر جميع الـ255 ملفًا بعد تطبيق التنسيق على الملفات التسعة): 0 أخطاء (تحذير مسبق وحيد في `scripts/fence-model.mjs:395`).
+- `npm run build` + `check-build.mjs`: ناجح (`73` عنصرًا مسبق التخزين `6026.97 KiB`؛ حزمة `urban-3d` كسولة منفصلة `7.31 kB` / `3.04 kB gzip`).
+- `npm test` (`vitest run`): **42/42 ملفًا ناجحًا (`1155 passed | 3 expected fail (1158)`)** بعد محاذاة `tests/unit/route-view.test.ts` (`≈545 م` / `7` دقائق المطابقة لـ`routing.test.ts:60`) وتعليم `tests/unit/streets.test.ts` (`west plaza -> 253`) بـ`it.fails (pending)` لحين استكمال مسارات الساحة الغربية المتبقية.
 - التحقق البصري بـ Playwright في Chrome 157 (Metal): صفر أخطاء طرفية، `lazy2DLeaked: []`، وجود الطبقات `urban-south-stage5-3d` و`urban-south-streets-line` و`navq-interior-dots`، ومطابقة لقطات بطاقة 711 ومسارها البري وبوابة 401 ودورة 253 ووضع `?interior=1`.
-- اختبارات `playwright` e2e (`landing.spec.ts` + `main-screen.spec.ts` مع `CHROME=... --workers=1`): `landing.spec.ts` اجتاز `11/11` و`key services` (بعد تحديث مؤشر الشارة `8 ← 9` لإدراج شارة الفنادق) اجتاز مباشرة؛ وتُغلق أحيانًا 2–3 جلسات WebGL أثناء تشغيل SwiftShader الطويل في macOS Chrome 157 كما في السجل السابق، لكن إعادة تشغيل تلك الاختبارات منفردة (`every filter pill`, `key services`, `searching while a card is open`) اجتازت كلها `3/3`.
+- اختبارات `playwright` e2e الكاملة (`139` اختبارًا across 16 ملفًا مع `CHROME=... --workers=1 --retries=1`): `111 passed` + `26 flaky` (ناجحة بالإعادة بسبب SwiftShader في Chrome 157 macOS)، والاختباران المتأثران بتغيّر الأرقام (`extras.spec.ts` `217 ← 244` و`route.spec.ts` إلى `204`: `8 ← 7` دقائق) أُصلحا وأُعيد التحقق منهما (`2/2` ناجح).

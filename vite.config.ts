@@ -10,11 +10,7 @@ const POIS: { id: number; category: string; subCategory: string }[] = JSON.parse
 const URBAN_APPROVED: { tier?: string; approvedBy?: string; buildings?: { poiId: number }[] } = JSON.parse(
   readFileSync(resolve(import.meta.dirname, 'data/urban-approved.json'), 'utf8'),
 );
-const APPROVED_HOTEL_IDS = new Set(
-  URBAN_APPROVED.tier === 'verified' && URBAN_APPROVED.approvedBy === 'owner'
-    ? (URBAN_APPROVED.buildings ?? []).map((b) => b.poiId)
-    : [],
-);
+const APPROVED_HOTEL_IDS = new Set(URBAN_APPROVED.tier === 'verified' && URBAN_APPROVED.approvedBy === 'owner' ? (URBAN_APPROVED.buildings ?? []).map((b) => b.poiId) : []);
 /** The landing page's numbers, computed from the data at build time (the live app's vite.config.ts). */
 const DEFINE = {
   __POI_COUNTS__: JSON.stringify({

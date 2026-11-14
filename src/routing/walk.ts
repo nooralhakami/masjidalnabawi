@@ -499,14 +499,7 @@ export function network(): Network {
     const pts = w.path.map(toM);
     // Split south-inner-walk at greeting/queue barrier boundaries so barrier-free stretches (serving 201, 203, 205) remain 0-penalty.
     if (w.id === 'south-inner-walk' && pts.length === 2) {
-      return [
-        pts[0],
-        modelToWalkMetres([-123.5, -30.3]),
-        modelToWalkMetres([-105, -30.3]),
-        modelToWalkMetres([-3, -30.3]),
-        modelToWalkMetres([45, -30.3]),
-        pts[1],
-      ];
+      return [pts[0], modelToWalkMetres([-123.5, -30.3]), modelToWalkMetres([-105, -30.3]), modelToWalkMetres([-3, -30.3]), modelToWalkMetres([45, -30.3]), pts[1]];
     }
     return pts;
   });
@@ -695,8 +688,7 @@ function localDetourHooks(
   const verts: XY[] = [p, ...nearAnchors];
   const m = verts.length;
   const adj: [number, number][][] = Array.from({ length: m }, () => []);
-  const segClear = (a: XY, b: XY) =>
-    !blocking.some((r) => segmentHits(a, b, r)) && !segmentHasViolation(a, b, allowedZones, carpetEndpts, w, allowedBarrierSources);
+  const segClear = (a: XY, b: XY) => !blocking.some((r) => segmentHits(a, b, r)) && !segmentHasViolation(a, b, allowedZones, carpetEndpts, w, allowedBarrierSources);
 
   for (let i = 0; i < m; i++) {
     for (let j = i + 1; j < m; j++) {
@@ -856,10 +848,7 @@ function graphRoute(A: XY, B: XY, N: Network, avoid?: Uint8Array): { pts: XY[]; 
     !insideMosque && edgeSafetyPenalty(h.e, allowedZones) > 0 ? segmentPenalty(h.q, N.nodes[nodeIdx], allowedZones, carpetEndpts) : 0;
 
   for (const h of hs) {
-    adj[S].push(
-      [h.e.u, h.penalty + h.d + h.along + endPenalty(h, h.e.u)],
-      [h.e.v, h.penalty + h.d + h.e.l - h.along + endPenalty(h, h.e.v)],
-    );
+    adj[S].push([h.e.u, h.penalty + h.d + h.along + endPenalty(h, h.e.u)], [h.e.v, h.penalty + h.d + h.e.l - h.along + endPenalty(h, h.e.v)]);
   }
   for (const h of ht) {
     adj[h.e.u].push([T, h.penalty + h.d + h.along + endPenalty(h, h.e.u)]);
@@ -902,26 +891,14 @@ function graphRoute(A: XY, B: XY, N: Network, avoid?: Uint8Array): { pts: XY[]; 
     // The hooks used at each end: the ones that give the costs Dijkstra settled on.
     const hS = hs.reduce(
       (m, h) => {
-        const c =
-          h.penalty +
-          (h.e.u === first
-            ? h.d + h.along + endPenalty(h, h.e.u)
-            : h.e.v === first
-              ? h.d + h.e.l - h.along + endPenalty(h, h.e.v)
-              : Infinity);
+        const c = h.penalty + (h.e.u === first ? h.d + h.along + endPenalty(h, h.e.u) : h.e.v === first ? h.d + h.e.l - h.along + endPenalty(h, h.e.v) : Infinity);
         return c < m.c ? { h, c } : m;
       },
       { h: hs[0], c: Infinity },
     ).h;
     const hT = ht.reduce(
       (m, h) => {
-        const c =
-          h.penalty +
-          (h.e.u === last
-            ? h.d + h.along + endPenalty(h, h.e.u)
-            : h.e.v === last
-              ? h.d + h.e.l - h.along + endPenalty(h, h.e.v)
-              : Infinity);
+        const c = h.penalty + (h.e.u === last ? h.d + h.along + endPenalty(h, h.e.u) : h.e.v === last ? h.d + h.e.l - h.along + endPenalty(h, h.e.v) : Infinity);
         return c < m.c ? { h, c } : m;
       },
       { h: ht[0], c: Infinity },
@@ -951,8 +928,7 @@ export function walkPath(a: LatLng, b: LatLng): LatLng[] {
   const carpetEndpts: XY[] = [];
   if (pointInCarpet(A, w)) carpetEndpts.push(A);
   if (pointInCarpet(B, w)) carpetEndpts.push(B);
-  const pathSafe = (poly: XY[]) =>
-    insideMosque || !poly.some((p, i) => i > 0 && segmentHasViolation(poly[i - 1], p, allowedZones, carpetEndpts, w));
+  const pathSafe = (poly: XY[]) => insideMosque || !poly.some((p, i) => i > 0 && segmentHasViolation(poly[i - 1], p, allowedZones, carpetEndpts, w));
 
   let pts: XY[] | null = null;
   const graph = graphRoute(A, B, N);
@@ -961,12 +937,7 @@ export function walkPath(a: LatLng, b: LatLng): LatLng[] {
   // building in the way, never over it or through carpets, barriers, or women's areas.
   if (openTogether(A, B) && !N.obstacles.some((r) => segmentHits(A, B, r))) {
     const open = aroundBuildings([A, B], N.buildings);
-    if (
-      !open.some((p, i) => i > 0 && N.blocks.some((r) => crossesInterior(open[i - 1], p, r, [A, B]))) &&
-      pathSafe(open) &&
-      (!graph || pathLen(open) < graph.length)
-    )
-      pts = open;
+    if (!open.some((p, i) => i > 0 && N.blocks.some((r) => crossesInterior(open[i - 1], p, r, [A, B]))) && pathSafe(open) && (!graph || pathLen(open) < graph.length)) pts = open;
   }
 
   if (!pts && dist(A, B) < short_L_route_max_m) {
@@ -978,9 +949,7 @@ export function walkPath(a: LatLng, b: LatLng): LatLng[] {
       if (
         !hitsAny(A, c, N) &&
         !hitsAny(c, B, N) &&
-        (insideMosque ||
-          (!segmentHasViolation(A, c, allowedZones, carpetEndpts, w) &&
-            !segmentHasViolation(c, B, allowedZones, carpetEndpts, w))) &&
+        (insideMosque || (!segmentHasViolation(A, c, allowedZones, carpetEndpts, w) && !segmentHasViolation(c, B, allowedZones, carpetEndpts, w))) &&
         (!graph || L < graph.length / 1.5)
       ) {
         pts = [A, c, B];
@@ -1003,9 +972,7 @@ export function walkPath(a: LatLng, b: LatLng): LatLng[] {
     const l = clean[clean.length - 1];
     if (Math.hypot(pts[i][0] - l[0], pts[i][1] - l[1]) > 0.5) clean.push(pts[i]);
   }
-  return clearApprovedBuildings(
-    (insideMosque ? roundCorners(clean, corner_radius_m) : roundCornersSafe(clean, corner_radius_m, allowedZones, carpetEndpts)).map(fromM),
-  );
+  return clearApprovedBuildings((insideMosque ? roundCorners(clean, corner_radius_m) : roundCornersSafe(clean, corner_radius_m, allowedZones, carpetEndpts)).map(fromM));
 }
 
 /**

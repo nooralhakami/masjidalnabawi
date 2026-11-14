@@ -68,12 +68,7 @@ function orient(a: XY, b: XY, c: XY): number {
 }
 
 function onSegment(a: XY, b: XY, p: XY): boolean {
-  return (
-    p[0] >= Math.min(a[0], b[0]) - 1e-9 &&
-    p[0] <= Math.max(a[0], b[0]) + 1e-9 &&
-    p[1] >= Math.min(a[1], b[1]) - 1e-9 &&
-    p[1] <= Math.max(a[1], b[1]) + 1e-9
-  );
+  return p[0] >= Math.min(a[0], b[0]) - 1e-9 && p[0] <= Math.max(a[0], b[0]) + 1e-9 && p[1] >= Math.min(a[1], b[1]) - 1e-9 && p[1] <= Math.max(a[1], b[1]) + 1e-9;
 }
 
 export function segmentsCross(a: XY, b: XY, c: XY, d: XY): boolean {

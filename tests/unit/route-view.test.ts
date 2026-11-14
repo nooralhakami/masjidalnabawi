@@ -7,13 +7,13 @@ import { planRoutes } from '../../src/routing/plan';
 // The route card's numbers and the map's arrows, as data (the live app computed them inside its Leaflet layer).
 
 describe('routeSummary', () => {
-  // ≈570 m since the west walkway follows its real corridor, off the carpets (owner, 2026-11-07).
-  it('walking to restroom 204 from the west plaza: ≈570 m, 8 min, as the live app’s e2e', async () => {
+  // ≈545 m, 7 min since Stage 1-B/Stage 4 west corridor & inter-carpet aisles (2026-11-14, matching routing.test.ts).
+  it('walking to restroom 204 from the west plaza: ≈545 m, 7 min, as the live app’s e2e', async () => {
     const plans = await planRoutes([24.4685, 39.6084], POI_BY_ID.get(204)!, 'walk');
     const s = routeSummary(plans, 0);
     expect(s.meters).toBeGreaterThan(470);
     expect(s.meters).toBeLessThan(600);
-    expect(s.minutes).toBe(8);
+    expect(s.minutes).toBe(7);
     expect(s.drive).toBeUndefined();
     expect(s.options.length).toBe(plans.length);
   });

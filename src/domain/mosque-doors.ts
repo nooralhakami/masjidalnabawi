@@ -14,13 +14,9 @@ import { fromModelMetres, toModelMetres } from './frames';
 export const ALWAYS_CLOSED_GATES: ReadonlySet<number> = new Set([18, 23, 26, 31, 32]);
 export const NEVER_CLOSED_GATES: ReadonlySet<number> = new Set([1, 2]);
 
-export const MAJOR_MULTI_BAY_GATES: ReadonlySet<number> = new Set([
-  7, 8, 9, 13, 16, 17, 19, 20, 21, 22, 23, 24, 25, 28, 29, 33, 34, 35, 37, 38,
-]);
+export const MAJOR_MULTI_BAY_GATES: ReadonlySet<number> = new Set([7, 8, 9, 13, 16, 17, 19, 20, 21, 22, 23, 24, 25, 28, 29, 33, 34, 35, 37, 38]);
 
-export const NUMBERED_MULTI_BAY_GATES: ReadonlySet<number> = new Set([
-  6, 10, 12, 14, 15, 18, 26, 27, 30, 31, 36,
-]);
+export const NUMBERED_MULTI_BAY_GATES: ReadonlySet<number> = new Set([6, 10, 12, 14, 15, 18, 26, 27, 30, 31, 36]);
 
 export type WallSide = 'N' | 'S' | 'E' | 'W';
 
@@ -93,14 +89,7 @@ function defaultTotalAndOpen(id: number): { totalBays: 1 | 3 | 5; defaultOpenBay
   };
 }
 
-function buildBays(
-  id: number,
-  cx: number,
-  cy: number,
-  tangent: readonly [number, number],
-  totalBays: 1 | 3 | 5,
-  openBays: number,
-): DoorBay[] {
+function buildBays(id: number, cx: number, cy: number, tangent: readonly [number, number], totalBays: 1 | 3 | 5, openBays: number): DoorBay[] {
   const bays: DoorBay[] = [];
   const halfSpan = (totalBays - 1) / 2;
   const openStart = openBays > 0 ? Math.floor((totalBays - openBays) / 2) : totalBays;

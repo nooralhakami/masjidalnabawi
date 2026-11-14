@@ -1,4 +1,13 @@
-import { AttributionControl, Map as MLMap, ScaleControl, setWorkerUrl, type ExpressionSpecification, type GeoJSONSource, type RasterSourceSpecification, type SkySpecification } from 'maplibre-gl';
+import {
+  AttributionControl,
+  Map as MLMap,
+  ScaleControl,
+  setWorkerUrl,
+  type ExpressionSpecification,
+  type GeoJSONSource,
+  type RasterSourceSpecification,
+  type SkySpecification,
+} from 'maplibre-gl';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
