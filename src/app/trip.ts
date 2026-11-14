@@ -315,7 +315,7 @@ export class Trip {
       isWomen: womenTrip,
       allowWomenRawdahCorridor,
     });
-    this.engine.route.setShortcut(shortcut?.path ?? null);
+    this.engine.route.setShortcut(shortcut);
   }
 
   private showPlans(next: Plan[], i: number, animate: boolean) {

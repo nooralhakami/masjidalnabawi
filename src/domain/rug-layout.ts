@@ -55,6 +55,19 @@ export interface AisleProps {
   widthM: number;
 }
 
+export interface RugPatch {
+  courtyard: boolean;
+  /** Tight polygon corners around the laid carpets of this patch (model metres). */
+  poly: XY[];
+  /** Polygon padded to enclose any perimeter prayer barrier (`0.55 m`), model metres. */
+  padded: XY[];
+  /** Bounds in the 1°-turned laid frame (`toLaid`). */
+  u0: number;
+  u1: number;
+  v0: number;
+  v1: number;
+}
+
 export interface RugLayout {
   rugs: Rug[];
   /** The ground each laid area covers (carpets and the gaps inside it), four corners each, in metres. */
@@ -65,6 +78,8 @@ export interface RugLayout {
   blocked: XY[][];
   /** Small and medium walking aisles carved between sub-blocks inside prayer areas (for rendering & shortcuts). */
   aisles: FeatureCollection<LineString, AisleProps>;
+  /** Contiguous laid rectangular prayer patches (for safe walkway detours). */
+  patches: RugPatch[];
 }
 
 /** Rotation of the prayer carpets (degrees clockwise): aligned with the canopies, never tilted to the qibla. */
@@ -189,6 +204,7 @@ export function rugLayout(columns: readonly (readonly [number, number])[]): RugL
   const rugs: Rug[] = [];
   const covered: XY[][] = [];
   const blocked: XY[][] = [];
+  const patches: RugPatch[] = [];
   const features: Feature<Polygon, { height: number }>[] = [];
   const aisleFeatures: Feature<LineString, AisleProps>[] = [];
   /** The carpets laid so far, by their north-west corner in the laid frame, hashed by size. */
@@ -393,11 +409,35 @@ export function rugLayout(columns: readonly (readonly [number, number])[]): RugL
           );
         }
       }
-      if (!courtyard) continue;
       const uStart = colU(rect.c0);
       const uEnd = colU(rect.c1) + RUG_W;
       const vTop = lattice[0].v0;
       const vBot = lattice[lattice.length - 1].v1;
+      const padM = courtyard ? 0.58 : 0.35;
+      patches.push({
+        courtyard,
+        poly: (
+          [
+            [uStart, vTop],
+            [uEnd, vTop],
+            [uEnd, vBot],
+            [uStart, vBot],
+          ] as XY[]
+        ).map(fromLaid),
+        padded: (
+          [
+            [uStart - padM, vTop - padM],
+            [uEnd + padM, vTop - padM],
+            [uEnd + padM, vBot + padM],
+            [uStart - padM, vBot + padM],
+          ] as XY[]
+        ).map(fromLaid),
+        u0: uStart,
+        u1: uEnd,
+        v0: vTop,
+        v1: vBot,
+      });
+      if (!courtyard) continue;
       const edges: readonly ['h' | 'v', number, number, number, number, number][] = [
         ['h', 0, -1, vTop, uStart, uEnd],
         ['h', 0, 1, vBot, uStart, uEnd],
@@ -444,9 +484,15 @@ export function rugLayout(columns: readonly (readonly [number, number])[]): RugL
     blocked,
     barriers: { type: 'FeatureCollection', features },
     aisles: { type: 'FeatureCollection', features: aisleFeatures },
+    patches,
   };
   cache = { key, layout };
   return layout;
+}
+
+/** Return the active cached rug layout (with canopy columns once loaded by the scene). */
+export function currentRugLayout(): RugLayout {
+  return cache ? cache.layout : rugLayout([]);
 }
 
 /**

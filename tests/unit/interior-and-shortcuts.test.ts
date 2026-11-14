@@ -8,6 +8,7 @@ import { buildInterCarpetAisles, rugLayout } from '../../src/map/rug-layout';
 import { saqifahAndSurroundings3D, saqifahGround2D } from '../../src/map/saqifah-3d';
 import { womenRawdahCorridorBarriers } from '../../src/map/women-barriers';
 import { walkPath, walkShortcutPath } from '../../src/routing/walk';
+import { SHORTCUT_PAINT, shortcutBadgeMeta } from '../../src/map/route';
 
 function pointInPolygon([lat, lng]: [number, number], ring: readonly [number, number][]): boolean {
   let inside = false;
@@ -118,5 +119,22 @@ describe('Phase 1-B resolution, inter-carpet aisles, interior routing, and Saqif
 
     // Ensure GLB canopy anchor constant was not dropped
     expect(ALHARAMAIN_MODELS.length).toBeGreaterThan(0);
+  });
+
+  it('uses faded styling and gender/access badge metadata for secondary shortcuts (D15)', () => {
+    expect(SHORTCUT_PAINT.lineOpacity).toBeLessThan(0.5);
+    expect(SHORTCUT_PAINT.casingOpacity).toBeLessThan(0.35);
+    expect(SHORTCUT_PAINT.lineWidth).toBeLessThanOrEqual(2.5);
+
+    const men = shortcutBadgeMeta('interior');
+    const women = shortcutBadgeMeta('women_rawdah');
+    const aisle = shortcutBadgeMeta('aisle');
+
+    expect(men.label).toContain('للرجال');
+    expect(men.glyph).toBeTruthy();
+    expect(women.label).toContain('للنساء');
+    expect(women.glyph).toBeTruthy();
+    expect(aisle.label).toBeTruthy();
+    expect(new Set([men.color, women.color, aisle.color]).size).toBe(3);
   });
 });

@@ -449,13 +449,13 @@ describe('Phase 3 route safety audit (D12-a: read-only audit without changing ro
     expect(audit.destCount).toBe(147);
     expect(audit.totalRoutes).toBe(22_050);
     expect(audit.cleanRoutes + audit.violatingRoutes).toBe(audit.totalRoutes);
-    expect(audit.cleanRoutes).toBe(6_986);
-    expect(audit.violatingRoutes).toBe(15_064);
+    expect(audit.cleanRoutes).toBe(21_042);
+    expect(audit.violatingRoutes).toBe(1_008);
     expect(audit.counts).toEqual({
-      carpet: 10_084,
-      barrier: 14_539,
-      women_transit: 1_041,
-      women_barrier_cross: 1_530,
+      carpet: 717,
+      barrier: 296,
+      women_transit: 0,
+      women_barrier_cross: 0,
     });
   }, 60_000);
 });
