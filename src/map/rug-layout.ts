@@ -42,8 +42,10 @@ export interface RugLayout {
   blocked: XY[][];
 }
 
+/** Rotation of the prayer carpets (degrees clockwise): aligned with the canopies, never tilted to the qibla. */
+export const RUG_TURN_DEG = ALHARAMAIN_MODELS[1].rotation;
 /** The frame the carpets are laid in: turned with the canopies (and the paving), so rows run true. */
-const TURN = (ALHARAMAIN_MODELS[1].rotation * Math.PI) / 180;
+const TURN = (RUG_TURN_DEG * Math.PI) / 180;
 const toLaid = ([x, z]: XY): XY => [Math.cos(TURN) * x - Math.sin(TURN) * z, Math.sin(TURN) * x + Math.cos(TURN) * z];
 const fromLaid = ([u, v]: XY): XY => [Math.cos(TURN) * u + Math.sin(TURN) * v, -Math.sin(TURN) * u + Math.cos(TURN) * v];
 

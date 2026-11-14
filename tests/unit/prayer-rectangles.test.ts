@@ -3,9 +3,12 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ALHARAMAIN_MODELS } from '../../src/data-next/alharamain-3d';
 import { WOMEN_AREAS } from '../../src/data-next/women-areas';
+import { QIBLA_BEARING_DEG } from '../../src/domain/geo';
 import { metresFromOrigin, nodePositions, parseGlbBuffer } from '../../src/map/glb-layer';
-import { MIN_RUGS, RUG_W, largestRectangle, rugLayout } from '../../src/map/rug-layout';
+import { RUG_GREEN_HEX } from '../../src/map/rug-layer';
+import { MIN_RUGS, RUG_TURN_DEG, RUG_W, largestRectangle, rugLayout } from '../../src/map/rug-layout';
 import { PANEL, womenBarriers } from '../../src/map/women-barriers';
+import { icon } from '../../src/presentation/icons';
 
 describe('prayer areas only as squares and rectangles (owner, 2026-11-07)', () => {
   it('the largest rectangle starts and ends on whole groups of rows', () => {
@@ -111,5 +114,28 @@ describe('the beige barriers round the women’s areas (owner, 2026-11-07)', () 
       return s + Math.hypot(r[1][0] - r[0][0], r[1][1] - r[0][1]) + PANEL.gap;
     }, 0);
     expect(Math.abs(panelled - total)).toBeLessThan(1);
+  });
+});
+
+describe('prayer carpet alignment and qibla compass (A1, A4)', () => {
+  it('keeps the carpets aligned with the canopies at 1° (not tilted to qibla) and uses green #6a7a2c', () => {
+    const canopies = ALHARAMAIN_MODELS.find((m) => m.url.includes('canopies'))!;
+    expect(RUG_TURN_DEG).toBe(canopies.rotation);
+    expect(RUG_TURN_DEG).toBe(1);
+    expect(RUG_GREEN_HEX).toBe('#6a7a2c');
+  });
+
+  it('points the compass Kaaba mark toward the qibla bearing 176.24° within 0.5°', () => {
+    expect(QIBLA_BEARING_DEG).toBe(176.24);
+    const svg = icon('rotate-reset');
+    const match = svg.match(/<g class="kaaba" transform="rotate\((-?\d+(?:\.\d+)?) 12 12\)">/);
+    expect(match).not.toBeNull();
+    const rotDeg = Number(match![1]);
+    // Kaaba mark is drawn at due south (180°: dx=0, dy=+5.8 from (12, 12)).
+    const rad = (rotDeg * Math.PI) / 180;
+    const dx = -5.8 * Math.sin(rad);
+    const dy = 5.8 * Math.cos(rad);
+    const bearingDeg = ((Math.atan2(dx, -dy) * 180) / Math.PI + 360) % 360;
+    expect(Math.abs(bearingDeg - QIBLA_BEARING_DEG)).toBeLessThanOrEqual(0.5);
   });
 });

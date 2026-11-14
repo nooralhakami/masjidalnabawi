@@ -3,6 +3,9 @@ import type { LatLng, Poi } from '../data/types';
 const R = 6_371_000;
 const RAD = Math.PI / 180;
 
+/** True bearing from Al-Masjid an-Nabawi to the Kaaba in Makkah, in degrees clockwise from north. */
+export const QIBLA_BEARING_DEG = 176.24;
+
 /** Great-circle distance in metres. */
 export function haversine(a: LatLng, b: LatLng): number {
   const dLat = (b[0] - a[0]) * RAD;
