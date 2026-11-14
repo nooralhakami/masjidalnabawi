@@ -1,10 +1,11 @@
 import { MercatorCoordinate, type CustomLayerInterface, type CustomRenderMethodInput, type Map as MLMap } from 'maplibre-gl';
 import { ALHARAMAIN_MODELS, type AlharamainModel } from '../data-next/alharamain-3d';
+import { fromModelMetres, MODEL_ORIGIN_LNGLAT, toModelMetres } from '../domain/frames';
 import { gateLattice, materialColor, materialGlow, minaretCrown, portalKind, type SceneLight } from './scene-light';
 import { createShadowTexture, SHADOW_GLSL, SHADOW_SIZE, sunMatrix, sunShadow } from './sun-shadow';
 
 /** glTF metres are measured from the Mosque's anchor (Venue 4 in `DataAPI_svc_GetVenues.json`). */
-const ORIGIN = ALHARAMAIN_MODELS[0].anchors[0] as [number, number];
+const ORIGIN = MODEL_ORIGIN_LNGLAT as [number, number];
 
 const GLB_MAGIC = 0x46546c67;
 const CHUNK_JSON = 0x4e4f534a;
@@ -466,19 +467,13 @@ export function parseGlbBuffer(buffer: ArrayBuffer): { gltf: GltfJson; bin: Uint
 }
 
 /** Metres east and south of the Mosque's anchor, the frame every glTF node is drawn in. */
-export function metresFromOrigin([lng, lat]: readonly [number, number]): [number, number] {
-  const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
-  const here = MercatorCoordinate.fromLngLat([lng, lat], 0);
-  const perMetre = origin.meterInMercatorCoordinateUnits();
-  return [(here.x - origin.x) / perMetre, (here.y - origin.y) / perMetre];
+export function metresFromOrigin(lngLat: readonly [number, number]): [number, number] {
+  return toModelMetres(lngLat);
 }
 
 /** `metresFromOrigin` the other way: `[east, south]` metres from the Mosque's anchor to `[lng, lat]`. */
-export function lngLatFromMetres([east, south]: readonly [number, number]): [number, number] {
-  const origin = MercatorCoordinate.fromLngLat(ORIGIN, 0);
-  const perMetre = origin.meterInMercatorCoordinateUnits();
-  const ll = new MercatorCoordinate(origin.x + east * perMetre, origin.y + south * perMetre, 0).toLngLat();
-  return [ll.lng, ll.lat];
+export function lngLatFromMetres(eastSouth: readonly [number, number]): [number, number] {
+  return fromModelMetres(eastSouth);
 }
 
 /** Map the models' metres (X=East, Y=Up, Z=South) about the Mosque's anchor to Web Mercator (X=East, Y=South, Z=Up). */
