@@ -4,11 +4,11 @@ import { QIBLA_BEARING_DEG } from '../domain/geo';
 import {
   INTERIOR_COL_STEP_M,
   INTERIOR_MAIN_BOUNDS,
-  INTERIOR_SOUTH_BOUNDS,
   INTERIOR_WALKWAY_HALF_W,
   INTERIOR_WALKWAY_X,
   INTERIOR_WALKWAY_Z,
   RAWDAH_INTERIOR_BOUNDS,
+  interiorCarpetBlocks,
   interiorColumnCentres,
 } from '../domain/interior-layout';
 import { WOMEN_RAWDAH_CORRIDOR_BOUNDS } from '../domain/rawdah-layout';
@@ -130,28 +130,12 @@ export function buildMosqueInterior3D(): FeatureCollection<Polygon, Interior3DPr
     }
   };
 
-  // Carve main expansion between the major N-S and E-W white marble walkways
-  const xEdges = [
-    INTERIOR_MAIN_BOUNDS.xMin,
-    ...INTERIOR_WALKWAY_X.map((w) => w - INTERIOR_WALKWAY_HALF_W),
-    ...INTERIOR_WALKWAY_X.map((w) => w + INTERIOR_WALKWAY_HALF_W),
-    INTERIOR_MAIN_BOUNDS.xMax,
-  ].sort((a, b) => a - b);
-  const zEdges = [
-    INTERIOR_MAIN_BOUNDS.zMin,
-    ...INTERIOR_WALKWAY_Z.map((w) => w - INTERIOR_WALKWAY_HALF_W),
-    ...INTERIOR_WALKWAY_Z.map((w) => w + INTERIOR_WALKWAY_HALF_W),
-    INTERIOR_MAIN_BOUNDS.zMax,
-  ].sort((a, b) => a - b);
-  for (let i = 0; i + 1 < xEdges.length; i += 2) {
-    for (let j = 0; j + 1 < zEdges.length; j += 2) {
-      addCarpetBlock(xEdges[i] + 0.4, xEdges[i + 1] - 0.4, zEdges[j] + 0.4, zEdges[j + 1] - 0.4, false);
-    }
+  // Carpets laid between the marble walkways (shared with routing safety): main expansion grid,
+  // southern old-hall west wing, and the lush Rawdah east bay (rendered green).
+  for (const r of interiorCarpetBlocks()) {
+    const isRawdah = r.x0 === RAWDAH_INTERIOR_BOUNDS.xMin && r.x1 === RAWDAH_INTERIOR_BOUNDS.xMax && r.z0 === RAWDAH_INTERIOR_BOUNDS.zMin && r.z1 === RAWDAH_INTERIOR_BOUNDS.zMax;
+    addCarpetBlock(r.x0, r.x1, r.z0, r.z1, isRawdah);
   }
-
-  // Southern old hall west wing + lush Rawdah east bay
-  addCarpetBlock(INTERIOR_SOUTH_BOUNDS.xMin + 1, RAWDAH_INTERIOR_BOUNDS.xMin - 2, INTERIOR_SOUTH_BOUNDS.zMin + 1, INTERIOR_SOUTH_BOUNDS.zMax - 1, false);
-  addCarpetBlock(RAWDAH_INTERIOR_BOUNDS.xMin, RAWDAH_INTERIOR_BOUNDS.xMax, RAWDAH_INTERIOR_BOUNDS.zMin, RAWDAH_INTERIOR_BOUNDS.zMax, true);
 
   // 2. White Marble Interior Walkways + warm geometric inlay border
   for (const wx of INTERIOR_WALKWAY_X) {

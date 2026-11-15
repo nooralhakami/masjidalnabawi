@@ -1,4 +1,3 @@
-import type { Feature, FeatureCollection, Polygon } from 'geojson';
 import { POIS } from '../data';
 import { fromModelMetres, toModelMetres } from './frames';
 
@@ -60,8 +59,6 @@ export interface DoorToggleResult {
 }
 
 const BAY_SPACING_M = 3.2;
-const BAY_WIDTH_M = 2.4;
-const BAY_DEPTH_M = 1.6;
 
 function wallForGate(id: number): { wall: WallSide; tangent: readonly [number, number]; outward: readonly [number, number] } {
   if (id === 1 || id === 2 || (id >= 7 && id <= 14)) {
@@ -181,7 +178,8 @@ export function toggleGateDoor(gateId: number): DoorToggleResult {
   return { ok: true, open: nextOpen, gate: updated };
 }
 
-export function toggleNearestMosqueDoor(x: number, y: number, maxDistM = 14): DoorToggleResult {
+/** The gate whose doorway bay is nearest to `[x, y]` (model metres) within `maxDistM`, or null. */
+export function nearestMosqueDoor(x: number, y: number, maxDistM = 14): MosqueDoorState | null {
   let best: MosqueDoorState | null = null;
   let bestD2 = maxDistM * maxDistM;
   for (const gate of doorStates) {
@@ -195,6 +193,11 @@ export function toggleNearestMosqueDoor(x: number, y: number, maxDistM = 14): Do
       }
     }
   }
+  return best;
+}
+
+export function toggleNearestMosqueDoor(x: number, y: number, maxDistM = 14): DoorToggleResult {
+  const best = nearestMosqueDoor(x, y, maxDistM);
   if (!best) return { ok: false, open: false, reason: 'not_found', gate: null };
   return toggleGateDoor(best.id);
 }
@@ -243,50 +246,4 @@ export function openDoorwayBayCentres(): Array<{
     }
   }
   return out;
-}
-
-/**
- * 3D fill-extrusion GeoJSON for all 42 `gate_inner` doorway bays:
- * - Open bays render a low golden brass marble threshold (`height = 0.35 m`, `#d4af37`) and
- *   warm lighted portal lintel posts so visitors clearly see open archways.
- * - Closed bays render teak/brass carved double leaves (`height = 5.4 m`, `#5c381c`).
- * - Always-closed gates (`18, 23, 26, 31, 32`) render darkened sealed teak leaves (`#3d2414`).
- */
-export function mosqueDoorBaysGeoJSON(): FeatureCollection<Polygon> {
-  const features: Feature<Polygon>[] = [];
-  for (const gate of doorStates) {
-    const [tx, ty] = gate.tangent;
-    const [ox, oy] = gate.outward;
-    const hw = BAY_WIDTH_M / 2;
-    const hd = BAY_DEPTH_M / 2;
-
-    for (const bay of gate.bays) {
-      const p0 = fromModelMetres([bay.x - tx * hw - ox * hd, bay.y - ty * hw - oy * hd]);
-      const p1 = fromModelMetres([bay.x + tx * hw - ox * hd, bay.y + ty * hw - oy * hd]);
-      const p2 = fromModelMetres([bay.x + tx * hw + ox * hd, bay.y + ty * hw + oy * hd]);
-      const p3 = fromModelMetres([bay.x - tx * hw + ox * hd, bay.y - ty * hw + oy * hd]);
-      const color = bay.open ? '#d4af37' : gate.alwaysClosed ? '#3d2414' : '#5c381c';
-      const height = bay.open ? 0.45 : 5.4;
-      features.push({
-        type: 'Feature',
-        properties: {
-          gateId: gate.id,
-          bayIndex: bay.bayIndex,
-          open: bay.open,
-          alwaysClosed: gate.alwaysClosed,
-          neverClosed: gate.neverClosed,
-          canToggle: gate.canToggle,
-          color,
-          height,
-          base: 0,
-          opacity: bay.open ? 0.92 : 0.96,
-        },
-        geometry: {
-          type: 'Polygon',
-          coordinates: [[p0, p1, p2, p3, p0]],
-        },
-      });
-    }
-  }
-  return { type: 'FeatureCollection', features };
 }

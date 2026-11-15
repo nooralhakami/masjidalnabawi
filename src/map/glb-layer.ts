@@ -1,7 +1,7 @@
 import { MercatorCoordinate, type CustomLayerInterface, type CustomRenderMethodInput, type Map as MLMap } from 'maplibre-gl';
 import { ALHARAMAIN_MODELS, type AlharamainModel } from '../data-next/alharamain-3d';
 import { fromModelMetres, MODEL_ORIGIN_LNGLAT, toModelMetres } from '../domain/frames';
-import { toggleNearestMosqueDoor } from '../domain/mosque-doors';
+import { isGateOpen, nearestMosqueDoor, subscribeMosqueDoors, toggleNearestMosqueDoor } from '../domain/mosque-doors';
 import { gateLattice, materialColor, materialGlow, minaretCrown, portalKind, type SceneLight } from './scene-light';
 import { createShadowTexture, SHADOW_GLSL, SHADOW_SIZE, sunMatrix, sunShadow } from './sun-shadow';
 
@@ -93,6 +93,8 @@ interface GpuPrimitive {
   portal: number;
   portalRect: [number, number, number, number];
   portalSize: [number, number];
+  /** The gate this portal belongs to; its open state picks the painted door (2 open hall, 1 shut). */
+  portalGate?: number;
   lattice: boolean;
   /** Alpha under this is cut out (glTF `MASK`); 0 draws every pixel. */
   cutoff: number;
@@ -254,14 +256,30 @@ vec3 portal(vec2 m, vec2 size, int kind, inout vec3 col) {
     float h = min(H * 0.9, 4.2);
     float inside = step(abs(m.x), w) * step(m.y, h);
     if (inside > 0.5) {
-      // Arches of the hall receding inside, cream and gold, lit from within.
-      float bands = 0.5 + 0.5 * cos(m.x / w * 9.0);
-      // Dark enough that the floodlights outside do not wash it out; the hall's own lamps light it.
-      col = mix(vec3(0.3, 0.22, 0.13), vec3(0.5, 0.42, 0.3), bands) * mix(1.0, 0.8, m.y / h);
-      vec2 c = (m - vec2(0.0, h * 0.7)) * vec2(1.3, 1.9);
-      float chandelier = exp(-dot(c, c) * 3.0);
-      float bulbs = 1.0 - smoothstep(0.03, 0.09, abs(length(c * vec2(1.0, 1.6)) - w * 0.7));
-      emit = vec3(1.0, 0.9, 0.74) * (0.3 * bands + 2.4 * chandelier + 1.2 * bulbs * step(abs(c.y), 0.35));
+      float ax = abs(m.x);
+      if (ax < w * 0.52) {
+        // The lit hall receding through the open centre: cream and gold arches, its great chandelier.
+        float bands = 0.5 + 0.5 * cos(m.x / w * 9.0);
+        col = mix(vec3(0.3, 0.22, 0.13), vec3(0.5, 0.42, 0.3), bands) * mix(1.0, 0.8, m.y / h);
+        vec2 c = (m - vec2(0.0, h * 0.7)) * vec2(1.3, 1.9);
+        float chandelier = exp(-dot(c, c) * 3.0);
+        float bulbs = 1.0 - smoothstep(0.03, 0.09, abs(length(c * vec2(1.0, 1.6)) - w * 0.7));
+        emit = vec3(1.0, 0.9, 0.74) * (0.3 * bands + 2.4 * chandelier + 1.2 * bulbs * step(abs(c.y), 0.35));
+      } else {
+        // A carved leaf swung open toward the viewer (owner's photographs): gold lattice, studs and
+        // a medallion, shaded darker toward its free edge so it reads as turned on its hinges.
+        float lx = (ax - w * 0.52) / (w * 0.48);
+        vec2 q = vec2(lx * 1.2 + m.y, lx * 1.2 - m.y) / 0.42;
+        vec2 fr = abs(fract(q) - 0.5);
+        float lattice = smoothstep(0.455, 0.49, max(fr.x, fr.y));
+        vec3 leaf = mix(wood, gold, lattice);
+        float stud = 1.0 - smoothstep(0.06, 0.1, length(fract(q) - 0.5));
+        leaf = mix(leaf, gold, stud * 0.9);
+        float r = length(vec2((lx - 0.5) * w * 0.48, m.y - h * 0.42));
+        leaf = mix(leaf, gold * 1.1, 1.0 - smoothstep(w * 0.16, w * 0.18, r));
+        leaf *= mix(1.0, 0.62, lx);
+        col = leaf;
+      }
     }
     float frame = max(step(abs(abs(m.x) - w), 0.1) * step(m.y, h), step(abs(m.y - h), 0.1) * step(abs(m.x), w));
     col = mix(col, gold, frame);
@@ -698,6 +716,8 @@ export class HaramGlbLayer implements CustomLayerInterface {
   private animCount = 0;
   private folded = false;
   private interior = false;
+  /** Repaints the portals when a gate opens or shuts. */
+  private unsubDoors: (() => void) | null = null;
   /** The last frame's projection (metres to clip space), to find the canopy under a tap. */
   private lastMvp: Float64Array | null = null;
 
@@ -716,12 +736,15 @@ export class HaramGlbLayer implements CustomLayerInterface {
   onAdd(map: MLMap, gl: WebGL2RenderingContext): void {
     this.map = map;
     this.initShader(gl);
+    this.unsubDoors = subscribeMosqueDoors(() => this.map?.triggerRepaint());
     const generation = ++this.generation;
     for (const model of ALHARAMAIN_MODELS) void this.loadAsset(model, generation);
   }
 
   onRemove(_map: MLMap, gl: WebGL2RenderingContext): void {
     this.generation++;
+    this.unsubDoors?.();
+    this.unsubDoors = null;
     for (const vao of this.vaos) gl.deleteVertexArray(vao);
     for (const b of this.buffers) gl.deleteBuffer(b);
     for (const t of this.textures) gl.deleteTexture(t);
@@ -874,27 +897,32 @@ export class HaramGlbLayer implements CustomLayerInterface {
     // A canopy with fabric (open by day, or always folded) opens and closes at a tap; the lamp
     // columns of the south courtyard, with no canopy, never do (owner, 2026-11-06).
     const firstCanopy = this.canopies.length;
-    const groups = new Map<string, { mesh: number; when: GpuPrimitive['when']; matrices: number[]; canopy: number[] }>();
-    const add = (mesh: number, when: GpuPrimitive['when'], matrix: Float64Array, canopy: number) => {
-      const key = `${mesh}|${when}`;
-      const group = groups.get(key) ?? { mesh, when, matrices: [], canopy: [] };
+    const groups = new Map<string, { mesh: number; when: GpuPrimitive['when']; matrices: number[]; canopy: number[]; gate?: number }>();
+    const add = (mesh: number, when: GpuPrimitive['when'], matrix: Float64Array, canopy: number, gate?: number, nodeKey?: string) => {
+      const key = nodeKey ?? `${mesh}|${when}`;
+      const group = groups.get(key) ?? { mesh, when, matrices: [], canopy: [], gate };
       group.matrices.push(...matrix);
       group.canopy.push(canopy);
       groups.set(key, group);
     };
     const combined = new Float64Array(16);
-    for (const node of gltf.nodes) {
+    for (const [nodeIdx, node] of gltf.nodes.entries()) {
       if (node.mesh === undefined) continue;
       const local = node.matrix ? new Float64Array(node.matrix) : composeTrs(node.translation ?? [0, 0, 0], node.rotation ?? [0, 0, 0, 1], node.scale ?? [1, 1, 1]);
       const folds = folding !== null && folding.open.has(node.mesh);
       const tappable = folding !== null && (folds || node.mesh === folding.closed);
+      // A doorway portal (navQ's `DEEP` plane) is drawn per node so each gate opens and shuts on its
+      // own; the nearest gate decides whether the shader paints the open hall or the carved leaves.
+      const mesh = gltf.meshes[node.mesh];
+      const isPortal = mesh.primitives.some((p) => portalKind(model.url, mesh.name, p.material !== undefined ? gltf.materials?.[p.material]?.name : undefined) > 0);
       for (const placement of placements) {
         mulMat4(combined, placement, local);
         const [dEast, dSouth] = nodeShift(model, combined[12], combined[14]);
         combined[12] += dEast;
         combined[14] += dSouth;
         const canopy = tappable ? this.canopies.push({ matrix: new Float32Array(combined), foldable: folds, refs: [] }) - 1 : -1;
-        add(node.mesh, folds ? 'day' : 'always', combined, canopy);
+        const gate = isPortal ? nearestMosqueDoor(combined[12], combined[14], 25)?.id : undefined;
+        add(node.mesh, folds ? 'day' : 'always', combined, canopy, gate, isPortal ? `portal|${node.mesh}|${nodeIdx}` : undefined);
         if (folds) add(folding!.closed, 'night', combined, canopy);
       }
     }
@@ -931,7 +959,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
     };
 
     const materials = gltf.materials ?? [];
-    for (const { mesh: meshIndex, when, matrices, canopy } of groups.values()) {
+    for (const { mesh: meshIndex, when, matrices, canopy, gate } of groups.values()) {
       const anim = when === 'anim';
       const instanceBuf = gl.createBuffer()!;
       gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuf);
@@ -1003,6 +1031,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
         gl.bindVertexArray(null);
 
         const material = prim.material !== undefined ? materials[prim.material] : undefined;
+        const pKind = portalKind(model.url, gltf.meshes[meshIndex].name, material?.name);
         const pbr = material?.pbrMetallicRoughness;
         const glow = materialGlow(model.url, material?.name);
         const bcf = materialColor(model.url, material?.name) ?? pbr?.baseColorFactor ?? [0.85, 0.82, 0.78, 1.0];
@@ -1022,7 +1051,8 @@ export class HaramGlbLayer implements CustomLayerInterface {
           glowTint: glow?.tint ?? 1,
           glowRise: glow?.rise ?? 0,
           crown: minaretCrown(model.url, gltf.meshes[meshIndex].name, material?.name) ?? [0, 0],
-          ...portalOf(gltf, bin, prim, portalKind(model.url, gltf.meshes[meshIndex].name, material?.name)),
+          ...portalOf(gltf, bin, prim, pKind),
+          portalGate: pKind > 0 ? gate : undefined,
           lattice: gateLattice(model.url, material?.name),
           cutoff: material?.alphaMode === 'MASK' ? (material.alphaCutoff ?? 0.5) : 0,
           interiorRole: classifyInteriorRole(model.url, material?.name),
@@ -1045,6 +1075,14 @@ export class HaramGlbLayer implements CustomLayerInterface {
     const ll = this.map.unproject([x, y]);
     const [mx, mz] = toModelMetres([ll.lng, ll.lat]);
     return toggleNearestMosqueDoor(mx, mz, 14);
+  }
+
+  /** The gate whose doorway is under screen `[x, y]` CSS pixels, without toggling it (for picking). */
+  doorGateAt(x: number, y: number): number | null {
+    if (!this.map) return null;
+    const ll = this.map.unproject([x, y]);
+    const [mx, mz] = toModelMetres([ll.lng, ll.lat]);
+    return nearestMosqueDoor(mx, mz, 14)?.id ?? null;
   }
 
   /**
@@ -1295,7 +1333,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
         gl.uniform1f(this.uGlowTint, prim.glowTint);
         gl.uniform1f(this.uGlowRise, prim.glowRise);
         gl.uniform2fv(this.uCrown, prim.crown);
-        gl.uniform1i(this.uPortal, prim.portal);
+        gl.uniform1i(this.uPortal, prim.portalGate !== undefined ? (isGateOpen(prim.portalGate) ? 2 : 1) : prim.portal);
         gl.uniform4fv(this.uPortalRect, prim.portalRect);
         gl.uniform2fv(this.uPortalSize, prim.portalSize);
         gl.uniform1f(this.uLattice, prim.lattice ? 1 : 0);

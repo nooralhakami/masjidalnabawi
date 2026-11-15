@@ -17,7 +17,7 @@ import { buildInterCarpetAisles, rugLayout } from './rug-layout';
 import { sunPosition } from '../domain/daylight';
 import type { Poi, Status } from '../data/types';
 import { isHidden } from '../domain/filters';
-import { mosqueDoorBaysGeoJSON, subscribeMosqueDoors, toggleGateDoor, type DoorToggleResult } from '../domain/mosque-doors';
+import { toggleGateDoor, type DoorToggleResult } from '../domain/mosque-doors';
 import { parsePrayerDemoOverride } from '../domain/prayer-session';
 import { isTapName } from '../domain/route-hint';
 import { FEATURED_IDS } from '../domain/visits';
@@ -123,7 +123,6 @@ export class MapEngine {
   private base: BaseLayer = 'satellite';
   private mode3d = false;
   private interiorMode = false;
-  private unsubDoors: (() => void) | null = null;
   /** The 3D models' layer while 3D is on, and the minute timer that follows the sun meanwhile. */
   private models: HaramGlbLayer | null = null;
   private urban: Urban3DLayer | null = null;
@@ -496,31 +495,6 @@ export class MapEngine {
           before,
         );
       }
-      // Interactive multi-bay Mosque gates (`gate_inner` 1..42): golden threshold when open, carved teak doors when closed.
-      if (!m.getSource('mosque-door-bays')) m.addSource('mosque-door-bays', { type: 'geojson', data: mosqueDoorBaysGeoJSON() });
-      if (!m.getLayer('mosque-door-bays')) {
-        m.addLayer(
-          {
-            id: 'mosque-door-bays',
-            type: 'fill-extrusion',
-            source: 'mosque-door-bays',
-            minzoom: 16.5,
-            paint: {
-              'fill-extrusion-color': ['get', 'color'],
-              'fill-extrusion-height': ['get', 'height'],
-              'fill-extrusion-base': ['get', 'base'],
-              // Constant, not `['get', 'opacity']`: see the saqifah layer above (0.92 open, 0.96 shut).
-              'fill-extrusion-opacity': 0.94,
-            },
-          },
-          before,
-        );
-      }
-      if (!this.unsubDoors) {
-        this.unsubDoors = subscribeMosqueDoors(() => {
-          (m.getSource('mosque-door-bays') as GeoJSONSource | undefined)?.setData(mosqueDoorBaysGeoJSON());
-        });
-      }
       // Manual 3D Mosque interior hall (columns, Ablaq arches, chandeliers, carpets, walkways).
       if (!m.getSource('mosque-interior-3d')) m.addSource('mosque-interior-3d', { type: 'geojson', data: buildMosqueInterior3D() });
       if (!m.getLayer('mosque-interior-3d')) {
@@ -623,8 +597,6 @@ export class MapEngine {
       if (this.lightTimer) clearInterval(this.lightTimer);
       this.lightTimer = null;
       this.urbanToken++;
-      this.unsubDoors?.();
-      this.unsubDoors = null;
       this.models = null;
       this.urban = null;
       this.crowd = null;
@@ -640,7 +612,6 @@ export class MapEngine {
         'mosque-interior-3d',
         'navq-interior-labels',
         'navq-interior-dots',
-        'mosque-door-bays',
         'alharamain-3d-crowd',
         'alharamain-3d-barriers',
         'alharamain-3d-women-barriers',
@@ -848,7 +819,6 @@ export class MapEngine {
       'mosque-interior-3d',
       'navq-interior-labels',
       'navq-interior-dots',
-      'mosque-door-bays',
       'alharamain-3d-terrain',
       'alharamain-3d-lamps',
       'alharamain-3d-barriers',
@@ -1039,10 +1009,7 @@ export class MapEngine {
   // ---------- picking ----------
 
   private doorAt(x: number, y: number): number | null {
-    if (!this.map.getLayer('mosque-door-bays')) return null;
-    const hit = this.map.queryRenderedFeatures([x, y], { layers: ['mosque-door-bays'] });
-    const gateId = Number(hit[0]?.properties?.gateId);
-    return Number.isFinite(gateId) && gateId > 0 ? gateId : null;
+    return this.models?.doorGateAt(x, y) ?? null;
   }
 
   /** The place under a tap: the nearest marker within 16 px (the live app's 32 px hit area). */
