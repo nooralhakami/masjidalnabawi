@@ -1,4 +1,5 @@
 import type { Feature, FeatureCollection, LineString, Polygon } from 'geojson';
+import { fromModelMetres } from './frames';
 import { WOMEN_RAWDAH_CORRIDOR_BOUNDS } from './rawdah-layout';
 
 /**
@@ -132,91 +133,44 @@ export function interiorPrayerAreas(): FeatureCollection<Polygon, InteriorAreaPr
   return { type: 'FeatureCollection', features };
 }
 
+/**
+ * Interior connecting corridors built ON the Mosque's interior plan: the white-marble walkway grid
+ * (`INTERIOR_WALKWAY_X` north–south and `INTERIOR_WALKWAY_Z` east–west) that the 3D interior renders
+ * and the columns avoid (owner, 2026-11-15: sub-corridors must follow the interior plan and respect
+ * the prayer-hall carpets). Each corridor runs along a walkway centreline, clear of the carpet blocks
+ * laid between walkways, instead of cutting gate-to-gate across the halls. The sole women's interior
+ * path remains the enclosed Gate 21 → Behind Rawdah corridor.
+ */
 export function interiorCorridors(): FeatureCollection<LineString, InteriorCorridorProps> {
   const b = WOMEN_RAWDAH_CORRIDOR_BOUNDS;
-  const corridors: { id: string; kind: InteriorCorridorProps['kind']; name_ar: string; coordinates: [number, number][] }[] = [
-    {
-      id: 'men-ns-gate15-gate6',
+  const corridors: { id: string; kind: InteriorCorridorProps['kind']; name_ar: string; coordinates: [number, number][] }[] = [];
+  INTERIOR_WALKWAY_X.forEach((wx, i) => {
+    corridors.push({
+      id: `men-ns-walkway-${i + 1}`,
       kind: 'men_interior',
-      name_ar: 'ممر داخلي (باب 15 ← باب 6)',
-      coordinates: [
-        [39.6094962, 24.4698467],
-        [39.609485, 24.4687485],
-        [39.609474, 24.4678322],
-      ],
-    },
-    {
-      id: 'men-ns-gate17-gate5',
+      name_ar: `ممر داخلي شمالي–جنوبي ${i + 1} (مخطط المسجد)`,
+      coordinates: [fromModelMetres([wx, INTERIOR_MAIN_BOUNDS.zMin]), fromModelMetres([wx, INTERIOR_MAIN_BOUNDS.zMax])],
+    });
+  });
+  INTERIOR_WALKWAY_Z.forEach((wz, i) => {
+    corridors.push({
+      id: `men-ew-walkway-${i + 1}`,
       kind: 'men_interior',
-      name_ar: 'ممر داخلي (باب عمر 17 ← باب قباء 5)',
-      coordinates: [
-        [39.6100144, 24.4699208],
-        [39.6100144, 24.4687485],
-        [39.6100144, 24.4677649],
-      ],
-    },
-    {
-      id: 'men-ns-gate25-gate37',
-      kind: 'men_interior',
-      name_ar: 'ممر داخلي (باب عثمان 25 ← باب مكة 37)',
-      coordinates: [
-        [39.6122942, 24.4699208],
-        [39.6122942, 24.4687553],
-        [39.6122202, 24.4679266],
-      ],
-    },
-    {
-      id: 'men-ew-west-gate10',
-      kind: 'men_interior',
-      name_ar: 'ممر عرضي داخلي (باب 10 غربًا)',
-      coordinates: [
-        [39.6091483, 24.4687485],
-        [39.6100144, 24.4687485],
-        [b.westLng - 0.000045, 24.4687485],
-      ],
-    },
-    {
-      id: 'men-ew-east-gate32',
-      kind: 'men_interior',
-      name_ar: 'ممر عرضي داخلي (باب أبي ذر 32 شرقًا)',
-      coordinates: [
-        [b.eastLng + 0.000045, 24.4687553],
-        [39.6122942, 24.4687553],
-        [39.613138, 24.4687553],
-      ],
-    },
-    {
-      id: 'men-ew-south-west',
-      kind: 'men_interior',
-      name_ar: 'ممر عرضي جنوبي غربي (باب الملك سعود 8)',
-      coordinates: [
-        [39.6091483, 24.4682702],
-        [39.6100144, 24.4682702],
-        [b.westLng - 0.000045, 24.4682702],
-      ],
-    },
-    {
-      id: 'men-ew-south-east',
-      kind: 'men_interior',
-      name_ar: 'ممر عرضي جنوبي شرقي (باب الملك عبد العزيز 34)',
-      coordinates: [
-        [b.eastLng + 0.000045, 24.4682904],
-        [39.6122942, 24.4682904],
-        [39.613138, 24.4682904],
-      ],
-    },
-    {
-      id: 'women-rawdah-gate21-corridor',
-      kind: 'women_rawdah_corridor',
-      name_ar: 'ممر النساء المغلق (باب الملك فهد 21 ← خلف الروضة)',
-      coordinates: [
-        [b.centerLng, 24.470155],
-        [b.centerLng, b.northLat],
-        [b.centerLng, 24.4689],
-        [b.centerLng, b.southLat],
-      ],
-    },
-  ];
+      name_ar: `ممر داخلي شرقي–غربي ${i + 1} (مخطط المسجد)`,
+      coordinates: [fromModelMetres([INTERIOR_MAIN_BOUNDS.xMin, wz]), fromModelMetres([INTERIOR_MAIN_BOUNDS.xMax, wz])],
+    });
+  });
+  corridors.push({
+    id: 'women-rawdah-gate21-corridor',
+    kind: 'women_rawdah_corridor',
+    name_ar: 'ممر النساء المغلق (باب الملك فهد 21 ← خلف الروضة)',
+    coordinates: [
+      [b.centerLng, 24.470155],
+      [b.centerLng, b.northLat],
+      [b.centerLng, 24.4689],
+      [b.centerLng, b.southLat],
+    ],
+  });
   return {
     type: 'FeatureCollection',
     features: corridors.map((c) => ({
@@ -236,6 +190,47 @@ export const INTERIOR_WALKWAY_X = [-201.3, -151.9, -115.9, -60.5, -2.8, 54.9, 10
 export const INTERIOR_WALKWAY_Z = [-310, -265, -216, -165, -124] as const;
 export const INTERIOR_WALKWAY_HALF_W = 2.6;
 export const INTERIOR_COL_STEP_M = 18;
+
+export interface InteriorCarpetRect {
+  x0: number;
+  x1: number;
+  z0: number;
+  z1: number;
+}
+
+/**
+ * The interior prayer carpets laid between the marble walkways (model metres), plus the southern
+ * old-hall west wing and the Rawdah. Single source shared by the 3D interior renderer and routing
+ * safety, so sub-corridors that stay on the walkways never cross a carpet (owner, 2026-11-15).
+ */
+export function interiorCarpetBlocks(): InteriorCarpetRect[] {
+  const out: InteriorCarpetRect[] = [];
+  const xEdges = [
+    INTERIOR_MAIN_BOUNDS.xMin,
+    ...INTERIOR_WALKWAY_X.map((w) => w - INTERIOR_WALKWAY_HALF_W),
+    ...INTERIOR_WALKWAY_X.map((w) => w + INTERIOR_WALKWAY_HALF_W),
+    INTERIOR_MAIN_BOUNDS.xMax,
+  ].sort((a, b) => a - b);
+  const zEdges = [
+    INTERIOR_MAIN_BOUNDS.zMin,
+    ...INTERIOR_WALKWAY_Z.map((w) => w - INTERIOR_WALKWAY_HALF_W),
+    ...INTERIOR_WALKWAY_Z.map((w) => w + INTERIOR_WALKWAY_HALF_W),
+    INTERIOR_MAIN_BOUNDS.zMax,
+  ].sort((a, b) => a - b);
+  for (let i = 0; i + 1 < xEdges.length; i += 2) {
+    for (let j = 0; j + 1 < zEdges.length; j += 2) {
+      out.push({ x0: xEdges[i] + 0.4, x1: xEdges[i + 1] - 0.4, z0: zEdges[j] + 0.4, z1: zEdges[j + 1] - 0.4 });
+    }
+  }
+  out.push({
+    x0: INTERIOR_SOUTH_BOUNDS.xMin + 1,
+    x1: RAWDAH_INTERIOR_BOUNDS.xMin - 2,
+    z0: INTERIOR_SOUTH_BOUNDS.zMin + 1,
+    z1: INTERIOR_SOUTH_BOUNDS.zMax - 1,
+  });
+  out.push({ x0: RAWDAH_INTERIOR_BOUNDS.xMin, x1: RAWDAH_INTERIOR_BOUNDS.xMax, z0: RAWDAH_INTERIOR_BOUNDS.zMin, z1: RAWDAH_INTERIOR_BOUNDS.zMax });
+  return out.filter((r) => r.x1 - r.x0 >= 2 && r.z1 - r.z0 >= 2);
+}
 
 export function isPointOnInteriorWalkway(x: number, z: number, pad = 0): boolean {
   const hw = INTERIOR_WALKWAY_HALF_W + pad;

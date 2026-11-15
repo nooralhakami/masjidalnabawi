@@ -1,5 +1,6 @@
 import { WOMEN_AREAS } from '../data-next/women-areas';
 import { modelToWalkMetres, toWalkMetres, type XY } from './frames';
+import { interiorCarpetBlocks } from './interior-layout';
 import { GREETING_BARRIERS, QUEUE_RAILS } from './rawdah-layout';
 import { currentRugLayout, type RugLayout } from './rug-layout';
 
@@ -145,6 +146,13 @@ export function safetyWorld(): SafetyWorld {
     carpets.push(quad);
     addToGrid(carpetGrid, quad, quad);
   }
+  // Interior prayer-hall carpets (between the marble walkways) so sub-corridors respect them too.
+  for (const r of interiorCarpetBlocks()) {
+    const poly = [modelToWalkMetres([r.x0, r.z0]), modelToWalkMetres([r.x1, r.z0]), modelToWalkMetres([r.x1, r.z1]), modelToWalkMetres([r.x0, r.z1])];
+    const quad: CarpetQuad = { poly, ...bboxOf(poly) };
+    carpets.push(quad);
+    addToGrid(carpetGrid, quad, quad);
+  }
 
   const barriers: BarrierSeg[] = [];
   const barrierGrid = new Map<string, BarrierSeg[]>();
@@ -253,12 +261,13 @@ export function pointInCarpet(p: XY, w = safetyWorld()): boolean {
 }
 
 /** Check whether straight segment `a -> b` crosses a laid prayer carpet. */
-export function segmentHitsCarpet(a: XY, b: XY, allowedEndpts: readonly XY[] = [], w = safetyWorld()): boolean {
+export function segmentHitsCarpet(a: XY, b: XY, allowedEndpts: readonly XY[] = [], w = safetyWorld(), strictCarpet = false): boolean {
   const set = queryGridSegment(w.carpetGrid, a, b);
   if (!set.size) return false;
-  const allowedBoxes = allowedEndpts.length
-    ? w.patchBoxes.filter((box) => allowedEndpts.some((e) => e[0] >= box.minX && e[0] <= box.maxX && e[1] >= box.minY && e[1] <= box.maxY))
-    : [];
+  const allowedBoxes =
+    !strictCarpet && allowedEndpts.length
+      ? w.patchBoxes.filter((box) => allowedEndpts.some((e) => e[0] >= box.minX && e[0] <= box.maxX && e[1] >= box.minY && e[1] <= box.maxY))
+      : [];
   const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
   const steps = Math.max(1, Math.ceil(len / 0.75));
   const candidates = [...set];
@@ -315,9 +324,10 @@ export function segmentHasViolation(
   allowedCarpetEndpts: readonly XY[] = [],
   w = safetyWorld(),
   allowedBarrierSources?: Set<BarrierSource>,
+  strictCarpet = false,
 ): boolean {
   if (segmentHitsBarrier(a, b, w, allowedBarrierSources)) return true;
-  if (segmentHitsCarpet(a, b, allowedCarpetEndpts, w)) return true;
+  if (segmentHitsCarpet(a, b, allowedCarpetEndpts, w, strictCarpet)) return true;
   if (segmentTransitsWomen(a, b, allowedWomenZones, w)) return true;
   return false;
 }
