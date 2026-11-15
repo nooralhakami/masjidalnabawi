@@ -10,10 +10,12 @@ import { interiorCorridors } from '../domain/interior-layout';
 import { WOMEN_RAWDAH_CORRIDOR_BOUNDS } from '../domain/rawdah-layout';
 import {
   pointInCarpet,
+  pointInInteriorCarpet,
   safetyWorld,
   segmentHasViolation,
   segmentHitsBarrier,
   segmentHitsCarpet,
+  segmentHitsInteriorCarpet,
   womenZonesContaining,
   type BarrierSource,
   type SafetyWorld,
@@ -60,6 +62,7 @@ interface Edge {
   kind?: 'exterior' | 'aisle' | 'men_interior' | 'women_rawdah';
   womenZones?: string[];
   hitsCarpet?: boolean;
+  hitsInteriorCarpet?: boolean;
   hitsHardBarrier?: boolean;
   hitsSoftBarrier?: boolean;
 }
@@ -201,15 +204,17 @@ function tagEdgesSafety(nodes: XY[], edges: Edge[]): void {
     const b = nodes[e.v];
     e.womenZones = sampleWomenZones(a, b);
     e.hitsCarpet = segmentHitsCarpet(a, b, [], w);
+    e.hitsInteriorCarpet = segmentHitsInteriorCarpet(a, b, [], w);
     e.hitsHardBarrier = segmentHitsBarrier(a, b, w, SOFT_BARRIERS);
     e.hitsSoftBarrier = segmentHitsBarrier(a, b, w, HARD_BARRIERS);
   }
 }
 
-function edgeSafetyPenalty(e: Edge, allowedZones: Set<string>): number {
+function edgeSafetyPenalty(e: Edge, allowedZones: Set<string>, includeInteriorCarpets = false): number {
   let pen = 0;
   if (e.womenZones?.some((id) => !allowedZones.has(id))) pen += 20_000;
   if (e.hitsCarpet) pen += 12_000;
+  if (includeInteriorCarpets && e.hitsInteriorCarpet) pen += 12_000;
   if (e.hitsHardBarrier) pen += 10_000;
   if (e.hitsSoftBarrier) pen += 1_200;
   return pen;
@@ -565,13 +570,13 @@ export function roundCorners(P: XY[], r: number): XY[] {
 }
 
 /** Replace each corner with a quadratic curve of radius r (metres), falling back when rounding would clip a safety zone. */
-function roundCornersSafe(P: XY[], r: number, allowedZones: Set<string>, carpetEndpts: readonly XY[]): XY[] {
+function roundCornersSafe(P: XY[], r: number, allowedZones: Set<string>, carpetEndpts: readonly XY[], strictCarpet = false, interiorCarpets = false): XY[] {
   if (P.length < 3) return P;
   const w = safetyWorld();
   const out: XY[] = [P[0]];
   const curveSafe = (curve: XY[]) => {
     for (let k = 1; k < curve.length; k++) {
-      if (segmentHasViolation(curve[k - 1], curve[k], allowedZones, carpetEndpts, w)) return false;
+      if (segmentHasViolation(curve[k - 1], curve[k], allowedZones, carpetEndpts, w, undefined, strictCarpet, interiorCarpets)) return false;
     }
     return true;
   };
@@ -1085,6 +1090,7 @@ function buildShortcutNetwork(isWomen: boolean, allowWomenRawdahCorridor: boolea
     kind: 'exterior',
     womenZones: e.womenZones,
     hitsCarpet: e.hitsCarpet,
+    hitsInteriorCarpet: e.hitsInteriorCarpet,
     hitsHardBarrier: e.hitsHardBarrier,
     hitsSoftBarrier: e.hitsSoftBarrier,
   }));
@@ -1170,8 +1176,8 @@ export function walkShortcutPath(a: LatLng, b: LatLng, opts: { isWomen?: boolean
   const B = toM(b);
   const allowedZones = new Set<string>([...womenZonesContaining(A, w), ...womenZonesContaining(B, w)]);
   const carpetEndpts: XY[] = [];
-  if (pointInCarpet(A, w)) carpetEndpts.push(A);
-  if (pointInCarpet(B, w)) carpetEndpts.push(B);
+  if (pointInCarpet(A, w) || pointInInteriorCarpet(A, w)) carpetEndpts.push(A);
+  if (pointInCarpet(B, w) || pointInInteriorCarpet(B, w)) carpetEndpts.push(B);
   const womenFenceOnly = new Set<BarrierSource>(['women_fence']);
 
   const mainLen = pathLength(walkPath(a, b));
@@ -1181,7 +1187,7 @@ export function walkShortcutPath(a: LatLng, b: LatLng, opts: { isWomen?: boolean
   const adj: { to: number; w: number; kind: NonNullable<Edge['kind']> }[][] = Array.from({ length: n + 2 }, () => []);
   for (const e of netInfo.edges) {
     // Safety penalties keep the sub-route off carpets, barriers and women's zones; clean aisles/corridors stay true metres.
-    const weight = e.l + edgeSafetyPenalty(e, allowedZones);
+    const weight = e.l + edgeSafetyPenalty(e, allowedZones, true);
     adj[e.u].push({ to: e.v, w: weight, kind: e.kind ?? 'exterior' });
     adj[e.v].push({ to: e.u, w: weight, kind: e.kind ?? 'exterior' });
   }
@@ -1197,7 +1203,7 @@ export function walkShortcutPath(a: LatLng, b: LatLng, opts: { isWomen?: boolean
       // The approach from the visitor to the network must itself be clean (the enclosed women's
       // corridor may pass its own fence). An unsafe approach is never offered.
       const allowedSources = e.kind === 'women_rawdah' ? womenFenceOnly : undefined;
-      if (segmentHasViolation(p, pr.q, allowedZones, carpetEndpts, w, allowedSources, true)) continue;
+      if (segmentHasViolation(p, pr.q, allowedZones, carpetEndpts, w, allowedSources, true, true)) continue;
       candidates.push({ idx: isStart ? S : T, q: pr.q, d: pr.d, e, along: pr.u * e.l });
     }
     if (!candidates.length) return [];
@@ -1209,7 +1215,7 @@ export function walkShortcutPath(a: LatLng, b: LatLng, opts: { isWomen?: boolean
   const ht = connectPoint(B, false);
   if (!hs.length || !ht.length) return null;
 
-  const hookPenalty = (h: { e: Edge }) => edgeSafetyPenalty(h.e, allowedZones);
+  const hookPenalty = (h: { e: Edge }) => edgeSafetyPenalty(h.e, allowedZones, true);
   for (const h of hs) {
     const k = h.e.kind ?? 'exterior';
     const pen = hookPenalty(h);
@@ -1281,11 +1287,11 @@ export function walkShortcutPath(a: LatLng, b: LatLng, opts: { isWomen?: boolean
     const l = clean[clean.length - 1];
     if (Math.hypot(pts[i][0] - l[0], pts[i][1] - l[1]) > 0.5) clean.push(pts[i]);
   }
-  const roundedXY = roundCornersSafe(clean, 3, allowedZones, carpetEndpts);
+  const roundedXY = roundCornersSafe(clean, 3, allowedZones, carpetEndpts, true, true);
   // Final guarantee: a sub-route is shown only if every stretch of it is free of carpet, barrier and
   // women-zone violations. Rounding can clip a corner, so validate the rounded geometry itself.
   for (let i = 1; i < roundedXY.length; i++) {
-    if (segmentHasViolation(roundedXY[i - 1], roundedXY[i], allowedZones, carpetEndpts, w, allowRawdah ? womenFenceOnly : undefined, true)) return null;
+    if (segmentHasViolation(roundedXY[i - 1], roundedXY[i], allowedZones, carpetEndpts, w, allowRawdah ? womenFenceOnly : undefined, true, true)) return null;
   }
   const rounded = roundedXY.map(fromM);
   const shortLen = pathLength(rounded);

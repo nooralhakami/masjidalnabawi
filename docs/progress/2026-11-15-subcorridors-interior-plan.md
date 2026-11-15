@@ -69,3 +69,9 @@
 - **الممرات الفرعية غير الآمنة تُخفى:** إن لم يوجد مسار فرعي سليم بين نقطتين، لا يُعرض مسار فرعي (يبقى المسار الخارجي الرئيسي). هذا مقصود: الأولوية للمسارات الخارجية، والسلامة قبل الاختصار.
 - **مصدر المخطط:** استُخدمت شبكة الممرات الرخامية **المعتمدة والمُصيَّرة** في المسجد ثلاثي الأبعاد، لا هندسة `navQ` الداخلية غير المتحققة (بوابة موافقة المالك؛ صفر تخمين).
 - الجزء 1 (فتح الأبواب وإزالة الصناديق) منفصل في `docs/progress/2026-11-15-doors-open-close.md`.
+
+## Follow-up: Separate interior carpets from exterior plaza alternatives [2026-11-15]
+
+- **Why `e2e` failed on PR #85**: Putting `interiorCarpetBlocks()` directly inside `SafetyWorld.carpets` caused `tagEdgesSafety` / `edgeSafetyPenalty` to penalize the exterior north-wall apron (`z = -340`, inside `INTERIOR_MAIN_BOUNDS.zMin = -344`), eliminating exterior alternative routes from the south plaza to Gate 21 (`route-alt` missing in `tests/e2e/route.spec.ts`).
+- **Fix**: Kept `interiorCarpets` and `interiorCarpetGrid` separate from exterior `carpets` / `carpetGrid` in `src/domain/route-safety.ts` (sharing grid helpers `pointInCarpetGrid` and `segmentHitsCarpetGrid` and exporting `pointInInteriorCarpet` and `segmentHitsInteriorCarpet`), and in `src/routing/walk.ts` left exterior `graphRoute` / `walkPaths` using exterior carpet safety (`includeInteriorCarpets = false`) while enforcing `pointInInteriorCarpet`, `hitsInteriorCarpet` (`includeInteriorCarpets = true`), `roundCornersSafe(..., true, true)`, and the final `segmentHasViolation` guard in `walkShortcutPath`.
+- **Regression test & local verification**: Added south plaza → Gate 21 alternatives test in `tests/unit/routing.test.ts`; verified `npm run lint`, `npm run typecheck`, `npx vitest run --maxWorkers=2` (`43` files / `1158` passed + `3` expected fail), `npm run build`, and `npx playwright test tests/e2e/route.spec.ts --workers=1` (`23` passed).

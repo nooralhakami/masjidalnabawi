@@ -225,6 +225,12 @@ describe('alternative routes (owner, 2026-10-11)', () => {
     expect(paths.length).toBeGreaterThan(1);
     expect(pathLength(paths[0])).toBeLessThanOrEqual(Math.min(...paths.map(pathLength)) + 1);
   });
+
+  it('south plaza to north gate keeps alternative exterior routes clear of interior carpets', () => {
+    const paths = walkPaths([24.4668, 39.6111], at(21));
+    const picked = pickRoutes(paths.map((path) => ({ path, item: path })));
+    expect(picked.length).toBeGreaterThan(1);
+  });
 });
 
 describe('restrooms are buildings: routes pass beside them, never over them (owner, 2026-10-11)', () => {

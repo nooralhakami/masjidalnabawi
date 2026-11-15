@@ -45,6 +45,9 @@ export interface PatchBox {
 export interface SafetyWorld {
   carpets: CarpetQuad[];
   carpetGrid: Map<string, CarpetQuad[]>;
+  /** Carpets inside the Mosque halls: only interior shortcuts are bound by them (exterior ways never enter the building). */
+  interiorCarpets: CarpetQuad[];
+  interiorCarpetGrid: Map<string, CarpetQuad[]>;
   barriers: BarrierSeg[];
   barrierGrid: Map<string, BarrierSeg[]>;
   womenZones: WomenZonePoly[];
@@ -146,12 +149,15 @@ export function safetyWorld(): SafetyWorld {
     carpets.push(quad);
     addToGrid(carpetGrid, quad, quad);
   }
-  // Interior prayer-hall carpets (between the marble walkways) so sub-corridors respect them too.
+  // Interior prayer-hall carpets (between the marble walkways), kept apart from the plaza carpets so
+  // only interior shortcuts are bound by them; an exterior way hugging the Mosque wall stays valid.
+  const interiorCarpets: CarpetQuad[] = [];
+  const interiorCarpetGrid = new Map<string, CarpetQuad[]>();
   for (const r of interiorCarpetBlocks()) {
     const poly = [modelToWalkMetres([r.x0, r.z0]), modelToWalkMetres([r.x1, r.z0]), modelToWalkMetres([r.x1, r.z1]), modelToWalkMetres([r.x0, r.z1])];
     const quad: CarpetQuad = { poly, ...bboxOf(poly) };
-    carpets.push(quad);
-    addToGrid(carpetGrid, quad, quad);
+    interiorCarpets.push(quad);
+    addToGrid(interiorCarpetGrid, quad, quad);
   }
 
   const barriers: BarrierSeg[] = [];
@@ -242,7 +248,7 @@ export function safetyWorld(): SafetyWorld {
     }
   }
 
-  cachedWorld = { carpets, carpetGrid, barriers, barrierGrid, womenZones, patchBoxes, detourAnchors };
+  cachedWorld = { carpets, carpetGrid, interiorCarpets, interiorCarpetGrid, barriers, barrierGrid, womenZones, patchBoxes, detourAnchors };
   return cachedWorld;
 }
 
@@ -254,20 +260,24 @@ export function womenZonesContaining(p: XY, w = safetyWorld()): Set<string> {
   return out;
 }
 
-export function pointInCarpet(p: XY, w = safetyWorld()): boolean {
-  const arr = w.carpetGrid.get(`${Math.floor(p[0] / CELL_M)}|${Math.floor(p[1] / CELL_M)}`);
+function pointInCarpetGrid(p: XY, grid: Map<string, CarpetQuad[]>): boolean {
+  const arr = grid.get(`${Math.floor(p[0] / CELL_M)}|${Math.floor(p[1] / CELL_M)}`);
   if (!arr) return false;
   return arr.some((c) => p[0] > c.minX && p[0] < c.maxX && p[1] > c.minY && p[1] < c.maxY && pointInPoly(p, c.poly));
 }
 
-/** Check whether straight segment `a -> b` crosses a laid prayer carpet. */
-export function segmentHitsCarpet(a: XY, b: XY, allowedEndpts: readonly XY[] = [], w = safetyWorld(), strictCarpet = false): boolean {
-  const set = queryGridSegment(w.carpetGrid, a, b);
+export function pointInCarpet(p: XY, w = safetyWorld()): boolean {
+  return pointInCarpetGrid(p, w.carpetGrid);
+}
+
+/** Check whether `p` stands on a prayer-hall carpet laid inside the Mosque. */
+export function pointInInteriorCarpet(p: XY, w = safetyWorld()): boolean {
+  return pointInCarpetGrid(p, w.interiorCarpetGrid);
+}
+
+function segmentHitsCarpetGrid(a: XY, b: XY, grid: Map<string, CarpetQuad[]>, allowedEndpts: readonly XY[], allowedBoxes: readonly PatchBox[]): boolean {
+  const set = queryGridSegment(grid, a, b);
   if (!set.size) return false;
-  const allowedBoxes =
-    !strictCarpet && allowedEndpts.length
-      ? w.patchBoxes.filter((box) => allowedEndpts.some((e) => e[0] >= box.minX && e[0] <= box.maxX && e[1] >= box.minY && e[1] <= box.maxY))
-      : [];
   const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
   const steps = Math.max(1, Math.ceil(len / 0.75));
   const candidates = [...set];
@@ -283,6 +293,20 @@ export function segmentHitsCarpet(a: XY, b: XY, allowedEndpts: readonly XY[] = [
     }
   }
   return false;
+}
+
+/** Check whether straight segment `a -> b` crosses a laid prayer carpet. */
+export function segmentHitsCarpet(a: XY, b: XY, allowedEndpts: readonly XY[] = [], w = safetyWorld(), strictCarpet = false): boolean {
+  const allowedBoxes =
+    !strictCarpet && allowedEndpts.length
+      ? w.patchBoxes.filter((box) => allowedEndpts.some((e) => e[0] >= box.minX && e[0] <= box.maxX && e[1] >= box.minY && e[1] <= box.maxY))
+      : [];
+  return segmentHitsCarpetGrid(a, b, w.carpetGrid, allowedEndpts, allowedBoxes);
+}
+
+/** Check whether straight segment `a -> b` crosses a carpet laid inside the Mosque halls (interior shortcuts only). */
+export function segmentHitsInteriorCarpet(a: XY, b: XY, allowedEndpts: readonly XY[] = [], w = safetyWorld()): boolean {
+  return segmentHitsCarpetGrid(a, b, w.interiorCarpetGrid, allowedEndpts, []);
 }
 
 /** Check whether straight segment `a -> b` crosses any documented barrier (`prayer_barrier`, `greeting_barrier`, `queue_rail`, `women_fence`). */
@@ -325,9 +349,11 @@ export function segmentHasViolation(
   w = safetyWorld(),
   allowedBarrierSources?: Set<BarrierSource>,
   strictCarpet = false,
+  interiorCarpets = false,
 ): boolean {
   if (segmentHitsBarrier(a, b, w, allowedBarrierSources)) return true;
   if (segmentHitsCarpet(a, b, allowedCarpetEndpts, w, strictCarpet)) return true;
+  if (interiorCarpets && segmentHitsInteriorCarpet(a, b, allowedCarpetEndpts, w)) return true;
   if (segmentTransitsWomen(a, b, allowedWomenZones, w)) return true;
   return false;
 }
