@@ -9,7 +9,8 @@ import {
   type MosqueDoorState,
   getGateDoorState,
   getMosqueDoors,
-  mosqueDoorBaysGeoJSON,
+  isGateOpen,
+  nearestMosqueDoor,
   openDoorwayBayCentres,
   resetMosqueDoors,
   subscribeMosqueDoors,
@@ -115,28 +116,20 @@ describe('the Mosque’s gates: multi-bay doors (owner, 2026-11-13)', () => {
     expect(toggleNearestMosqueDoor(getGateDoorState(1)!.x, getGateDoorState(1)!.y)).toMatchObject({ ok: false, reason: 'never_closed' });
   });
 
-  it('the 3D doorway bays are one polygon each: a brass threshold when open, teak leaves when shut', () => {
-    const doors = getMosqueDoors();
-    const fc = mosqueDoorBaysGeoJSON();
-    expect(fc.features).toHaveLength(doors.reduce((n, g) => n + g.totalBays, 0));
-    for (const f of fc.features) {
-      const p = f.properties as Record<string, unknown>;
-      expect(f.geometry.coordinates[0]).toHaveLength(5);
-      expect(f.geometry.coordinates[0][0]).toEqual(f.geometry.coordinates[0][4]);
-      if (p.open) {
-        expect(p.height).toBe(0.45);
-        expect(p.color).toBe('#d4af37');
-        expect(p.opacity).toBe(0.92);
-      } else {
-        expect(p.height).toBe(5.4);
-        expect(p.color).toBe(p.alwaysClosed ? '#3d2414' : '#5c381c');
-        expect(p.opacity).toBe(0.96);
-      }
-    }
-    // The sealed gates' leaves are read as shut even after a tap.
-    toggleGateDoor(18);
-    const sealed = mosqueDoorBaysGeoJSON().features.filter((f) => (f.properties as Record<string, unknown>).gateId === 18);
-    expect(sealed.every((f) => (f.properties as Record<string, unknown>).open === false)).toBe(true);
+  it('the nearest doorway picks its gate, and the gate open state is what the portal paints', () => {
+    const g = getGateDoorState(8)!;
+    const bay = g.bays[Math.floor(g.totalBays / 2)];
+    expect(nearestMosqueDoor(bay.x, bay.y)?.id).toBe(8);
+    expect(nearestMosqueDoor(g.x + 500, g.y + 500)).toBeNull();
+    // The real wall portal paints the open hall while its gate is open, the carved leaves when shut.
+    expect(isGateOpen(8)).toBe(true);
+    toggleGateDoor(8);
+    expect(isGateOpen(8)).toBe(false);
+    toggleGateDoor(8);
+    expect(isGateOpen(8)).toBe(true);
+    // Bab al-Salam's portal is always the open hall; a sealed gate's portal is always shut.
+    expect(isGateOpen(1)).toBe(true);
+    expect(isGateOpen(26)).toBe(false);
   });
 
   it('opening and closing publishes the bays a visitor can walk through', () => {
