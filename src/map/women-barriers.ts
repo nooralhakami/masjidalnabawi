@@ -1,7 +1,7 @@
 import type { FeatureCollection, Polygon } from 'geojson';
 import { WOMEN_AREAS } from '../data-next/women-areas';
 import { lngLatFromMetres, metresFromOrigin } from './glb-layer';
-import { GREETING_BARRIERS, QUEUE_RAILS, WOMEN_RAWDAH_CORRIDOR_BARRIERS } from './rawdah-layout';
+import { GREETING_BARRIERS, QUEUE_RAILS, RAWDAH_APPROACH_BARRIERS, RAWDAH_HALL_BARRIERS, WOMEN_RAWDAH_CORRIDOR_BARRIERS } from './rawdah-layout';
 
 /** A barrier panel: 2 m long, 0.15 m thick, 1.1 m high, with a hand's gap to the next (owner, 2026-11-07). */
 export const PANEL = { length: 2, thick: 0.15, height: 1.1, gap: 0.08 };
@@ -23,10 +23,14 @@ export function queueRails(): FeatureCollection<Polygon, { height: number }> {
   return panels(QUEUE_RAILS, RAIL);
 }
 
-/** The green barriers that order the greeting at the Prophet's chamber (owner, 2026-11-08): as the prayer areas'. */
+/**
+ * The green barriers that order the greeting at the Prophet's chamber (owner, 2026-11-08): as the
+ * prayer areas'. With them, the same barriers that close the way to the Rawdah (owner, 2026-11-18):
+ * the hall inside Gate 38 and the ground between the queue's head, Gate 38 and the greeting's way out.
+ */
 export const GREEN_PANEL = { length: 2, thick: 0.15, height: 1.0, gap: 0.08 };
 export function greetingBarriers(): FeatureCollection<Polygon, { height: number }> {
-  return panels(GREETING_BARRIERS, GREEN_PANEL);
+  return panels([...GREETING_BARRIERS, ...RAWDAH_APPROACH_BARRIERS, ...RAWDAH_HALL_BARRIERS], GREEN_PANEL);
 }
 
 /**

@@ -6,7 +6,7 @@ import { openDoorwayBayCentres } from '../domain/mosque-doors';
 import type { CrowdInput, XY } from './crowd-sim';
 import { metresFromOrigin } from './glb-layer';
 import { MOSQUE_MAIN, MOSQUE_SOUTH, restroomFootprints, restroomWalkways } from './prayer-layout';
-import { GREETING_BARRIERS, GREETING_WAYS, QUEUE_AREA, QUEUE_MOUTH, QUEUE_RAILS } from './rawdah-layout';
+import { GREETING_BARRIERS, GREETING_WAYS, QUEUE_AREA, QUEUE_MOUTH, QUEUE_RAILS, RAWDAH_APPROACH, RAWDAH_APPROACH_BARRIERS, RAWDAH_STRIP } from './rawdah-layout';
 import { rugLayout } from './rug-layout';
 
 const m = (ll: readonly [number, number]): XY => metresFromOrigin(ll as [number, number]);
@@ -106,10 +106,13 @@ export function crowdInput(columns: readonly (readonly [number, number])[]): Cro
     goals: [...POIS.filter((p) => p.category === 'gates').map((p) => m([p.lng, p.lat])), ...buildDoorwayGoals(columns)],
     womenOnly: WOMEN_AREAS.map((a) => a.zone.map(mLatLng)),
     // The women's barriers, the rails of the Rawdah's queues and the greeting's barriers (owner, 2026-11-08).
-    fences: [...WOMEN_AREAS.flatMap((a) => a.barriers.map((line) => line.map(mLatLng))), ...QUEUE_RAILS, ...GREETING_BARRIERS],
-    reserved: [QUEUE_AREA],
+    // And those that close the ground from the queue's head to Gate 38 (owner, 2026-11-18).
+    fences: [...WOMEN_AREAS.flatMap((a) => a.barriers.map((line) => line.map(mLatLng))), ...QUEUE_RAILS, ...GREETING_BARRIERS, ...RAWDAH_APPROACH_BARRIERS],
+    // The strip closed between the greeting's way out and the queue: no one walks there.
+    reserved: [QUEUE_AREA, RAWDAH_STRIP],
     heldWays: GREETING_WAYS,
-    quiet: [QUEUE_MOUTH],
+    // Only those let through the queue walk to Gate 38: no one else starts there.
+    quiet: [QUEUE_MOUTH, RAWDAH_APPROACH],
     womenGoals: WOMEN_AREAS.flatMap((a) => inside(a.zone.map(mLatLng))),
   };
 }

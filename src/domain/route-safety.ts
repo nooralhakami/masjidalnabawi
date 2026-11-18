@@ -1,10 +1,10 @@
 import { WOMEN_AREAS } from '../data-next/women-areas';
 import { modelToWalkMetres, toWalkMetres, type XY } from './frames';
 import { interiorCarpetBlocks } from './interior-layout';
-import { GREETING_BARRIERS, QUEUE_RAILS } from './rawdah-layout';
+import { GREETING_BARRIERS, QUEUE_RAILS, RAWDAH_APPROACH_BARRIERS, RAWDAH_HALL_BARRIERS } from './rawdah-layout';
 import { currentRugLayout, type RugLayout } from './rug-layout';
 
-export type BarrierSource = 'prayer_barrier' | 'greeting_barrier' | 'queue_rail' | 'women_fence';
+export type BarrierSource = 'prayer_barrier' | 'greeting_barrier' | 'queue_rail' | 'rawdah_barrier' | 'women_fence';
 
 export interface CarpetQuad {
   poly: XY[];
@@ -180,6 +180,11 @@ export function safetyWorld(): SafetyWorld {
     const pts = run.map((pt) => modelToWalkMetres(pt));
     for (let i = 1; i < pts.length; i++) addBarrier(pts[i - 1], pts[i], 'greeting_barrier');
   }
+  // The way to the Rawdah (owner, 2026-11-18): only through the queue, Gate 38 and the hall inside it.
+  for (const run of [...RAWDAH_APPROACH_BARRIERS, ...RAWDAH_HALL_BARRIERS]) {
+    const pts = run.map((pt) => modelToWalkMetres(pt));
+    for (let i = 1; i < pts.length; i++) addBarrier(pts[i - 1], pts[i], 'rawdah_barrier');
+  }
 
   const womenZones: WomenZonePoly[] = WOMEN_AREAS.map((area) => {
     const poly = area.zone.map((pt) => toWalkMetres([pt[0], pt[1]]));
@@ -227,7 +232,7 @@ export function safetyWorld(): SafetyWorld {
       }
     }
   }
-  for (const run of [...GREETING_BARRIERS, ...QUEUE_RAILS]) {
+  for (const run of [...GREETING_BARRIERS, ...QUEUE_RAILS, ...RAWDAH_APPROACH_BARRIERS, ...RAWDAH_HALL_BARRIERS]) {
     const pts = run.map((pt) => modelToWalkMetres(pt));
     for (let i = 0; i < pts.length; i++) {
       const p = pts[i];
@@ -309,7 +314,7 @@ export function segmentHitsInteriorCarpet(a: XY, b: XY, allowedEndpts: readonly 
   return segmentHitsCarpetGrid(a, b, w.interiorCarpetGrid, allowedEndpts, []);
 }
 
-/** Check whether straight segment `a -> b` crosses any documented barrier (`prayer_barrier`, `greeting_barrier`, `queue_rail`, `women_fence`). */
+/** Check whether straight segment `a -> b` crosses any documented barrier (`prayer_barrier`, `greeting_barrier`, `queue_rail`, `rawdah_barrier`, `women_fence`). */
 export function segmentHitsBarrier(a: XY, b: XY, w = safetyWorld(), allowedSources?: Set<BarrierSource>): boolean {
   const set = queryGridSegment(w.barrierGrid, a, b);
   if (!set.size) return false;

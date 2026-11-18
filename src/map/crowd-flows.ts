@@ -4,9 +4,8 @@ import {
   FLOWS_CENTRE,
   FLOWS_REACH,
   FUNERAL_WAY,
-  HOLD_CENTRE,
-  HOLD_HALF,
-  HOLD_ORGANISERS,
+  GATE_38_ORGANISERS,
+  GATE_38_STEP,
   QUEUE_CHECKERS,
   QUEUE_ENTRY_Z,
   QUEUE_HEAD_Z,
@@ -15,7 +14,6 @@ import {
   QUEUE_OUT_Z,
   QUEUE_ROW,
   RAWDAH_AWAY,
-  RAWDAH_IN,
   RAWDAH_OUT,
   SALAM_IN,
   SALAM_OUT,
@@ -27,8 +25,9 @@ import {
  * from the crowd and given back to it:
  *
  * - The Rawdah: those whose turn it is (men or women, as the rota on the Rawdah card) queue in the
- *   six lanes, are checked one by one at the lanes' heads, wait before Gate 37, are sent in batches
- *   into the Rawdah through Gate 39, and come out of Gate 2 some time later.
+ *   six lanes, are checked one by one at the lanes' heads, go in by Gate 38 to wait in the closed hall
+ *   inside it (owner, 2026-11-18: never toward Gate 37), are sent on in batches through Gate 39
+ *   into the Rawdah, and come out of Gate 2 some time later.
  * - The greeting: men walk to Gate 1, are inside a while, come out of Gate 41 and walk south.
  * - Now and then a funeral: a bier on four men's shoulders, men following, out of block 203 to
  *   the south face by Gate 42.
@@ -42,11 +41,11 @@ type Step =
   | { go: XY } // steered straight to a point
   | { hide: number } // inside the Mosque for so many seconds
   | { at: XY } // comes out here
-  | { join: 'hold' } // waits before Gate 37
+  | { join: 'hold' } // goes in by Gate 38, to wait in the hall inside
   | { done: true }; // back to the crowd
 
 /**
- * How many queue in each lane, and the most who wait before Gate 37. The rates are set so the
+ * How many queue in each lane, and the most who wait in the hall inside Gate 38. The rates are set so the
  * flows hold about 150 of the crowd's men or women at once, and the rest still walk the courtyards.
  */
 export const LANE_FILL = 10;
@@ -101,7 +100,6 @@ export class Flows {
   private g: {
     entry: number[];
     hold: number;
-    rawdahIn: number;
     away: number;
     salamIn: number[];
     salamOut: number[];
@@ -122,8 +120,7 @@ export class Flows {
     const add = (p: XY) => crowd.addSpecialGoal(p);
     this.g = {
       entry: QUEUE_LANES.map(([w, e]) => add([(w + e) / 2, QUEUE_ENTRY_Z])),
-      hold: add(HOLD_CENTRE),
-      rawdahIn: add(RAWDAH_IN),
+      hold: add(GATE_38_STEP),
       away: add(RAWDAH_AWAY),
       salamIn: SALAM_IN.map((p) => crowd.addSpecialGoal(p, 2)),
       salamOut: SALAM_OUT.map((p) => crowd.addSpecialGoal(p, 2)),
@@ -202,17 +199,10 @@ export class Flows {
         p.until = this.t + 2; // wait for room at the door
       else this.next(a);
     } else if ('join' in step) {
+      // In by Gate 38: waiting in the hall inside, out of sight under the roof.
       this.plans.delete(a);
       this.hold.push(a);
-      const [hx, hz] = HOLD_CENTRE;
-      for (let tries = 0; tries < 20; tries++) {
-        const x = hx + (this.rnd() * 2 - 1) * HOLD_HALF[0];
-        const z = hz + (this.rnd() * 2 - 1) * HOLD_HALF[1];
-        if (!c.standable(x, z, !c.woman[a])) continue;
-        c.steer(a, x, z, 0.75);
-        return;
-      }
-      c.steer(a, hx, hz, 0.75);
+      c.hide(a);
     }
   }
 
@@ -274,9 +264,8 @@ export class Flows {
       this.nextRelease[l] = this.t + 2 + this.rnd() * 6;
     }
     for (let k = 0; k < 12; k++) {
-      const a = this.recruit(HOLD_CENTRE[0], HOLD_CENTRE[1], woman, 10_000);
+      const a = this.recruit(GATE_38_STEP[0], GATE_38_STEP[1], woman, 10_000);
       if (a < 0) break;
-      if (!c.place(a, HOLD_CENTRE[0] + (this.rnd() * 2 - 1) * HOLD_HALF[0], HOLD_CENTRE[1] + (this.rnd() * 2 - 1) * HOLD_HALF[1])) continue;
       this.plan(a, [{ join: 'hold' }]);
     }
     this.nextBatch = this.t + 20 + this.rnd() * 20;
@@ -287,13 +276,13 @@ export class Flows {
     this.secondFuneral = Number.POSITIVE_INFINITY;
   }
 
-  /** The checkers and the organisers by Gate 37: standing, of the turn's sex, facing their work. */
+  /** The checkers and the organisers by Gate 38: standing, of the turn's sex, facing their work. */
   private placeOrganisers(): void {
     const c = this.crowd;
     for (const a of this.organisers) c.free(a);
     this.organisers = [];
     const woman = this.turn === 'women';
-    const spots: [XY, number][] = [...QUEUE_CHECKERS.map((p): [XY, number] => [p, Math.PI / 2]), ...HOLD_ORGANISERS.map((p): [XY, number] => [p, -Math.PI / 2])];
+    const spots: [XY, number][] = [...QUEUE_CHECKERS.map((p): [XY, number] => [p, Math.PI / 2]), ...GATE_38_ORGANISERS.map((p): [XY, number] => [p, Math.PI / 2])];
     for (const [[x, z], heading] of spots) {
       const a = this.recruit(x, z, woman, 10_000);
       if (a < 0) break;
@@ -385,7 +374,7 @@ export class Flows {
         if (c.pz[a] > QUEUE_MOUTH_Z - 0.5 && Math.abs(c.px[a] - x) > 0.4) c.steer(a, x, QUEUE_MOUTH_Z + 1, 0.62);
         else c.steer(a, x, z, 0.62);
       });
-      // The checker lets the first through, when there is room to wait before Gate 37.
+      // The checker lets the first through, when there is room to wait in the hall inside Gate 38.
       const head = lane[0];
       if (head !== undefined && this.t >= this.nextRelease[l] && this.hold.length < HOLD_MAX) {
         const [x, z] = this.slot(l, 0);
@@ -409,10 +398,11 @@ export class Flows {
       }
     }
 
-    // A batch from before Gate 37 into the Rawdah through Gate 39, out of Gate 2 a while later.
+    // A batch from the hall through Gate 39 into the Rawdah (inside, unseen), out of Gate 2 a while
+    // later. (Every ten minutes or so in fact; the scene's minutes run faster.)
     if (this.t >= this.nextBatch) {
       const batch = this.hold.splice(0, BATCH_MAX);
-      for (const a of batch) this.plan(a, [{ via: this.g.rawdahIn }, { hide: 40 + this.rnd() * 40 }, { at: RAWDAH_OUT }, { via: this.g.away }, { done: true }]);
+      for (const a of batch) this.plan(a, [{ hide: 40 + this.rnd() * 40 }, { at: RAWDAH_OUT }, { via: this.g.away }, { done: true }]);
       this.nextBatch = this.t + 35 + this.rnd() * 10;
     }
 
