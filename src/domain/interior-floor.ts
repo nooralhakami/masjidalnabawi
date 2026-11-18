@@ -1,5 +1,5 @@
 import { toModelMetres, type XY } from './frames';
-import { interiorColumnCentres } from './interior-layout';
+import { INTERIOR_COL_STEP_M, interiorColumnCentres } from './interior-layout';
 import { COLUMN_CLEAR, fromLaid, inside, RUG_D, RUG_W, type Rug, toLaid, within } from './rug-layout';
 
 /**
@@ -112,4 +112,26 @@ export function interiorRugs(floor: InteriorFloor, columns: readonly XY[]): Rug[
     }
   }
   return rugs;
+}
+
+/** Where the interior's props stand (model metres): the columns, an arch between each two columns
+ * one grid step apart (east–west or north–south), and a chandelier in each bay with all four. */
+export interface InteriorPropPlacements {
+  columns: XY[];
+  archesEastWest: XY[];
+  archesNorthSouth: XY[];
+  chandeliers: XY[];
+}
+
+export function interiorPropPlacements(columns: readonly XY[], step = INTERIOR_COL_STEP_M): InteriorPropPlacements {
+  const key = (x: number, z: number) => `${Math.round(x * 2)},${Math.round(z * 2)}`;
+  const stands = new Set(columns.map(([x, z]) => key(x, z)));
+  const has = (x: number, z: number) => stands.has(key(x, z));
+  const out: InteriorPropPlacements = { columns: [...columns], archesEastWest: [], archesNorthSouth: [], chandeliers: [] };
+  for (const [x, z] of columns) {
+    if (has(x + step, z)) out.archesEastWest.push([x + step / 2, z]);
+    if (has(x, z + step)) out.archesNorthSouth.push([x, z + step / 2]);
+    if (has(x + step, z) && has(x, z + step) && has(x + step, z + step)) out.chandeliers.push([x + step / 2, z + step / 2]);
+  }
+  return out;
 }
