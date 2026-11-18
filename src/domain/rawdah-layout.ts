@@ -103,34 +103,40 @@ export const RAWDAH_AWAY: XY = [-140, -95];
 /**
  * The closed hall where those for the Rawdah wait (owner, 2026-11-18, his yellow box over navQ's
  * plan): the bay «مصلى الرجال A17» (navQ 178: x −4.6…52.2, z −161.8…−119.2), its west walkway (to
- * the carpet A12 at x −10) and the south half of its north one (z −167.5), east to x 55.5 so that
- * Gate 37 (navQ x 59.3, on the east walkway) stays outside; and the way from it west to Gate 39
- * (navQ x −23.5, z −112.7) along the south of the carpet A7. Its only ways in: Gate 38 from the
- * queue, and out: Gate 39 to the Rawdah.
+ * the carpet A12 at x −10) and the south half of its north one (z −167.5), and east to the carpet's
+ * edge (x 52.6), so that Gate 37 (navQ x 59.3; its five bays from x 53 in `haram-3d.glb`) stays
+ * outside; and the way from it west to Gate 39 (navQ x −23.5, z −112.7, in the old Mosque's north
+ * wall) along the south of the carpet A7. Its south side is the Mosque's face, which the 3D model
+ * has at z −121.4 between x −12 and 44. Its only way in: Gate 38 from the queue; out: Gate 39.
  */
 export const RAWDAH_HALL: XY[] = [
-  [55.5, -110.6],
-  [55.5, -167.5],
+  [52.6, -112.6],
+  [44.0, -112.6],
+  [44.0, -121.4],
+  [52.6, -167.5],
   [-10.0, -167.5],
   [-10.0, -136.0],
   [-18.7, -136.0],
   [-19.2, -132.5],
   [-19.2, -120.9],
   [-27.0, -120.9],
-  [-27.0, -110.6],
+  [-27.0, -112.4],
+  [-12.0, -112.4],
+  [-12.0, -121.4],
 ];
-/** The barriers round it, inside the Mosque: east (Gate 37 left outside), north, and west to Gate 39. */
+/** The barriers round it, inside the Mosque: east (from the face, by Gate 37's first bay, which stays
+ * outside), north, and west to Gate 39. */
 export const RAWDAH_HALL_BARRIERS: XY[][] = [
   [
-    [55.5, -110.8],
-    [55.5, -167.5],
+    [52.6, -112.6],
+    [52.6, -167.5],
     [-10.0, -167.5],
     [-10.0, -136.0],
     [-18.7, -136.0],
     [-19.2, -132.5],
     [-19.2, -120.9],
     [-27.0, -120.9],
-    [-27.0, -110.8],
+    [-27.0, -112.6],
   ],
 ];
 /**
@@ -143,7 +149,7 @@ export const RAWDAH_HALL_BARRIERS: XY[][] = [
 export const RAWDAH_APPROACH_BARRIERS: XY[][] = [
   [
     [42.2, -93.2],
-    [42.2, -110.2],
+    [42.2, -121.2],
   ],
   [
     [16.7, -93.2],
@@ -156,8 +162,8 @@ export const RAWDAH_APPROACH_BARRIERS: XY[][] = [
 ];
 /** Where only those let through the queue walk, outside: from the queue's head to Gate 38. */
 export const RAWDAH_APPROACH: XY[] = [
-  [-11.4, -110.2],
-  [42.2, -110.2],
+  [-11.4, -121.4],
+  [42.2, -121.4],
   [42.2, -93.2],
   [16.7, -93.2],
   [4.5, -75.1],

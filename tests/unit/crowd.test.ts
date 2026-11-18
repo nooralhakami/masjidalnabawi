@@ -9,7 +9,7 @@ import { crowdInput } from '../../src/map/crowd-world';
 import { generateWorshipperPlacements, parsePrayerDemoOverride, resolvePrayerSession } from '../../src/domain/prayer-session';
 import { metresFromOrigin, nodePositions, parseGlbBuffer } from '../../src/map/glb-layer';
 import { restroomFootprints, restroomWalkways } from '../../src/map/prayer-layout';
-import { GREETING_BARRIERS, QUEUE_LANES, QUEUE_MOUTH_Z, QUEUE_RAILS } from '../../src/map/rawdah-layout';
+import { GREETING_BARRIERS, QUEUE_LANES, QUEUE_MOUTH_Z, QUEUE_RAILS, RAWDAH_APPROACH_BARRIERS } from '../../src/map/rawdah-layout';
 import { rugLayout } from '../../src/map/rug-layout';
 
 const inside = (x: number, z: number, r: readonly (readonly [number, number])[]) => {
@@ -133,8 +133,9 @@ describe('the women’s areas (owner, 2026-11-07)', () => {
 
   it('the two areas and their barriers are read in: north-west and north-east', () => {
     expect(zones).toHaveLength(2);
-    // 13 for the women's areas, the 11 rails of the Rawdah's queues and the greeting's barriers (owner, 2026-11-08).
-    expect(fences.length).toBe(13 + QUEUE_RAILS.length + GREETING_BARRIERS.length);
+    // 13 for the women's areas, the 11 rails of the Rawdah's queues and the greeting's barriers (owner, 2026-11-08),
+    // and those closing the ground from the queue's head to Gate 38 (owner, 2026-11-18).
+    expect(fences.length).toBe(13 + QUEUE_RAILS.length + GREETING_BARRIERS.length + RAWDAH_APPROACH_BARRIERS.length);
     expect(QUEUE_RAILS).toHaveLength(11);
   });
 
