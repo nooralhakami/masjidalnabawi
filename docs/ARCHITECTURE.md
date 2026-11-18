@@ -70,6 +70,7 @@ src/
     setup.ts       map, Esri + light raster sources, bounds, attribution, scale, rotation, compass
     zoom.ts        legacyZoom() — the one bridge between MapLibre zoom and the app's Leaflet-era thresholds
     glb-layer.ts   the 3D view's custom WebGL2 layer: draws the files of data-next/alharamain-3d.ts, instanced per mesh
+                   the Mosque's 27 sliding domes are one group of their own, drawn from a buffer that moves them (domain/sliding-domes.ts numbers them and sets each one's way; domain/easing.ts is the motor curve shared with the canopies)
     scene-light.ts how the 3D view is lit for a sun position (night, blue hour, golden hour, day), the sky, and which materials glow at night
     terrain-layer.ts  the 3D view's mountains (custom WebGL2 layer), one draw call, lit and hazed like the scene
     terrain-mesh.ts   pure geometry for it: the height grid as triangles, only where the ground rises
