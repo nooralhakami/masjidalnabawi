@@ -4,6 +4,7 @@ import { motorEase } from '../domain/easing';
 import { fromModelMetres, MODEL_ORIGIN_LNGLAT, toModelMetres } from '../domain/frames';
 import { isGateOpen, nearestMosqueDoor, subscribeMosqueDoors, toggleNearestMosqueDoor } from '../domain/mosque-doors';
 import type { InteriorPropPlacements } from '../domain/interior-floor';
+import { MAX_REVEAL_LANES, NO_REVEAL, type InteriorReveal } from '../domain/interior-reveal';
 import { buildSlidingDomes, domeSlideAt, isDomeOpen, type SlidingDome, toggleDome } from '../domain/sliding-domes';
 import { gateLattice, materialColor, materialGlow, minaretCrown, portalKind, type SceneLight } from './scene-light';
 import { createShadowTexture, SHADOW_GLSL, SHADOW_SIZE, sunMatrix, sunShadow } from './sun-shadow';
@@ -108,8 +109,10 @@ interface GpuPrimitive {
    * the canopies a visitor opened or closed with a tap, folded in the vertex shader.
    */
   when: 'always' | 'day' | 'night' | 'anim';
-  /** The interior's props (columns, arches, lanterns, chandeliers): drawn only in the interior cutaway. */
+  /** The interior's props (columns, arches, lanterns, chandeliers): drawn only when the interior shows. */
   interiorOnly?: boolean;
+  /** Where the roof lifts over the interior: 0 never, 1 roof (above 1.5 m), 2 the rest (above 12 m). */
+  revealRole: 0 | 1 | 2;
 }
 
 // The courtyards' twelve canopies (`uMB`, their `steel` ribs and `steel gold` finials) stand open to the
@@ -122,6 +125,12 @@ function classifyInteriorRole(url: string, materialName?: string): 'keep' | 'wal
   if (materialName && INTERIOR_KEEP_MATERIALS.has(materialName)) return 'keep';
   if (materialName && INTERIOR_ROOF_MATERIALS.has(materialName)) return 'roof';
   return 'wall';
+}
+
+/** How a part lets the interior show (`GpuPrimitive.revealRole`): the props and what stays whole never. */
+export function revealRoleOf(role: 'keep' | 'wall' | 'roof', prop: boolean): 0 | 1 | 2 {
+  if (prop || role === 'keep') return 0;
+  return role === 'roof' ? 1 : 2;
 }
 
 /** A parsed file waiting for the next frame: WebGL state is only ours while MapLibre renders this layer. */
@@ -198,6 +207,7 @@ out vec2 v_uv;
 out float v_height;
 out vec4 v_shadow;
 out float v_localY;
+out vec2 v_xz;
 
 void main() {
   vec3 nrm = a_normal;
@@ -206,6 +216,7 @@ void main() {
   vec4 world = a_model * vec4(pos, 1.0);
   gl_Position = a_hide > 0.5 ? vec4(0.0, 0.0, 2.0, 1.0) : u_mvp * world;
   v_height = world.y;
+  v_xz = world.xz;
   v_shadow = u_light * world;
   // Some nodes are scaled unevenly or mirrored, so a plain rotation would bend their normals.
   v_normal = transpose(inverse(mat3(a_model))) * nrm;
@@ -221,8 +232,19 @@ in vec2 v_uv;
 in float v_height;
 in vec4 v_shadow;
 in float v_localY;
+in vec2 v_xz;
 
 uniform vec4 u_baseColor;
+// Where the roof lifts to show the interior (domain/interior-reveal.ts): this part's role, 0 never
+// (minarets, the Green Dome, the courtyards' canopies, the interior's own props), 1 roof (lifted
+// above 1.5 m), 2 the rest of the Mosque (lifted above 12 m: what stands on the roof, while the
+// facades keep their height and their gates); the discs (x, z, radius) and lanes (a, b) lifted.
+uniform int u_revealRole;
+uniform vec3 u_revealDisc[2];
+uniform int u_revealDiscs;
+uniform vec4 u_revealLane[${MAX_REVEAL_LANES}];
+uniform int u_revealLanes;
+uniform float u_revealHalf;
 // The minarets' green-lit crown, in the mesh's own height (x..y), or (0, 0) for none.
 uniform vec2 u_crown;
 // A portal's back wall to paint (scene-light.ts portalKind): 0 none, 1 closed gate, 2 open (Bab
@@ -337,18 +359,43 @@ vec3 portal(vec2 m, vec2 size, int kind, inout vec3 col) {
   return emit;
 }
 
+// How far p is outside the lifted roof (negative: inside it), in metres.
+float revealEdge(vec2 p) {
+  float e = 1e6;
+  for (int i = 0; i < 2; i++) {
+    if (i >= u_revealDiscs) break;
+    e = min(e, length(p - u_revealDisc[i].xy) - u_revealDisc[i].z);
+  }
+  for (int i = 0; i < ${MAX_REVEAL_LANES}; i++) {
+    if (i >= u_revealLanes) break;
+    vec2 a = u_revealLane[i].xy;
+    vec2 ab = u_revealLane[i].zw - a;
+    float t = clamp(dot(p - a, ab) / max(dot(ab, ab), 1e-6), 0.0, 1.0);
+    e = min(e, length(p - a - t * ab) - u_revealHalf);
+  }
+  return e;
+}
+
 // Filmic roll-off (ACES fit): strong light goes to white, as a camera sees it, never to orange.
 vec3 filmic(vec3 x) {
   return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
 }
 
 void main() {
+  // The roof lifted over the interior: nothing drawn there, and a cut stone rim around the opening.
+  float rim = 0.0;
+  if (u_revealRole > 0 && v_height > (u_revealRole == 1 ? 1.5 : 12.0)) {
+    float e = revealEdge(v_xz);
+    if (e < 0.0) discard;
+    rim = 1.0 - smoothstep(0.3, 0.7, e);
+  }
   // As navQ draws them: textures darkened toward linear, material colours as stored, no gamma at the end.
   vec4 albedo = u_baseColor;
   if (u_hasTex == 1) {
     vec4 texel = texture(u_tex, v_uv);
     albedo *= vec4(pow(texel.rgb, vec3(1.6)), texel.a);
   }
+  albedo.rgb = mix(albedo.rgb, vec3(0.86, 0.8, 0.68), rim * 0.85);
   // A cut-out material (the fence's lattice and spikes): its holes are not drawn at all.
   if (u_cutoff > 0.0 && albedo.a < u_cutoff) discard;
 
@@ -800,6 +847,14 @@ export class HaramGlbLayer implements CustomLayerInterface {
   private domeDirty = false;
   /** The interior props' file is asked for once, when the interior's plan has arrived. */
   private propsRequested = false;
+  /** Where the roof lifts this frame (the engine's answer: a tapped gate, a route inside). */
+  private revealSource: (() => InteriorReveal) | null = null;
+  private uRevealRole: WebGLUniformLocation | null = null;
+  private uRevealDisc: WebGLUniformLocation | null = null;
+  private uRevealDiscs: WebGLUniformLocation | null = null;
+  private uRevealLane: WebGLUniformLocation | null = null;
+  private uRevealLanes: WebGLUniformLocation | null = null;
+  private uRevealHalf: WebGLUniformLocation | null = null;
 
   /**
    * `light`: how the scene is lit now (change it with `setLight`). `onLamps`: where the lanterns of
@@ -892,6 +947,12 @@ export class HaramGlbLayer implements CustomLayerInterface {
     this.uLattice = gl.getUniformLocation(prog, 'u_lattice');
     this.uCutoff = gl.getUniformLocation(prog, 'u_cutoff');
     this.uCanopy = gl.getUniformLocation(prog, 'u_canopy');
+    this.uRevealRole = gl.getUniformLocation(prog, 'u_revealRole');
+    this.uRevealDisc = gl.getUniformLocation(prog, 'u_revealDisc');
+    this.uRevealDiscs = gl.getUniformLocation(prog, 'u_revealDiscs');
+    this.uRevealLane = gl.getUniformLocation(prog, 'u_revealLane');
+    this.uRevealLanes = gl.getUniformLocation(prog, 'u_revealLanes');
+    this.uRevealHalf = gl.getUniformLocation(prog, 'u_revealHalf');
 
     // The depth-only pass the sun's shadow map is drawn with: the same vertex arrays, position and
     // instance matrix only.
@@ -1163,6 +1224,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
           instances: matrices.length / 16,
           when,
           interiorOnly: Boolean(asset.props),
+          revealRole: revealRoleOf(classifyInteriorRole(model.url, material?.name), Boolean(asset.props)),
         });
       }
     }
@@ -1182,6 +1244,23 @@ export class HaramGlbLayer implements CustomLayerInterface {
   setInterior(on: boolean): void {
     this.interior = on;
     this.map?.triggerRepaint();
+  }
+
+  /**
+   * Where the roof lifts over the interior, asked each frame (owner, 2026-11-18: the Mosque is seen
+   * from outside unless a gate was tapped and the map zoomed in, a route walks inside, a dome is open,
+   * or the interior view is on). `domain/interior-reveal.ts` says where.
+   */
+  setRevealSource(source: (() => InteriorReveal) | null): void {
+    this.revealSource = source;
+    this.map?.triggerRepaint();
+  }
+
+  /** Is any sliding dome open, or on its way? Then the interior shows through its opening. */
+  private anyDomeOpen(): boolean {
+    if (this.domeMoves.size) return true;
+    for (const f of this.domeOpen.values()) if (f > 0) return true;
+    return false;
   }
 
   /** Toggle the nearest Mosque doorway bay under screen `[x, y]` CSS pixels. */
@@ -1506,12 +1585,27 @@ export class HaramGlbLayer implements CustomLayerInterface {
     let boundTex: WebGLTexture | null = null;
     // Folded from about sunset (the light is then half way to night) until morning.
     const folded = light.night >= 0.5;
+    // Where the roof lifts (none in the interior view: there all of it is faded instead).
+    const reveal = this.interior ? NO_REVEAL : (this.revealSource?.() ?? NO_REVEAL);
+    const lifted = reveal.discs.length + reveal.lanes.length > 0;
+    const discs = new Float32Array(6);
+    reveal.discs.slice(0, 2).forEach((d, i) => discs.set(d, i * 3));
+    const lanes = new Float32Array(MAX_REVEAL_LANES * 4);
+    reveal.lanes.slice(0, MAX_REVEAL_LANES).forEach((l, i) => lanes.set(l, i * 4));
+    gl.uniform3fv(this.uRevealDisc, discs);
+    gl.uniform1i(this.uRevealDiscs, Math.min(2, reveal.discs.length));
+    gl.uniform4fv(this.uRevealLane, lanes);
+    gl.uniform1i(this.uRevealLanes, Math.min(MAX_REVEAL_LANES, reveal.lanes.length));
+    gl.uniform1f(this.uRevealHalf, reveal.laneHalf);
+    // The interior's columns, arches and chandeliers: under the roof they are hidden, so they are only
+    // drawn when some of the interior shows.
+    const props = this.interior || lifted || this.anyDomeOpen();
     const passes: readonly ('all' | 'keep' | 'fade')[] = this.interior ? ['keep', 'fade'] : ['all'];
     for (const pass of passes) {
       gl.depthMask(pass !== 'fade');
       for (const prim of this.prims) {
         if ((prim.when === 'day' && folded) || (prim.when === 'night' && !folded)) continue;
-        if (prim.interiorOnly && !this.interior) continue;
+        if (prim.interiorOnly && !props) continue;
         if (pass === 'keep' && prim.interiorRole !== 'keep') continue;
         if (pass === 'fade' && prim.interiorRole === 'keep') continue;
         const instances = prim.when === 'anim' ? this.animCount : prim.instances;
@@ -1528,6 +1622,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
         gl.uniform2fv(this.uPortalSize, prim.portalSize);
         gl.uniform1f(this.uLattice, prim.lattice ? 1 : 0);
         gl.uniform1f(this.uCutoff, prim.cutoff);
+        gl.uniform1i(this.uRevealRole, lifted ? prim.revealRole : 0);
 
         const texture = prim.hasUv && prim.textureIndex >= 0 ? this.textures[prim.textureIndex] : undefined;
         gl.uniform1i(this.uHasTex, texture ? 1 : 0);

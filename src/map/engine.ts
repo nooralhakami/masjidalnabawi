@@ -17,7 +17,9 @@ import { buildInterCarpetAisles, rugLayout } from './rug-layout';
 import { sunPosition } from '../domain/daylight';
 import type { Poi, Status } from '../data/types';
 import { isHidden } from '../domain/filters';
-import { toggleGateDoor, type DoorToggleResult } from '../domain/mosque-doors';
+import { getGateDoorState, toggleGateDoor, type DoorToggleResult } from '../domain/mosque-doors';
+import { interiorReveal, type InteriorReveal } from '../domain/interior-reveal';
+import { toModelMetres, type XY } from '../domain/frames';
 import { parsePrayerDemoOverride } from '../domain/prayer-session';
 import { isTapName } from '../domain/route-hint';
 import { FEATURED_IDS } from '../domain/visits';
@@ -125,6 +127,13 @@ export class MapEngine {
   private base: BaseLayer = 'satellite';
   private mode3d = false;
   private interiorMode = false;
+  /**
+   * The gate the visitor tapped or chose (its POI id): zoomed in on it, the roof lifts over the bays
+   * just inside (owner, 2026-11-18). Cleared by a tap on nothing or by choosing another place.
+   */
+  private revealDoor: number | null = null;
+  /** The routes on the map in the models' metres, kept while the same paths are shown. */
+  private revealRoutes: { paths: readonly unknown[]; metres: XY[][] } = { paths: [], metres: [] };
   /** Bumped when the 3D view closes, so a late interior plan is not laid on a map that left it. */
   private floorToken = 0;
   /** The 3D models' layer while 3D is on, and the minute timer that follows the sun meanwhile. */
@@ -575,6 +584,7 @@ export class MapEngine {
           (m.getSource('inter-carpet-aisles') as GeoJSONSource | undefined)?.setData(buildInterCarpetAisles(lamps));
         });
         this.models.setInterior(this.interiorMode);
+        this.models.setRevealSource(() => this.revealNow());
         m.addLayer(this.models, before);
       }
       // People walking the courtyards, after the models so they share their depth (owner, 2026-11-06).
@@ -786,6 +796,10 @@ export class MapEngine {
   /** Open (or, with null, close) a place's card on the map: its pin, and nothing else, shows. */
   select(id: number | null): void {
     const changed = id !== this.selected;
+    // A chosen gate is looked in through once zoomed in; choosing another place, or closing the gate's
+    // card, lets the roof close again.
+    if (id !== null && POI_BY_ID.get(id)?.subCategory === 'gate_inner') this.setRevealDoor(id);
+    else if (id !== null || this.revealDoor === this.selected) this.setRevealDoor(null);
     this.selected = id;
     if (this.map.getLayer('facilities')) this.applyView();
     // A short gold ring on the newly chosen marker: «this one» (UI plan phase 3).
@@ -952,6 +966,32 @@ export class MapEngine {
     return this.interiorMode;
   }
 
+  private setRevealDoor(id: number | null): void {
+    if (id === this.revealDoor) return;
+    this.revealDoor = id;
+    this.map.triggerRepaint();
+  }
+
+  /**
+   * Where the roof lifts this frame (`domain/interior-reveal.ts`): over the gate tapped or chosen, and
+   * along the routes on the map where they walk inside, once the map is zoomed in close.
+   */
+  private revealNow(): InteriorReveal {
+    const paths = [this.route.latLngs, this.route.shortcut].filter((p) => p.length > 1);
+    const cached = this.revealRoutes;
+    if (paths.length !== cached.paths.length || paths.some((p, i) => p !== cached.paths[i])) {
+      this.revealRoutes = { paths, metres: paths.map((p) => p.map(([lat, lng]) => toModelMetres([lng, lat]))) };
+    }
+    const gate = this.revealDoor !== null ? getGateDoorState(this.revealDoor) : undefined;
+    const c = this.map.getCenter();
+    return interiorReveal({
+      legacyZoom: legacyZoom(this.map.getZoom()),
+      door: gate ? { x: gate.x, z: gate.y, outward: gate.outward } : null,
+      routes: this.revealRoutes.metres,
+      centre: toModelMetres([c.lng, c.lat]),
+    });
+  }
+
   /**
    * The laptop's ways to turn and tilt the 3D view (owner, 2026-11-07), besides a right-button or
    * Ctrl drag: Option/Alt with a two-finger scroll tilts (up and down) and turns (left and right);
@@ -1054,6 +1094,8 @@ export class MapEngine {
     }
     const place = 'open' in choice ? choice.open : null;
     if (doorGateId !== null && (place === null || POI_BY_ID.get(place)?.subCategory === 'gate_inner')) {
+      // The tapped gate is the one looked in through, zoomed in (owner, 2026-11-18).
+      this.setRevealDoor(doorGateId);
       const result = toggleGateDoor(doorGateId);
       this.opts.onDoorToggle?.(result);
       return;
@@ -1071,6 +1113,8 @@ export class MapEngine {
     if (place === null && this.mode3d && this.models?.toggleDomeAt(x, y)) return;
     // In 3D, a tap on no place but on a canopy opens or closes it (owner, 2026-11-06).
     if (place === null && this.mode3d && this.models?.toggleCanopyAt(x, y)) return;
+    // A tap on nothing closes the roof over a gate looked in through.
+    if (place === null) this.setRevealDoor(null);
     this.opts.onPick?.(place);
   }
 }
