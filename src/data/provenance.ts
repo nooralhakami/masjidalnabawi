@@ -28,6 +28,7 @@ export type DataSourceId =
   | 'vertical-nodes'
   | 'interior-layout'
   | 'mosque-interior-3d'
+  | 'navq-interior-floor'
   | 'navq-interior'
   | 'navq-parking-sections'
   | 'urban-approved'
@@ -159,6 +160,14 @@ export const DATA_PROVENANCE: Readonly<Record<DataSourceId, DataSourceRecord>> =
     routingAllowed: true,
     path: 'data/urban-approved.json',
     description: 'Stage 5 owner-approved Southern Plaza buildings (7 hotels, flat pending owner floors, western facade entrances) and verified OSM street corridors.',
+  },
+  'navq-interior-floor': {
+    id: 'navq-interior-floor',
+    tier: 'verified',
+    routingAllowed: false,
+    path: 'data/navq-interior-floor.json',
+    description:
+      "The Mosque's interior floor from navQ's ground-floor plan (FF0 marble walkways, FF5 men's and FF6 women's carpeted prayer areas, the First Hasawa); owner-approved 2026-11-18 for drawing. Not yet a routing source (Phase 2).",
   },
   'mosque-interior-3d': {
     id: 'mosque-interior-3d',
