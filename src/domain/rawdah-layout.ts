@@ -111,8 +111,6 @@ export const RAWDAH_AWAY: XY = [-140, -95];
  */
 export const RAWDAH_HALL: XY[] = [
   [52.6, -112.6],
-  [44.0, -112.6],
-  [44.0, -121.4],
   [52.6, -167.5],
   [-10.0, -167.5],
   [-10.0, -136.0],
@@ -123,6 +121,8 @@ export const RAWDAH_HALL: XY[] = [
   [-27.0, -112.4],
   [-12.0, -112.4],
   [-12.0, -121.4],
+  [44.0, -121.4],
+  [44.0, -112.6],
 ];
 /** The barriers round it, inside the Mosque: east (from the face, by Gate 37's first bay, which stays
  * outside), north, and west to Gate 39. */

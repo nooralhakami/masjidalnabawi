@@ -36,8 +36,17 @@ export function parseTerrain(buffer: ArrayBuffer): TerrainGrid {
   return { cols, rows, x0, z0, step, heights };
 }
 
-/** The mountains as one mesh: every grid point, and the cells where the ground rises (the flat city stays the imagery's). */
-export function buildTerrainMesh({ cols, rows, x0, z0, step, heights }: TerrainGrid): TerrainMesh {
+/**
+ * How far the ground may rise over the Haram and still be the city's (owner, 2026-11-18: «remove the
+ * brown squares that cover much of the map»). The grid's 120 m cells drew the city's gentle rises and
+ * the low hill of Sal' as flat brown plates over the imagery; the mountains are drawn from this height
+ * up, set down by it so they meet the imagery at its foot (Uhud still stands some 440 m).
+ */
+export const CITY_RISE_M = 35;
+
+/** The mountains as one mesh: every grid point, and the cells where the ground rises over the city (which stays the imagery's). */
+export function buildTerrainMesh({ cols, rows, x0, z0, step, heights: ground }: TerrainGrid): TerrainMesh {
+  const heights = ground.map((h) => Math.max(0, h - CITY_RISE_M));
   const v = new Float32Array(cols * rows * STRIDE);
   for (let r = 0; r < rows; r++) {
     const up = (r > 0 ? r - 1 : r) * cols;

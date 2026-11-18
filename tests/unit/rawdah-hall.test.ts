@@ -1,14 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { modelToWalkMetres, type XY } from '../../src/domain/frames';
-import {
-  GATE_38_ORGANISERS,
-  GATE_38_STEP,
-  QUEUE_LANES,
-  QUEUE_OUT_Z,
-  RAWDAH_APPROACH,
-  RAWDAH_HALL,
-  RAWDAH_STRIP,
-} from '../../src/domain/rawdah-layout';
+import { GATE_38_ORGANISERS, GATE_38_STEP, QUEUE_LANES, QUEUE_OUT_Z, RAWDAH_APPROACH, RAWDAH_HALL, RAWDAH_STRIP } from '../../src/domain/rawdah-layout';
 import { inside } from '../../src/domain/rug-layout';
 import { safetyWorld, segmentHitsBarrier } from '../../src/domain/route-safety';
 
