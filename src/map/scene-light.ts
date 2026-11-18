@@ -197,6 +197,13 @@ const LANTERN: Rgb = [1, 0.99, 0.95];
 export function materialGlow(file: string, material: string | undefined): MaterialGlow | null {
   const name = (material ?? '').toLowerCase();
   const canopies = file.includes('canopies');
+  // The interior's props (scripts/build-interior-props-glb.py): the lanterns' and chandeliers' glass
+  // burns warm, gold and brass catch it, the marble and stone take the halls' soft light.
+  if (file.includes('interior')) {
+    if (name.startsWith('glass')) return { color: scale(INSIDE, 2.2), tint: 0, rise: 0 };
+    if (name === 'gold' || name === 'brass') return { color: scale(INSIDE, 0.9), tint: 1, rise: 0 };
+    return { color: scale(INSIDE, 0.7), tint: 1, rise: 0 };
+  }
   // The restroom blocks' lattice windows, the lit stairs and escalator halls of the entrance, the
   // closed lattice at the back and the sign, lit from inside: the light shows through the lattice's
   // holes and the bronze stays dark (scripts/restroom-model.mjs).

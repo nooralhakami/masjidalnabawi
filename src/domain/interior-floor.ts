@@ -1,3 +1,4 @@
+import type { InteriorCarpetData, InteriorFloorData } from '../data-next/interior-floor-data';
 import { toModelMetres, type XY } from './frames';
 import { INTERIOR_COL_STEP_M, interiorColumnCentres } from './interior-layout';
 import { COLUMN_CLEAR, fromLaid, inside, RUG_D, RUG_W, type Rug, toLaid, within } from './rug-layout';
@@ -9,20 +10,7 @@ import { COLUMN_CLEAR, fromLaid, inside, RUG_D, RUG_W, type Rug, toLaid, within 
  * holds the shapes in `[lng, lat]`; here they become the models' metres, and the carpets are laid.
  */
 
-export interface InteriorFloorData {
-  source: Record<string, string>;
-  marble: { navq: number; ring: [number, number][] }[];
-  men: InteriorCarpetData[];
-  women: InteriorCarpetData[];
-  courtyard: { navq: number; name: string; ring: [number, number][] }[];
-}
-
-export interface InteriorCarpetData {
-  navq: number;
-  ring: [number, number][];
-  names: string[];
-  poi: number[];
-}
+export type { InteriorCarpetData, InteriorFloorData };
 
 export interface InteriorCarpetArea {
   navq: number;

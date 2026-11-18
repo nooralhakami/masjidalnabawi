@@ -89,7 +89,18 @@ void main() {
   // How glossy: polished stone shines more than concrete; carpet not at all.
   float gloss;
 
-  if (v_kind > 1.5) {
+  if (v_kind > 3.5) {
+    // Inside the Mosque (navQ's walking floor, owner 2026-11-18): polished white marble in 1.2 m
+    // slabs with faint grey veins, and a warm inlay line every 6 m, as the photographs' walkways.
+    float speck = hash(floor(p * 9.0)) * (1.0 - smoothstep(0.004, 0.02, fwP));
+    float vein = smoothstep(0.93, 1.0, 0.5 + 0.5 * sin(p.x * 0.9 + p.y * 1.7 + hash(floor(p / 1.2)) * 6.28));
+    color = vec3(0.955, 0.945, 0.915) * (0.98 + 0.03 * speck);
+    color = mix(color, vec3(0.78, 0.78, 0.76), vein * 0.3 * (1.0 - smoothstep(0.02, 0.08, fwP)));
+    color = mix(color, vec3(0.74, 0.73, 0.7), joints(p, vec2(1.2), 0.006) * 0.7);
+    color = mix(color, vec3(0.66, 0.55, 0.4), joints(p, vec2(6.0), 0.05) * 0.65);
+    alpha = 0.97;
+    gloss = 0.9;
+  } else if (v_kind > 1.5) {
     // The prayer areas: their carpets are laid whole, one by one, by the rug layer (owner,
     // 2026-11-07); here only the paving under them shows.
     discard;
@@ -156,7 +167,7 @@ void main() {
   }
 
   // In the shadow of the Mosque, its minarets and the canopies, the floor keeps only the sky's light.
-  if (u_shadow > 0.0) {
+  if (u_shadow > 0.0 && v_kind < 3.5) {
     float shade = (1.0 - sunLit(u_light * vec4(v_pos.x, 0.0, v_pos.y, 1.0), 0.0008)) * u_shadow;
     color *= mix(1.0, 0.6, shade);
     alpha = mix(alpha, max(alpha, 0.8), shade);
@@ -196,6 +207,9 @@ export class PlazaMarbleLayer implements CustomLayerInterface {
   private frame = frameMatrix();
   /** Bound in place of the shadow map until the models' layer has made it (a shadow sampler needs a depth texture). */
   private noShadow: WebGLTexture | null = null;
+  /** The Mosque's interior walking floor (model metres), once its plan has arrived; the mesh is rebuilt. */
+  private interior: readonly (readonly (readonly [number, number])[])[] = [];
+  private meshDirty = false;
 
   constructor(private light: SceneLight) {}
 
@@ -219,7 +233,7 @@ export class PlazaMarbleLayer implements CustomLayerInterface {
     for (const name of ['u_mvp', 'u_turn', 'u_night', 'u_grid', 'u_main', 'u_south', 'u_eye', 'u_sheen', 'u_shadowMap', 'u_light', 'u_shadow'])
       this.uniforms[name] = gl.getUniformLocation(prog, name);
 
-    const { vertices, indices } = plazaMesh();
+    const { vertices, indices } = plazaMesh(this.interior);
     const vao = gl.createVertexArray()!;
     gl.bindVertexArray(vao);
     const vbo = gl.createBuffer()!;
@@ -261,8 +275,26 @@ export class PlazaMarbleLayer implements CustomLayerInterface {
     this.map?.triggerRepaint();
   }
 
+  /** The Mosque's interior walking floor in polished marble too (owner, 2026-11-18): navQ's FF0. */
+  setInteriorFloor(rings: readonly (readonly (readonly [number, number])[])[]): void {
+    this.interior = rings;
+    this.meshDirty = true;
+    this.map?.triggerRepaint();
+  }
+
   render(gl: WebGL2RenderingContext, options: CustomRenderMethodInput): void {
     if (!this.program || !this.vao) return;
+    if (this.meshDirty) {
+      const { vertices, indices } = plazaMesh(this.interior);
+      gl.bindVertexArray(this.vao);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers[0]);
+      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers[1]);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+      gl.bindVertexArray(null);
+      this.count = indices.length;
+      this.meshDirty = false;
+    }
     const projMatrix = options.defaultProjectionData?.mainMatrix ?? options.modelViewProjectionMatrix;
     if (!projMatrix) return;
     const mvp = new Float64Array(16);
@@ -336,10 +368,11 @@ const CANOPY_GRID: [number, number] = (() => {
 /**
  * The outdoor plazas as triangles, in the models' metres: x, z, kind, and the area's north-west
  * corner (x, z) its carpets start from. Kinds: 0 the five sectors, 1 the western annex, 2 its
- * prayer areas, men's and women's, 3 the courtyards' prayer areas (`ALHARAMAIN_PRAYERS`); each laid
- * after the one it lies on, so the carpets are on top.
+ * prayer areas, men's and women's, 3 the courtyards' prayer areas (`ALHARAMAIN_PRAYERS`), 4 the
+ * Mosque's interior walking floor (`interior`, model metres, navQ FF0); each laid after the one it
+ * lies on, so the carpets are on top.
  */
-export function plazaMesh(): { vertices: Float32Array; indices: Uint16Array } {
+export function plazaMesh(interior: readonly (readonly (readonly [number, number])[])[] = []): { vertices: Float32Array; indices: Uint16Array } {
   const v: number[] = [];
   const ix: number[] = [];
   const kinds = { sector: 0, annex: 1, men: 2, women: 2 } as const;
@@ -353,5 +386,12 @@ export function plazaMesh(): { vertices: Float32Array; indices: Uint16Array } {
   };
   for (const f of alharamainPlaza().features) add(f.geometry.coordinates[0].slice(0, -1) as [number, number][], kinds[f.properties.kind]);
   for (const ring of ALHARAMAIN_PRAYERS) add(ring, 3);
+  for (const ring of interior) {
+    const west = Math.min(...ring.map(([x]) => x));
+    const north = Math.min(...ring.map(([, z]) => z));
+    const base = v.length / 5;
+    for (const [x, z] of ring) v.push(x, z, 4, west, north);
+    for (const i of triangulate(ring as [number, number][])) ix.push(base + i);
+  }
   return { vertices: new Float32Array(v), indices: new Uint16Array(ix) };
 }

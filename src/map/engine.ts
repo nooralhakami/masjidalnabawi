@@ -28,8 +28,10 @@ import { RugLayer } from './rug-layer';
 import { greetingBarriers, queueRails, womenBarriers, womenRawdahCorridorBarriers } from './women-barriers';
 import { interiorCorridors, interiorPrayerAreas } from './interior-layout';
 import { buildMosqueInterior3D } from './mosque-interior-3d';
+import { loadInteriorFloorData } from '../data-next/interior-floor-data';
+import { interiorColumns, interiorFloorMetres, interiorPropPlacements, interiorRugs } from '../domain/interior-floor';
 import { saqifahAndSurroundings3D, saqifahGround2D } from './saqifah-3d';
-import { HaramGlbLayer } from './glb-layer';
+import { HaramGlbLayer, interiorPropMatrices } from './glb-layer';
 import type { Urban3DLayer } from './urban-3d';
 import { IconAtlas, createDrawer, cssPalette, type Drawer } from './images';
 import { LampGlowLayer } from './lamp-glow-layer';
@@ -123,6 +125,8 @@ export class MapEngine {
   private base: BaseLayer = 'satellite';
   private mode3d = false;
   private interiorMode = false;
+  /** Bumped when the 3D view closes, so a late interior plan is not laid on a map that left it. */
+  private floorToken = 0;
   /** The 3D models' layer while 3D is on, and the minute timer that follows the sun meanwhile. */
   private models: HaramGlbLayer | null = null;
   private urban: Urban3DLayer | null = null;
@@ -587,6 +591,17 @@ export class MapEngine {
       }
       this.applyLight();
       if (!this.lightTimer) this.lightTimer = setInterval(() => this.applyLight(), 60_000);
+      // The Mosque's interior from navQ's plan (owner, 2026-11-18): its marble, its carpets, and its
+      // columns, arches, lanterns and chandeliers; fetched after the 3D view is up, never in 2D's load.
+      const floorToken = ++this.floorToken;
+      void loadInteriorFloorData().then((data) => {
+        if (!this.mode3d || floorToken !== this.floorToken || this.map !== m) return;
+        const floor = interiorFloorMetres(data);
+        const columns = interiorColumns(floor);
+        this.marble?.setInteriorFloor(floor.marble);
+        this.rugs?.setInteriorRugs(interiorRugs(floor, columns));
+        this.models?.setInteriorProps(interiorPropMatrices(interiorPropPlacements(columns)));
+      });
       const urbanToken = ++this.urbanToken;
       void import('./urban-3d').then(({ mountUrban3D }) => {
         if (!this.mode3d || urbanToken !== this.urbanToken || this.map !== m) return;
@@ -597,6 +612,7 @@ export class MapEngine {
       if (this.lightTimer) clearInterval(this.lightTimer);
       this.lightTimer = null;
       this.urbanToken++;
+      this.floorToken++;
       this.models = null;
       this.urban = null;
       this.crowd = null;
