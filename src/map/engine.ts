@@ -1051,6 +1051,8 @@ export class MapEngine {
         return;
       }
     }
+    // In 3D, a tap on no place but on a sliding dome slides it open or shut (owner, 2026-11-18).
+    if (place === null && this.mode3d && this.models?.toggleDomeAt(x, y)) return;
     // In 3D, a tap on no place but on a canopy opens or closes it (owner, 2026-11-06).
     if (place === null && this.mode3d && this.models?.toggleCanopyAt(x, y)) return;
     this.opts.onPick?.(place);

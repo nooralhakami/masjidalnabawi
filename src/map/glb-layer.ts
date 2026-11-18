@@ -1,7 +1,9 @@
 import { MercatorCoordinate, type CustomLayerInterface, type CustomRenderMethodInput, type Map as MLMap } from 'maplibre-gl';
 import { ALHARAMAIN_MODELS, type AlharamainModel } from '../data-next/alharamain-3d';
+import { motorEase } from '../domain/easing';
 import { fromModelMetres, MODEL_ORIGIN_LNGLAT, toModelMetres } from '../domain/frames';
 import { isGateOpen, nearestMosqueDoor, subscribeMosqueDoors, toggleNearestMosqueDoor } from '../domain/mosque-doors';
+import { buildSlidingDomes, domeSlideAt, isDomeOpen, type SlidingDome, toggleDome } from '../domain/sliding-domes';
 import { gateLattice, materialColor, materialGlow, minaretCrown, portalKind, type SceneLight } from './scene-light';
 import { createShadowTexture, SHADOW_GLSL, SHADOW_SIZE, sunMatrix, sunShadow } from './sun-shadow';
 
@@ -534,9 +536,7 @@ export const CANOPY_MOVE_MS = 6000;
  * motor, it starts gently, runs, and slows into place.
  */
 export function canopyFoldAt(from: number, to: number, ms: number, duration = CANOPY_MOVE_MS * Math.abs(to - from)): number {
-  const u = duration <= 0 ? 1 : Math.max(0, Math.min(1, ms / duration));
-  const e = u * u * u * (u * (u * 6 - 15) + 10);
-  return from + (to - from) * e;
+  return from + (to - from) * motorEase(duration <= 0 ? 1 : ms / duration);
 }
 
 /** `CANOPY_GLSL`'s fold in TypeScript, for the tests: a vertex of the open canopy at fold `f`. */
@@ -657,6 +657,50 @@ export function nodePositions(model: AlharamainModel, gltf: GltfJson): [number, 
   return out;
 }
 
+/** The sliding domes' unit in navQ's Mosque file: the mesh painted with the `Domes` material that
+ * several nodes share (27 in `haram-3d.glb`), or -1 when a file has none. */
+export function domeMeshIndex(gltf: GltfJson): number {
+  const domesMat = (gltf.materials ?? []).findIndex((m) => m.name === 'Domes');
+  if (domesMat < 0) return -1;
+  const mesh = gltf.meshes.findIndex((m) => m.primitives.some((p) => p.material === domesMat));
+  if (mesh < 0) return -1;
+  return gltf.nodes.filter((n) => n.mesh === mesh).length > 1 ? mesh : -1;
+}
+
+/** Where each sliding dome stands, `[east, south]` model metres, in node order (one per anchor). */
+export function domeInstanceCentres(model: AlharamainModel, gltf: GltfJson): [number, number][] {
+  const mesh = domeMeshIndex(gltf);
+  if (mesh < 0) return [];
+  const turn = (model.rotation * Math.PI) / 180;
+  const out: [number, number][] = [];
+  // Nodes outside, anchors inside: the order the layer stacks the units' instances in.
+  for (const node of gltf.nodes) {
+    if (node.mesh !== mesh) continue;
+    for (const anchor of model.anchors) {
+      const [east0, south0] = metresFromOrigin(anchor);
+      const [x, , z] = node.matrix ? [node.matrix[12], node.matrix[13], node.matrix[14]] : (node.translation ?? [0, 0, 0]);
+      const east = east0 + x * Math.cos(turn) - z * Math.sin(turn);
+      const south = south0 + x * Math.sin(turn) + z * Math.cos(turn);
+      const [dEast, dSouth] = nodeShift(model, east, south);
+      out.push([east + dEast, south + dSouth]);
+    }
+  }
+  return out;
+}
+
+/** A dome sliding, or held where a visitor left it (0 closed, 1 open). */
+interface DomeMove {
+  from: number;
+  to: number;
+  start: number;
+  f: number;
+}
+
+/** Height of the drum's middle above the ground (the unit stands at 13 m; its cap rises 9 m more). */
+const DOME_PICK_HEIGHT_M = 17;
+/** Half the unit's width: a tap within it (as seen on screen) picks the dome. */
+const DOME_PICK_RADIUS_M = 9.6;
+
 /**
  * Draws the Al-Haramain 3D files (`ALHARAMAIN_MODELS`) on MapLibre with WebGL2: the Mosque, the
  * courtyard canopies and the service blocks, at the anchors navQ gives them. Nodes sharing a mesh
@@ -720,6 +764,14 @@ export class HaramGlbLayer implements CustomLayerInterface {
   private unsubDoors: (() => void) | null = null;
   /** The last frame's projection (metres to clip space), to find the canopy under a tap. */
   private lastMvp: Float64Array | null = null;
+  /** The sliding domes (owner, 2026-11-18): their units' matrices as the file has them (closed),
+   * the instance buffer they are drawn from, how open each is, and the slides under way. */
+  private domes: SlidingDome[] = [];
+  private domeBase: Float32Array | null = null;
+  private domeBuf: WebGLBuffer | null = null;
+  private domeOpen = new Map<number, number>();
+  private domeMoves = new Map<number, DomeMove>();
+  private domeDirty = false;
 
   /**
    * `light`: how the scene is lit now (change it with `setLight`). `onLamps`: where the lanterns of
@@ -906,6 +958,8 @@ export class HaramGlbLayer implements CustomLayerInterface {
       groups.set(key, group);
     };
     const combined = new Float64Array(16);
+    // The sliding domes' units are one group of their own, drawn from a buffer that moves them.
+    const domeMesh = domeMeshIndex(gltf);
     for (const [nodeIdx, node] of gltf.nodes.entries()) {
       if (node.mesh === undefined) continue;
       const local = node.matrix ? new Float64Array(node.matrix) : composeTrs(node.translation ?? [0, 0, 0], node.rotation ?? [0, 0, 0, 1], node.scale ?? [1, 1, 1]);
@@ -922,7 +976,8 @@ export class HaramGlbLayer implements CustomLayerInterface {
         combined[14] += dSouth;
         const canopy = tappable ? this.canopies.push({ matrix: new Float32Array(combined), foldable: folds, refs: [] }) - 1 : -1;
         const gate = isPortal ? nearestMosqueDoor(combined[12], combined[14], 25)?.id : undefined;
-        add(node.mesh, folds ? 'day' : 'always', combined, canopy, gate, isPortal ? `portal|${node.mesh}|${nodeIdx}` : undefined);
+        const nodeKey = isPortal ? `portal|${node.mesh}|${nodeIdx}` : node.mesh === domeMesh ? 'domes' : undefined;
+        add(node.mesh, folds ? 'day' : 'always', combined, canopy, gate, nodeKey);
         if (folds) add(folding!.closed, 'night', combined, canopy);
       }
     }
@@ -959,13 +1014,22 @@ export class HaramGlbLayer implements CustomLayerInterface {
     };
 
     const materials = gltf.materials ?? [];
-    for (const { mesh: meshIndex, when, matrices, canopy, gate } of groups.values()) {
+    for (const [key, { mesh: meshIndex, when, matrices, canopy, gate }] of groups) {
       const anim = when === 'anim';
+      const domes = key === 'domes';
       const instanceBuf = gl.createBuffer()!;
       gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuf);
       if (anim) gl.bufferData(gl.ARRAY_BUFFER, (this.canopies.length - firstCanopy) * 64, gl.DYNAMIC_DRAW);
-      else gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(matrices), gl.STATIC_DRAW);
+      else gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(matrices), domes ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW);
       this.buffers.push(instanceBuf);
+      if (domes) {
+        this.domes = buildSlidingDomes(domeInstanceCentres(model, gltf));
+        this.domeBase = new Float32Array(matrices);
+        this.domeBuf = instanceBuf;
+        // Domes a visitor opened before the file was (re)read stand open at once.
+        for (const d of this.domes) if (isDomeOpen(d.n)) this.domeOpen.set(d.n, 1);
+        this.domeDirty = true;
+      }
       // Per instance: hidden while a visitor's move draws it (the canopies' groups only), and how
       // open it is (the anim group only).
       let hideBuf: WebGLBuffer | null = null;
@@ -1101,6 +1165,76 @@ export class HaramGlbLayer implements CustomLayerInterface {
     this.setHidden(k, true);
     this.map?.triggerRepaint();
     return true;
+  }
+
+  /**
+   * A tap at `[x, y]` (CSS pixels) on a sliding dome: it opens slowly (sliding along its rails by
+   * its own size, north or south as the owner set), or closes if open. False when no dome is there.
+   */
+  toggleDomeAt(x: number, y: number): boolean {
+    const n = this.domeAt(x, y);
+    if (n === null) return false;
+    const f = this.domeMoves.get(n)?.f ?? this.domeOpen.get(n) ?? 0;
+    const to = toggleDome(n) ? 1 : 0;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.domeMoves.set(n, { from: reduce ? to : f, to, start: performance.now(), f });
+    this.map?.triggerRepaint();
+    return true;
+  }
+
+  /** The dome under a tap: within its unit's half-width on screen, the nearest to the eye. */
+  domeAt(x: number, y: number): number | null {
+    const mvp = this.lastMvp;
+    const canvas = this.map?.getCanvas();
+    if (!mvp || !canvas || !this.domes.length) return null;
+    const W = canvas.clientWidth;
+    const H = canvas.clientHeight;
+    const project = (east: number, south: number): [number, number, number] | null => {
+      const h = DOME_PICK_HEIGHT_M;
+      const cw = mvp[3] * east + mvp[7] * h + mvp[11] * south + mvp[15];
+      if (cw <= 0) return null;
+      const nx = (mvp[0] * east + mvp[4] * h + mvp[8] * south + mvp[12]) / cw;
+      const ny = (mvp[1] * east + mvp[5] * h + mvp[9] * south + mvp[13]) / cw;
+      return [((nx + 1) / 2) * W, ((1 - ny) / 2) * H, cw];
+    };
+    let best: number | null = null;
+    let bestDepth = Number.POSITIVE_INFINITY;
+    for (const d of this.domes) {
+      const south = d.south + d.slideSouth * (this.domeMoves.get(d.n)?.f ?? this.domeOpen.get(d.n) ?? 0);
+      const c = project(d.east, south);
+      const edge = project(d.east + DOME_PICK_RADIUS_M, south);
+      if (!c || !edge) continue;
+      const radius = Math.max(12, Math.hypot(edge[0] - c[0], edge[1] - c[1]));
+      if (Math.hypot(x - c[0], y - c[1]) <= radius && c[2] < bestDepth) {
+        best = d.n;
+        bestDepth = c[2];
+      }
+    }
+    return best;
+  }
+
+  /** Advance the domes' slides to `now` and write their units' matrices; true while one moves. */
+  private stepDomes(gl: WebGL2RenderingContext, now: number): boolean {
+    if (!this.domeBuf || !this.domeBase || (!this.domeMoves.size && !this.domeDirty)) return false;
+    let moving = false;
+    for (const [n, m] of this.domeMoves) {
+      m.f = domeSlideAt(m.from, m.to, now - m.start);
+      this.domeOpen.set(n, m.f);
+      if (m.f === m.to) this.domeMoves.delete(n);
+      else moving = true;
+    }
+    const out = new Float32Array(this.domeBase);
+    for (const d of this.domes) {
+      const f = this.domeOpen.get(d.n) ?? 0;
+      // Along the ground's south axis (the matrices' translation is [east, up, south] metres).
+      if (f) out[d.instance * 16 + 14] += d.slideSouth * f;
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.domeBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, out);
+    this.domeDirty = false;
+    // Its shadow is drawn again once it rests (a shadow pass every frame would cost a phone too much).
+    if (!moving) this.shadowDirty = true;
+    return moving;
   }
 
   /** The nearest canopy to a tap, by its column from the ground to the top, within 24 px. */
@@ -1284,6 +1418,8 @@ export class HaramGlbLayer implements CustomLayerInterface {
       this.shadowDirty = true;
       this.map?.triggerRepaint();
     }
+    // A dome still sliding asks for the next frame too.
+    if (this.stepDomes(gl, performance.now())) this.map?.triggerRepaint();
 
     gl.useProgram(this.program);
     gl.enable(gl.DEPTH_TEST);
