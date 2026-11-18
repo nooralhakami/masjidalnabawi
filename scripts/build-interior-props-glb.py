@@ -10,7 +10,7 @@ interior plan puts them (src/domain/interior-floor.ts), so the file stays small:
                       up to the ceiling, spanning one bay (`--pitch`, the column grid's step)
   InteriorChandelier  a brass ring of lamps with a lantern at its heart, hung in a bay
 
-As the owner's photographs show them (صور مراجع/, 2026-11-14 and 2026-11-18). Metres; Blender
+As the owner's photographs show them (~/Desktop/ملحقات المجلد المركزي/خريطة المسجد النبوي/صور مراجع/, 2026-11-14 and 2026-11-18). Metres; Blender
 X east, Y north, Z up; glTF (export_yup) X east, Y up, Z south, like navQ's models.
 
 Usage:
