@@ -164,10 +164,10 @@ export const DATA_PROVENANCE: Readonly<Record<DataSourceId, DataSourceRecord>> =
   'navq-interior-floor': {
     id: 'navq-interior-floor',
     tier: 'verified',
-    routingAllowed: false,
+    routingAllowed: true,
     path: 'data/navq-interior-floor.json',
     description:
-      "The Mosque's interior floor from navQ's ground-floor plan (FF0 marble walkways, FF5 men's and FF6 women's carpeted prayer areas, the First Hasawa); owner-approved 2026-11-18 for drawing. Not yet a routing source (Phase 2).",
+      "The Mosque's interior floor from navQ's ground-floor plan (FF0 marble walkways, FF5 men's and FF6 women's carpeted prayer areas, the First Hasawa); owner-approved 2026-11-18. Drawn now; the men's and women's interior routes are built on it next (Phase 2).",
   },
   'mosque-interior-3d': {
     id: 'mosque-interior-3d',
