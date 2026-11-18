@@ -1,7 +1,7 @@
 import type { CustomLayerInterface, CustomRenderMethodInput, Map as MLMap } from 'maplibre-gl';
 import { frameMatrix, mulMat4 } from './glb-layer';
 import { cameraEye } from './plaza-layer';
-import { RUG_D, RUG_TURN_DEG, RUG_W, rugLayout } from './rug-layout';
+import { RUG_D, RUG_TURN_DEG, RUG_W, type Rug, rugLayout } from './rug-layout';
 import type { SceneLight } from './scene-light';
 import { createShadowTexture, SHADOW_GLSL, sunShadow } from './sun-shadow';
 
@@ -46,8 +46,10 @@ uniform float u_shadow;
 out vec4 fragColor;
 ${SHADOW_GLSL}
 void main() {
-  vec3 color = texture(u_tex, v_uv).rgb * v_tone;
-  if (u_shadow > 0.0) {
+  // A tone above 1.5 marks a carpet inside the Mosque: lit by its lamps, never by the sun.
+  bool inside = v_tone > 1.5;
+  vec3 color = texture(u_tex, v_uv).rgb * (inside ? v_tone - 1.0 : v_tone);
+  if (u_shadow > 0.0 && !inside) {
     float shade = (1.0 - sunLit(u_light * vec4(v_pos.x, 0.0, v_pos.y, 1.0), 0.0008)) * u_shadow;
     color *= mix(1.0, 0.6, shade);
   }
@@ -211,6 +213,8 @@ export class RugLayer implements CustomLayerInterface {
   private noShadow: WebGLTexture | null = null;
   private count = 0;
   private columns: [number, number][] | null = null;
+  /** The carpets inside the Mosque (navQ's prayer areas, `interiorRugs`), laid with the plazas'. */
+  private interior: readonly Rug[] = [];
   private dirty = false;
   private frame = frameMatrix();
 
@@ -224,6 +228,13 @@ export class RugLayer implements CustomLayerInterface {
 
   setLight(light: SceneLight): void {
     this.light = light;
+    this.map?.triggerRepaint();
+  }
+
+  /** Lay the Mosque's interior carpets too (owner, 2026-11-18): the same rugs, in its prayer areas. */
+  setInteriorRugs(rugs: readonly Rug[]): void {
+    this.interior = rugs;
+    this.dirty = true;
     this.map?.triggerRepaint();
   }
 
@@ -297,16 +308,19 @@ export class RugLayer implements CustomLayerInterface {
   }
 
   render(gl: WebGL2RenderingContext, options: CustomRenderMethodInput): void {
-    if (!this.program || !this.vao || !this.columns) return;
+    if (!this.program || !this.vao || (!this.columns && !this.interior.length)) return;
     const projMatrix = options.defaultProjectionData?.mainMatrix ?? options.modelViewProjectionMatrix;
     if (!projMatrix) return;
     if (this.dirty) {
-      const { rugs } = rugLayout(this.columns);
+      const plaza = this.columns ? rugLayout(this.columns).rugs : [];
+      const rugs = [...plaza, ...this.interior];
       const data = new Float32Array(rugs.length * 4);
       let seed = 3;
       rugs.forEach((rug, i) => {
         seed = (seed * 1664525 + 1013904223) >>> 0;
-        data.set([rug.x, rug.z, rug.flip ? 1 : 0, 0.93 + (seed / 4294967296) * 0.12], i * 4);
+        const tone = 0.93 + (seed / 4294967296) * 0.12;
+        // The interior's carpets carry +1 on their tone: the shader keeps the sun's shadow off them.
+        data.set([rug.x, rug.z, rug.flip ? 1 : 0, i < plaza.length ? tone : 1.08 + tone], i * 4);
       });
       gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers[1]);
       gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);

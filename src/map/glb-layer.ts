@@ -1,7 +1,11 @@
 import { MercatorCoordinate, type CustomLayerInterface, type CustomRenderMethodInput, type Map as MLMap } from 'maplibre-gl';
 import { ALHARAMAIN_MODELS, type AlharamainModel } from '../data-next/alharamain-3d';
+import { motorEase } from '../domain/easing';
 import { fromModelMetres, MODEL_ORIGIN_LNGLAT, toModelMetres } from '../domain/frames';
 import { isGateOpen, nearestMosqueDoor, subscribeMosqueDoors, toggleNearestMosqueDoor } from '../domain/mosque-doors';
+import type { InteriorPropPlacements } from '../domain/interior-floor';
+import { MAX_REVEAL_LANES, NO_REVEAL, type InteriorReveal } from '../domain/interior-reveal';
+import { buildSlidingDomes, domeSlideAt, isDomeOpen, type SlidingDome, toggleDome } from '../domain/sliding-domes';
 import { gateLattice, materialColor, materialGlow, minaretCrown, portalKind, type SceneLight } from './scene-light';
 import { createShadowTexture, SHADOW_GLSL, SHADOW_SIZE, sunMatrix, sunShadow } from './sun-shadow';
 
@@ -105,10 +109,16 @@ interface GpuPrimitive {
    * the canopies a visitor opened or closed with a tap, folded in the vertex shader.
    */
   when: 'always' | 'day' | 'night' | 'anim';
+  /** The interior's props (columns, arches, lanterns, chandeliers): drawn only when the interior shows. */
+  interiorOnly?: boolean;
+  /** Where the roof lifts over the interior: 0 never, 1 roof (above 1.5 m), 2 the rest (above 12 m). */
+  revealRole: 0 | 1 | 2;
 }
 
-const INTERIOR_KEEP_MATERIALS = new Set(['MINTEX', 'MINTEX.001', 'MIN2TEX2', 'GREENDOME', 'GREENDOME2', 'SilverDome']);
-const INTERIOR_ROOF_MATERIALS = new Set(['roof', 'tile', 'domeblue', 'Domes', 'tent', 'uMB', 'silver', 'windowDome', 'dark']);
+// The courtyards' twelve canopies (`uMB`, their `steel` ribs and `steel gold` finials) stand open to the
+// sky, not under the roof: they stay whole in the cutaway (owner, 2026-11-18: the Hasawa's canopies).
+const INTERIOR_KEEP_MATERIALS = new Set(['MINTEX', 'MINTEX.001', 'MIN2TEX2', 'GREENDOME', 'GREENDOME2', 'SilverDome', 'uMB', 'steel', 'steel gold']);
+const INTERIOR_ROOF_MATERIALS = new Set(['roof', 'tile', 'domeblue', 'Domes', 'tent', 'silver', 'windowDome', 'dark']);
 
 function classifyInteriorRole(url: string, materialName?: string): 'keep' | 'wall' | 'roof' {
   if (!url.includes('haram-3d')) return 'keep';
@@ -117,12 +127,20 @@ function classifyInteriorRole(url: string, materialName?: string): 'keep' | 'wal
   return 'wall';
 }
 
+/** How a part lets the interior show (`GpuPrimitive.revealRole`): the props and what stays whole never. */
+export function revealRoleOf(role: 'keep' | 'wall' | 'roof', prop: boolean): 0 | 1 | 2 {
+  if (prop || role === 'keep') return 0;
+  return role === 'roof' ? 1 : 2;
+}
+
 /** A parsed file waiting for the next frame: WebGL state is only ours while MapLibre renders this layer. */
 interface PendingAsset {
   model: AlharamainModel;
   gltf: GltfJson;
   bin: Uint8Array;
   images: (ImageBitmap | null)[];
+  /** For the interior props' file: where each prop mesh (by name) stands, 4×4 matrices end to end. */
+  props?: Map<string, Float32Array>;
 }
 
 /**
@@ -189,6 +207,7 @@ out vec2 v_uv;
 out float v_height;
 out vec4 v_shadow;
 out float v_localY;
+out vec2 v_xz;
 
 void main() {
   vec3 nrm = a_normal;
@@ -197,6 +216,7 @@ void main() {
   vec4 world = a_model * vec4(pos, 1.0);
   gl_Position = a_hide > 0.5 ? vec4(0.0, 0.0, 2.0, 1.0) : u_mvp * world;
   v_height = world.y;
+  v_xz = world.xz;
   v_shadow = u_light * world;
   // Some nodes are scaled unevenly or mirrored, so a plain rotation would bend their normals.
   v_normal = transpose(inverse(mat3(a_model))) * nrm;
@@ -212,8 +232,19 @@ in vec2 v_uv;
 in float v_height;
 in vec4 v_shadow;
 in float v_localY;
+in vec2 v_xz;
 
 uniform vec4 u_baseColor;
+// Where the roof lifts to show the interior (domain/interior-reveal.ts): this part's role, 0 never
+// (minarets, the Green Dome, the courtyards' canopies, the interior's own props), 1 roof (lifted
+// above 1.5 m), 2 the rest of the Mosque (lifted above 12 m: what stands on the roof, while the
+// facades keep their height and their gates); the discs (x, z, radius) and lanes (a, b) lifted.
+uniform int u_revealRole;
+uniform vec3 u_revealDisc[2];
+uniform int u_revealDiscs;
+uniform vec4 u_revealLane[${MAX_REVEAL_LANES}];
+uniform int u_revealLanes;
+uniform float u_revealHalf;
 // The minarets' green-lit crown, in the mesh's own height (x..y), or (0, 0) for none.
 uniform vec2 u_crown;
 // A portal's back wall to paint (scene-light.ts portalKind): 0 none, 1 closed gate, 2 open (Bab
@@ -328,18 +359,43 @@ vec3 portal(vec2 m, vec2 size, int kind, inout vec3 col) {
   return emit;
 }
 
+// How far p is outside the lifted roof (negative: inside it), in metres.
+float revealEdge(vec2 p) {
+  float e = 1e6;
+  for (int i = 0; i < 2; i++) {
+    if (i >= u_revealDiscs) break;
+    e = min(e, length(p - u_revealDisc[i].xy) - u_revealDisc[i].z);
+  }
+  for (int i = 0; i < ${MAX_REVEAL_LANES}; i++) {
+    if (i >= u_revealLanes) break;
+    vec2 a = u_revealLane[i].xy;
+    vec2 ab = u_revealLane[i].zw - a;
+    float t = clamp(dot(p - a, ab) / max(dot(ab, ab), 1e-6), 0.0, 1.0);
+    e = min(e, length(p - a - t * ab) - u_revealHalf);
+  }
+  return e;
+}
+
 // Filmic roll-off (ACES fit): strong light goes to white, as a camera sees it, never to orange.
 vec3 filmic(vec3 x) {
   return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
 }
 
 void main() {
+  // The roof lifted over the interior: nothing drawn there, and a cut stone rim around the opening.
+  float rim = 0.0;
+  if (u_revealRole > 0 && v_height > (u_revealRole == 1 ? 1.5 : 12.0)) {
+    float e = revealEdge(v_xz);
+    if (e < 0.0) discard;
+    rim = 1.0 - smoothstep(0.3, 0.7, e);
+  }
   // As navQ draws them: textures darkened toward linear, material colours as stored, no gamma at the end.
   vec4 albedo = u_baseColor;
   if (u_hasTex == 1) {
     vec4 texel = texture(u_tex, v_uv);
     albedo *= vec4(pow(texel.rgb, vec3(1.6)), texel.a);
   }
+  albedo.rgb = mix(albedo.rgb, vec3(0.86, 0.8, 0.68), rim * 0.85);
   // A cut-out material (the fence's lattice and spikes): its holes are not drawn at all.
   if (u_cutoff > 0.0 && albedo.a < u_cutoff) discard;
 
@@ -534,9 +590,7 @@ export const CANOPY_MOVE_MS = 6000;
  * motor, it starts gently, runs, and slows into place.
  */
 export function canopyFoldAt(from: number, to: number, ms: number, duration = CANOPY_MOVE_MS * Math.abs(to - from)): number {
-  const u = duration <= 0 ? 1 : Math.max(0, Math.min(1, ms / duration));
-  const e = u * u * u * (u * (u * 6 - 15) + 10);
-  return from + (to - from) * e;
+  return from + (to - from) * motorEase(duration <= 0 ? 1 : ms / duration);
 }
 
 /** `CANOPY_GLSL`'s fold in TypeScript, for the tests: a vertex of the open canopy at fold `f`. */
@@ -657,6 +711,69 @@ export function nodePositions(model: AlharamainModel, gltf: GltfJson): [number, 
   return out;
 }
 
+/** The sliding domes' unit in navQ's Mosque file: the mesh painted with the `Domes` material that
+ * several nodes share (27 in `haram-3d.glb`), or -1 when a file has none. */
+export function domeMeshIndex(gltf: GltfJson): number {
+  const domesMat = (gltf.materials ?? []).findIndex((m) => m.name === 'Domes');
+  if (domesMat < 0) return -1;
+  const mesh = gltf.meshes.findIndex((m) => m.primitives.some((p) => p.material === domesMat));
+  if (mesh < 0) return -1;
+  return gltf.nodes.filter((n) => n.mesh === mesh).length > 1 ? mesh : -1;
+}
+
+/** Where each sliding dome stands, `[east, south]` model metres, in node order (one per anchor). */
+export function domeInstanceCentres(model: AlharamainModel, gltf: GltfJson): [number, number][] {
+  const mesh = domeMeshIndex(gltf);
+  if (mesh < 0) return [];
+  const turn = (model.rotation * Math.PI) / 180;
+  const out: [number, number][] = [];
+  // Nodes outside, anchors inside: the order the layer stacks the units' instances in.
+  for (const node of gltf.nodes) {
+    if (node.mesh !== mesh) continue;
+    for (const anchor of model.anchors) {
+      const [east0, south0] = metresFromOrigin(anchor);
+      const [x, , z] = node.matrix ? [node.matrix[12], node.matrix[13], node.matrix[14]] : (node.translation ?? [0, 0, 0]);
+      const east = east0 + x * Math.cos(turn) - z * Math.sin(turn);
+      const south = south0 + x * Math.sin(turn) + z * Math.cos(turn);
+      const [dEast, dSouth] = nodeShift(model, east, south);
+      out.push([east + dEast, south + dSouth]);
+    }
+  }
+  return out;
+}
+
+/** The interior props' file (scripts/build-interior-props-glb.py): one prototype per prop, at the origin. */
+export const INTERIOR_PROPS_MODEL: AlharamainModel = { url: './models/haram-interior-props.glb', anchors: [MODEL_ORIGIN_LNGLAT], rotation: 0 };
+
+/**
+ * The props' instance matrices by mesh name: a column and its lanterns at each column, the arch
+ * along the bay (turned a quarter round for north–south bays), a chandelier at each bay's heart.
+ */
+export function interiorPropMatrices(p: InteriorPropPlacements): Map<string, Float32Array> {
+  const at = (list: readonly (readonly [number, number])[], turned: boolean) =>
+    list.flatMap(([x, z]) => (turned ? [0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0, x, 0, z, 1] : [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, 0, z, 1]));
+  const columns = new Float32Array(at(p.columns, false));
+  return new Map([
+    ['InteriorColumn', columns],
+    ['ColumnLanterns', columns],
+    ['InteriorArch', new Float32Array([...at(p.archesEastWest, false), ...at(p.archesNorthSouth, true)])],
+    ['InteriorChandelier', new Float32Array(at(p.chandeliers, false))],
+  ]);
+}
+
+/** A dome sliding, or held where a visitor left it (0 closed, 1 open). */
+interface DomeMove {
+  from: number;
+  to: number;
+  start: number;
+  f: number;
+}
+
+/** Height of the drum's middle above the ground (the unit stands at 13 m; its cap rises 9 m more). */
+const DOME_PICK_HEIGHT_M = 17;
+/** Half the unit's width: a tap within it (as seen on screen) picks the dome. */
+const DOME_PICK_RADIUS_M = 9.6;
+
 /**
  * Draws the Al-Haramain 3D files (`ALHARAMAIN_MODELS`) on MapLibre with WebGL2: the Mosque, the
  * courtyard canopies and the service blocks, at the anchors navQ gives them. Nodes sharing a mesh
@@ -720,6 +837,24 @@ export class HaramGlbLayer implements CustomLayerInterface {
   private unsubDoors: (() => void) | null = null;
   /** The last frame's projection (metres to clip space), to find the canopy under a tap. */
   private lastMvp: Float64Array | null = null;
+  /** The sliding domes (owner, 2026-11-18): their units' matrices as the file has them (closed),
+   * the instance buffer they are drawn from, how open each is, and the slides under way. */
+  private domes: SlidingDome[] = [];
+  private domeBase: Float32Array | null = null;
+  private domeBuf: WebGLBuffer | null = null;
+  private domeOpen = new Map<number, number>();
+  private domeMoves = new Map<number, DomeMove>();
+  private domeDirty = false;
+  /** The interior props' file is asked for once, when the interior's plan has arrived. */
+  private propsRequested = false;
+  /** Where the roof lifts this frame (the engine's answer: a tapped gate, a route inside). */
+  private revealSource: (() => InteriorReveal) | null = null;
+  private uRevealRole: WebGLUniformLocation | null = null;
+  private uRevealDisc: WebGLUniformLocation | null = null;
+  private uRevealDiscs: WebGLUniformLocation | null = null;
+  private uRevealLane: WebGLUniformLocation | null = null;
+  private uRevealLanes: WebGLUniformLocation | null = null;
+  private uRevealHalf: WebGLUniformLocation | null = null;
 
   /**
    * `light`: how the scene is lit now (change it with `setLight`). `onLamps`: where the lanterns of
@@ -735,6 +870,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
 
   onAdd(map: MLMap, gl: WebGL2RenderingContext): void {
     this.map = map;
+    this.propsRequested = false;
     this.initShader(gl);
     this.unsubDoors = subscribeMosqueDoors(() => this.map?.triggerRepaint());
     const generation = ++this.generation;
@@ -811,6 +947,12 @@ export class HaramGlbLayer implements CustomLayerInterface {
     this.uLattice = gl.getUniformLocation(prog, 'u_lattice');
     this.uCutoff = gl.getUniformLocation(prog, 'u_cutoff');
     this.uCanopy = gl.getUniformLocation(prog, 'u_canopy');
+    this.uRevealRole = gl.getUniformLocation(prog, 'u_revealRole');
+    this.uRevealDisc = gl.getUniformLocation(prog, 'u_revealDisc');
+    this.uRevealDiscs = gl.getUniformLocation(prog, 'u_revealDiscs');
+    this.uRevealLane = gl.getUniformLocation(prog, 'u_revealLane');
+    this.uRevealLanes = gl.getUniformLocation(prog, 'u_revealLanes');
+    this.uRevealHalf = gl.getUniformLocation(prog, 'u_revealHalf');
 
     // The depth-only pass the sun's shadow map is drawn with: the same vertex arrays, position and
     // instance matrix only.
@@ -839,7 +981,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
   }
 
   /** Each file loads on its own: a missing one leaves the others standing and the map unharmed. */
-  private async loadAsset(model: AlharamainModel, generation: number): Promise<void> {
+  private async loadAsset(model: AlharamainModel, generation: number, props?: Map<string, Float32Array>): Promise<void> {
     try {
       const res = await fetch(model.url);
       if (!res.ok) return;
@@ -856,7 +998,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
         for (const bmp of images) bmp?.close();
         return;
       }
-      this.pending.push({ model, gltf, bin, images });
+      this.pending.push({ model, gltf, bin, images, props });
       if (this.onLamps && model.url.includes('canopies')) this.onLamps(nodePositions(model, gltf));
       this.map?.triggerRepaint();
     } catch {
@@ -906,8 +1048,10 @@ export class HaramGlbLayer implements CustomLayerInterface {
       groups.set(key, group);
     };
     const combined = new Float64Array(16);
+    // The sliding domes' units are one group of their own, drawn from a buffer that moves them.
+    const domeMesh = domeMeshIndex(gltf);
     for (const [nodeIdx, node] of gltf.nodes.entries()) {
-      if (node.mesh === undefined) continue;
+      if (node.mesh === undefined || asset.props) continue;
       const local = node.matrix ? new Float64Array(node.matrix) : composeTrs(node.translation ?? [0, 0, 0], node.rotation ?? [0, 0, 0, 1], node.scale ?? [1, 1, 1]);
       const folds = folding !== null && folding.open.has(node.mesh);
       const tappable = folding !== null && (folds || node.mesh === folding.closed);
@@ -922,8 +1066,20 @@ export class HaramGlbLayer implements CustomLayerInterface {
         combined[14] += dSouth;
         const canopy = tappable ? this.canopies.push({ matrix: new Float32Array(combined), foldable: folds, refs: [] }) - 1 : -1;
         const gate = isPortal ? nearestMosqueDoor(combined[12], combined[14], 25)?.id : undefined;
-        add(node.mesh, folds ? 'day' : 'always', combined, canopy, gate, isPortal ? `portal|${node.mesh}|${nodeIdx}` : undefined);
+        const nodeKey = isPortal ? `portal|${node.mesh}|${nodeIdx}` : node.mesh === domeMesh ? 'domes' : undefined;
+        add(node.mesh, folds ? 'day' : 'always', combined, canopy, gate, nodeKey);
         if (folds) add(folding!.closed, 'night', combined, canopy);
+      }
+    }
+    // The interior props stand where the interior's plan puts them, not where their file has them.
+    for (const node of asset.props ? gltf.nodes : []) {
+      if (node.mesh === undefined) continue;
+      const at = asset.props!.get(gltf.meshes[node.mesh].name ?? '');
+      if (!at) continue;
+      const local = node.matrix ? new Float64Array(node.matrix) : composeTrs(node.translation ?? [0, 0, 0], node.rotation ?? [0, 0, 0, 1], node.scale ?? [1, 1, 1]);
+      for (let k = 0; k + 16 <= at.length; k += 16) {
+        mulMat4(combined, at.subarray(k, k + 16), local);
+        add(node.mesh, 'always', combined, -1, undefined, `props|${node.mesh}`);
       }
     }
     if (folding && this.canopies.length > firstCanopy) {
@@ -959,13 +1115,22 @@ export class HaramGlbLayer implements CustomLayerInterface {
     };
 
     const materials = gltf.materials ?? [];
-    for (const { mesh: meshIndex, when, matrices, canopy, gate } of groups.values()) {
+    for (const [key, { mesh: meshIndex, when, matrices, canopy, gate }] of groups) {
       const anim = when === 'anim';
+      const domes = key === 'domes';
       const instanceBuf = gl.createBuffer()!;
       gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuf);
       if (anim) gl.bufferData(gl.ARRAY_BUFFER, (this.canopies.length - firstCanopy) * 64, gl.DYNAMIC_DRAW);
-      else gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(matrices), gl.STATIC_DRAW);
+      else gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(matrices), domes ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW);
       this.buffers.push(instanceBuf);
+      if (domes) {
+        this.domes = buildSlidingDomes(domeInstanceCentres(model, gltf));
+        this.domeBase = new Float32Array(matrices);
+        this.domeBuf = instanceBuf;
+        // Domes a visitor opened before the file was (re)read stand open at once.
+        for (const d of this.domes) if (isDomeOpen(d.n)) this.domeOpen.set(d.n, 1);
+        this.domeDirty = true;
+      }
       // Per instance: hidden while a visitor's move draws it (the canopies' groups only), and how
       // open it is (the anim group only).
       let hideBuf: WebGLBuffer | null = null;
@@ -1058,15 +1223,44 @@ export class HaramGlbLayer implements CustomLayerInterface {
           interiorRole: classifyInteriorRole(model.url, material?.name),
           instances: matrices.length / 16,
           when,
+          interiorOnly: Boolean(asset.props),
+          revealRole: revealRoleOf(classifyInteriorRole(model.url, material?.name), Boolean(asset.props)),
         });
       }
     }
+  }
+
+  /**
+   * The interior's columns, ablaq arches, lanterns and chandeliers (owner, 2026-11-18), shown with the
+   * interior cutaway: `matrices` per prop mesh (`interiorPropMatrices`). The file is read once.
+   */
+  setInteriorProps(matrices: Map<string, Float32Array>): void {
+    if (this.propsRequested) return;
+    this.propsRequested = true;
+    void this.loadAsset(INTERIOR_PROPS_MODEL, this.generation, matrices);
   }
 
   /** Enable or disable translucent interior cutaway mode on the Mosque building while keeping minarets and domes opaque. */
   setInterior(on: boolean): void {
     this.interior = on;
     this.map?.triggerRepaint();
+  }
+
+  /**
+   * Where the roof lifts over the interior, asked each frame (owner, 2026-11-18: the Mosque is seen
+   * from outside unless a gate was tapped and the map zoomed in, a route walks inside, a dome is open,
+   * or the interior view is on). `domain/interior-reveal.ts` says where.
+   */
+  setRevealSource(source: (() => InteriorReveal) | null): void {
+    this.revealSource = source;
+    this.map?.triggerRepaint();
+  }
+
+  /** Is any sliding dome open, or on its way? Then the interior shows through its opening. */
+  private anyDomeOpen(): boolean {
+    if (this.domeMoves.size) return true;
+    for (const f of this.domeOpen.values()) if (f > 0) return true;
+    return false;
   }
 
   /** Toggle the nearest Mosque doorway bay under screen `[x, y]` CSS pixels. */
@@ -1101,6 +1295,76 @@ export class HaramGlbLayer implements CustomLayerInterface {
     this.setHidden(k, true);
     this.map?.triggerRepaint();
     return true;
+  }
+
+  /**
+   * A tap at `[x, y]` (CSS pixels) on a sliding dome: it opens slowly (sliding along its rails by
+   * its own size, north or south as the owner set), or closes if open. False when no dome is there.
+   */
+  toggleDomeAt(x: number, y: number): boolean {
+    const n = this.domeAt(x, y);
+    if (n === null) return false;
+    const f = this.domeMoves.get(n)?.f ?? this.domeOpen.get(n) ?? 0;
+    const to = toggleDome(n) ? 1 : 0;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.domeMoves.set(n, { from: reduce ? to : f, to, start: performance.now(), f });
+    this.map?.triggerRepaint();
+    return true;
+  }
+
+  /** The dome under a tap: within its unit's half-width on screen, the nearest to the eye. */
+  domeAt(x: number, y: number): number | null {
+    const mvp = this.lastMvp;
+    const canvas = this.map?.getCanvas();
+    if (!mvp || !canvas || !this.domes.length) return null;
+    const W = canvas.clientWidth;
+    const H = canvas.clientHeight;
+    const project = (east: number, south: number): [number, number, number] | null => {
+      const h = DOME_PICK_HEIGHT_M;
+      const cw = mvp[3] * east + mvp[7] * h + mvp[11] * south + mvp[15];
+      if (cw <= 0) return null;
+      const nx = (mvp[0] * east + mvp[4] * h + mvp[8] * south + mvp[12]) / cw;
+      const ny = (mvp[1] * east + mvp[5] * h + mvp[9] * south + mvp[13]) / cw;
+      return [((nx + 1) / 2) * W, ((1 - ny) / 2) * H, cw];
+    };
+    let best: number | null = null;
+    let bestDepth = Number.POSITIVE_INFINITY;
+    for (const d of this.domes) {
+      const south = d.south + d.slideSouth * (this.domeMoves.get(d.n)?.f ?? this.domeOpen.get(d.n) ?? 0);
+      const c = project(d.east, south);
+      const edge = project(d.east + DOME_PICK_RADIUS_M, south);
+      if (!c || !edge) continue;
+      const radius = Math.max(12, Math.hypot(edge[0] - c[0], edge[1] - c[1]));
+      if (Math.hypot(x - c[0], y - c[1]) <= radius && c[2] < bestDepth) {
+        best = d.n;
+        bestDepth = c[2];
+      }
+    }
+    return best;
+  }
+
+  /** Advance the domes' slides to `now` and write their units' matrices; true while one moves. */
+  private stepDomes(gl: WebGL2RenderingContext, now: number): boolean {
+    if (!this.domeBuf || !this.domeBase || (!this.domeMoves.size && !this.domeDirty)) return false;
+    let moving = false;
+    for (const [n, m] of this.domeMoves) {
+      m.f = domeSlideAt(m.from, m.to, now - m.start);
+      this.domeOpen.set(n, m.f);
+      if (m.f === m.to) this.domeMoves.delete(n);
+      else moving = true;
+    }
+    const out = new Float32Array(this.domeBase);
+    for (const d of this.domes) {
+      const f = this.domeOpen.get(d.n) ?? 0;
+      // Along the ground's south axis (the matrices' translation is [east, up, south] metres).
+      if (f) out[d.instance * 16 + 14] += d.slideSouth * f;
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.domeBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, out);
+    this.domeDirty = false;
+    // Its shadow is drawn again once it rests (a shadow pass every frame would cost a phone too much).
+    if (!moving) this.shadowDirty = true;
+    return moving;
   }
 
   /** The nearest canopy to a tap, by its column from the ground to the top, within 24 px. */
@@ -1245,6 +1509,8 @@ export class HaramGlbLayer implements CustomLayerInterface {
     gl.vertexAttrib1f(8, 1);
     for (const prim of this.prims) {
       if ((prim.when === 'day' && folded) || (prim.when === 'night' && !folded)) continue;
+      // Under the roof no sun reaches the interior's props.
+      if (prim.interiorOnly) continue;
       // A lattice casts the shadow of its bars, not of a wall: left out of the shadow map.
       if (prim.cutoff > 0) continue;
       const instances = prim.when === 'anim' ? this.animCount : prim.instances;
@@ -1284,6 +1550,8 @@ export class HaramGlbLayer implements CustomLayerInterface {
       this.shadowDirty = true;
       this.map?.triggerRepaint();
     }
+    // A dome still sliding asks for the next frame too.
+    if (this.stepDomes(gl, performance.now())) this.map?.triggerRepaint();
 
     gl.useProgram(this.program);
     gl.enable(gl.DEPTH_TEST);
@@ -1317,11 +1585,27 @@ export class HaramGlbLayer implements CustomLayerInterface {
     let boundTex: WebGLTexture | null = null;
     // Folded from about sunset (the light is then half way to night) until morning.
     const folded = light.night >= 0.5;
+    // Where the roof lifts (none in the interior view: there all of it is faded instead).
+    const reveal = this.interior ? NO_REVEAL : (this.revealSource?.() ?? NO_REVEAL);
+    const lifted = reveal.discs.length + reveal.lanes.length > 0;
+    const discs = new Float32Array(6);
+    reveal.discs.slice(0, 2).forEach((d, i) => discs.set(d, i * 3));
+    const lanes = new Float32Array(MAX_REVEAL_LANES * 4);
+    reveal.lanes.slice(0, MAX_REVEAL_LANES).forEach((l, i) => lanes.set(l, i * 4));
+    gl.uniform3fv(this.uRevealDisc, discs);
+    gl.uniform1i(this.uRevealDiscs, Math.min(2, reveal.discs.length));
+    gl.uniform4fv(this.uRevealLane, lanes);
+    gl.uniform1i(this.uRevealLanes, Math.min(MAX_REVEAL_LANES, reveal.lanes.length));
+    gl.uniform1f(this.uRevealHalf, reveal.laneHalf);
+    // The interior's columns, arches and chandeliers: under the roof they are hidden, so they are only
+    // drawn when some of the interior shows.
+    const props = this.interior || lifted || this.anyDomeOpen();
     const passes: readonly ('all' | 'keep' | 'fade')[] = this.interior ? ['keep', 'fade'] : ['all'];
     for (const pass of passes) {
       gl.depthMask(pass !== 'fade');
       for (const prim of this.prims) {
         if ((prim.when === 'day' && folded) || (prim.when === 'night' && !folded)) continue;
+        if (prim.interiorOnly && !props) continue;
         if (pass === 'keep' && prim.interiorRole !== 'keep') continue;
         if (pass === 'fade' && prim.interiorRole === 'keep') continue;
         const instances = prim.when === 'anim' ? this.animCount : prim.instances;
@@ -1338,6 +1622,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
         gl.uniform2fv(this.uPortalSize, prim.portalSize);
         gl.uniform1f(this.uLattice, prim.lattice ? 1 : 0);
         gl.uniform1f(this.uCutoff, prim.cutoff);
+        gl.uniform1i(this.uRevealRole, lifted ? prim.revealRole : 0);
 
         const texture = prim.hasUv && prim.textureIndex >= 0 ? this.textures[prim.textureIndex] : undefined;
         gl.uniform1i(this.uHasTex, texture ? 1 : 0);

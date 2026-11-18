@@ -181,7 +181,7 @@ function buildGraph(lines: XY[][]): { nodes: XY[]; edges: Edge[] } {
   return { nodes, edges };
 }
 
-const SOFT_BARRIERS = new Set<BarrierSource>(['greeting_barrier', 'queue_rail']);
+const SOFT_BARRIERS = new Set<BarrierSource>(['greeting_barrier', 'queue_rail', 'rawdah_barrier']);
 const HARD_BARRIERS = new Set<BarrierSource>(['prayer_barrier', 'women_fence']);
 
 function sampleWomenZones(a: XY, b: XY): string[] {

@@ -8,8 +8,11 @@ import type { XY } from './frames';
  *
  * - Yellow: the queues for the Rawdah. Three long rails, and between each two of them two shorter
  *   dividers broken in the middle: six lanes, entered from the south, checked at their north end.
- * - Then on to wait before Gate 37, sent in batches into the Rawdah through Gate 39, and out of it
- *   through Gate 2.
+ * - Then (owner, 2026-11-18) in through Gate 38 only, to wait in the closed hall inside it (the bay
+ *   «مصلى الرجال A17» and its walkways, `RAWDAH_HALL`); every ten minutes or so a group goes on
+ *   through Gate 39 into the Rawdah, and out of it through Gate 2. Never toward Gate 37: barriers
+ *   close the hall from the rest of the Mosque, and the ground outside between the queue's head,
+ *   Gate 38 and the greeting's way out (`RAWDAH_HALL_BARRIERS`, `RAWDAH_APPROACH_BARRIERS`).
  * - Green: men to greet the Prophet ﷺ enter through Gate 1 (Bab al-Salam); red: they leave through
  *   Gate 41 (Bab al-Baqi') and walk south.
  * - Blue: a funeral now and then, out of block 203 to the Mosque's south face by Gate 42 (Bab
@@ -82,17 +85,100 @@ export const QUEUE_CHECKERS: XY[] = [
   [37.7, -94],
 ];
 
-/** Waiting before Gate 37, and the organisers standing by. */
-export const HOLD_CENTRE: XY = [55, -103];
-export const HOLD_HALF: XY = [8, 3.5];
-export const HOLD_ORGANISERS: XY[] = [
-  [45.5, -101],
-  [64.5, -101],
+/**
+ * In through Gate 38 (owner, 2026-11-18: «visitors go in by Gate 38, wait inside, and go on to the
+ * Rawdah through Gate 39»): the step before the gate where those let through the queue go in, and
+ * the organisers standing by it. (Gate 38's marker; navQ draws the gate 15 m further west, at
+ * x −7.8, by the old Mosque's corner: both are inside the closed ground.)
+ */
+export const GATE_38_STEP: XY = [7.7, -107.2];
+export const GATE_38_ORGANISERS: XY[] = [
+  [2.4, -106.4],
+  [13.0, -106.4],
 ];
-/** Into the Rawdah (Gate 39), and out of it (outside Gate 2) and away west. */
-export const RAWDAH_IN: XY = [-10.3, -113.4];
+/** Out of the Rawdah (outside Gate 2) and away west. */
 export const RAWDAH_OUT: XY = [-112.5, -99.6];
 export const RAWDAH_AWAY: XY = [-140, -95];
+
+/**
+ * The closed hall where those for the Rawdah wait (owner, 2026-11-18, his yellow box over navQ's
+ * plan): the bay «مصلى الرجال A17» (navQ 178: x −4.6…52.2, z −161.8…−119.2), its west walkway (to
+ * the carpet A12 at x −10) and the south half of its north one (z −167.5), and east to the carpet's
+ * edge (x 52.6), so that Gate 37 (navQ x 59.3; its five bays from x 53 in `haram-3d.glb`) stays
+ * outside; and the way from it west to Gate 39 (navQ x −23.5, z −112.7, in the old Mosque's north
+ * wall) along the south of the carpet A7. Its south side is the Mosque's face, which the 3D model
+ * has at z −121.4 between x −12 and 44. Its only way in: Gate 38 from the queue; out: Gate 39.
+ */
+export const RAWDAH_HALL: XY[] = [
+  [52.6, -112.6],
+  [52.6, -167.5],
+  [-10.0, -167.5],
+  [-10.0, -136.0],
+  [-18.7, -136.0],
+  [-19.2, -132.5],
+  [-19.2, -120.9],
+  [-27.0, -120.9],
+  [-27.0, -112.4],
+  [-12.0, -112.4],
+  [-12.0, -121.4],
+  [44.0, -121.4],
+  [44.0, -112.6],
+];
+/** The barriers round it, inside the Mosque: east (from the face, by Gate 37's first bay, which stays
+ * outside), north, and west to Gate 39. */
+export const RAWDAH_HALL_BARRIERS: XY[][] = [
+  [
+    [52.6, -112.6],
+    [52.6, -167.5],
+    [-10.0, -167.5],
+    [-10.0, -136.0],
+    [-18.7, -136.0],
+    [-19.2, -132.5],
+    [-19.2, -120.9],
+    [-27.0, -120.9],
+    [-27.0, -112.6],
+  ],
+];
+/**
+ * Outside, between the queue's head and the Mosque (owner, 2026-11-18): from the queue's east rail to
+ * the Mosque's wall, so none let through goes east toward Gate 37; and the ground between the
+ * greeting's way out (its east barrier) and the queue's west rail closed at both ends, so none comes
+ * up between them to Gate 38 without queuing. The ground they close, with the queue's head, Gate 38
+ * and the old Mosque's wall, is `RAWDAH_APPROACH`.
+ */
+export const RAWDAH_APPROACH_BARRIERS: XY[][] = [
+  [
+    [42.2, -93.2],
+    [42.2, -121.2],
+  ],
+  [
+    [16.7, -93.2],
+    [4.5, -75.1],
+  ],
+  [
+    [11.3, 2.9],
+    [16.7, 2.9],
+  ],
+];
+/** Where only those let through the queue walk, outside: from the queue's head to Gate 38. */
+export const RAWDAH_APPROACH: XY[] = [
+  [-11.4, -121.4],
+  [42.2, -121.4],
+  [42.2, -93.2],
+  [16.7, -93.2],
+  [4.5, -75.1],
+  [-2.2, -84.6],
+  [-11.4, -87.5],
+];
+/** The strip closed between the greeting's way out and the queue's west rail. */
+export const RAWDAH_STRIP: XY[] = [
+  [4.5, -75.1],
+  [16.7, -93.2],
+  [16.7, 2.9],
+  [11.3, 2.9],
+  [10.7, -37.1],
+  [8.3, -60.8],
+];
 
 /**
  * The green barriers that order the greeting (owner, 2026-11-08: all there in fact, and all green;

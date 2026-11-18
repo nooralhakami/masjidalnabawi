@@ -37,7 +37,7 @@ export const GROUP_GAP = 0.8;
 export const AISLE_LONG_W = 1.8;
 /** Kept between a carpet and its area's edge. */
 const INSET = 0.3;
-const COLUMN_CLEAR = 1.05;
+export const COLUMN_CLEAR = 1.05;
 /** Kept between a carpet and a walkway, a cleared corridor or a restroom: the barrier's room. */
 const KEEP_OFF = 0.5;
 
@@ -86,10 +86,10 @@ export interface RugLayout {
 export const RUG_TURN_DEG = ALHARAMAIN_MODELS[1].rotation;
 /** The frame the carpets are laid in: turned with the canopies (and the paving), so rows run true. */
 const TURN = (RUG_TURN_DEG * Math.PI) / 180;
-const toLaid = ([x, z]: XY): XY => [Math.cos(TURN) * x - Math.sin(TURN) * z, Math.sin(TURN) * x + Math.cos(TURN) * z];
-const fromLaid = ([u, v]: XY): XY => [Math.cos(TURN) * u + Math.sin(TURN) * v, -Math.sin(TURN) * u + Math.cos(TURN) * v];
+export const toLaid = ([x, z]: XY): XY => [Math.cos(TURN) * x - Math.sin(TURN) * z, Math.sin(TURN) * x + Math.cos(TURN) * z];
+export const fromLaid = ([u, v]: XY): XY => [Math.cos(TURN) * u + Math.sin(TURN) * v, -Math.sin(TURN) * u + Math.cos(TURN) * v];
 
-function inside([x, y]: XY, ring: readonly XY[]): boolean {
+export function inside([x, y]: XY, ring: readonly XY[]): boolean {
   let c = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
     if (ring[i][1] > y !== ring[j][1] > y && x < ((ring[j][0] - ring[i][0]) * (y - ring[i][1])) / (ring[j][1] - ring[i][1]) + ring[i][0]) c = !c;
@@ -122,7 +122,7 @@ function touches(u0: number, v0: number, u1: number, v1: number, poly: readonly 
 }
 
 /** Is the rectangle wholly inside the polygon (corners in, no edge of it crossing the rectangle)? */
-function within(u0: number, v0: number, u1: number, v1: number, poly: readonly XY[]): boolean {
+export function within(u0: number, v0: number, u1: number, v1: number, poly: readonly XY[]): boolean {
   const rect: XY[] = [
     [u0, v0],
     [u1, v0],
