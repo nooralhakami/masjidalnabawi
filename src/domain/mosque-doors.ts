@@ -20,6 +20,8 @@ export const NEVER_CLOSED_GATES: ReadonlySet<number> = new Set([1, 2]);
 export const MAJOR_MULTI_BAY_GATES: ReadonlySet<number> = new Set([8, 13, 17, 21, 25, 29, 34]);
 export const TRIPLE_BAY_GATES: ReadonlySet<number> = new Set([2, 5, 37]);
 export const DOUBLE_BAY_GATES: ReadonlySet<number> = new Set([3, 4, 10, 11, 32, 38, 39]);
+/** Recessed inward-set archway portals (e.g. Gates 7 & 9) whose vaulted forecourt has an 8-point star marble floor. */
+export const RECESSED_PORCH_GATES: ReadonlySet<number> = new Set([7, 9, 12, 14, 16, 18, 19, 20, 22, 23, 24, 26, 28, 30, 33, 35]);
 
 export type WallSide = 'N' | 'S' | 'E' | 'W';
 export type DoorStyle = 'monumental' | 'old_mosque' | 'arch';
@@ -331,12 +333,14 @@ export interface DoorKitMatrices {
   leftLeaves: Float32Array;
   rightLeaves: Float32Array;
   glows: Float32Array;
+  starFloors: Float32Array;
   bayKeys: string[];
 }
 
 /**
  * Column-major 4x4 WebGL instance matrices for every bay's frame, hinged left/right leaves
- * (rotating strictly inward along `-outward` by `DOOR_OPEN_ANGLE_RAD`), and open floor light spill.
+ * (rotating strictly inward along `-outward` by `DOOR_OPEN_ANGLE_RAD`), open floor light spill,
+ * and recessed-porch star marble medallions (strictly on inward-set archway portals).
  */
 export function buildDoorKitMatrices(doors: readonly MosqueDoorState[], openFraction: (gateId: number, bayIndex: number) => number): DoorKitMatrices {
   const total = doors.reduce((s, d) => s + d.bays.length, 0);
@@ -344,12 +348,14 @@ export function buildDoorKitMatrices(doors: readonly MosqueDoorState[], openFrac
   const leftLeaves = new Float32Array(total * 16);
   const rightLeaves = new Float32Array(total * 16);
   const glows = new Float32Array(total * 16);
+  const starList: number[] = [];
   const bayKeys: string[] = [];
 
   let i = 0;
   for (const gate of doors) {
     const [tx, tz] = gate.tangent;
     const [ox, oz] = gate.outward;
+    const hasStarPorch = RECESSED_PORCH_GATES.has(gate.id);
     for (const bay of gate.bays) {
       const f = Math.max(0, Math.min(1, openFraction(gate.id, bay.bayIndex)));
       const key = doorBayKey(gate.id, bay.bayIndex);
@@ -359,8 +365,14 @@ export function buildDoorKitMatrices(doors: readonly MosqueDoorState[], openFrac
       const h = bay.heightM;
       const halfW = w / 2;
 
-      // Frame: placed at center + outward * 0.14 so its recessed lit alcove sits clear inside the wall cut
+      // Frame: placed at center + outward * 0.14 so its open portal aligns cleanly inside the wall cut
       frames.set([tx * w, 0, tz * w, 0, 0, h, 0, 0, ox, 0, oz, 0, bay.x + ox * 0.14, 0, bay.y + oz * 0.14, 1], off);
+
+      if (hasStarPorch) {
+        const sw = w * 1.15;
+        const sd = 2.8;
+        starList.push(tx * sw, 0, tz * sw, 0, 0, h, 0, 0, ox * sd, 0, oz * sd, 0, bay.x + ox * 0.14, 0, bay.y + oz * 0.14, 1);
+      }
 
       // Hinge line at center + outward * 0.22; leaves swing strictly inward (toward -outward)
       const hx = bay.x + ox * 0.22;
@@ -388,7 +400,7 @@ export function buildDoorKitMatrices(doors: readonly MosqueDoorState[], openFrac
     }
   }
 
-  return { frames, leftLeaves, rightLeaves, glows, bayKeys };
+  return { frames, leftLeaves, rightLeaves, glows, starFloors: new Float32Array(starList), bayKeys };
 }
 
 /**

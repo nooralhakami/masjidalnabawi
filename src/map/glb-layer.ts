@@ -1163,6 +1163,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
         ['DoorPortalFrame', kit.frames],
         ['DoorLeafLeft', kit.leftLeaves],
         ['DoorLeafRight', kit.rightLeaves],
+        ['DoorStarFloor', kit.starFloors],
         ['DoorThresholdGlow', kit.glows],
       ]);
       const cut = buildDoorCutBoxes(doors);
