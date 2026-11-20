@@ -573,7 +573,7 @@ window.renderAtlas = async () => {
     d[i + 2] = Math.min(255, Math.round(Math.pow(d[i + 2] / 255, invG) * 255));
   }
   ctx.putImageData(img, 0, 0);
-  return c.toDataURL('image/jpeg', 0.93);
+  return c.toDataURL('image/jpeg', 0.86);
 };
 </script>
 </body>

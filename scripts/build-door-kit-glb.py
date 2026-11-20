@@ -445,8 +445,7 @@ def main():
         export_texcoords=True,
         export_normals=True,
         export_materials="EXPORT",
-        export_image_format="JPEG",
-        export_jpeg_quality=85,
+        export_image_format="AUTO",
     )
     print(f"Exported museum-grade open-through Door Kit GLB to {OUTPUT_GLB} ({OUTPUT_GLB.stat().st_size} bytes)")
 

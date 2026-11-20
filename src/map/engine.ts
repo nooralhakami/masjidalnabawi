@@ -17,9 +17,10 @@ import { buildInterCarpetAisles, rugLayout } from './rug-layout';
 import { sunPosition } from '../domain/daylight';
 import type { Poi, Status } from '../data/types';
 import { isHidden } from '../domain/filters';
-import { getGateDoorState, toggleGateBay, toggleGateDoor, type DoorToggleResult } from '../domain/mosque-doors';
+import { getMosqueDoors, isBayOpen, toggleGateBay, toggleGateDoor, type DoorToggleResult } from '../domain/mosque-doors';
 import { interiorReveal, type InteriorReveal } from '../domain/interior-reveal';
-import { toModelMetres, type XY } from '../domain/frames';
+import { guardMosqueCameraEntry, isInsideMosqueWall } from '../domain/mosque-entry';
+import { fromModelMetres, toModelMetres, type XY } from '../domain/frames';
 import { parsePrayerDemoOverride } from '../domain/prayer-session';
 import { isTapName } from '../domain/route-hint';
 import { FEATURED_IDS } from '../domain/visits';
@@ -38,7 +39,7 @@ import type { Urban3DLayer } from './urban-3d';
 import { IconAtlas, createDrawer, cssPalette, type Drawer } from './images';
 import { LampGlowLayer } from './lamp-glow-layer';
 import { MeMarker } from './me';
-import { PlazaMarbleLayer } from './plaza-layer';
+import { cameraEye, PlazaMarbleLayer } from './plaza-layer';
 import { addHintLayer, EMPTY_HINTS, HintLayer } from './hints';
 import { addPoiLayers } from './poi-layers';
 import {
@@ -97,14 +98,16 @@ export interface MapEngineOptions {
   onEntrance?(id: string): void;
   /** A tap on a Mosque doorway bay that opened, closed, or stayed locked. */
   onDoorToggle?(result: DoorToggleResult): void;
+  /** Fired when close-up zoom/pan tries to enter the Mosque through a closed door, wall, or roof. */
+  onDoorEntryBlocked?(reason: 'closed_door' | 'solid_wall' | 'roof'): void;
 }
 
 const DIRS: Record<string, string> = { south: 'dir-south', west: 'dir-west', north: 'dir-north', east: 'dir-east' };
 
 /** Map zoom of a legacy (Leaflet) zoom threshold. */
 const at = mapZoom;
-/** How close the 3D view may come (MapLibre zoom; the flat map stops at the live app's 19, MapLibre 18). */
-export const MAX_ZOOM_3D = 22;
+/** How close the 3D view may come (eye-level at open Mosque doorways; flat map keeps legacy limit). */
+export const MAX_ZOOM_3D = 23.2;
 
 /**
  * The map (SPEC F1, N1; ARCHITECTURE §5): Esri imagery (or a light map), one GeoJSON source for every
@@ -127,11 +130,11 @@ export class MapEngine {
   private base: BaseLayer = 'satellite';
   private mode3d = false;
   private interiorMode = false;
-  /**
-   * The gate the visitor tapped or chose (its POI id): zoomed in on it, the roof lifts over the bays
-   * just inside (owner, 2026-11-18). Cleared by a tap on nothing or by choosing another place.
-   */
-  private revealDoor: number | null = null;
+  /** Whether the 3D camera has entered inside the Mosque strictly through an open doorway bay. */
+  private insideMosque = false;
+  private guardingEntry = false;
+  private lastCam: { center: XY; eyeX: number; eyeY: number; eyeZ: number; zoom: number } | null = null;
+  private lastBlockToast = 0;
   /** The routes on the map in the models' metres, kept while the same paths are shown. */
   private revealRoutes: { paths: readonly unknown[]; metres: XY[][] } = { paths: [], metres: [] };
   /** Bumped when the 3D view closes, so a late interior plan is not laid on a map that left it. */
@@ -240,6 +243,7 @@ export class MapEngine {
     this.map.once('dragstart', () => (this.touched = true));
     this.map.once('zoomstart', (e) => e.originalEvent && (this.touched = true));
     this.map.on('click', (e) => this.pick(e.point.x, e.point.y));
+    this.map.on('move', () => this.enforceMosqueEntry());
 
     const icons = [...new Set(POIS.map((p) => lookOf(p).icon)), 'lock', 'car'] as IconName[];
     this.ready = Promise.all([
@@ -796,10 +800,6 @@ export class MapEngine {
   /** Open (or, with null, close) a place's card on the map: its pin, and nothing else, shows. */
   select(id: number | null): void {
     const changed = id !== this.selected;
-    // A chosen gate is looked in through once zoomed in; choosing another place, or closing the gate's
-    // card, lets the roof close again.
-    if (id !== null && POI_BY_ID.get(id)?.subCategory === 'gate_inner') this.setRevealDoor(id);
-    else if (id !== null || this.revealDoor === this.selected) this.setRevealDoor(null);
     this.selected = id;
     if (this.map.getLayer('facilities')) this.applyView();
     // A short gold ring on the newly chosen marker: «this one» (UI plan phase 3).
@@ -925,6 +925,8 @@ export class MapEngine {
       this.sync3DLayer();
       this.map.easeTo({ pitch: 45, bearing: 22, duration: instant ? 0 : 1000 });
     } else {
+      this.insideMosque = false;
+      this.lastCam = null;
       this.map.touchPitch.disable();
       this.sync3DLayer();
       const flatMax = at(LEGACY_MAX);
@@ -966,15 +968,54 @@ export class MapEngine {
     return this.interiorMode;
   }
 
-  private setRevealDoor(id: number | null): void {
-    if (id === this.revealDoor) return;
-    this.revealDoor = id;
-    this.map.triggerRepaint();
+  get isInsideMosque(): boolean {
+    return this.insideMosque;
+  }
+
+  /** Enforce doorway-only camera entry: never zoom or clip through the solid Mosque roof or exterior walls. */
+  private enforceMosqueEntry(): void {
+    if (!this.mode3d || this.interiorMode || this.guardingEntry) return;
+    const c = this.map.getCenter();
+    const center = toModelMetres([c.lng, c.lat]);
+    const eye = cameraEye(this.map);
+    const zoom = this.map.getZoom();
+    const sample = { center, eyeX: eye[0], eyeY: eye[1], eyeZ: eye[2], zoom };
+
+    if (!this.lastCam) {
+      this.insideMosque = isInsideMosqueWall(center) && zoom >= 19.2 && eye[1] <= 13.5;
+      this.lastCam = sample;
+      return;
+    }
+
+    const prev = { ...this.lastCam, inside: this.insideMosque };
+    const res = guardMosqueCameraEntry(prev, sample, getMosqueDoors(), (g, b) => this.models?.doorOpenFraction(g, b) ?? (isBayOpen(g, b) ? 1 : 0));
+    if (res.blocked) {
+      const clamped = res.clampedCenter ? fromModelMetres(res.clampedCenter) : [c.lng, c.lat];
+      const clampedZoom = res.clampedZoom !== undefined ? Math.min(zoom, res.clampedZoom) : zoom;
+      this.guardingEntry = true;
+      try {
+        this.map.jumpTo({ center: [clamped[0], clamped[1]], zoom: clampedZoom });
+      } finally {
+        this.guardingEntry = false;
+      }
+      const nc = this.map.getCenter();
+      const ne = cameraEye(this.map);
+      this.lastCam = { center: toModelMetres([nc.lng, nc.lat]), eyeX: ne[0], eyeY: ne[1], eyeZ: ne[2], zoom: this.map.getZoom() };
+      this.insideMosque = false;
+      const now = Date.now();
+      if (res.reason && now - this.lastBlockToast > 4500) {
+        this.lastBlockToast = now;
+        this.opts.onDoorEntryBlocked?.(res.reason);
+      }
+      return;
+    }
+    this.insideMosque = res.inside;
+    this.lastCam = sample;
   }
 
   /**
-   * Where the roof lifts this frame (`domain/interior-reveal.ts`): over the gate tapped or chosen, and
-   * along the routes on the map where they walk inside, once the map is zoomed in close.
+   * Where the roof lifts along an active inside walking route (`domain/interior-reveal.ts`);
+   * tapping or selecting a gate never cuts a roof hole (owner, 2026-11-20).
    */
   private revealNow(): InteriorReveal {
     const paths = [this.route.latLngs, this.route.shortcut].filter((p) => p.length > 1);
@@ -982,11 +1023,10 @@ export class MapEngine {
     if (paths.length !== cached.paths.length || paths.some((p, i) => p !== cached.paths[i])) {
       this.revealRoutes = { paths, metres: paths.map((p) => p.map(([lat, lng]) => toModelMetres([lng, lat]))) };
     }
-    const gate = this.revealDoor !== null ? getGateDoorState(this.revealDoor) : undefined;
     const c = this.map.getCenter();
     return interiorReveal({
       legacyZoom: legacyZoom(this.map.getZoom()),
-      door: gate ? { x: gate.x, z: gate.y, outward: gate.outward } : null,
+      door: null,
       routes: this.revealRoutes.metres,
       centre: toModelMetres([c.lng, c.lat]),
     });
@@ -1095,8 +1135,6 @@ export class MapEngine {
     }
     const place = 'open' in choice ? choice.open : null;
     if (doorGateId !== null && (place === null || POI_BY_ID.get(place)?.subCategory === 'gate_inner')) {
-      // The tapped gate is the one looked in through, zoomed in (owner, 2026-11-18).
-      this.setRevealDoor(doorGateId);
       const result = bayHit ? toggleGateBay(bayHit.gateId, bayHit.bayIndex) : toggleGateDoor(doorGateId);
       this.opts.onDoorToggle?.(result);
       return;
@@ -1114,8 +1152,6 @@ export class MapEngine {
     if (place === null && this.mode3d && this.models?.toggleDomeAt(x, y)) return;
     // In 3D, a tap on no place but on a canopy opens or closes it (owner, 2026-11-06).
     if (place === null && this.mode3d && this.models?.toggleCanopyAt(x, y)) return;
-    // A tap on nothing closes the roof over a gate looked in through.
-    if (place === null) this.setRevealDoor(null);
     this.opts.onPick?.(place);
   }
 }
