@@ -402,8 +402,8 @@ export function buildDoorCutBoxes(doors: readonly MosqueDoorState[]): { count: n
     const [ox, oz] = gate.outward;
     for (const bay of gate.bays) {
       const halfT = bay.widthM * 0.46;
-      const inExt = -2.1;
-      const outExt = 0.45;
+      const inExt = -2.4;
+      const outExt = 0.55;
       const corners = [
         [bay.x - tx * halfT + ox * inExt, bay.y - tz * halfT + oz * inExt],
         [bay.x + tx * halfT + ox * inExt, bay.y + tz * halfT + oz * inExt],
