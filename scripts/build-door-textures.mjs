@@ -37,7 +37,7 @@ const HTML = `<!doctype html>
   @font-face {
     font-family: 'HaramThuluth';
     src: url('data:font/ttf;base64,${fontBase64()}') format('truetype');
-    font-weight: normal;
+    font-weight: 100 900;
     font-style: normal;
   }
   html, body { margin: 0; padding: 0; background: #000; }
@@ -48,6 +48,7 @@ const HTML = `<!doctype html>
 <script>
 window.renderAtlas = async () => {
   await document.fonts.ready;
+  await document.fonts.load('48px "HaramThuluth"').catch(() => {});
   const c = document.getElementById('c');
   const ctx = c.getContext('2d');
 
@@ -220,7 +221,7 @@ window.renderAtlas = async () => {
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    ctx.font = 'bold 40px "HaramThuluth", serif';
+    ctx.font = '46px "HaramThuluth", "Diwan Thuluth", "DecoType Naskh", serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#4e2f08';
@@ -334,19 +335,19 @@ window.renderAtlas = async () => {
   ctx.stroke();
 
   // Crisp RTL calligraphy inside medallion
-  ctx.font = 'bold 46px "HaramThuluth", serif';
+  ctx.font = '62px "HaramThuluth", "Diwan Thuluth", "DecoType Naskh", serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#4c2e06';
-  ctx.fillText('محمد', mx + 1.5, my - 24);
+  ctx.fillText('محمد', mx + 1.5, my - 26);
   ctx.fillStyle = '#fff6c6';
-  ctx.fillText('محمد', mx, my - 26);
+  ctx.fillText('محمد', mx, my - 28);
 
-  ctx.font = 'bold 34px "HaramThuluth", serif';
+  ctx.font = '44px "HaramThuluth", "Diwan Thuluth", "DecoType Naskh", serif';
   ctx.fillStyle = '#4c2e06';
-  ctx.fillText('رسول الله', mx + 1.5, my + 24);
+  ctx.fillText('رسول الله', mx + 1.5, my + 28);
   ctx.fillStyle = '#fff6c6';
-  ctx.fillText('رسول الله', mx, my + 22);
+  ctx.fillText('رسول الله', mx, my + 26);
 
   // Subtle vertical leaf meeting hairline at center
   ctx.fillStyle = 'rgba(28, 16, 6, 0.72)';
@@ -381,15 +382,15 @@ window.renderAtlas = async () => {
   ctx.lineWidth = 2.5;
   ctx.strokeRect(536, 28, 464, 200);
 
-  // Flanking 12-petal carved rosettes
-  for (const rx of [576, 960]) {
+  // Flanking 12-petal carved rosettes (kept clear of center calligraphy)
+  for (const rx of [564, 972]) {
     const ry = 128;
     ctx.beginPath();
-    ctx.arc(rx, ry, 34, 0, Math.PI * 2);
+    ctx.arc(rx, ry, 25, 0, Math.PI * 2);
     ctx.fillStyle = '#ddd0bc';
     ctx.fill();
     ctx.strokeStyle = '#9a8466';
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 2.2;
     ctx.stroke();
     for (let k = 0; k < 12; k++) {
       const a = (k / 12) * Math.PI * 2;
@@ -397,28 +398,28 @@ window.renderAtlas = async () => {
       ctx.translate(rx, ry);
       ctx.rotate(a);
       ctx.beginPath();
-      ctx.ellipse(16, 0, 12, 4.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(12, 0, 9, 3.6, 0, 0, Math.PI * 2);
       ctx.fillStyle = '#f4ede1';
       ctx.fill();
       ctx.strokeStyle = '#b49456';
-      ctx.lineWidth = 1.4;
+      ctx.lineWidth = 1.2;
       ctx.stroke();
       ctx.restore();
     }
     ctx.beginPath();
-    ctx.arc(rx, ry, 8, 0, Math.PI * 2);
+    ctx.arc(rx, ry, 6.5, 0, Math.PI * 2);
     ctx.fillStyle = '#d7b25f';
     ctx.fill();
   }
 
   // Carved Arabic Quranic inscription "ادخلوها بسلام آمنين"
-  ctx.font = 'bold 54px "HaramThuluth", serif';
+  ctx.font = '56px "HaramThuluth", "Diwan Thuluth", "DecoType Naskh", serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#735733';
-  ctx.fillText('ادخلوها بسلام آمنين', 769, 133);
+  ctx.fillText('ادخلوها بسلام آمنين', 769, 132);
   ctx.fillStyle = '#b98f3f';
-  ctx.fillText('ادخلوها بسلام آمنين', 768, 131);
+  ctx.fillText('ادخلوها بسلام آمنين', 768, 130);
   ctx.restore();
 
   // ---------- 3. MID-RIGHT TOP (512..1024 x 256..396): LEADED TRANSOM GLASS ----------

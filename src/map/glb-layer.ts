@@ -413,7 +413,7 @@ void main() {
     if (e < 0.0) discard;
     rim = 1.0 - smoothstep(0.3, 0.7, e);
   }
-  if (u_doorCutOn > 0 && u_doorCutCount > 0 && v_height < 6.0) {
+  if (u_doorCutOn > 0 && u_doorCutCount > 0 && v_height < 6.5 && v_height > 0.04) {
     for (int i = 0; i < 96; i++) {
       if (i >= u_doorCutCount) break;
       vec4 box = texelFetch(u_doorCutTex, ivec2(i, 0), 0);
@@ -1405,6 +1405,11 @@ export class HaramGlbLayer implements CustomLayerInterface {
     return hit ? { gateId: hit.gate.id, bayIndex: hit.bay.bayIndex } : null;
   }
 
+  /** Live animated open fraction (`0` shut .. `1` open) of a specific doorway bay. */
+  doorOpenFraction(gateId: number, bayIndex: number): number {
+    return this.doorOpen.get(doorBayKey(gateId, bayIndex)) ?? (isBayOpen(gateId, bayIndex) ? 1 : 0);
+  }
+
   /** Synchronize target open fractions from domain state into `doorOpen` / active `doorMoves`. */
   private syncDoorTargets(): void {
     const reduce = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1784,9 +1789,9 @@ export class HaramGlbLayer implements CustomLayerInterface {
     gl.uniform4fv(this.uRevealLane, lanes);
     gl.uniform1i(this.uRevealLanes, Math.min(MAX_REVEAL_LANES, reveal.lanes.length));
     gl.uniform1f(this.uRevealHalf, reveal.laneHalf);
-    // The interior's columns, arches and chandeliers: under the roof they are hidden, so they are only
-    // drawn when some of the interior shows.
-    const props = this.interior || lifted || this.anyDomeOpen();
+    // The interior's columns, arches and chandeliers: under the roof they stay hidden when far away,
+    // and draw whenever zoomed close (to see straight through open doors), in interior mode, or under an open dome/route.
+    const props = this.interior || lifted || this.anyDomeOpen() || (this.map?.getZoom() ?? 0) >= 18.2;
     const passes: readonly ('all' | 'keep' | 'fade')[] = this.interior ? ['keep', 'fade'] : ['all'];
     for (const pass of passes) {
       gl.depthMask(pass !== 'fade');
