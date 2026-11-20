@@ -204,6 +204,14 @@ export function materialGlow(file: string, material: string | undefined): Materi
     if (name === 'gold' || name === 'brass') return { color: scale(INSIDE, 0.9), tint: 1, rise: 0 };
     return { color: scale(INSIDE, 0.7), tint: 1, rise: 0 };
   }
+  // The 3D Door Kit (scripts/build-door-kit-glb.py): lit interior vestibule and threshold spill at night.
+  if (file.includes('doors-kit')) {
+    if (name === 'glasslamp' || name === 'thresholdglow') return { color: scale(INSIDE, 1.9), tint: 0, rise: 0 };
+    if (name === 'hallinterior') return { color: scale(INSIDE, 1.3), tint: 1, rise: 0 };
+    if (name === 'transomblue') return { color: [0.35, 0.58, 0.95], tint: 1, rise: 0 };
+    if (name === 'gold' || name === 'brass') return { color: scale(FLOOD, 0.75), tint: 1, rise: 0 };
+    return { color: scale(FLOOD, 0.45), tint: 1, rise: 1 };
+  }
   // The restroom blocks' lattice windows, the lit stairs and escalator halls of the entrance, the
   // closed lattice at the back and the sign, lit from inside: the light shows through the lattice's
   // holes and the bronze stays dark (scripts/restroom-model.mjs).

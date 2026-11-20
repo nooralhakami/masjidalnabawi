@@ -1,23 +1,28 @@
+import doors3dRaw from '../../data/mosque-doors-3d.json';
 import { POIS } from '../data';
-import { fromModelMetres, toModelMetres } from './frames';
+import { motorEase } from './easing';
 
 /**
- * Interactive multi-bay Mosque gates (`gate_inner` POIs 1..42):
- * - Multi-bay main/named gates (`MAJOR_MULTI_BAY_GATES`, 5 bays) open 3 central bays by default.
- * - Multi-bay numbered gates (`NUMBERED_MULTI_BAY_GATES`, 3 bays) open 2 central bays by default.
- * - Single-bay gates (`totalBays = 1`) open 1 bay by default.
- * - `ALWAYS_CLOSED_GATES` (`18, 23, 26, 31, 32`) remain locked (`0` open bays) and cannot be opened.
- * - `NEVER_CLOSED_GATES` (`1` Bab al-Salam, `2` Bab Abi Bakr Al-Siddiq) stay open and cannot be closed.
+ * Interactive multi-bay Mosque gates (`gate_inner` POIs 1..42), backed by exact 3D doorway bay
+ * placements extracted from `haram-3d.glb` (`data/mosque-doors-3d.json`) with the owner's
+ * bay counts and realistic partial-open defaults [2026-11-20]:
+ * - Monumental 5-bay gateways (`8, 13, 17, 21, 25, 29, 34`): 5 bays, 2 open by default.
+ * - Triple-bay gateways (`2, 5, 37`): 3 bays, 2 open by default.
+ * - Double-bay gateways (`3, 4, 10, 11, 32, 38, 39`): 2 bays, 1 open by default (`32` always shut).
+ * - Single-bay archways (remaining 25 gates): 1 bay, 1 open by default (`18, 23, 26, 31` shut).
+ * - `ALWAYS_CLOSED_GATES` (`18, 23, 26, 31, 32`) remain locked (`0` open bays).
+ * - `NEVER_CLOSED_GATES` (`1` Bab al-Salam, `2` Bab Abi Bakr Al-Siddiq) can never be closed to 0 bays.
  */
 
 export const ALWAYS_CLOSED_GATES: ReadonlySet<number> = new Set([18, 23, 26, 31, 32]);
 export const NEVER_CLOSED_GATES: ReadonlySet<number> = new Set([1, 2]);
 
-export const MAJOR_MULTI_BAY_GATES: ReadonlySet<number> = new Set([7, 8, 9, 13, 16, 17, 19, 20, 21, 22, 23, 24, 25, 28, 29, 33, 34, 35, 37, 38]);
-
-export const NUMBERED_MULTI_BAY_GATES: ReadonlySet<number> = new Set([6, 10, 12, 14, 15, 18, 26, 27, 30, 31, 36]);
+export const MAJOR_MULTI_BAY_GATES: ReadonlySet<number> = new Set([8, 13, 17, 21, 25, 29, 34]);
+export const TRIPLE_BAY_GATES: ReadonlySet<number> = new Set([2, 5, 37]);
+export const DOUBLE_BAY_GATES: ReadonlySet<number> = new Set([3, 4, 10, 11, 32, 38, 39]);
 
 export type WallSide = 'N' | 'S' | 'E' | 'W';
+export type DoorStyle = 'monumental' | 'old_mosque' | 'arch';
 
 export interface DoorBay {
   gateId: number;
@@ -29,6 +34,8 @@ export interface DoorBay {
   /** Center in `[lng, lat]`. */
   lng: number;
   lat: number;
+  widthM: number;
+  heightM: number;
 }
 
 export interface MosqueDoorState {
@@ -36,7 +43,8 @@ export interface MosqueDoorState {
   nameAr: string;
   women: boolean;
   wall: WallSide;
-  totalBays: 1 | 3 | 5;
+  style: DoorStyle;
+  totalBays: 1 | 2 | 3 | 5;
   defaultOpenBays: number;
   openBays: number;
   open: boolean;
@@ -58,83 +66,101 @@ export interface DoorToggleResult {
   gate: MosqueDoorState | null;
 }
 
-const BAY_SPACING_M = 3.2;
-
-function wallForGate(id: number): { wall: WallSide; tangent: readonly [number, number]; outward: readonly [number, number] } {
-  if (id === 1 || id === 2 || (id >= 7 && id <= 14)) {
-    return { wall: 'W', tangent: [0, 1], outward: [-1, 0] };
-  }
-  if ((id >= 28 && id <= 35) || id === 40 || id === 41) {
-    return { wall: 'E', tangent: [0, 1], outward: [1, 0] };
-  }
-  if (id >= 15 && id <= 27) {
-    return { wall: 'N', tangent: [1, 0], outward: [0, -1] };
-  }
-  return { wall: 'S', tangent: [1, 0], outward: [0, 1] };
+interface RawDoorBay {
+  bayIndex: number;
+  x: number;
+  z: number;
+  lng: number;
+  lat: number;
+  widthM: number;
+  heightM: number;
 }
 
-function defaultTotalAndOpen(id: number): { totalBays: 1 | 3 | 5; defaultOpenBays: number; alwaysClosed: boolean; neverClosed: boolean } {
-  const alwaysClosed = ALWAYS_CLOSED_GATES.has(id);
-  const neverClosed = NEVER_CLOSED_GATES.has(id);
-  const totalBays: 1 | 3 | 5 = MAJOR_MULTI_BAY_GATES.has(id) ? 5 : NUMBERED_MULTI_BAY_GATES.has(id) ? 3 : 1;
-  const openCountWhenActive = totalBays === 5 ? 3 : totalBays === 3 ? 2 : 1;
-  return {
-    totalBays,
-    defaultOpenBays: alwaysClosed ? 0 : openCountWhenActive,
-    alwaysClosed,
-    neverClosed,
-  };
+interface RawDoorGate {
+  id: number;
+  style: DoorStyle;
+  totalBays: 1 | 2 | 3 | 5;
+  defaultOpenBays: number;
+  x: number;
+  z: number;
+  lng: number;
+  lat: number;
+  outward: [number, number];
+  tangent: [number, number];
+  bays: RawDoorBay[];
 }
 
-function buildBays(id: number, cx: number, cy: number, tangent: readonly [number, number], totalBays: 1 | 3 | 5, openBays: number): DoorBay[] {
-  const bays: DoorBay[] = [];
-  const halfSpan = (totalBays - 1) / 2;
-  const openStart = openBays > 0 ? Math.floor((totalBays - openBays) / 2) : totalBays;
-  const openEnd = openBays > 0 ? openStart + openBays : -1;
-  for (let i = 0; i < totalBays; i++) {
-    const offset = (i - halfSpan) * BAY_SPACING_M;
-    const x = cx + tangent[0] * offset;
-    const y = cy + tangent[1] * offset;
-    const [lng, lat] = fromModelMetres([x, y]);
-    bays.push({
-      gateId: id,
-      bayIndex: i,
-      open: i >= openStart && i < openEnd,
-      x,
-      y,
-      lng,
-      lat,
-    });
-  }
-  return bays;
+const RAW_GATES = new Map<number, RawDoorGate>((doors3dRaw as { gates: RawDoorGate[] }).gates.map((g) => [g.id, g]));
+
+/** Smooth duration for swinging leaves (6-8 s per master plan §5.2). */
+export const DOOR_SWING_MS = 7_000;
+/** Full inward open angle (~95 deg into the Mosque vestibule). */
+export const DOOR_OPEN_ANGLE_RAD = (95 * Math.PI) / 180;
+
+function wallFromOutward([ox, oz]: readonly [number, number]): WallSide {
+  if (ox < -0.5) return 'W';
+  if (ox > 0.5) return 'E';
+  if (oz < -0.5) return 'N';
+  return 'S';
+}
+
+function defaultOpenForTotal(totalBays: 1 | 2 | 3 | 5, alwaysClosed: boolean): number {
+  if (alwaysClosed) return 0;
+  if (totalBays === 5 || totalBays === 3) return 2;
+  return 1;
+}
+
+function defaultOpenIndices(totalBays: number, openCount: number): Set<number> {
+  const out = new Set<number>();
+  if (openCount <= 0) return out;
+  const start = Math.floor((totalBays - openCount) / 2);
+  for (let i = 0; i < openCount; i++) out.add(start + i);
+  return out;
 }
 
 const initialGates = (): MosqueDoorState[] =>
   POIS.filter((p) => p.subCategory === 'gate_inner')
     .sort((a, b) => a.id - b.id)
     .map((poi) => {
-      const [x, y] = toModelMetres([poi.lng, poi.lat]);
-      const { wall, tangent, outward } = wallForGate(poi.id);
-      const { totalBays, defaultOpenBays, alwaysClosed, neverClosed } = defaultTotalAndOpen(poi.id);
-      const open = !alwaysClosed;
-      const openBays = open ? defaultOpenBays : 0;
+      const raw = RAW_GATES.get(poi.id)!;
+      const alwaysClosed = ALWAYS_CLOSED_GATES.has(poi.id);
+      const neverClosed = NEVER_CLOSED_GATES.has(poi.id);
+      const totalBays = raw.totalBays;
+      const defaultOpenBays = defaultOpenForTotal(totalBays, alwaysClosed);
+      const openSet = defaultOpenIndices(totalBays, defaultOpenBays);
+      const openBays = openSet.size;
+      // Right-handed tangent T such that T x (+Y) = outward: T = [oz, -ox]
+      const outward: readonly [number, number] = [raw.outward[0], raw.outward[1]];
+      const tangent: readonly [number, number] = [outward[1], -outward[0]];
+      const bays: DoorBay[] = raw.bays.map((b) => ({
+        gateId: poi.id,
+        bayIndex: b.bayIndex,
+        open: openSet.has(b.bayIndex),
+        x: b.x,
+        y: b.z,
+        lng: b.lng,
+        lat: b.lat,
+        widthM: b.widthM,
+        heightM: b.heightM,
+      }));
       return {
         id: poi.id,
         nameAr: poi.name_ar,
         women: Boolean(poi.women),
-        wall,
+        wall: wallFromOutward(outward),
+        style: raw.style,
         totalBays,
         defaultOpenBays,
         openBays,
-        open,
+        open: openBays > 0,
         alwaysClosed,
         neverClosed,
-        canToggle: !alwaysClosed && !neverClosed,
-        x,
-        y,
+        canToggle: !alwaysClosed && (!neverClosed || totalBays > 1),
+        x: raw.x,
+        y: raw.z,
         tangent,
         outward,
-        bays: buildBays(poi.id, x, y, tangent, totalBays, openBays),
+        bays,
       };
     });
 
@@ -157,6 +183,10 @@ export function isGateOpen(gateId: number): boolean {
   return getGateDoorState(gateId)?.open ?? false;
 }
 
+export function isBayOpen(gateId: number, bayIndex: number): boolean {
+  return getGateDoorState(gateId)?.bays[bayIndex]?.open ?? false;
+}
+
 export function toggleGateDoor(gateId: number): DoorToggleResult {
   const idx = doorStates.findIndex((g) => g.id === gateId);
   if (idx < 0) return { ok: false, open: false, reason: 'not_found', gate: null };
@@ -165,22 +195,49 @@ export function toggleGateDoor(gateId: number): DoorToggleResult {
   if (current.neverClosed) return { ok: false, open: true, reason: 'never_closed', gate: current };
 
   const nextOpen = !current.open;
-  const activeCount = current.totalBays === 5 ? 3 : current.totalBays === 3 ? 2 : 1;
-  const openBays = nextOpen ? activeCount : 0;
+  const openSet = defaultOpenIndices(current.totalBays, nextOpen ? current.defaultOpenBays : 0);
+  const updatedBays = current.bays.map((b) => ({ ...b, open: openSet.has(b.bayIndex) }));
+  const openBays = updatedBays.filter((b) => b.open).length;
   const updated: MosqueDoorState = {
     ...current,
-    open: nextOpen,
+    open: openBays > 0,
     openBays,
-    bays: buildBays(current.id, current.x, current.y, current.tangent, current.totalBays, openBays),
+    bays: updatedBays,
   };
   doorStates = doorStates.map((g, i) => (i === idx ? updated : g));
   emitDoorChange();
   return { ok: true, open: nextOpen, gate: updated };
 }
 
-/** The gate whose doorway bay is nearest to `[x, y]` (model metres) within `maxDistM`, or null. */
-export function nearestMosqueDoor(x: number, y: number, maxDistM = 14): MosqueDoorState | null {
-  let best: MosqueDoorState | null = null;
+/** Toggle a single doorway bay on a gate; protects `always_closed` and keeps >= 1 open bay on `never_closed` gates. */
+export function toggleGateBay(gateId: number, bayIndex: number): DoorToggleResult {
+  const idx = doorStates.findIndex((g) => g.id === gateId);
+  if (idx < 0) return { ok: false, open: false, reason: 'not_found', gate: null };
+  const current = doorStates[idx];
+  const bay = current.bays[bayIndex];
+  if (!bay) return { ok: false, open: current.open, reason: 'not_found', gate: current };
+  if (current.alwaysClosed) return { ok: false, open: false, reason: 'always_closed', gate: current };
+  if (current.neverClosed && bay.open && current.openBays <= 1) {
+    return { ok: false, open: true, reason: 'never_closed', gate: current };
+  }
+
+  const nextBayOpen = !bay.open;
+  const updatedBays = current.bays.map((b) => (b.bayIndex === bayIndex ? { ...b, open: nextBayOpen } : b));
+  const openBays = updatedBays.filter((b) => b.open).length;
+  const updated: MosqueDoorState = {
+    ...current,
+    open: openBays > 0,
+    openBays,
+    bays: updatedBays,
+  };
+  doorStates = doorStates.map((g, i) => (i === idx ? updated : g));
+  emitDoorChange();
+  return { ok: true, open: nextBayOpen, gate: updated };
+}
+
+/** The individual doorway bay nearest to `[x, y]` (model metres) within `maxDistM`, or null. */
+export function nearestDoorBay(x: number, y: number, maxDistM = 14): { gate: MosqueDoorState; bay: DoorBay } | null {
+  let best: { gate: MosqueDoorState; bay: DoorBay } | null = null;
   let bestD2 = maxDistM * maxDistM;
   for (const gate of doorStates) {
     for (const bay of gate.bays) {
@@ -189,17 +246,28 @@ export function nearestMosqueDoor(x: number, y: number, maxDistM = 14): MosqueDo
       const d2 = dx * dx + dy * dy;
       if (d2 <= bestD2) {
         bestD2 = d2;
-        best = gate;
+        best = { gate, bay };
       }
     }
   }
   return best;
 }
 
+/** The gate whose doorway bay is nearest to `[x, y]` (model metres) within `maxDistM`, or null. */
+export function nearestMosqueDoor(x: number, y: number, maxDistM = 14): MosqueDoorState | null {
+  return nearestDoorBay(x, y, maxDistM)?.gate ?? null;
+}
+
 export function toggleNearestMosqueDoor(x: number, y: number, maxDistM = 14): DoorToggleResult {
   const best = nearestMosqueDoor(x, y, maxDistM);
   if (!best) return { ok: false, open: false, reason: 'not_found', gate: null };
   return toggleGateDoor(best.id);
+}
+
+export function toggleNearestDoorBay(x: number, y: number, maxDistM = 14): DoorToggleResult {
+  const hit = nearestDoorBay(x, y, maxDistM);
+  if (!hit) return { ok: false, open: false, reason: 'not_found', gate: null };
+  return toggleGateBay(hit.gate.id, hit.bay.bayIndex);
 }
 
 export function resetMosqueDoors(): void {
@@ -246,4 +314,143 @@ export function openDoorwayBayCentres(): Array<{
     }
   }
   return out;
+}
+
+export function doorBayKey(gateId: number, bayIndex: number): string {
+  return `${gateId}:${bayIndex}`;
+}
+
+/** The door leaf's open fraction (0 shut .. 1 open) `elapsedMs` after a swing from `from` to `to`. */
+export function doorSwingAt(from: number, to: number, elapsedMs: number): number {
+  const t = Math.max(0, Math.min(1, elapsedMs / DOOR_SWING_MS));
+  return from + (to - from) * motorEase(t);
+}
+
+export interface DoorKitMatrices {
+  frames: Float32Array;
+  leftLeaves: Float32Array;
+  rightLeaves: Float32Array;
+  glows: Float32Array;
+  bayKeys: string[];
+}
+
+/**
+ * Column-major 4x4 WebGL instance matrices for every bay's frame, hinged left/right leaves
+ * (rotating strictly inward along `-outward` by `DOOR_OPEN_ANGLE_RAD`), and open floor light spill.
+ */
+export function buildDoorKitMatrices(
+  doors: readonly MosqueDoorState[],
+  openFraction: (gateId: number, bayIndex: number) => number,
+): DoorKitMatrices {
+  const total = doors.reduce((s, d) => s + d.bays.length, 0);
+  const frames = new Float32Array(total * 16);
+  const leftLeaves = new Float32Array(total * 16);
+  const rightLeaves = new Float32Array(total * 16);
+  const glows = new Float32Array(total * 16);
+  const bayKeys: string[] = [];
+
+  let i = 0;
+  for (const gate of doors) {
+    const [tx, tz] = gate.tangent;
+    const [ox, oz] = gate.outward;
+    for (const bay of gate.bays) {
+      const f = Math.max(0, Math.min(1, openFraction(gate.id, bay.bayIndex)));
+      const key = doorBayKey(gate.id, bay.bayIndex);
+      bayKeys.push(key);
+      const off = i * 16;
+      const w = bay.widthM;
+      const h = bay.heightM;
+      const halfW = w / 2;
+
+      // Frame: placed at center + outward * 0.14 so its recessed lit alcove sits clear inside the wall cut
+      frames.set(
+        [tx * w, 0, tz * w, 0, 0, h, 0, 0, ox, 0, oz, 0, bay.x + ox * 0.14, 0, bay.y + oz * 0.14, 1],
+        off,
+      );
+
+      // Hinge line at center + outward * 0.22; leaves swing strictly inward (toward -outward)
+      const hx = bay.x + ox * 0.22;
+      const hz = bay.y + oz * 0.22;
+      const theta = f * DOOR_OPEN_ANGLE_RAD;
+      const c = Math.cos(theta);
+      const s = Math.sin(theta);
+
+      // Left hinge at -T * halfW
+      const lx = hx - tx * halfW;
+      const lz = hz - tz * halfW;
+      leftLeaves.set(
+        [
+          (c * tx - s * ox) * halfW, 0, (c * tz - s * oz) * halfW, 0,
+          0, h, 0, 0,
+          s * tx + c * ox, 0, s * tz + c * oz, 0,
+          lx, 0, lz, 1,
+        ],
+        off,
+      );
+
+      // Right hinge at +T * halfW
+      const rx = hx + tx * halfW;
+      const rz = hz + tz * halfW;
+      rightLeaves.set(
+        [
+          (c * tx + s * ox) * halfW, 0, (c * tz + s * oz) * halfW, 0,
+          0, h, 0, 0,
+          -s * tx + c * ox, 0, -s * tz + c * oz, 0,
+          rx, 0, rz, 1,
+        ],
+        off,
+      );
+
+      // Threshold light spill outside open bays (zero-scaled when closed)
+      const gW = f > 0.02 ? w * 0.92 * (0.45 + 0.55 * f) : 0;
+      const gD = f > 0.02 ? 2.4 * f : 0;
+      glows.set(
+        [tx * gW, 0, tz * gW, 0, 0, f > 0.02 ? 1 : 0, 0, 0, ox * gD, 0, oz * gD, 0, bay.x + ox * 0.26, 0, bay.y + oz * 0.26, 1],
+        off,
+      );
+
+      i++;
+    }
+  }
+
+  return { frames, leftLeaves, rightLeaves, glows, bayKeys };
+}
+
+/**
+ * Pack doorway cut boxes into an `N x 2` RGBA32F array (`N * 8` floats) so `glb-layer.ts`
+ * discards the opaque `haram-3d.glb` doorway wall inside `[0 .. heightM * 0.99]`.
+ */
+export function buildDoorCutBoxes(doors: readonly MosqueDoorState[]): { count: number; data: Float32Array } {
+  const bays: { minX: number; minZ: number; maxX: number; maxZ: number; maxY: number }[] = [];
+  for (const gate of doors) {
+    const [tx, tz] = gate.tangent;
+    const [ox, oz] = gate.outward;
+    for (const bay of gate.bays) {
+      const halfT = bay.widthM * 0.46;
+      const inExt = -2.1;
+      const outExt = 0.45;
+      const corners = [
+        [bay.x - tx * halfT + ox * inExt, bay.y - tz * halfT + oz * inExt],
+        [bay.x + tx * halfT + ox * inExt, bay.y + tz * halfT + oz * inExt],
+        [bay.x - tx * halfT + ox * outExt, bay.y - tz * halfT + oz * outExt],
+        [bay.x + tx * halfT + ox * outExt, bay.y + tz * halfT + oz * outExt],
+      ];
+      const xs = corners.map((p) => p[0]);
+      const zs = corners.map((p) => p[1]);
+      bays.push({
+        minX: Math.min(...xs),
+        minZ: Math.min(...zs),
+        maxX: Math.max(...xs),
+        maxZ: Math.max(...zs),
+        maxY: bay.heightM * 0.99,
+      });
+    }
+  }
+  const count = bays.length;
+  const data = new Float32Array(count * 2 * 4);
+  bays.forEach((b, idx) => {
+    data.set([b.minX, b.minZ, b.maxX, b.maxZ], idx * 4);
+    data.set([b.maxY, 0, 0, 0], (count + idx) * 4);
+  });
+  return { count, data };
 }

@@ -2,7 +2,19 @@ import { MercatorCoordinate, type CustomLayerInterface, type CustomRenderMethodI
 import { ALHARAMAIN_MODELS, type AlharamainModel } from '../data-next/alharamain-3d';
 import { motorEase } from '../domain/easing';
 import { fromModelMetres, MODEL_ORIGIN_LNGLAT, toModelMetres } from '../domain/frames';
-import { isGateOpen, nearestMosqueDoor, subscribeMosqueDoors, toggleNearestMosqueDoor } from '../domain/mosque-doors';
+import {
+  buildDoorCutBoxes,
+  buildDoorKitMatrices,
+  doorBayKey,
+  doorSwingAt,
+  getMosqueDoors,
+  isBayOpen,
+  isGateOpen,
+  nearestDoorBay,
+  nearestMosqueDoor,
+  subscribeMosqueDoors,
+  toggleNearestMosqueDoor,
+} from '../domain/mosque-doors';
 import type { InteriorPropPlacements } from '../domain/interior-floor';
 import { MAX_REVEAL_LANES, NO_REVEAL, type InteriorReveal } from '../domain/interior-reveal';
 import { buildSlidingDomes, domeSlideAt, isDomeOpen, type SlidingDome, toggleDome } from '../domain/sliding-domes';
@@ -111,6 +123,12 @@ interface GpuPrimitive {
   when: 'always' | 'day' | 'night' | 'anim';
   /** The interior's props (columns, arches, lanterns, chandeliers): drawn only when the interior shows. */
   interiorOnly?: boolean;
+  /** The 3D hinged door kit: always shown in 3D exterior & cutaway views, excluded from shadow depth pass. */
+  doorKit?: boolean;
+  /** Exterior Mosque building wall parts where active 3D doorway boxes are cut out. */
+  cutDoorways?: boolean;
+  /** Open-door threshold floor glow quad (alpha scaled by night intensity). */
+  thresholdGlow?: boolean;
   /** Where the roof lifts over the interior: 0 never, 1 roof (above 1.5 m), 2 the rest (above 12 m). */
   revealRole: 0 | 1 | 2;
 }
@@ -141,6 +159,8 @@ interface PendingAsset {
   images: (ImageBitmap | null)[];
   /** For the interior props' file: where each prop mesh (by name) stands, 4×4 matrices end to end. */
   props?: Map<string, Float32Array>;
+  /** True for the 3D Door Kit (`haram-doors-kit.glb`), whose buffers animate on hinged leaves. */
+  doorKit?: boolean;
 }
 
 /**
@@ -256,6 +276,10 @@ uniform float u_lattice;
 uniform float u_cutoff;
 uniform int u_hasTex;
 uniform sampler2D u_tex;
+// Real 3D doorway cuts packed into an N x 2 RGBA32F lookup texture so haram-3d.glb walls open cleanly.
+uniform int u_doorCutCount;
+uniform int u_doorCutOn;
+uniform sampler2D u_doorCutTex;
 // The scene's light (scene-light.ts): the sun, the sky, and how far into the night it is.
 uniform vec3 u_sunDir;
 uniform vec3 u_sun;
@@ -388,6 +412,16 @@ void main() {
     float e = revealEdge(v_xz);
     if (e < 0.0) discard;
     rim = 1.0 - smoothstep(0.3, 0.7, e);
+  }
+  if (u_doorCutOn > 0 && u_doorCutCount > 0 && v_height < 6.0) {
+    for (int i = 0; i < 96; i++) {
+      if (i >= u_doorCutCount) break;
+      vec4 box = texelFetch(u_doorCutTex, ivec2(i, 0), 0);
+      if (v_xz.x >= box.x && v_xz.x <= box.z && v_xz.y >= box.y && v_xz.y <= box.w) {
+        vec4 ht = texelFetch(u_doorCutTex, ivec2(i, 1), 0);
+        if (v_height <= ht.x) discard;
+      }
+    }
   }
   // As navQ draws them: textures darkened toward linear, material colours as stored, no gamma at the end.
   vec4 albedo = u_baseColor;
