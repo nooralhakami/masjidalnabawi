@@ -14,6 +14,7 @@ import {
   openDoorwayBayCentres,
   resetMosqueDoors,
   subscribeMosqueDoors,
+  toggleGateBay,
   toggleGateDoor,
   toggleNearestMosqueDoor,
 } from '../../src/domain/mosque-doors';
@@ -50,9 +51,9 @@ describe('the Mosque’s gates: multi-bay doors (owner, 2026-11-13)', () => {
     const doors = getMosqueDoors();
     expect(doors.map((g) => g.id)).toEqual(gateIds);
     for (const g of doors) {
-      expect(g.totalBays, `gate ${g.id}`).toBe([1, 3, 5].includes(g.totalBays) ? g.totalBays : -1);
+      expect([1, 2, 3, 5], `gate ${g.id}`).toContain(g.totalBays);
       expect(g.bays).toHaveLength(g.totalBays);
-      expect(g.canToggle).toBe(!g.alwaysClosed && !g.neverClosed);
+      expect(g.canToggle).toBe(!g.alwaysClosed && (!g.neverClosed || g.totalBays > 1));
       expect(bays(g)).toBe(g.openBays);
       // An open gate opens contiguous middle bays, never a side one alone.
       const open = g.bays.filter((b) => b.open).map((b) => b.bayIndex);
@@ -61,14 +62,26 @@ describe('the Mosque’s gates: multi-bay doors (owner, 2026-11-13)', () => {
   });
 
   it('Bab al-Salam and Bab Abi Bakr stay open; the five sealed gates never open', () => {
-    for (const id of ONLY(NEVER_CLOSED_GATES)) {
-      const g = getGateDoorState(id)!;
-      expect(g.open, `gate ${id}`).toBe(true);
-      expect(g.bays.every((b) => b.open)).toBe(true);
-      const r = toggleGateDoor(id);
-      expect(r).toMatchObject({ ok: false, open: true, reason: 'never_closed' });
-      expect(getGateDoorState(id)!.open).toBe(true);
-    }
+    const g1 = getGateDoorState(1)!;
+    expect(g1.totalBays).toBe(1);
+    expect(g1.openBays).toBe(1);
+    expect(g1.open).toBe(true);
+    expect(toggleGateDoor(1)).toMatchObject({ ok: false, open: true, reason: 'never_closed' });
+
+    const g2 = getGateDoorState(2)!;
+    expect(g2.totalBays).toBe(3);
+    expect(g2.openBays).toBe(2);
+    expect(g2.open).toBe(true);
+    expect(toggleGateDoor(2)).toMatchObject({ ok: false, open: true, reason: 'never_closed' });
+
+    // Gate 2 (3 bays) allows toggling individual bays while keeping at least 1 bay open.
+    expect(toggleGateBay(2, 2)).toMatchObject({ ok: true, open: true });
+    expect(getGateDoorState(2)!.openBays).toBe(3);
+    expect(toggleGateBay(2, 1)).toMatchObject({ ok: true, open: false });
+    expect(toggleGateBay(2, 2)).toMatchObject({ ok: true, open: false });
+    expect(getGateDoorState(2)!.openBays).toBe(1);
+    expect(toggleGateBay(2, 0)).toMatchObject({ ok: false, open: true, reason: 'never_closed' });
+
     for (const id of ONLY(ALWAYS_CLOSED_GATES)) {
       const g = getGateDoorState(id)!;
       expect(g.open, `gate ${id}`).toBe(false);
@@ -76,33 +89,49 @@ describe('the Mosque’s gates: multi-bay doors (owner, 2026-11-13)', () => {
       expect(g.canToggle).toBe(false);
       expect(toggleGateDoor(id)).toMatchObject({ ok: false, open: false, reason: 'always_closed' });
     }
+    expect(ONLY(NEVER_CLOSED_GATES)).toEqual([1, 2]);
     expect(ONLY(ALWAYS_CLOSED_GATES)).toEqual([18, 23, 26, 31, 32]);
   });
 
-  it('a numbered gate opens two of its three bays; closing it leaves the leaves shut, opening again brings them back', () => {
-    const g = getGateDoorState(6)!;
-    expect(g.totalBays).toBe(3);
-    expect(g.openBays).toBe(2);
-    const closed = toggleGateDoor(6);
-    expect(closed).toMatchObject({ ok: true, open: false });
-    expect(closed.gate!.openBays).toBe(0);
-    expect(closed.gate!.bays.every((b) => !b.open)).toBe(true);
-    const open = toggleGateDoor(6);
-    expect(open).toMatchObject({ ok: true, open: true });
-    expect(open.gate!.bays.map((b) => b.open)).toEqual([true, true, false]);
+  it('multi-bay gates open with realistic partial-open defaults and support both gate and single-bay toggling', () => {
+    const g8 = getGateDoorState(8)!;
+    expect(g8.totalBays).toBe(5);
+    expect(g8.openBays).toBe(2);
+    expect(g8.bays.map((b) => b.open)).toEqual([false, true, true, false, false]);
+    const closed8 = toggleGateDoor(8);
+    expect(closed8).toMatchObject({ ok: true, open: false });
+    expect(closed8.gate!.openBays).toBe(0);
+    expect(closed8.gate!.bays.every((b) => !b.open)).toBe(true);
+    const open8 = toggleGateDoor(8);
+    expect(open8).toMatchObject({ ok: true, open: true });
+    expect(open8.gate!.openBays).toBe(2);
+    expect(open8.gate!.bays.map((b) => b.open)).toEqual([false, true, true, false, false]);
+    const singleBay8 = toggleGateBay(8, 0);
+    expect(singleBay8).toMatchObject({ ok: true, open: true });
+    expect(singleBay8.gate!.openBays).toBe(3);
+    expect(singleBay8.gate!.bays.map((b) => b.open)).toEqual([true, true, true, false, false]);
+
+    expect(getGateDoorState(4)).toMatchObject({ totalBays: 2, openBays: 1 });
+    expect(getGateDoorState(37)).toMatchObject({ totalBays: 3, openBays: 2 });
+    expect(getGateDoorState(6)).toMatchObject({ totalBays: 1, openBays: 1 });
+    expect(getGateDoorState(32)).toMatchObject({ totalBays: 2, openBays: 0 });
   });
 
-  it('the bays stand 3.2 m apart along the wall, the middle one on the gate', () => {
+  it('the bays stand ordered along the wall tangent with real haram-3d.glb spacing (>= 2.5 m) around the gate center', () => {
     for (const g of getMosqueDoors().filter((d) => d.totalBays > 1)) {
-      const dx = g.tangent[0] * 3.2;
-      const dy = g.tangent[1] * 3.2;
       for (let i = 1; i < g.bays.length; i++) {
-        expect(g.bays[i].x - g.bays[i - 1].x, `gate ${g.id} bay ${i}`).toBeCloseTo(dx, 6);
-        expect(g.bays[i].y - g.bays[i - 1].y, `gate ${g.id} bay ${i}`).toBeCloseTo(dy, 6);
+        const dx = g.bays[i].x - g.bays[i - 1].x;
+        const dy = g.bays[i].y - g.bays[i - 1].y;
+        const along = dx * g.tangent[0] + dy * g.tangent[1];
+        const step = Math.hypot(dx, dy);
+        expect(along, `gate ${g.id} bay ${i} ordered along tangent`).toBeGreaterThan(2.4);
+        expect(step, `gate ${g.id} bay ${i} step`).toBeGreaterThanOrEqual(2.5);
+        expect(step, `gate ${g.id} bay ${i} step`).toBeLessThanOrEqual(6.5);
       }
-      const middle = g.bays[(g.totalBays - 1) / 2];
-      expect(middle.x).toBeCloseTo(g.x, 6);
-      expect(middle.y).toBeCloseTo(g.y, 6);
+      const meanX = g.bays.reduce((s, b) => s + b.x, 0) / g.bays.length;
+      const meanY = g.bays.reduce((s, b) => s + b.y, 0) / g.bays.length;
+      expect(meanX, `gate ${g.id} meanX`).toBeCloseTo(g.x, 1);
+      expect(meanY, `gate ${g.id} meanY`).toBeCloseTo(g.y, 1);
     }
   });
 
@@ -134,13 +163,12 @@ describe('the Mosque’s gates: multi-bay doors (owner, 2026-11-13)', () => {
 
   it('opening and closing publishes the bays a visitor can walk through', () => {
     const before = openDoorwayBayCentres();
-    const open37 = getGateDoorState(37)!;
-    expect(before.filter((b) => b.gateId === 37)).toHaveLength(open37.totalBays === 5 ? 3 : 2);
+    expect(before.filter((b) => b.gateId === 37)).toHaveLength(2);
     toggleGateDoor(37);
     expect(openDoorwayBayCentres().filter((b) => b.gateId === 37)).toEqual([]);
     toggleGateDoor(37);
     const again = openDoorwayBayCentres().filter((b) => b.gateId === 37);
-    expect(again).toHaveLength(3);
+    expect(again).toHaveLength(2);
     for (const bay of again) {
       const gate = getGateDoorState(37)!;
       expect(bay.x).toBeCloseTo(gate.bays[bay.bayIndex].x, 6);

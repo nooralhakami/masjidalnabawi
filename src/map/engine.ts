@@ -17,7 +17,7 @@ import { buildInterCarpetAisles, rugLayout } from './rug-layout';
 import { sunPosition } from '../domain/daylight';
 import type { Poi, Status } from '../data/types';
 import { isHidden } from '../domain/filters';
-import { getGateDoorState, toggleGateDoor, type DoorToggleResult } from '../domain/mosque-doors';
+import { getGateDoorState, toggleGateBay, toggleGateDoor, type DoorToggleResult } from '../domain/mosque-doors';
 import { interiorReveal, type InteriorReveal } from '../domain/interior-reveal';
 import { toModelMetres, type XY } from '../domain/frames';
 import { parsePrayerDemoOverride } from '../domain/prayer-session';
@@ -1081,7 +1081,8 @@ export class MapEngine {
       this.opts.onEntrance?.(ent);
       return;
     }
-    const doorGateId = this.mode3d && this.map.getZoom() >= 17 ? this.doorAt(x, y) : null;
+    const bayHit = this.mode3d && this.map.getZoom() >= 18.5 ? (this.models?.doorBayAt(x, y) ?? null) : null;
+    const doorGateId = bayHit?.gateId ?? (this.mode3d && this.map.getZoom() >= 17 ? this.doorAt(x, y) : null);
     // Markers stay where they are (owner); a tap on a tight group zooms in there until they part.
     const max = this.map.getMaxZoom();
     const choice = tapChoice(placesAt(this.map, x, y), this.map.getZoom() < max - 0.5);
@@ -1096,7 +1097,7 @@ export class MapEngine {
     if (doorGateId !== null && (place === null || POI_BY_ID.get(place)?.subCategory === 'gate_inner')) {
       // The tapped gate is the one looked in through, zoomed in (owner, 2026-11-18).
       this.setRevealDoor(doorGateId);
-      const result = toggleGateDoor(doorGateId);
+      const result = bayHit ? toggleGateBay(bayHit.gateId, bayHit.bayIndex) : toggleGateDoor(doorGateId);
       this.opts.onDoorToggle?.(result);
       return;
     }

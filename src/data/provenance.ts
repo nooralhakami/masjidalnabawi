@@ -133,7 +133,8 @@ export const DATA_PROVENANCE: Readonly<Record<DataSourceId, DataSourceRecord>> =
     tier: 'verified',
     routingAllowed: false,
     path: 'data/mosque-doors-3d.json',
-    description: 'Verified 3D doorway bay inventory and coordinates for all 42 inner Mosque gates extracted from haram-3d.glb with owner-approved bay counts and partial-open defaults (2026-11-20).',
+    description:
+      'Verified 3D doorway bay inventory and coordinates for all 42 inner Mosque gates extracted from haram-3d.glb with owner-approved bay counts and partial-open defaults (2026-11-20).',
   },
   'vertical-nodes': {
     id: 'vertical-nodes',

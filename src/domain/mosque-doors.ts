@@ -90,7 +90,7 @@ interface RawDoorGate {
   bays: RawDoorBay[];
 }
 
-const RAW_GATES = new Map<number, RawDoorGate>((doors3dRaw as { gates: RawDoorGate[] }).gates.map((g) => [g.id, g]));
+const RAW_GATES = new Map<number, RawDoorGate>((doors3dRaw as unknown as { gates: RawDoorGate[] }).gates.map((g) => [g.id, g]));
 
 /** Smooth duration for swinging leaves (6-8 s per master plan §5.2). */
 export const DOOR_SWING_MS = 7_000;
@@ -338,10 +338,7 @@ export interface DoorKitMatrices {
  * Column-major 4x4 WebGL instance matrices for every bay's frame, hinged left/right leaves
  * (rotating strictly inward along `-outward` by `DOOR_OPEN_ANGLE_RAD`), and open floor light spill.
  */
-export function buildDoorKitMatrices(
-  doors: readonly MosqueDoorState[],
-  openFraction: (gateId: number, bayIndex: number) => number,
-): DoorKitMatrices {
+export function buildDoorKitMatrices(doors: readonly MosqueDoorState[], openFraction: (gateId: number, bayIndex: number) => number): DoorKitMatrices {
   const total = doors.reduce((s, d) => s + d.bays.length, 0);
   const frames = new Float32Array(total * 16);
   const leftLeaves = new Float32Array(total * 16);
@@ -363,10 +360,7 @@ export function buildDoorKitMatrices(
       const halfW = w / 2;
 
       // Frame: placed at center + outward * 0.14 so its recessed lit alcove sits clear inside the wall cut
-      frames.set(
-        [tx * w, 0, tz * w, 0, 0, h, 0, 0, ox, 0, oz, 0, bay.x + ox * 0.14, 0, bay.y + oz * 0.14, 1],
-        off,
-      );
+      frames.set([tx * w, 0, tz * w, 0, 0, h, 0, 0, ox, 0, oz, 0, bay.x + ox * 0.14, 0, bay.y + oz * 0.14, 1], off);
 
       // Hinge line at center + outward * 0.22; leaves swing strictly inward (toward -outward)
       const hx = bay.x + ox * 0.22;
@@ -378,36 +372,17 @@ export function buildDoorKitMatrices(
       // Left hinge at -T * halfW
       const lx = hx - tx * halfW;
       const lz = hz - tz * halfW;
-      leftLeaves.set(
-        [
-          (c * tx - s * ox) * halfW, 0, (c * tz - s * oz) * halfW, 0,
-          0, h, 0, 0,
-          s * tx + c * ox, 0, s * tz + c * oz, 0,
-          lx, 0, lz, 1,
-        ],
-        off,
-      );
+      leftLeaves.set([(c * tx - s * ox) * halfW, 0, (c * tz - s * oz) * halfW, 0, 0, h, 0, 0, s * tx + c * ox, 0, s * tz + c * oz, 0, lx, 0, lz, 1], off);
 
       // Right hinge at +T * halfW
       const rx = hx + tx * halfW;
       const rz = hz + tz * halfW;
-      rightLeaves.set(
-        [
-          (c * tx + s * ox) * halfW, 0, (c * tz + s * oz) * halfW, 0,
-          0, h, 0, 0,
-          -s * tx + c * ox, 0, -s * tz + c * oz, 0,
-          rx, 0, rz, 1,
-        ],
-        off,
-      );
+      rightLeaves.set([(c * tx + s * ox) * halfW, 0, (c * tz + s * oz) * halfW, 0, 0, h, 0, 0, -s * tx + c * ox, 0, -s * tz + c * oz, 0, rx, 0, rz, 1], off);
 
       // Threshold light spill outside open bays (zero-scaled when closed)
       const gW = f > 0.02 ? w * 0.92 * (0.45 + 0.55 * f) : 0;
       const gD = f > 0.02 ? 2.4 * f : 0;
-      glows.set(
-        [tx * gW, 0, tz * gW, 0, 0, f > 0.02 ? 1 : 0, 0, 0, ox * gD, 0, oz * gD, 0, bay.x + ox * 0.26, 0, bay.y + oz * 0.26, 1],
-        off,
-      );
+      glows.set([tx * gW, 0, tz * gW, 0, 0, f > 0.02 ? 1 : 0, 0, 0, ox * gD, 0, oz * gD, 0, bay.x + ox * 0.26, 0, bay.y + oz * 0.26, 1], off);
 
       i++;
     }

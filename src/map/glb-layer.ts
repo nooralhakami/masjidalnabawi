@@ -939,6 +939,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
     this.propsRequested = false;
     this.initShader(gl);
     this.unsubDoors = subscribeMosqueDoors(() => this.syncDoorTargets());
+    this.syncDoorTargets();
     const generation = ++this.generation;
     for (const model of ALHARAMAIN_MODELS) void this.loadAsset(model, generation);
     void this.loadAsset(DOOR_KIT_MODEL, generation, undefined, true);
@@ -1128,7 +1129,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
     // The sliding domes' units are one group of their own, drawn from a buffer that moves them.
     const domeMesh = domeMeshIndex(gltf);
     for (const [nodeIdx, node] of gltf.nodes.entries()) {
-      if (node.mesh === undefined || asset.props) continue;
+      if (node.mesh === undefined || asset.props || asset.doorKit) continue;
       const local = node.matrix ? new Float64Array(node.matrix) : composeTrs(node.translation ?? [0, 0, 0], node.rotation ?? [0, 0, 0, 1], node.scale ?? [1, 1, 1]);
       const folds = folding !== null && folding.open.has(node.mesh);
       const tappable = folding !== null && (folds || node.mesh === folding.closed);
@@ -1148,15 +1149,44 @@ export class HaramGlbLayer implements CustomLayerInterface {
         if (folds) add(folding!.closed, 'night', combined, canopy);
       }
     }
-    // The interior props stand where the interior's plan puts them, not where their file has them.
-    for (const node of asset.props ? gltf.nodes : []) {
+    let doorKitMap: Map<string, Float32Array> | null = null;
+    if (asset.doorKit) {
+      const doors = getMosqueDoors();
+      for (const gate of doors) {
+        for (const bay of gate.bays) {
+          const key = doorBayKey(gate.id, bay.bayIndex);
+          if (!this.doorOpen.has(key)) this.doorOpen.set(key, gate.open && bay.open ? 1 : 0);
+        }
+      }
+      const kit = buildDoorKitMatrices(doors, (gateId, bayIndex) => this.doorOpen.get(doorBayKey(gateId, bayIndex)) ?? (isBayOpen(gateId, bayIndex) ? 1 : 0));
+      doorKitMap = new Map([
+        ['DoorPortalFrame', kit.frames],
+        ['DoorLeafLeft', kit.leftLeaves],
+        ['DoorLeafRight', kit.rightLeaves],
+        ['DoorThresholdGlow', kit.glows],
+      ]);
+      const cut = buildDoorCutBoxes(doors);
+      this.doorCutCount = cut.count;
+      const cutTex = gl.createTexture()!;
+      gl.bindTexture(gl.TEXTURE_2D, cutTex);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, cut.count, 2, 0, gl.RGBA, gl.FLOAT, cut.data);
+      this.doorCutTex = cutTex;
+      this.doorsDirty = true;
+    }
+    const instMap = asset.props ?? doorKitMap;
+    // The interior props and 3D door kit stand where the architectural plan puts them, not at origin.
+    for (const node of instMap ? gltf.nodes : []) {
       if (node.mesh === undefined) continue;
-      const at = asset.props!.get(gltf.meshes[node.mesh].name ?? '');
+      const at = instMap!.get(gltf.meshes[node.mesh].name ?? '');
       if (!at) continue;
       const local = node.matrix ? new Float64Array(node.matrix) : composeTrs(node.translation ?? [0, 0, 0], node.rotation ?? [0, 0, 0, 1], node.scale ?? [1, 1, 1]);
       for (let k = 0; k + 16 <= at.length; k += 16) {
         mulMat4(combined, at.subarray(k, k + 16), local);
-        add(node.mesh, 'always', combined, -1, undefined, `props|${node.mesh}`);
+        add(node.mesh, 'always', combined, -1, undefined, `${asset.doorKit ? 'doors' : 'props'}|${node.mesh}`);
       }
     }
     if (folding && this.canopies.length > firstCanopy) {
@@ -1195,11 +1225,18 @@ export class HaramGlbLayer implements CustomLayerInterface {
     for (const [key, { mesh: meshIndex, when, matrices, canopy, gate }] of groups) {
       const anim = when === 'anim';
       const domes = key === 'domes';
+      const meshName = gltf.meshes[meshIndex].name ?? '';
+      const doorDyn = Boolean(asset.doorKit) && (meshName === 'DoorLeafLeft' || meshName === 'DoorLeafRight' || meshName === 'DoorThresholdGlow');
       const instanceBuf = gl.createBuffer()!;
       gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuf);
       if (anim) gl.bufferData(gl.ARRAY_BUFFER, (this.canopies.length - firstCanopy) * 64, gl.DYNAMIC_DRAW);
-      else gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(matrices), domes ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW);
+      else gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(matrices), domes || doorDyn ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW);
       this.buffers.push(instanceBuf);
+      if (doorDyn) {
+        if (meshName === 'DoorLeafLeft') this.doorLeftBuf = instanceBuf;
+        else if (meshName === 'DoorLeafRight') this.doorRightBuf = instanceBuf;
+        else if (meshName === 'DoorThresholdGlow') this.doorGlowBuf = instanceBuf;
+      }
       if (domes) {
         this.domes = buildSlidingDomes(domeInstanceCentres(model, gltf));
         this.domeBase = new Float32Array(matrices);
@@ -1302,6 +1339,9 @@ export class HaramGlbLayer implements CustomLayerInterface {
           when,
           interiorOnly: Boolean(asset.props),
           revealRole: revealRoleOf(classifyInteriorRole(model.url, material?.name), Boolean(asset.props)),
+          doorKit: Boolean(asset.doorKit),
+          cutDoorways: model.url.includes('haram-3d') && classifyInteriorRole(model.url, material?.name) !== 'keep',
+          thresholdGlow: Boolean(asset.doorKit && material?.name === 'thresholdGlow'),
         });
       }
     }
@@ -1354,6 +1394,71 @@ export class HaramGlbLayer implements CustomLayerInterface {
     const ll = this.map.unproject([x, y]);
     const [mx, mz] = toModelMetres([ll.lng, ll.lat]);
     return nearestMosqueDoor(mx, mz, 14)?.id ?? null;
+  }
+
+  /** The individual doorway bay under screen `[x, y]` CSS pixels (null outside `maxDistM`). */
+  doorBayAt(x: number, y: number, maxDistM = 6): { gateId: number; bayIndex: number } | null {
+    if (!this.map) return null;
+    const ll = this.map.unproject([x, y]);
+    const [mx, mz] = toModelMetres([ll.lng, ll.lat]);
+    const hit = nearestDoorBay(mx, mz, maxDistM);
+    return hit ? { gateId: hit.gate.id, bayIndex: hit.bay.bayIndex } : null;
+  }
+
+  /** Synchronize target open fractions from domain state into `doorOpen` / active `doorMoves`. */
+  private syncDoorTargets(): void {
+    const reduce = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let changed = false;
+    for (const gate of getMosqueDoors()) {
+      for (const bay of gate.bays) {
+        const key = doorBayKey(gate.id, bay.bayIndex);
+        const target = gate.open && bay.open ? 1 : 0;
+        if (!this.doorOpen.has(key)) {
+          this.doorOpen.set(key, target);
+          continue;
+        }
+        const move = this.doorMoves.get(key);
+        const current = move?.f ?? this.doorOpen.get(key) ?? target;
+        if (reduce) {
+          if (Math.abs(current - target) > 1e-4 || move) {
+            this.doorMoves.delete(key);
+            this.doorOpen.set(key, target);
+            this.doorsDirty = true;
+            changed = true;
+          }
+        } else if (move ? move.to !== target : Math.abs(current - target) > 1e-4) {
+          this.doorMoves.set(key, { from: current, to: target, start: performance.now(), f: current });
+          changed = true;
+        }
+      }
+    }
+    if (changed) this.map?.triggerRepaint();
+  }
+
+  /** Advance active 3D door swings to `now` and update dynamic leaf & glow instance buffers. */
+  private stepDoors(gl: WebGL2RenderingContext, now: number): boolean {
+    if (!this.doorLeftBuf || !this.doorRightBuf || !this.doorGlowBuf || (!this.doorMoves.size && !this.doorsDirty)) return false;
+    let moving = false;
+    for (const [key, m] of this.doorMoves) {
+      m.f = doorSwingAt(m.from, m.to, now - m.start);
+      if (Math.abs(m.f - m.to) < 1e-4) {
+        m.f = m.to;
+        this.doorOpen.set(key, m.to);
+        this.doorMoves.delete(key);
+      } else {
+        this.doorOpen.set(key, m.f);
+        moving = true;
+      }
+    }
+    const kit = buildDoorKitMatrices(getMosqueDoors(), (gateId, bayIndex) => this.doorOpen.get(doorBayKey(gateId, bayIndex)) ?? (isBayOpen(gateId, bayIndex) ? 1 : 0));
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.doorLeftBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, kit.leftLeaves);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.doorRightBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, kit.rightLeaves);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.doorGlowBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, kit.glows);
+    this.doorsDirty = false;
+    return moving;
   }
 
   /**
@@ -1587,7 +1692,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
     for (const prim of this.prims) {
       if ((prim.when === 'day' && folded) || (prim.when === 'night' && !folded)) continue;
       // Under the roof no sun reaches the interior's props.
-      if (prim.interiorOnly) continue;
+      if (prim.interiorOnly || prim.doorKit) continue;
       // A lattice casts the shadow of its bars, not of a wall: left out of the shadow map.
       if (prim.cutoff > 0) continue;
       const instances = prim.when === 'anim' ? this.animCount : prim.instances;
@@ -1629,6 +1734,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
     }
     // A dome still sliding asks for the next frame too.
     if (this.stepDomes(gl, performance.now())) this.map?.triggerRepaint();
+    if (this.stepDoors(gl, performance.now())) this.map?.triggerRepaint();
 
     gl.useProgram(this.program);
     gl.enable(gl.DEPTH_TEST);
@@ -1657,6 +1763,10 @@ export class HaramGlbLayer implements CustomLayerInterface {
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, sunShadow.texture);
     gl.uniform1i(this.uShadowMap, 1);
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, this.doorCutTex ?? this.fallbackTex);
+    gl.uniform1i(this.uDoorCutTex, 2);
+    gl.uniform1i(this.uDoorCutCount, this.doorCutTex ? this.doorCutCount : 0);
     gl.activeTexture(gl.TEXTURE0);
 
     let boundTex: WebGLTexture | null = null;
@@ -1685,9 +1795,10 @@ export class HaramGlbLayer implements CustomLayerInterface {
         if (prim.interiorOnly && !props) continue;
         if (pass === 'keep' && prim.interiorRole !== 'keep') continue;
         if (pass === 'fade' && prim.interiorRole === 'keep') continue;
+        if (prim.thresholdGlow && light.night <= 0.02) continue;
         const instances = prim.when === 'anim' ? this.animCount : prim.instances;
         if (!instances) continue;
-        const alphaScale = !this.interior ? 1 : prim.interiorRole === 'roof' ? 0.14 : prim.interiorRole === 'wall' ? 0.24 : 1;
+        const alphaScale = (!this.interior ? 1 : prim.interiorRole === 'roof' ? 0.14 : prim.interiorRole === 'wall' ? 0.24 : 1) * (prim.thresholdGlow ? light.night : 1);
         gl.uniform4fv(this.uCanopy, prim.when === 'anim' ? this.canopyAxis : [0, 0, 0, 0]);
         gl.uniform4fv(this.uBaseColor, [prim.baseColor[0], prim.baseColor[1], prim.baseColor[2], prim.baseColor[3] * alphaScale]);
         gl.uniform3fv(this.uGlow, prim.glow);
@@ -1700,6 +1811,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
         gl.uniform1f(this.uLattice, prim.lattice ? 1 : 0);
         gl.uniform1f(this.uCutoff, prim.cutoff);
         gl.uniform1i(this.uRevealRole, lifted ? prim.revealRole : 0);
+        gl.uniform1i(this.uDoorCutOn, prim.cutDoorways ? 1 : 0);
 
         const texture = prim.hasUv && prim.textureIndex >= 0 ? this.textures[prim.textureIndex] : undefined;
         gl.uniform1i(this.uHasTex, texture ? 1 : 0);
