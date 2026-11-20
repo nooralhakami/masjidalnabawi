@@ -36,6 +36,8 @@
   "dl_png": "Preuzmi QR kod kao PNG",
   "door_always_closed": "{name}: ova vrata su uvijek zatvorena",
   "door_closed": "{name} zatvorena",
+  "door_entry_closed": "Ova vrata su zatvorena — dodirnite da ih otvorite ili uđite kroz otvorena vrata",
+  "door_entry_open_only": "Ulazak u džamiju moguć je samo kroz otvorena vrata",
   "door_never_closed": "{name}: ova vrata su uvijek otvorena",
   "door_opened": "{name} otvorena",
   "drive_fallback": "Ruta autom nije pronađena, pa je prikazana pješačka",

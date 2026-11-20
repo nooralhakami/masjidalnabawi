@@ -36,8 +36,7 @@ const PROJECTING_PAVILIONS: readonly (readonly [number, number, number, number])
   [53.4, -121.4, 76.4, -113.65], // Gate 37 pavilion
 ];
 
-const inBox = ([x, z]: XY, b: readonly [number, number, number, number]): boolean =>
-  x >= b[0] && x <= b[2] && z >= b[1] && z <= b[3];
+const inBox = ([x, z]: XY, b: readonly [number, number, number, number]): boolean => x >= b[0] && x <= b[2] && z >= b[1] && z <= b[3];
 
 export function isInsideMosqueWall(p: XY): boolean {
   if (inBox(p, SOUTH_WALL_BOX)) return true;
@@ -69,12 +68,7 @@ export interface MosqueEntryResult {
   enteredBayIndex?: number;
 }
 
-function crossesBay(
-  a: XY,
-  b: XY,
-  gate: MosqueDoorState,
-  bay: DoorBay,
-): boolean {
+function crossesBay(a: XY, b: XY, gate: MosqueDoorState, bay: DoorBay): boolean {
   const [tx, tz] = gate.tangent;
   const [ox, oz] = gate.outward;
   const halfPass = bay.widthM * 0.56;

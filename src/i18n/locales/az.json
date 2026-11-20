@@ -36,6 +36,8 @@
   "dl_png": "QR kodu PNG kimi yüklə",
   "door_always_closed": "{name}: bu qapı həmişə bağlıdır",
   "door_closed": "{name} bağlandı",
+  "door_entry_closed": "Bu qapı bağlıdır — açmaq üçün toxunun və ya açıq qapıdan daxil olun",
+  "door_entry_open_only": "Məscidə giriş yalnız açıq qapılardan mümkündür",
   "door_never_closed": "{name}: bu qapı həmişə açıqdır",
   "door_opened": "{name} açıldı",
   "drive_fallback": "Avtomobil marşrutu tapılmadı, ona görə marşrut piyadadır",

@@ -36,6 +36,8 @@
   "dl_png": "Descargar código QR en PNG",
   "door_always_closed": "{name}: esta puerta siempre está cerrada",
   "door_closed": "{name} cerrada",
+  "door_entry_closed": "Esta puerta está cerrada — toca para abrirla o entra por una puerta abierta",
+  "door_entry_open_only": "Solo se puede entrar a la Mezquita por las puertas abiertas",
   "door_never_closed": "{name}: esta puerta siempre permanece abierta",
   "door_opened": "{name} abierta",
   "drive_fallback": "No se encontró ruta en coche, así que la ruta es a pie",

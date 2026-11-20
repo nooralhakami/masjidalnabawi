@@ -36,6 +36,8 @@
   "dl_png": "QR kodu PNG indir",
   "door_always_closed": "{name}: bu kapı her zaman kapalıdır",
   "door_closed": "{name} kapatıldı",
+  "door_entry_closed": "Bu kapı kapalı — açmak için dokunun veya açık bir kapıdan girin",
+  "door_entry_open_only": "Mescide giriş yalnızca açık kapılardan mümkündür",
   "door_never_closed": "{name}: bu kapı her zaman açıktır",
   "door_opened": "{name} açıldı",
   "drive_fallback": "Araç rotası bulunamadı, rota yürüyerek çizildi",

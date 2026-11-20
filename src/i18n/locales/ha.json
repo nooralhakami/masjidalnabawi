@@ -36,6 +36,8 @@
   "dl_png": "Sauke lambar QR a matsayin PNG",
   "door_always_closed": "{name}: wannan ƙofa a rufe take koyaushe",
   "door_closed": "An rufe {name}",
+  "door_entry_closed": "Wannan ƙofa a rufe take — taɓa don buɗewa ko shiga ta ƙofar da ke buɗe",
+  "door_entry_open_only": "Shiga Masallaci yana yiwuwa ne kawai ta ƙofofin da ke buɗe",
   "door_never_closed": "{name}: wannan ƙofa tana buɗe koyaushe",
   "door_opened": "An buɗe {name}",
   "drive_fallback": "Ba a sami hanyar mota ba, don haka an nuna hanyar ƙafa",

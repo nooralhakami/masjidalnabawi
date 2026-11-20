@@ -35,14 +35,42 @@ describe('Stage 3: Real Swinging 3D Mosque Doors (haram-doors-kit & mosque-doors
     }
   });
 
-  it('haram-doors-kit.glb exposes the 4 named kit meshes, identity node transforms, and stays <= 60 KB gzipped', () => {
+  it('haram-doors-kit.glb exposes 4 named open-through meshes, packed texture + UVs, identity nodes, and stays <= 250 KB gzipped', () => {
     const raw = readFileSync(join(ROOT, 'public/models/haram-doors-kit.glb'));
     const gz = gzipSync(raw);
-    expect(gz.byteLength).toBeLessThanOrEqual(60_000);
+    expect(gz.byteLength).toBeLessThanOrEqual(250_000);
 
-    const { gltf } = parseGlbBuffer(raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength) as ArrayBuffer);
+    const { gltf, bin } = parseGlbBuffer(raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength) as ArrayBuffer);
     const meshNames = gltf.meshes.map((m) => m.name).sort();
     expect(meshNames).toEqual(['DoorLeafLeft', 'DoorLeafRight', 'DoorPortalFrame', 'DoorThresholdGlow']);
+    expect((gltf as { images?: unknown[] }).images?.length ?? 0).toBeGreaterThanOrEqual(1);
+
+    for (const name of ['DoorLeafLeft', 'DoorLeafRight', 'DoorPortalFrame']) {
+      const m = gltf.meshes.find((x) => x.name === name)!;
+      expect(
+        m.primitives.some((p) => p.attributes.TEXCOORD_0 !== undefined),
+        `${name} TEXCOORD_0`,
+      ).toBe(true);
+    }
+
+    // Verify DoorPortalFrame is open through the central passage (no opaque back wall blocking open entry).
+    const frameMesh = gltf.meshes.find((m) => m.name === 'DoorPortalFrame')!;
+    const binView = new DataView(bin.buffer, bin.byteOffset, bin.byteLength);
+    let blockingBackVerts = 0;
+    for (const prim of frameMesh.primitives) {
+      const posAcc = gltf.accessors[prim.attributes.POSITION] as { bufferView: number; byteOffset?: number; count: number };
+      const bv = gltf.bufferViews[posAcc.bufferView] as { byteOffset?: number; byteStride?: number };
+      const base = (bv.byteOffset ?? 0) + (posAcc.byteOffset ?? 0);
+      const stride = bv.byteStride ?? 12;
+      for (let i = 0; i < posAcc.count; i++) {
+        const off = base + i * stride;
+        const x = binView.getFloat32(off, true);
+        const y = binView.getFloat32(off + 4, true);
+        const z = binView.getFloat32(off + 8, true);
+        if (Math.abs(x) < 0.35 && y > 0.1 && y < 0.65 && z < -1.5) blockingBackVerts++;
+      }
+    }
+    expect(blockingBackVerts).toBe(0);
 
     for (const node of gltf.nodes) {
       expect(node.matrix).toBeUndefined();
@@ -122,11 +150,11 @@ describe('Stage 3: Real Swinging 3D Mosque Doors (haram-doors-kit & mosque-doors
     }
   });
 
-  it('scene-light provides warm glow rules for haram-doors-kit lit hall, lamp, blue transom, and floor spill', () => {
-    expect(materialGlow('./models/haram-doors-kit.glb', 'hallInterior')).toMatchObject({ rise: 0, tint: 1 });
-    expect(materialGlow('./models/haram-doors-kit.glb', 'glassLamp')).toMatchObject({ rise: 0, tint: 0 });
-    expect(materialGlow('./models/haram-doors-kit.glb', 'transomBlue')).toMatchObject({ rise: 0, tint: 1 });
+  it('scene-light provides warm glow rules for haram-doors-kit lantern bulbs, transom glass, gold, atlas, and floor spill', () => {
+    expect(materialGlow('./models/haram-doors-kit.glb', 'lanternBulb')).toMatchObject({ rise: 0, tint: 0 });
+    expect(materialGlow('./models/haram-doors-kit.glb', 'transomGlass')).toMatchObject({ rise: 0, tint: 1 });
+    expect(materialGlow('./models/haram-doors-kit.glb', 'doorGold')).toMatchObject({ rise: 0, tint: 1 });
+    expect(materialGlow('./models/haram-doors-kit.glb', 'doorAtlas')).toMatchObject({ rise: 1, tint: 1 });
     expect(materialGlow('./models/haram-doors-kit.glb', 'thresholdGlow')).toMatchObject({ rise: 0, tint: 0 });
-    expect(materialGlow('./models/haram-doors-kit.glb', 'doorWood')).toMatchObject({ rise: 1, tint: 1 });
   });
 });

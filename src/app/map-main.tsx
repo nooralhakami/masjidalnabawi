@@ -96,6 +96,9 @@ async function main() {
         else if (res.reason === 'never_closed') notify(t('door_never_closed', { name }), 'ok', 3500);
         else if (res.ok) notify(t(res.open ? 'door_opened' : 'door_closed', { name }), res.open ? 'ok' : 'info', 3000);
       },
+      onDoorEntryBlocked: (reason) => {
+        notify(t(reason === 'closed_door' ? 'door_entry_closed' : 'door_entry_open_only'), 'info', 3500);
+      },
     });
   } catch {
     // No map on this device (no WebGL, or refused): say so instead of a blank page.

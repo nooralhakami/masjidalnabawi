@@ -36,6 +36,8 @@
   "dl_png": "QR kodni PNG yuklab olish",
   "door_always_closed": "{name}: bu eshik doim yopiq",
   "door_closed": "{name} yopildi",
+  "door_entry_closed": "Bu eshik yopiq — ochish uchun bosing yoki ochiq eshikdan kiring",
+  "door_entry_open_only": "Masjidga faqat ochiq eshiklar orqali kirish mumkin",
   "door_never_closed": "{name}: bu eshik doim ochiq",
   "door_opened": "{name} ochildi",
   "drive_fallback": "Mashina yo‘li topilmadi, shuning uchun piyoda yo‘l chizildi",

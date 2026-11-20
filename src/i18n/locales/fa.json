@@ -36,6 +36,8 @@
   "dl_png": "دانلود کد QR به صورت PNG",
   "door_always_closed": "{name}: این در همیشه بسته است",
   "door_closed": "{name} بسته شد",
+  "door_entry_closed": "این در بسته است — برای باز کردن ضربه بزنید یا از در باز وارد شوید",
+  "door_entry_open_only": "ورود به مسجد فقط از طریق درهای باز امکان‌پذیر است",
   "door_never_closed": "{name}: این در همیشه باز است",
   "door_opened": "{name} باز شد",
   "drive_fallback": "مسیر خودرو پیدا نشد، بنابراین مسیر پیاده است",
