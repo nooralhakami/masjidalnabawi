@@ -22,6 +22,13 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, '..', 'data', 'navq-interior-floor.json')
 HASAWA_FEATURE = 754  # FF888: the First Hasawa (navQ landmark 1011 "الحصوة الاولى" lies in it)
+CHAMBER_FEATURE = 13  # FF1: the Sacred Chamber (الحجرة الشريفة) — exterior perimeter only
+WOMEN_MARBLE_FEATURES = {34, 291, 425}  # FF0 parts forming the women's floor (Phase 1 report, 2026-11-18)
+LANDMARK_POIS = {
+    1009: 'minbar',      # منبر الرسول صلى الله عليه وسلم
+    1008: 'mihrab',      # محراب الرسول صلى الله عليه وسلم
+    1039: 'salamFront',  # المواجهة الشريفة (ممر السلام)
+}
 MIN_AREA_M2 = 4.0
 K = 111320.0
 
@@ -60,14 +67,17 @@ def main(gf_path, pois_path):
     pois = json.load(open(pois_path))
     pois = pois if isinstance(pois, list) else next(v for v in pois.values() if isinstance(v, list))
     named = []
+    landmarks = {}
     for p in pois:
+        c = p['zoneCenterPoint']['LongLat']
+        if p['id'] in LANDMARK_POIS:
+            landmarks[LANDMARK_POIS[p['id']]] = [round(c['Longitude'], 7), round(c['Latitude'], 7)]
         if p.get('categoryId') not in (3, 41, 43):
             continue
         ar = next((n['value'] for n in p['name'] if n['code'] == 'ar'), '')
-        c = p['zoneCenterPoint']['LongLat']
         named.append((p['id'], ar, (c['Longitude'], c['Latitude'])))
 
-    out = {'marble': [], 'men': [], 'women': [], 'courtyard': []}
+    out = {'marble': [], 'men': [], 'women': [], 'courtyard': [], 'chamber': None, 'landmarks': landmarks}
     for i, f in enumerate(gf):
         g = f.get('geometry')
         if not g:
@@ -79,12 +89,17 @@ def main(gf_path, pois_path):
             if area(ring) < MIN_AREA_M2:
                 continue
             if ff == 0:
-                out['marble'].append({'navq': i, 'ring': tidy(ring)})
+                rec = {'navq': i, 'ring': tidy(ring)}
+                if i in WOMEN_MARBLE_FEATURES:
+                    rec['women'] = True
+                out['marble'].append(rec)
             elif ff in (5, 6):
                 names = [n for (_, n, ll) in named if inside(ll, ring)]
                 ids = [pid for (pid, _, ll) in named if inside(ll, ring)]
                 rec = {'navq': i, 'ring': tidy(ring), 'names': names, 'poi': ids}
                 out['men' if ff == 5 else 'women'].append(rec)
+            elif ff == 1 and i == CHAMBER_FEATURE:
+                out['chamber'] = {'navq': i, 'name': 'الحجرة الشريفة', 'ring': tidy(ring)}
             elif ff == 888 and i == HASAWA_FEATURE:
                 out['courtyard'].append({'navq': i, 'name': 'الحصوة الأولى', 'ring': tidy(ring)})
 
