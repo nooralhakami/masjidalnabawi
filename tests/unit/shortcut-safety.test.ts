@@ -4,8 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { INTERIOR_POIS, POI_BY_ID } from '../../src/data';
 import { ALHARAMAIN_MODELS } from '../../src/data-next/alharamain-3d';
 import type { LatLng } from '../../src/data/types';
-import { toModelMetres, type XY } from '../../src/domain/frames';
+import { toModelMetres, toWalkMetres, type XY } from '../../src/domain/frames';
 import { interiorCarpetBlocks, interiorCorridors, isPointOnInteriorWalkway } from '../../src/domain/interior-layout';
+import { interiorRoutingData } from '../../src/domain/interior-routing';
 import { pointInPoly, safetyWorld, segmentsCross } from '../../src/domain/route-safety';
 import { rugLayout } from '../../src/domain/rug-layout';
 import { nodePositions, parseGlbBuffer } from '../../src/map/glb-layer';
@@ -47,7 +48,11 @@ function auditShortcuts() {
     const ring = r.map(([x, z]) => [x, z] as XY);
     return { ring, box: bboxOf(ring) };
   });
-  const interiorRects = interiorCarpetBlocks();
+  const navqInterior = interiorRoutingData();
+  const interiorPolys = [...navqInterior.menCarpets, ...navqInterior.womenCarpets, navqInterior.chamber].map((ring) => ({
+    ring,
+    box: bboxOf(ring),
+  }));
   const w = safetyWorld();
 
   const plazaStarts: LatLng[] = [
@@ -75,20 +80,26 @@ function auditShortcuts() {
       offered++;
       const A = toModelMetres([a[1], a[0]]);
       const B = toModelMetres([b[1], b[0]]);
+      const Aw = toWalkMetres(a);
+      const Bw = toWalkMetres(b);
       const pts = s.path.map(([lat, lng]) => toModelMetres([lng, lat]));
+      const ptsW = s.path.map(toWalkMetres);
       const kinds = new Set<string>();
       const endCarpetRings = covered.filter((c) => pointInPoly(A, c.ring) || pointInPoly(B, c.ring));
-      const endInterior = interiorRects.filter((r) => inBox(A, { minX: r.x0, maxX: r.x1, minZ: r.z0, maxZ: r.z1 }) || inBox(B, { minX: r.x0, maxX: r.x1, minZ: r.z0, maxZ: r.z1 }));
+      const endInterior = interiorPolys.filter((c) => pointInPoly(Aw, c.ring) || pointInPoly(Bw, c.ring));
 
       for (let i = 1; i < pts.length; i++) {
         const p0 = pts[i - 1];
         const p1 = pts[i];
+        const pw0 = ptsW[i - 1];
+        const pw1 = ptsW[i];
         const len = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
         const steps = Math.max(1, Math.ceil(len / 0.75));
         const segBox: Box = { minX: Math.min(p0[0], p1[0]), maxX: Math.max(p0[0], p1[0]), minZ: Math.min(p0[1], p1[1]), maxZ: Math.max(p0[1], p1[1]) };
         for (let k = 0; k <= steps; k++) {
           const u = k / steps;
           const p: XY = [p0[0] + (p1[0] - p0[0]) * u, p0[1] + (p1[1] - p0[1]) * u];
+          const pw: XY = [pw0[0] + (pw1[0] - pw0[0]) * u, pw0[1] + (pw1[1] - pw0[1]) * u];
           if (!kinds.has('carpet')) {
             for (const c of covered) {
               if (endCarpetRings.includes(c)) continue;
@@ -99,9 +110,9 @@ function auditShortcuts() {
             }
           }
           if (!kinds.has('interiorCarpet')) {
-            for (const r of interiorRects) {
-              if (endInterior.includes(r)) continue;
-              if (p[0] > r.x0 && p[0] < r.x1 && p[1] > r.z0 && p[1] < r.z1) {
+            for (const c of interiorPolys) {
+              if (endInterior.includes(c)) continue;
+              if (inBox(pw, c.box) && pointInPoly(pw, c.ring)) {
                 kinds.add('interiorCarpet');
                 break;
               }

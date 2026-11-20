@@ -374,12 +374,7 @@ export function pointInInteriorMenZone(p: XY, w = safetyWorld(), allowRawdahCorr
   const [mx, mz] = walkToModelMetres(p);
   if (!insideMosqueMetres([mx, mz])) return false;
   // Require 2.5 m inside the Mosque envelope so exterior apron walkways hugging the outer wall stay unaffected.
-  return (
-    insideMosqueMetres([mx - 2.5, mz]) &&
-    insideMosqueMetres([mx + 2.5, mz]) &&
-    insideMosqueMetres([mx, mz - 2.5]) &&
-    insideMosqueMetres([mx, mz + 2.5])
-  );
+  return insideMosqueMetres([mx - 2.5, mz]) && insideMosqueMetres([mx + 2.5, mz]) && insideMosqueMetres([mx, mz - 2.5]) && insideMosqueMetres([mx, mz + 2.5]);
 }
 
 /** Check whether straight segment `a -> b` enters navQ's interior women's zones (forbidden for men). */

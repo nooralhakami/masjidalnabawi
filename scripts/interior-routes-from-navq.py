@@ -96,7 +96,22 @@ def main(edges_path: str):
     men_carpets = [[to_m(c[0], c[1]) for c in a['ring']] for a in floor['men']]
     women_carpets = [[to_m(c[0], c[1]) for c in a['ring']] for a in floor['women']]
     all_carpets = men_carpets + women_carpets
-    women_floors = [[to_m(c[0], c[1]) for c in m['ring']] for m in floor['marble'] if m.get('women')]
+    women_marble_raw = [m['ring'] for m in floor['marble'] if m.get('women')]
+    # Compute the two exact NW & NE women's interior zone envelopes from navQ's FF0 women marble + FF6 women carpets,
+    # capturing the internal corridor strip between A23-A25 and A26-A29 and the women's gate doorway thresholds.
+    all_women_lnglat = [pt for ring in women_marble_raw + [a['ring'] for a in floor['women']] for pt in ring]
+    nw_pts = [pt for pt in all_women_lnglat if to_m(pt[0], pt[1])[0] < -100]
+    ne_pts = [pt for pt in all_women_lnglat if to_m(pt[0], pt[1])[0] >= -100]
+    def envelope_ring(pts):
+        lngs = [p[0] for p in pts]; lats = [p[1] for p in pts]
+        return [
+            [round(min(lngs), 7), round(max(lats), 7)],
+            [round(max(lngs), 7), round(max(lats), 7)],
+            [round(max(lngs), 7), round(min(lats), 7)],
+            [round(min(lngs), 7), round(min(lats), 7)],
+        ]
+    women_envelopes_raw = [envelope_ring(nw_pts), envelope_ring(ne_pts)]
+    women_floors = [[to_m(c[0], c[1]) for c in ring] for ring in women_marble_raw + women_envelopes_raw]
     chamber = [to_m(c[0], c[1]) for c in floor['chamber']['ring']]
 
     def in_any(p, rings):
@@ -178,7 +193,7 @@ def main(edges_path: str):
         'womenEdges': women_edges,
         'menCarpets': [c['ring'] for c in floor['men']],
         'womenCarpets': [c['ring'] for c in floor['women']],
-        'womenFloor': [m['ring'] for m in floor['marble'] if m.get('women')],
+        'womenFloor': women_marble_raw + women_envelopes_raw,
         'chamber': floor['chamber']['ring'],
     }
     with open(OUT_PATH, 'w', encoding='utf-8') as fh:

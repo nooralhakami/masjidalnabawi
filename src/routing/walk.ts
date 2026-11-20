@@ -1249,9 +1249,10 @@ export function walkShortcutPath(a: LatLng, b: LatLng, opts: { isWomen?: boolean
       const blockers = allowInsideHook ? base.buildings.filter((r) => !insideRect(p, r)) : blocking;
       if (blockers.some((r) => segmentHits(p, pr.q, r))) continue;
       // The approach from the visitor to the network must itself be clean (women's approaches may pass
-      // their own courtyard fence). An unsafe or cross-gender approach is never offered.
+      // their own courtyard fence; the enclosed Gate 21 Rawdah corridor is fenced over the central hall).
       const allowedSources = e.kind === 'women_rawdah' || e.kind === 'women_interior' ? womenFenceOnly : undefined;
-      if (segmentHasViolation(p, pr.q, allowedZones, carpetEndpts, w, allowedSources, true, true, interiorGender, allowRawdah)) continue;
+      const checkInteriorCarpets = e.kind !== 'women_rawdah';
+      if (segmentHasViolation(p, pr.q, allowedZones, carpetEndpts, w, allowedSources, true, checkInteriorCarpets, interiorGender, allowRawdah)) continue;
       candidates.push({ idx: isStart ? S : T, q: pr.q, d: pr.d, e, along: pr.u * e.l });
     }
     if (!candidates.length) return [];
@@ -1335,18 +1336,20 @@ export function walkShortcutPath(a: LatLng, b: LatLng, opts: { isWomen?: boolean
     const l = clean[clean.length - 1];
     if (Math.hypot(pts[i][0] - l[0], pts[i][1] - l[1]) > 0.5) clean.push(pts[i]);
   }
-  const roundedXY = roundCornersSafe(clean, 3, allowedZones, carpetEndpts, true, true, interiorGender, allowRawdah);
+  const insideWomenRawdah = usedKinds.has('women_rawdah');
+  const insideWomen = usedKinds.has('women_interior');
+  const checkFinalInteriorCarpets = !insideWomenRawdah;
+  const roundedXY = roundCornersSafe(clean, 3, allowedZones, carpetEndpts, true, checkFinalInteriorCarpets, interiorGender, allowRawdah);
   // Final guarantee: a sub-route is shown only if every stretch of it is free of carpet, barrier,
   // Sacred Chamber, and cross-gender violations. Rounding can clip a corner, so validate the rounded geometry itself.
-  const finalAllowedBarriers = allowRawdah || usedKinds.has('women_interior') ? womenFenceOnly : undefined;
+  const finalAllowedBarriers = allowRawdah || insideWomen ? womenFenceOnly : undefined;
   for (let i = 1; i < roundedXY.length; i++) {
-    if (segmentHasViolation(roundedXY[i - 1], roundedXY[i], allowedZones, carpetEndpts, w, finalAllowedBarriers, true, true, interiorGender, allowRawdah)) return null;
+    if (segmentHasViolation(roundedXY[i - 1], roundedXY[i], allowedZones, carpetEndpts, w, finalAllowedBarriers, true, checkFinalInteriorCarpets, interiorGender, allowRawdah))
+      return null;
   }
   const rounded = roundedXY.map(fromM);
   const shortLen = pathLength(rounded);
   const savedM = Math.round(mainLen - shortLen);
-  const insideWomenRawdah = usedKinds.has('women_rawdah');
-  const insideWomen = usedKinds.has('women_interior');
   const nearAisle = hs.some((h) => h.e.kind === 'aisle' && h.d < 20);
   if (!insideWomenRawdah && !insideWomen && savedM < 3 && !(nearAisle && shortLen <= mainLen + 2)) return null;
 
