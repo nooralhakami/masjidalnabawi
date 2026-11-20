@@ -313,6 +313,17 @@ def chamber_grille():
     b.finish({"unitLength": 1.0})
 
 
+def chamber_roof():
+    """1 m x 1 m opaque emerald-and-gold cap sealing the Sacred Chamber from above (strict dignity rule)."""
+    b = Builder("ChamberRoof")
+    b.box(-0.5, 0.5, -0.5, 0.5, 7.25, 7.45, "chamberEmerald")
+    b.box(-0.5, 0.5, -0.5, -0.46, 7.40, 7.50, "gold")
+    b.box(-0.5, 0.5, 0.46, 0.5, 7.40, 7.50, "gold")
+    b.box(-0.5, -0.46, -0.5, 0.5, 7.40, 7.50, "gold")
+    b.box(0.46, 0.5, -0.5, 0.5, 7.40, 7.50, "gold")
+    b.finish({"unitSize": 1.0})
+
+
 def salam_rail():
     """1 m unit of the low gilded brass railing separating visitors in the Greeting Passage (photo 03)."""
     b = Builder("SalamRail")
@@ -404,6 +415,7 @@ def main():
     ottoman_column()
     ottoman_chandelier()
     chamber_grille()
+    chamber_roof()
     salam_rail()
     prophet_minbar()
     prophet_mihrab()

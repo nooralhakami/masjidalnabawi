@@ -107,6 +107,7 @@ describe('the interior’s props', () => {
     const names = gltf.meshes.map((m) => m.name).sort();
     expect(names).toEqual([
       'ChamberGrille',
+      'ChamberRoof',
       'ColumnLanterns',
       'InteriorArch',
       'InteriorChandelier',
@@ -126,6 +127,7 @@ describe('the interior’s props', () => {
     expect(P.columns.length + P.ottomanColumns.length).toBe(ALL_COLS.length);
     expect(m.get('InteriorArch')!.length).toBe((P.archesEastWest.length + P.archesNorthSouth.length) * 16);
     expect(m.get('ChamberGrille')!.length).toBeGreaterThan(20 * 16);
+    expect(m.get('ChamberRoof')!.length).toBe(16);
     expect(m.get('SalamRail')!.length).toBeGreaterThan(15 * 16);
     expect(m.get('ProphetMinbar')!.length).toBe(16);
     expect(m.get('ProphetMihrab')!.length).toBe(16);

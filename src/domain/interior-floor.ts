@@ -300,6 +300,7 @@ export interface InteriorPropPlacements {
   ottomanColumns: XY[];
   ottomanChandeliers: XY[];
   chamberGrilles: OrientedProp[];
+  chamberRoof: { x: number; z: number; scaleX: number; scaleZ: number } | null;
   salamRails: OrientedProp[];
   minbar: OrientedProp | null;
   mihrab: OrientedProp | null;
@@ -319,6 +320,15 @@ export function interiorPropPlacements(columns: readonly XY[], step = INTERIOR_C
   const extraRawdah = floor ? rawdahExtraColumns(floor, columns) : [];
   ottomanCols.push(...extraRawdah);
 
+  const chamberRoof = floor?.chamber?.length
+    ? (() => {
+        const xs = floor.chamber.map((p) => p[0]);
+        const zs = floor.chamber.map((p) => p[1]);
+        const [x0, x1, z0, z1] = [Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs)];
+        return { x: (x0 + x1) / 2, z: (z0 + z1) / 2, scaleX: x1 - x0 - 0.6, scaleZ: z1 - z0 - 0.6 };
+      })()
+    : null;
+
   const out: InteriorPropPlacements = {
     columns: saudiCols,
     archesEastWest: [],
@@ -327,6 +337,7 @@ export function interiorPropPlacements(columns: readonly XY[], step = INTERIOR_C
     ottomanColumns: ottomanCols,
     ottomanChandeliers: [],
     chamberGrilles: floor ? chamberExteriorGrilles(floor) : [],
+    chamberRoof,
     salamRails: floor ? salamPassageRails(floor) : [],
     minbar: floor?.landmarks.minbar ? { x: floor.landmarks.minbar[0], z: floor.landmarks.minbar[1], angle: 0, scaleX: 1 } : null,
     mihrab: floor?.landmarks.mihrab ? { x: floor.landmarks.mihrab[0], z: floor.landmarks.mihrab[1], angle: 0, scaleX: 1 } : null,

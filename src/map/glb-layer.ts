@@ -770,6 +770,7 @@ export function interiorPropMatrices(p: InteriorPropPlacements): Map<string, Flo
     ['OttomanColumn', new Float32Array(at(p.ottomanColumns, false))],
     ['OttomanChandelier', new Float32Array(at(p.ottomanChandeliers, false))],
     ['ChamberGrille', new Float32Array(oriented(p.chamberGrilles))],
+    ['ChamberRoof', new Float32Array(p.chamberRoof ? [p.chamberRoof.scaleX, 0, 0, 0, 0, 1, 0, 0, 0, 0, p.chamberRoof.scaleZ, 0, p.chamberRoof.x, 0, p.chamberRoof.z, 1] : [])],
     ['SalamRail', new Float32Array(oriented(p.salamRails))],
     ['ProphetMinbar', new Float32Array(p.minbar ? oriented([p.minbar]) : [])],
     ['ProphetMihrab', new Float32Array(p.mihrab ? oriented([p.mihrab]) : [])],
