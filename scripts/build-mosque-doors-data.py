@@ -88,7 +88,7 @@ def xform(m, v):
 
 
 def wall_outward(gate_id: int) -> tuple[int, int]:
-    if gate_id in (1, 2) or (7 <= gate_id <= 14):
+    if gate_id in (1, 2, 3) or (7 <= gate_id <= 14):
         return (-1, 0)
     if (28 <= gate_id <= 35) or gate_id in (40, 41):
         return (1, 0)
@@ -311,6 +311,7 @@ def main():
         ox, oz = wall_outward(gid)
         # Right-handed tangent T such that T x (+Y) = outward: T = [oz, -ox]
         tx, tz = oz, -ox
+        centers = sorted(centers, key=lambda p: p[0] * tx + p[1] * tz)
         cx = sum(p[0] for p in centers) / len(centers)
         cz = sum(p[1] for p in centers) / len(centers)
         glng, glat = from_m(cx, cz)

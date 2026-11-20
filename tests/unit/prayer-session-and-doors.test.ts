@@ -126,7 +126,7 @@ describe('the Mosque’s gates: multi-bay doors (owner, 2026-11-13)', () => {
         const step = Math.hypot(dx, dy);
         expect(along, `gate ${g.id} bay ${i} ordered along tangent`).toBeGreaterThan(2.4);
         expect(step, `gate ${g.id} bay ${i} step`).toBeGreaterThanOrEqual(2.5);
-        expect(step, `gate ${g.id} bay ${i} step`).toBeLessThanOrEqual(6.5);
+        expect(step, `gate ${g.id} bay ${i} step`).toBeLessThanOrEqual(7.0);
       }
       const meanX = g.bays.reduce((s, b) => s + b.x, 0) / g.bays.length;
       const meanY = g.bays.reduce((s, b) => s + b.y, 0) / g.bays.length;

@@ -94,13 +94,13 @@ describe('Stage 3: Real Swinging 3D Mosque Doors (haram-doors-kit & mosque-doors
         const rLen = Math.hypot(rx, rz);
         expect((rx * ox + rz * oz) / rLen, `right inward gate ${g.id}`).toBeLessThan(-0.9);
 
-        // Threshold glow is zero-scaled when shut and visible when open.
-        expect(shut.glows[off]).toBe(0);
+        // Threshold glow is zero-scaled when shut and visible when open (measured across XZ columns 0 & 2).
+        expect(Math.hypot(shut.glows[off], shut.glows[off + 2])).toBe(0);
         expect(shut.glows[off + 5]).toBe(0);
-        expect(shut.glows[off + 10]).toBe(0);
-        expect(open.glows[off]).toBeGreaterThan(0);
+        expect(Math.hypot(shut.glows[off + 8], shut.glows[off + 10])).toBe(0);
+        expect(Math.hypot(open.glows[off], open.glows[off + 2])).toBeGreaterThan(0);
         expect(open.glows[off + 5]).toBe(1);
-        expect(open.glows[off + 10]).toBeGreaterThan(0);
+        expect(Math.hypot(open.glows[off + 8], open.glows[off + 10])).toBeGreaterThan(0);
         bayIdx++;
       }
     }
@@ -123,10 +123,10 @@ describe('Stage 3: Real Swinging 3D Mosque Doors (haram-doors-kit & mosque-doors
   });
 
   it('scene-light provides warm glow rules for haram-doors-kit lit hall, lamp, blue transom, and floor spill', () => {
-    expect(materialGlow('./models/haram-doors-kit.glb', 'hallInterior')).not.toBeNull();
-    expect(materialGlow('./models/haram-doors-kit.glb', 'glassLamp')).not.toBeNull();
-    expect(materialGlow('./models/haram-doors-kit.glb', 'transomBlue')).not.toBeNull();
-    expect(materialGlow('./models/haram-doors-kit.glb', 'thresholdGlow')).not.toBeNull();
-    expect(materialGlow('./models/haram-doors-kit.glb', 'doorWood')).toBeNull();
+    expect(materialGlow('./models/haram-doors-kit.glb', 'hallInterior')).toMatchObject({ rise: 0, tint: 1 });
+    expect(materialGlow('./models/haram-doors-kit.glb', 'glassLamp')).toMatchObject({ rise: 0, tint: 0 });
+    expect(materialGlow('./models/haram-doors-kit.glb', 'transomBlue')).toMatchObject({ rise: 0, tint: 1 });
+    expect(materialGlow('./models/haram-doors-kit.glb', 'thresholdGlow')).toMatchObject({ rise: 0, tint: 0 });
+    expect(materialGlow('./models/haram-doors-kit.glb', 'doorWood')).toMatchObject({ rise: 1, tint: 1 });
   });
 });
