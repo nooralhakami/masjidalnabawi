@@ -29,6 +29,7 @@ export type DataSourceId =
   | 'interior-layout'
   | 'mosque-interior-3d'
   | 'navq-interior-floor'
+  | 'navq-interior-routes'
   | 'navq-interior'
   | 'navq-parking-sections'
   | 'urban-approved'
@@ -167,7 +168,15 @@ export const DATA_PROVENANCE: Readonly<Record<DataSourceId, DataSourceRecord>> =
     routingAllowed: true,
     path: 'data/navq-interior-floor.json',
     description:
-      "The Mosque's interior floor from navQ's ground-floor plan (FF0 marble walkways, FF5 men's and FF6 women's carpeted prayer areas, the First Hasawa); owner-approved 2026-11-18. Drawn now; the men's and women's interior routes are built on it next (Phase 2).",
+      "The Mosque's interior floor from navQ's ground-floor plan (FF0 marble walkways, FF5 men's and FF6 women's carpeted prayer areas, the First Hasawa, the Sacred Chamber exterior, and Minbar/Mihrab/Salam landmarks); owner-approved 2026-11-18.",
+  },
+  'navq-interior-routes': {
+    id: 'navq-interior-routes',
+    tier: 'verified',
+    routingAllowed: true,
+    path: 'data/navq-interior-routes.json',
+    description:
+      "Separated men's and women's interior walking networks (0 men-women links) built from navQ's approved floor plan and harvested /path/trip edges (Phase 2), respecting FF5/FF6 carpets, Rawdah waiting hall barriers, Sacred Chamber, and women's gates 11-17 & 23-31.",
   },
   'mosque-interior-3d': {
     id: 'mosque-interior-3d',
