@@ -610,7 +610,7 @@ export class MapEngine {
         const columns = interiorColumns(floor);
         this.marble?.setInteriorFloor(floor.marble);
         this.rugs?.setInteriorRugs(interiorRugs(floor, columns));
-        this.models?.setInteriorProps(interiorPropMatrices(interiorPropPlacements(columns)));
+        this.models?.setInteriorProps(interiorPropMatrices(interiorPropPlacements(columns, undefined, floor)));
       });
       const urbanToken = ++this.urbanToken;
       void import('./urban-3d').then(({ mountUrban3D }) => {

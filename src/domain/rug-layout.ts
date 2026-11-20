@@ -48,6 +48,8 @@ export interface Rug {
   flip: boolean;
   /** The courtyards' areas (inside the Haram) are ringed by barriers; the western annex's are not. */
   courtyard: boolean;
+  /** True for carpets in the Noble Rawdah (navQ 506): rendered with its distinctive luminous green/ivory tone. */
+  rawdah?: boolean;
 }
 
 export interface AisleProps {

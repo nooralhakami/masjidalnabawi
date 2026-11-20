@@ -746,18 +746,34 @@ export function domeInstanceCentres(model: AlharamainModel, gltf: GltfJson): [nu
 export const INTERIOR_PROPS_MODEL: AlharamainModel = { url: './models/haram-interior-props.glb', anchors: [MODEL_ORIGIN_LNGLAT], rotation: 0 };
 
 /**
- * The props' instance matrices by mesh name: a column and its lanterns at each column, the arch
- * along the bay (turned a quarter round for north–south bays), a chandelier at each bay's heart.
+ * The props' instance matrices by mesh name: Saudi extension columns, lanterns, ablaq arches and
+ * ring chandeliers; Ottoman Rawdah/old-Mosque columns and chandeliers; exterior grilles of the
+ * Sacred Chamber; the Greeting Passage's golden rail; the Prophetic Minbar and Mihrab; and the
+ * warm teak wooden partitions separating the women's prayer areas.
  */
 export function interiorPropMatrices(p: InteriorPropPlacements): Map<string, Float32Array> {
   const at = (list: readonly (readonly [number, number])[], turned: boolean) =>
     list.flatMap(([x, z]) => (turned ? [0, 0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0, x, 0, z, 1] : [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, 0, z, 1]));
+  const oriented = (list: readonly { x: number; z: number; angle: number; scaleX: number }[]) =>
+    list.flatMap(({ x, z, angle, scaleX }) => {
+      const c = Math.cos(angle);
+      const s = Math.sin(angle);
+      // Right-handed XZ rotation: +X -> (scaleX*c, 0, scaleX*s), +Y -> (0,1,0), +Z -> (-s, 0, c)
+      return [scaleX * c, 0, scaleX * s, 0, 0, 1, 0, 0, -s, 0, c, 0, x, 0, z, 1];
+    });
   const columns = new Float32Array(at(p.columns, false));
   return new Map([
     ['InteriorColumn', columns],
     ['ColumnLanterns', columns],
     ['InteriorArch', new Float32Array([...at(p.archesEastWest, false), ...at(p.archesNorthSouth, true)])],
     ['InteriorChandelier', new Float32Array(at(p.chandeliers, false))],
+    ['OttomanColumn', new Float32Array(at(p.ottomanColumns, false))],
+    ['OttomanChandelier', new Float32Array(at(p.ottomanChandeliers, false))],
+    ['ChamberGrille', new Float32Array(oriented(p.chamberGrilles))],
+    ['SalamRail', new Float32Array(oriented(p.salamRails))],
+    ['ProphetMinbar', new Float32Array(p.minbar ? oriented([p.minbar]) : [])],
+    ['ProphetMihrab', new Float32Array(p.mihrab ? oriented([p.mihrab]) : [])],
+    ['WomenWoodPartition', new Float32Array(oriented(p.womenPartitions))],
   ]);
 }
 

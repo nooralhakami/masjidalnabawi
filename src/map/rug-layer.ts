@@ -46,9 +46,12 @@ uniform float u_shadow;
 out vec4 fragColor;
 ${SHADOW_GLSL}
 void main() {
-  // A tone above 1.5 marks a carpet inside the Mosque: lit by its lamps, never by the sun.
+  // Tone > 1.5 marks a carpet inside the Mosque (lit by lamps, no sun shadow); > 2.5 marks the Noble Rawdah.
   bool inside = v_tone > 1.5;
-  vec3 color = texture(u_tex, v_uv).rgb * (inside ? v_tone - 1.0 : v_tone);
+  bool rawdah = v_tone > 2.5;
+  float shade = rawdah ? v_tone - 2.0 : (inside ? v_tone - 1.0 : v_tone);
+  vec3 color = texture(u_tex, v_uv).rgb * shade;
+  if (rawdah) color = mix(color, vec3(0.47, 0.56, 0.35), 0.38);
   if (u_shadow > 0.0 && !inside) {
     float shade = (1.0 - sunLit(u_light * vec4(v_pos.x, 0.0, v_pos.y, 1.0), 0.0008)) * u_shadow;
     color *= mix(1.0, 0.6, shade);
@@ -319,8 +322,9 @@ export class RugLayer implements CustomLayerInterface {
       rugs.forEach((rug, i) => {
         seed = (seed * 1664525 + 1013904223) >>> 0;
         const tone = 0.93 + (seed / 4294967296) * 0.12;
-        // The interior's carpets carry +1 on their tone: the shader keeps the sun's shadow off them.
-        data.set([rug.x, rug.z, rug.flip ? 1 : 0, i < plaza.length ? tone : 1.08 + tone], i * 4);
+        // Interior carpets carry +1 on tone (no sun shadow); the Noble Rawdah carries +2 (distinct luminous sage/ivory hue).
+        const baseTone = i < plaza.length ? tone : rug.rawdah ? 2.08 + tone : 1.08 + tone;
+        data.set([rug.x, rug.z, rug.flip ? 1 : 0, baseTone], i * 4);
       });
       gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers[1]);
       gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);

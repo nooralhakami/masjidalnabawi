@@ -2,8 +2,10 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import data from '../../data/navq-interior-floor.json';
+import { POI_BY_ID } from '../../src/data';
 import type { InteriorFloorData } from '../../src/data-next/interior-floor-data';
-import { inCourtyard, interiorColumns, interiorFloorMetres, interiorPropPlacements, interiorRugs } from '../../src/domain/interior-floor';
+import { toModelMetres } from '../../src/domain/frames';
+import { inChamber, inCourtyard, interiorColumns, interiorFloorMetres, interiorPropPlacements, interiorRugs, RAWDAH_NAVQ, rawdahExtraColumns } from '../../src/domain/interior-floor';
 import { INTERIOR_COL_STEP_M } from '../../src/domain/interior-layout';
 import { COLUMN_CLEAR, inside, RUG_D, RUG_W, toLaid } from '../../src/domain/rug-layout';
 import { interiorPropMatrices, parseGlbBuffer } from '../../src/map/glb-layer';
@@ -23,6 +25,12 @@ describe('the interior floor from navQ’s plan (data/navq-interior-floor.json)'
     expect(d.men.length).toBe(30);
     expect(d.women.length).toBe(15);
     expect(d.courtyard.map((c) => c.name)).toEqual(['الحصوة الأولى']);
+    expect(d.chamber?.navq).toBe(13);
+    expect(d.chamber?.ring.length).toBeGreaterThanOrEqual(20);
+    expect(d.landmarks?.minbar).toHaveLength(2);
+    expect(d.landmarks?.mihrab).toHaveLength(2);
+    expect(d.landmarks?.salamFront).toHaveLength(2);
+    expect(FLOOR.womenMarble.length).toBe(3);
   });
 
   it('names every women’s area as a women’s prayer area, and no men’s area as one', () => {
@@ -72,7 +80,8 @@ describe('the interior’s carpets', () => {
 });
 
 describe('the interior’s props', () => {
-  const P = interiorPropPlacements(COLUMNS);
+  const P = interiorPropPlacements(COLUMNS, INTERIOR_COL_STEP_M, FLOOR);
+  const ALL_COLS = [...COLUMNS, ...rawdahExtraColumns(FLOOR, COLUMNS)];
   it('span each arch between two columns one grid step apart, and hang a chandelier in each full bay', () => {
     const has = (x: number, z: number) => COLUMNS.some((c) => Math.abs(c[0] - x) < 0.5 && Math.abs(c[1] - z) < 0.5);
     const h = INTERIOR_COL_STEP_M / 2;
@@ -83,16 +92,59 @@ describe('the interior’s props', () => {
     for (const [x, z] of P.chandeliers) expect(has(x - h, z - h) && has(x + h, z - h) && has(x - h, z + h) && has(x + h, z + h)).toBe(true);
   });
 
-  it('come from one Blender file whose arch fits the column grid’s step', () => {
+  it('come from one Blender file with all 11 Saudi, Ottoman Rawdah/Chamber, and women partition meshes', () => {
     const f = readFileSync(resolve(__dirname, '../../public/models/haram-interior-props.glb'));
     const { gltf } = parseGlbBuffer(f.buffer.slice(f.byteOffset, f.byteOffset + f.byteLength) as ArrayBuffer);
     const names = gltf.meshes.map((m) => m.name).sort();
-    expect(names).toEqual(['ColumnLanterns', 'InteriorArch', 'InteriorChandelier', 'InteriorColumn']);
+    expect(names).toEqual([
+      'ChamberGrille',
+      'ColumnLanterns',
+      'InteriorArch',
+      'InteriorChandelier',
+      'InteriorColumn',
+      'OttomanChandelier',
+      'OttomanColumn',
+      'ProphetMihrab',
+      'ProphetMinbar',
+      'SalamRail',
+      'WomenWoodPartition',
+    ]);
     const arch = gltf.nodes.find((n) => n.name === 'InteriorArch') as { extras?: { pitch?: number } } | undefined;
     expect(arch?.extras?.pitch).toBe(INTERIOR_COL_STEP_M);
     const m = interiorPropMatrices(P);
-    expect(m.get('InteriorColumn')!.length).toBe(COLUMNS.length * 16);
+    expect(m.get('InteriorColumn')!.length).toBe(P.columns.length * 16);
+    expect(m.get('OttomanColumn')!.length).toBe(P.ottomanColumns.length * 16);
+    expect(P.columns.length + P.ottomanColumns.length).toBe(ALL_COLS.length);
     expect(m.get('InteriorArch')!.length).toBe((P.archesEastWest.length + P.archesNorthSouth.length) * 16);
+    expect(m.get('ChamberGrille')!.length).toBeGreaterThan(20 * 16);
+    expect(m.get('SalamRail')!.length).toBeGreaterThan(15 * 16);
+    expect(m.get('ProphetMinbar')!.length).toBe(16);
+    expect(m.get('ProphetMihrab')!.length).toBe(16);
+    expect(m.get('WomenWoodPartition')!.length).toBeGreaterThan(100 * 16);
+  });
+
+  it('keeps the Sacred Chamber completely free of interior columns or rugs, and marks Rawdah carpets distinctly', () => {
+    for (const c of ALL_COLS) expect(inChamber(FLOOR, c)).toBe(false);
+    for (const r of RUGS) expect(inChamber(FLOOR, [r.x, r.z])).toBe(false);
+    const rawdahRing = FLOOR.carpets.find((c) => c.navq === RAWDAH_NAVQ)!.ring;
+    const rawdahRugs = RUGS.filter((r) => r.rawdah);
+    expect(rawdahRugs.length).toBeGreaterThan(30);
+    for (const r of rawdahRugs) expect(inside([r.x, r.z], rawdahRing)).toBe(true);
+    expect(P.ottomanColumns.length).toBeGreaterThanOrEqual(8);
+    expect(P.ottomanChandeliers.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it('places women’s wooden partitions along the interior men–women boundary without blocking women’s gates 11–17 or 23–31', () => {
+    expect(P.womenPartitions.length).toBeGreaterThan(100);
+    const womenGateIds = [11, 12, 13, 14, 15, 16, 17, 23, 24, 25, 26, 27, 28, 29, 30, 31];
+    for (const id of womenGateIds) {
+      const g = POI_BY_ID.get(id);
+      if (!g) continue;
+      const [gx, gz] = toModelMetres([g.lng, g.lat]);
+      for (const wp of P.womenPartitions) {
+        expect(Math.hypot(wp.x - gx, wp.z - gz), `partition too close to women gate ${id}`).toBeGreaterThan(3.5);
+      }
+    }
   });
 
   it('light their lanterns warm at night', () => {
