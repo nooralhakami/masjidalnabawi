@@ -779,6 +779,9 @@ export function domeInstanceCentres(model: AlharamainModel, gltf: GltfJson): [nu
 /** The interior props' file (scripts/build-interior-props-glb.py): one prototype per prop, at the origin. */
 export const INTERIOR_PROPS_MODEL: AlharamainModel = { url: './models/haram-interior-props.glb', anchors: [MODEL_ORIGIN_LNGLAT], rotation: 0 };
 
+/** The Mosque's 3D hinged door kit (scripts/build-door-kit-glb.py): frame, swinging leaves, threshold glow. */
+export const DOOR_KIT_MODEL: AlharamainModel = { url: './models/haram-doors-kit.glb', anchors: [MODEL_ORIGIN_LNGLAT], rotation: 0 };
+
 /**
  * The props' instance matrices by mesh name: Saudi extension columns, lanterns, ablaq arches and
  * ring chandeliers; Ottoman Rawdah/old-Mosque columns and chandeliers; exterior grilles of the
@@ -896,6 +899,18 @@ export class HaramGlbLayer implements CustomLayerInterface {
   private domeOpen = new Map<number, number>();
   private domeMoves = new Map<number, DomeMove>();
   private domeDirty = false;
+  /** The 3D hinged doors (owner, 2026-11-20): per-bay open fraction (`gateId:bayIndex`), active swings, dynamic buffers, and wall cut texture. */
+  private doorOpen = new Map<string, number>();
+  private doorMoves = new Map<string, DomeMove>();
+  private doorLeftBuf: WebGLBuffer | null = null;
+  private doorRightBuf: WebGLBuffer | null = null;
+  private doorGlowBuf: WebGLBuffer | null = null;
+  private doorsDirty = false;
+  private doorCutTex: WebGLTexture | null = null;
+  private doorCutCount = 0;
+  private uDoorCutCount: WebGLUniformLocation | null = null;
+  private uDoorCutOn: WebGLUniformLocation | null = null;
+  private uDoorCutTex: WebGLUniformLocation | null = null;
   /** The interior props' file is asked for once, when the interior's plan has arrived. */
   private propsRequested = false;
   /** Where the roof lifts this frame (the engine's answer: a tapped gate, a route inside). */
@@ -923,9 +938,10 @@ export class HaramGlbLayer implements CustomLayerInterface {
     this.map = map;
     this.propsRequested = false;
     this.initShader(gl);
-    this.unsubDoors = subscribeMosqueDoors(() => this.map?.triggerRepaint());
+    this.unsubDoors = subscribeMosqueDoors(() => this.syncDoorTargets());
     const generation = ++this.generation;
     for (const model of ALHARAMAIN_MODELS) void this.loadAsset(model, generation);
+    void this.loadAsset(DOOR_KIT_MODEL, generation, undefined, true);
   }
 
   onRemove(_map: MLMap, gl: WebGL2RenderingContext): void {
@@ -936,6 +952,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
     for (const b of this.buffers) gl.deleteBuffer(b);
     for (const t of this.textures) gl.deleteTexture(t);
     for (const asset of this.pending) for (const bmp of asset.images) bmp?.close();
+    if (this.doorCutTex) gl.deleteTexture(this.doorCutTex);
     if (this.fallbackTex) gl.deleteTexture(this.fallbackTex);
     if (this.program) gl.deleteProgram(this.program);
     if (this.depthProgram) gl.deleteProgram(this.depthProgram);
@@ -949,6 +966,12 @@ export class HaramGlbLayer implements CustomLayerInterface {
     this.prims = [];
     this.canopies = [];
     this.moves.clear();
+    this.doorOpen.clear();
+    this.doorMoves.clear();
+    this.doorLeftBuf = this.doorRightBuf = this.doorGlowBuf = null;
+    this.doorsDirty = false;
+    this.doorCutTex = null;
+    this.doorCutCount = 0;
     this.animMatrices = this.animFolds = null;
     this.animCount = 0;
     this.lastMvp = null;
@@ -997,6 +1020,9 @@ export class HaramGlbLayer implements CustomLayerInterface {
     this.uPortalSize = gl.getUniformLocation(prog, 'u_portalSize');
     this.uLattice = gl.getUniformLocation(prog, 'u_lattice');
     this.uCutoff = gl.getUniformLocation(prog, 'u_cutoff');
+    this.uDoorCutCount = gl.getUniformLocation(prog, 'u_doorCutCount');
+    this.uDoorCutOn = gl.getUniformLocation(prog, 'u_doorCutOn');
+    this.uDoorCutTex = gl.getUniformLocation(prog, 'u_doorCutTex');
     this.uCanopy = gl.getUniformLocation(prog, 'u_canopy');
     this.uRevealRole = gl.getUniformLocation(prog, 'u_revealRole');
     this.uRevealDisc = gl.getUniformLocation(prog, 'u_revealDisc');
@@ -1032,7 +1058,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
   }
 
   /** Each file loads on its own: a missing one leaves the others standing and the map unharmed. */
-  private async loadAsset(model: AlharamainModel, generation: number, props?: Map<string, Float32Array>): Promise<void> {
+  private async loadAsset(model: AlharamainModel, generation: number, props?: Map<string, Float32Array>, doorKit = false): Promise<void> {
     try {
       const res = await fetch(model.url);
       if (!res.ok) return;
@@ -1049,7 +1075,7 @@ export class HaramGlbLayer implements CustomLayerInterface {
         for (const bmp of images) bmp?.close();
         return;
       }
-      this.pending.push({ model, gltf, bin, images, props });
+      this.pending.push({ model, gltf, bin, images, props, doorKit });
       if (this.onLamps && model.url.includes('canopies')) this.onLamps(nodePositions(model, gltf));
       this.map?.triggerRepaint();
     } catch {
