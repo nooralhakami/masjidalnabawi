@@ -8,9 +8,19 @@ afterEach(() => resetMosqueDoors());
 describe('strict doorway-only camera entry into the Mosque (owner, 2026-11-20)', () => {
   const doors = () => getMosqueDoors();
 
-  it('blocks zooming straight down through the solid Mosque roof when not inside', () => {
+  it('allows flying/panning freely above roof altitude and blocks zooming straight down through the solid roof', () => {
+    const plazaOutside: XY = [-275, -230];
     const roofCenter: XY = [-80, -230];
+    expect(isInsideMosqueWall(plazaOutside)).toBe(false);
     expect(isInsideMosqueWall(roofCenter)).toBe(true);
+    const flyOver = guardMosqueCameraEntry(
+      { inside: false, center: plazaOutside, eyeX: -275, eyeY: 50, eyeZ: -215, zoom: 18.4 },
+      { center: roofCenter, eyeX: -80, eyeY: 50, eyeZ: -215, zoom: 18.4 },
+      doors(),
+    );
+    expect(flyOver.allowed).toBe(true);
+    expect(flyOver.inside).toBe(false);
+
     const res = guardMosqueCameraEntry(
       { inside: false, center: roofCenter, eyeX: -80, eyeY: 28, eyeZ: -215, zoom: 18.6 },
       { center: roofCenter, eyeX: -80, eyeY: 9.5, eyeZ: -222, zoom: ENTRY_ZOOM_THRESHOLD + 0.4 },

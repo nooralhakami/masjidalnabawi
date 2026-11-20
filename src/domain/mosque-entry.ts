@@ -173,16 +173,17 @@ export function guardMosqueCameraEntry(
     return { allowed: true, inside: false, blocked: false };
   }
 
-  // Outside the Mosque currently (`!prev.inside`):
+  // Outside the Mosque currently (`!prev.inside`): allow free high-altitude flight above the roof.
+  if (next.zoom < ENTRY_ZOOM_THRESHOLD && next.eyeY > MOSQUE_ROOF_ALT_M) {
+    return { allowed: true, inside: false, blocked: false };
+  }
+
   const prevIn = isInsideMosqueWall(prev.center);
   const nextIn = isInsideMosqueWall(next.center);
   const eyeJustEntered = !isInsideMosqueWall([prev.eyeX, prev.eyeZ]) && isInsideMosqueWall([next.eyeX, next.eyeZ]) && next.eyeY <= MOSQUE_ROOF_ALT_M;
 
-  // 1. High-altitude roof inspection / zooming vertically onto the roof (no horizontal door crossing)
+  // 1. Zooming vertically down through the roof over the Mosque (no horizontal door crossing)
   if (prevIn && nextIn) {
-    if (next.zoom < ENTRY_ZOOM_THRESHOLD && next.eyeY > MOSQUE_ROOF_ALT_M) {
-      return { allowed: true, inside: false, blocked: false };
-    }
     const openHit = findMatchingOpenBay(prev.center, next.center, [next.eyeX, next.eyeZ], doors, effOpen);
     if (openHit) {
       return {

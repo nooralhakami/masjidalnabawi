@@ -91,6 +91,7 @@ def make_materials() -> None:
             "doorAtlas": textured_material("doorAtlas", img, metallic=0.38, roughness=0.38),
             "doorStone": textured_material("doorStone", img, metallic=0.0, roughness=0.64),
             "marbleFloor": textured_material("marbleFloor", img, metallic=0.04, roughness=0.22),
+            "marblePlain": solid_material("marblePlain", (0.89, 0.85, 0.78, 1.0), metallic=0.04, roughness=0.24),
             "transomGlass": textured_material("transomGlass", img, metallic=0.0, roughness=0.18),
             "doorGold": solid_material("doorGold", (0.90, 0.70, 0.27, 1.0), metallic=0.92, roughness=0.26),
             "doorWood": solid_material("doorWood", (0.24, 0.14, 0.08, 1.0), metallic=0.12, roughness=0.52),
@@ -192,7 +193,7 @@ def door_leaf(side: str):
     b = Builder(name)
 
     xa, xb = (0.015, 0.995) if is_left else (-0.995, -0.015)
-    z0, z1 = 0.015, 0.760
+    z0, z1 = 0.016, 0.760
 
     # Front (-Y) maps [xa -> xb] onto [0 -> 256] (left) or [256 -> 512] (right)
     # Back (+Y) maps [xb -> xa] onto [256 -> 512] (left back) or [0 -> 256] (right back) so text reads RTL on both faces!
@@ -267,11 +268,11 @@ def door_leaf(side: str):
         b.cylinder_z(hx, -0.04, hz - 0.024, hz + 0.024, 0.024, 0.024, 8, "doorGold")
         b.cylinder_z(hx, 0.04, hz - 0.024, hz + 0.024, 0.024, 0.024, 8, "doorGold")
 
-    # 6. Raised 3D semicircular half-medallion relief boss on BOTH faces centered on meeting seam!
+    # 6. Raised 3D semicircular half-medallion relief boss matching exact aspect-corrected circular ring!
     seam_x = 0.995 if is_left else -0.995
-    med_z = z0 + (z1 - z0) * (1.0 - 545.0 / 1024.0)  # matches atlas my=545 exactly (~0.364)
-    rx = 0.305
-    rz = 0.114
+    med_z = z0 + (z1 - z0) * (1.0 - 545.0 / 1024.0)
+    rx = 0.346
+    rz = 0.116
     segs = 12
     # Seam angles sweeping into left leaf (PI/2 .. 3*PI/2) or right leaf (-PI/2 .. +PI/2)
     a_start = math.pi * 0.5 if is_left else -math.pi * 0.5
@@ -324,12 +325,8 @@ def door_portal_frame():
     glass_uv = (516.0, 260.0, 1020.0, 392.0)
     lantern_uv = (516.0, 400.0, 764.0, 508.0)
 
-    # 1. Polished 8-pointed star marble floor (no central wall; completely open through!)
-    b.box(
-        -0.50, 0.50, -0.34, 1.78, 0.00, 0.020, "marbleFloor",
-        uv_top=(520.0, 774.0, 1016.0, 1018.0),
-        uv_side=granite_uv,
-    )
+    # 1. Honed plain cream Medina marble threshold floor (no geometric star pattern under flush gates)
+    b.box(-0.50, 0.50, -0.34, 1.78, 0.00, 0.012, "marblePlain")
 
     # 2. Outer stone doorway jambs (granite lower dado + dressed sandstone ashlar upper cheeks)
     for sx0, sx1 in ((-0.54, -0.46), (0.46, 0.54)):
@@ -419,6 +416,19 @@ def door_portal_frame():
     b.finish()
 
 
+def door_star_floor():
+    """Geometric 8-pointed Islamic star marble inlay panel instantiated strictly on inward-set porch gates (e.g. 7 & 9)."""
+    b = Builder("DoorStarFloor")
+    u0, v0 = uv_from_px(520.0, 1018.0)
+    u1, v1 = uv_from_px(1016.0, 774.0)
+    b.face(
+        [(-0.50, -1.0, 0.0145), (0.50, -1.0, 0.0145), (0.50, 0.0, 0.0145), (-0.50, 0.0, 0.0145)],
+        "marbleFloor",
+        [(u0, v0), (u1, v0), (u1, v1), (u0, v1)],
+    )
+    b.finish()
+
+
 def door_threshold_glow():
     b = Builder("DoorThresholdGlow")
     # Extends outward from y=0 to y=-1.0 (scaled dynamically by open fraction & night intensity)
@@ -436,6 +446,7 @@ def main():
     door_leaf("L")
     door_leaf("R")
     door_portal_frame()
+    door_star_floor()
     door_threshold_glow()
     OUTPUT_GLB.parent.mkdir(parents=True, exist_ok=True)
     bpy.ops.export_scene.gltf(

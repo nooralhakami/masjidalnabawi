@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { afterEach, describe, expect, it } from 'vitest';
 import doors3dRaw from '../../data/mosque-doors-3d.json';
-import { DOOR_SWING_MS, buildDoorCutBoxes, buildDoorKitMatrices, doorSwingAt, getMosqueDoors, resetMosqueDoors } from '../../src/domain/mosque-doors';
+import { DOOR_SWING_MS, RECESSED_PORCH_GATES, buildDoorCutBoxes, buildDoorKitMatrices, doorSwingAt, getMosqueDoors, resetMosqueDoors } from '../../src/domain/mosque-doors';
 import { parseGlbBuffer } from '../../src/map/glb-layer';
 import { materialGlow } from '../../src/map/scene-light';
 
@@ -42,10 +42,10 @@ describe('Stage 3: Real Swinging 3D Mosque Doors (haram-doors-kit & mosque-doors
 
     const { gltf, bin } = parseGlbBuffer(raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength) as ArrayBuffer);
     const meshNames = gltf.meshes.map((m) => m.name).sort();
-    expect(meshNames).toEqual(['DoorLeafLeft', 'DoorLeafRight', 'DoorPortalFrame', 'DoorThresholdGlow']);
+    expect(meshNames).toEqual(['DoorLeafLeft', 'DoorLeafRight', 'DoorPortalFrame', 'DoorStarFloor', 'DoorThresholdGlow']);
     expect((gltf as { images?: unknown[] }).images?.length ?? 0).toBeGreaterThanOrEqual(1);
 
-    for (const name of ['DoorLeafLeft', 'DoorLeafRight', 'DoorPortalFrame']) {
+    for (const name of ['DoorLeafLeft', 'DoorLeafRight', 'DoorPortalFrame', 'DoorStarFloor']) {
       const m = gltf.meshes.find((x) => x.name === name)!;
       expect(
         m.primitives.some((p) => p.attributes.TEXCOORD_0 !== undefined),
@@ -99,8 +99,16 @@ describe('Stage 3: Real Swinging 3D Mosque Doors (haram-doors-kit & mosque-doors
     expect(open.leftLeaves).toHaveLength(83 * 16);
     expect(open.rightLeaves).toHaveLength(83 * 16);
     expect(open.glows).toHaveLength(83 * 16);
+    expect(open.starFloors).toHaveLength(RECESSED_PORCH_GATES.size * 16);
+    expect(RECESSED_PORCH_GATES.has(7)).toBe(true);
+    expect(RECESSED_PORCH_GATES.has(9)).toBe(true);
+    expect(RECESSED_PORCH_GATES.has(8)).toBe(false);
+    expect(RECESSED_PORCH_GATES.has(4)).toBe(false);
 
     const detXZ = (arr: Float32Array, off: number) => arr[off + 5] * (arr[off] * arr[off + 10] - arr[off + 2] * arr[off + 8]);
+    for (let s = 0; s < RECESSED_PORCH_GATES.size; s++) {
+      expect(detXZ(open.starFloors, s * 16), `star floor det ${s}`).toBeGreaterThan(0);
+    }
 
     let bayIdx = 0;
     for (const g of gates) {

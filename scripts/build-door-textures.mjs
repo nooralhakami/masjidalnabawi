@@ -52,9 +52,14 @@ window.renderAtlas = async () => {
   const c = document.getElementById('c');
   const ctx = c.getContext('2d');
 
+  const DOOR_ASPECT = 0.565;
+
   // ---------- Helpers ----------
-  function rivet(x, y, r, goldTone = true) {
-    const g = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r * 1.15);
+  function rivet(x, y, r, goldTone = true, sx = DOOR_ASPECT) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(sx, 1.0);
+    const g = ctx.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r * 1.15);
     if (goldTone) {
       g.addColorStop(0, '#fff7cc');
       g.addColorStop(0.45, '#e8bc4a');
@@ -66,9 +71,10 @@ window.renderAtlas = async () => {
       g.addColorStop(1, '#2d1c06');
     }
     ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.fillStyle = g;
     ctx.fill();
+    ctx.restore();
   }
 
   function scallopBand(x0, y0, x1, y1, horizontal = true) {
@@ -128,34 +134,35 @@ window.renderAtlas = async () => {
   ctx.fillStyle = '#2d180a';
   ctx.fillRect(34, 214, 444, 662);
 
-  // Draw crisp coffered diagonal lattice bars & recessed pockets
-  const spacing = 54;
+  // Draw crisp coffered diagonal lattice bars & recessed pockets (aspect-corrected to true 45° diamonds in 3D)
+  const spacing = 68;
   ctx.translate(256, 545);
+  ctx.scale(DOOR_ASPECT, 1.0);
   ctx.rotate(Math.PI / 4);
-  for (let gx = -600; gx <= 600; gx += spacing) {
-    for (let gy = -600; gy <= 600; gy += spacing) {
+  for (let gx = -800; gx <= 800; gx += spacing) {
+    for (let gy = -800; gy <= 800; gy += spacing) {
       // Recessed bevel pocket
       ctx.fillStyle = '#4f2f17';
-      ctx.fillRect(gx + 5, gy + 5, spacing - 10, spacing - 10);
+      ctx.fillRect(gx + 6, gy + 6, spacing - 12, spacing - 12);
       ctx.fillStyle = '#261409';
-      ctx.fillRect(gx + 10, gy + 10, spacing - 20, spacing - 20);
+      ctx.fillRect(gx + 12, gy + 12, spacing - 24, spacing - 24);
       // Warm carved teak interwoven pinwheel ribs
       ctx.fillStyle = '#8b5930';
-      ctx.fillRect(gx - 4, gy, 8, spacing);
-      ctx.fillRect(gx, gy - 4, spacing, 8);
+      ctx.fillRect(gx - 5, gy, 10, spacing);
+      ctx.fillRect(gx, gy - 5, spacing, 10);
       // Fine brass inlay line down center of teak ribs
       ctx.fillStyle = '#deb14c';
-      ctx.fillRect(gx - 1, gy, 2, spacing);
-      ctx.fillRect(gx, gy - 1, spacing, 2);
+      ctx.fillRect(gx - 1.4, gy, 2.8, spacing);
+      ctx.fillRect(gx, gy - 1.4, spacing, 2.8);
       // Central golden boss medallion in every square pocket
       const bx = gx + spacing / 2;
       const by = gy + spacing / 2;
-      const rg = ctx.createRadialGradient(bx - 1.5, by - 1.5, 1, bx, by, 7.5);
+      const rg = ctx.createRadialGradient(bx - 2, by - 2, 1.2, bx, by, 9);
       rg.addColorStop(0, '#fff5c0');
       rg.addColorStop(0.55, '#dfa83a');
       rg.addColorStop(1, '#4c2c0b');
       ctx.beginPath();
-      ctx.arc(bx, by, 7.2, 0, Math.PI * 2);
+      ctx.arc(bx, by, 8.8, 0, Math.PI * 2);
       ctx.fillStyle = rg;
       ctx.fill();
     }
@@ -207,27 +214,31 @@ window.renderAtlas = async () => {
   ctx.lineWidth = 4;
   ctx.strokeRect(38, 40, 436, 106);
 
-  // Left & Right gold corner cartouches with "الله"
-  for (const cx of [78, 434]) {
+  // Left & Right gold corner cartouches with "الله" (aspect-corrected to true circular medallions in 3D)
+  for (const cx of [70, 442]) {
+    ctx.save();
+    ctx.translate(cx, 93);
+    ctx.scale(DOOR_ASPECT, 1.0);
     ctx.beginPath();
-    ctx.arc(cx, 93, 35, 0, Math.PI * 2);
-    const cg = ctx.createRadialGradient(cx - 6, 86, 4, cx, 93, 36);
+    ctx.arc(0, 0, 42, 0, Math.PI * 2);
+    const cg = ctx.createRadialGradient(-8, -7, 5, 0, 0, 44);
     cg.addColorStop(0, '#fff2b0');
     cg.addColorStop(0.65, '#dfa838');
     cg.addColorStop(1, '#7a5110');
     ctx.fillStyle = cg;
     ctx.fill();
     ctx.strokeStyle = '#4b2d06';
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 3;
     ctx.stroke();
 
-    ctx.font = '46px "HaramThuluth", "Diwan Thuluth", "DecoType Naskh", serif';
+    ctx.font = '56px "HaramThuluth", "Diwan Thuluth", "DecoType Naskh", serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#4e2f08';
-    ctx.fillText('الله', cx + 1, 97);
+    ctx.fillText('الله', 1.5, 4);
     ctx.fillStyle = '#fff3b8';
-    ctx.fillText('الله', cx, 95);
+    ctx.fillText('الله', 0, 2);
+    ctx.restore();
   }
 
   // Studded horizontal gold band (y: 148..212)
@@ -267,57 +278,60 @@ window.renderAtlas = async () => {
     }
   }
 
-  // Grand central golden medallion (x=256, y=545)
+  // Grand central golden medallion (x=256, y=545; scaled by DOOR_ASPECT so it renders 1:1 circular in 3D!)
   const mx = 256, my = 545;
+  ctx.save();
+  ctx.translate(mx, my);
+  ctx.scale(DOOR_ASPECT, 1.0);
   // 16 radiating lotus finials
   for (let k = 0; k < 16; k++) {
     const ang = (k / 16) * Math.PI * 2;
     const cardinal = k % 4 === 0;
-    const rLen = cardinal ? 186 : 168;
+    const rLen = cardinal ? 194 : 174;
     ctx.save();
-    ctx.translate(mx + Math.cos(ang) * rLen, my + Math.sin(ang) * rLen);
+    ctx.translate(Math.cos(ang) * rLen, Math.sin(ang) * rLen);
     ctx.rotate(ang);
     ctx.beginPath();
-    ctx.moveTo(18, 0);
-    ctx.quadraticCurveTo(0, 12, -16, 7);
-    ctx.lineTo(-16, -7);
-    ctx.quadraticCurveTo(0, -12, 18, 0);
+    ctx.moveTo(22, 0);
+    ctx.quadraticCurveTo(0, 14, -18, 8);
+    ctx.lineTo(-18, -8);
+    ctx.quadraticCurveTo(0, -14, 22, 0);
     ctx.fillStyle = '#f5ce68';
     ctx.fill();
     ctx.strokeStyle = '#6b430b';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2.5;
     ctx.stroke();
     ctx.restore();
   }
-  // Scalloped outer medallion disk
-  const medOut = ctx.createRadialGradient(mx - 20, my - 25, 25, mx, my, 160);
+  // Scalloped outer medallion disk (matches Blender rx=0.346, rz=0.116)
+  const medOut = ctx.createRadialGradient(-22, -26, 26, 0, 0, 166);
   medOut.addColorStop(0, '#fff7c8');
   medOut.addColorStop(0.55, '#ecc152');
   medOut.addColorStop(0.85, '#b67e1c');
   medOut.addColorStop(1, '#4b2d07');
   ctx.beginPath();
-  ctx.arc(mx, my, 154, 0, Math.PI * 2);
+  ctx.arc(0, 0, 160, 0, Math.PI * 2);
   ctx.fillStyle = medOut;
   ctx.fill();
 
   // Dark bronze floral ring
   ctx.beginPath();
-  ctx.arc(mx, my, 136, 0, Math.PI * 2);
+  ctx.arc(0, 0, 142, 0, Math.PI * 2);
   ctx.fillStyle = '#3f2608';
   ctx.fill();
   for (let k = 0; k < 24; k++) {
     const a = (k / 24) * Math.PI * 2;
     ctx.beginPath();
-    ctx.arc(mx + Math.cos(a) * 119, my + Math.sin(a) * 119, 10, 0, Math.PI * 2);
+    ctx.arc(Math.cos(a) * 124, Math.sin(a) * 124, 11, 0, Math.PI * 2);
     ctx.strokeStyle = '#f2c75a';
-    ctx.lineWidth = 2.8;
+    ctx.lineWidth = 3.2;
     ctx.stroke();
   }
 
   // Beaded golden inner ring + embossed "محمد رسول الله"
   ctx.beginPath();
-  ctx.arc(mx, my, 100, 0, Math.PI * 2);
-  const medIn = ctx.createRadialGradient(mx - 12, my - 15, 8, mx, my, 100);
+  ctx.arc(0, 0, 105, 0, Math.PI * 2);
+  const medIn = ctx.createRadialGradient(-14, -16, 8, 0, 0, 105);
   medIn.addColorStop(0, '#fff5bd');
   medIn.addColorStop(0.5, '#e8bc4a');
   medIn.addColorStop(0.88, '#b57e1d');
@@ -325,29 +339,30 @@ window.renderAtlas = async () => {
   ctx.fillStyle = medIn;
   ctx.fill();
   ctx.strokeStyle = '#3e2405';
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 4.5;
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.arc(mx, my, 88, 0, Math.PI * 2);
+  ctx.arc(0, 0, 92, 0, Math.PI * 2);
   ctx.strokeStyle = '#734a0d';
-  ctx.lineWidth = 2.5;
+  ctx.lineWidth = 2.8;
   ctx.stroke();
 
   // Crisp RTL calligraphy inside medallion
-  ctx.font = '62px "HaramThuluth", "Diwan Thuluth", "DecoType Naskh", serif';
+  ctx.font = '72px "HaramThuluth", "Diwan Thuluth", "DecoType Naskh", serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#4c2e06';
-  ctx.fillText('محمد', mx + 1.5, my - 26);
+  ctx.fillText('محمد', 2, -26);
   ctx.fillStyle = '#fff6c6';
-  ctx.fillText('محمد', mx, my - 28);
+  ctx.fillText('محمد', 0, -28);
 
-  ctx.font = '44px "HaramThuluth", "Diwan Thuluth", "DecoType Naskh", serif';
+  ctx.font = '50px "HaramThuluth", "Diwan Thuluth", "DecoType Naskh", serif';
   ctx.fillStyle = '#4c2e06';
-  ctx.fillText('رسول الله', mx + 1.5, my + 28);
+  ctx.fillText('رسول الله', 2, 32);
   ctx.fillStyle = '#fff6c6';
-  ctx.fillText('رسول الله', mx, my + 26);
+  ctx.fillText('رسول الله', 0, 30);
+  ctx.restore();
 
   // Subtle vertical leaf meeting hairline at center
   ctx.fillStyle = 'rgba(28, 16, 6, 0.72)';
@@ -382,44 +397,47 @@ window.renderAtlas = async () => {
   ctx.lineWidth = 2.5;
   ctx.strokeRect(536, 28, 464, 200);
 
-  // Flanking 12-petal carved rosettes (kept clear of center calligraphy)
-  for (const rx of [564, 972]) {
-    const ry = 128;
+  // Aspect-corrected rosettes & tall un-stretched bronze Thuluth inscription (lintel 3D ratio ~6.1:1 vs canvas 2:1 -> sx=0.34)
+  ctx.save();
+  ctx.translate(768, 128);
+  ctx.scale(0.34, 1.0);
+  for (const rx of [-580, 580]) {
     ctx.beginPath();
-    ctx.arc(rx, ry, 25, 0, Math.PI * 2);
-    ctx.fillStyle = '#ddd0bc';
+    ctx.arc(rx, 0, 62, 0, Math.PI * 2);
+    ctx.fillStyle = '#d9cbb4';
     ctx.fill();
-    ctx.strokeStyle = '#9a8466';
-    ctx.lineWidth = 2.2;
+    ctx.strokeStyle = '#8b7352';
+    ctx.lineWidth = 4;
     ctx.stroke();
     for (let k = 0; k < 12; k++) {
       const a = (k / 12) * Math.PI * 2;
       ctx.save();
-      ctx.translate(rx, ry);
+      ctx.translate(rx, 0);
       ctx.rotate(a);
       ctx.beginPath();
-      ctx.ellipse(12, 0, 9, 3.6, 0, 0, Math.PI * 2);
-      ctx.fillStyle = '#f4ede1';
+      ctx.ellipse(29, 0, 22, 8.5, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#f6efe3';
       ctx.fill();
-      ctx.strokeStyle = '#b49456';
-      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = '#9e7d43';
+      ctx.lineWidth = 2.4;
       ctx.stroke();
       ctx.restore();
     }
     ctx.beginPath();
-    ctx.arc(rx, ry, 6.5, 0, Math.PI * 2);
-    ctx.fillStyle = '#d7b25f';
+    ctx.arc(rx, 0, 15, 0, Math.PI * 2);
+    ctx.fillStyle = '#c89b44';
     ctx.fill();
   }
 
-  // Carved Arabic Quranic inscription "ادخلوها بسلام آمنين"
-  ctx.font = '56px "HaramThuluth", "Diwan Thuluth", "DecoType Naskh", serif';
+  // Crisp dark-bronze carved Quranic inscription "ادخلوها بسلام آمنين"
+  ctx.font = '96px "HaramThuluth", "Diwan Thuluth", "DecoType Naskh", serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#735733';
-  ctx.fillText('ادخلوها بسلام آمنين', 769, 132);
-  ctx.fillStyle = '#b98f3f';
-  ctx.fillText('ادخلوها بسلام آمنين', 768, 130);
+  ctx.fillStyle = '#4a3212';
+  ctx.fillText('ادخلوها بسلام آمنين', 3, 5);
+  ctx.fillStyle = '#8a6324';
+  ctx.fillText('ادخلوها بسلام آمنين', 0, 1);
+  ctx.restore();
   ctx.restore();
 
   // ---------- 3. MID-RIGHT TOP (512..1024 x 256..396): LEADED TRANSOM GLASS ----------
