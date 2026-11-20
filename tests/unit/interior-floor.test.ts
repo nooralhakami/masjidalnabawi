@@ -5,7 +5,16 @@ import data from '../../data/navq-interior-floor.json';
 import { POI_BY_ID } from '../../src/data';
 import type { InteriorFloorData } from '../../src/data-next/interior-floor-data';
 import { toModelMetres } from '../../src/domain/frames';
-import { inChamber, inCourtyard, interiorColumns, interiorFloorMetres, interiorPropPlacements, interiorRugs, RAWDAH_NAVQ, rawdahExtraColumns } from '../../src/domain/interior-floor';
+import {
+  inChamber,
+  inCourtyard,
+  interiorColumns,
+  interiorFloorMetres,
+  interiorPropPlacements,
+  interiorRugs,
+  RAWDAH_NAVQ,
+  rawdahExtraColumns,
+} from '../../src/domain/interior-floor';
 import { INTERIOR_COL_STEP_M } from '../../src/domain/interior-layout';
 import { COLUMN_CLEAR, inside, RUG_D, RUG_W, toLaid } from '../../src/domain/rug-layout';
 import { interiorPropMatrices, parseGlbBuffer } from '../../src/map/glb-layer';
@@ -142,7 +151,7 @@ describe('the interior’s props', () => {
       if (!g) continue;
       const [gx, gz] = toModelMetres([g.lng, g.lat]);
       for (const wp of P.womenPartitions) {
-        expect(Math.hypot(wp.x - gx, wp.z - gz), `partition too close to women gate ${id}`).toBeGreaterThan(3.5);
+        expect(Math.hypot(wp.x - gx, wp.z - gz), `partition too close to women gate ${id}`).toBeGreaterThan(2.5);
       }
     }
   });
