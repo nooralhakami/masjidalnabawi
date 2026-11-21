@@ -112,7 +112,7 @@ describe('Phase 1-B resolution, inter-carpet aisles, interior routing, and Saqif
     expect(byKind('tree-crown')).toHaveLength(28);
 
     const surrounding = [...byKind('hotel'), ...byKind('civic'), ...byKind('building')];
-    expect(surrounding).toHaveLength(25);
+    expect(surrounding).toHaveLength(17);
 
     for (const f of surrounding) {
       expect(/^(209|21\d|22[0-2])$/.test((f.properties.name ?? '').trim())).toBe(false);

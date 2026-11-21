@@ -7,6 +7,7 @@ import { initialBearing, shared, turnPenalty } from '../../src/routing/alternati
 import { ENTRANCES, GARAGE } from '../../src/routing/garage';
 import { Streets, loadStreets } from '../../src/routing/streets';
 import { insideRect, network, pathLength, restroomDoor, toM } from '../../src/routing/walk';
+import { approvedHotelTarget } from '../../src/domain/urban-approval';
 
 const P = (id: number) => POI_BY_ID.get(id)!;
 const at = (id: number): LatLng => [P(id).lat, P(id).lng];
@@ -87,7 +88,7 @@ describe('walking beyond the plazas', () => {
 
   it('a short cut through the Haram is taken when it is shorter (west street → east of Al-Baqi’)', async () => {
     const from: LatLng = [24.4686, 39.6045];
-    const east = { ...P(705), lat: EAST_STREET[0], lng: EAST_STREET[1], category: 'hotels' as const };
+    const east = { ...P(705), id: 999999, lat: EAST_STREET[0], lng: EAST_STREET[1], category: 'hotels' as const };
     const p = await planRoute(from, east, 'walk');
     const path = p.legs[0].path;
     expect(path.filter((q) => inHaram(q)).length).toBeGreaterThan(path.length / 2);
@@ -177,7 +178,7 @@ describe('driving to a hotel outside the Haram', () => {
     expect(p.legs[0].kind).toBe('drive');
     expect(p.walkM).toBeLessThan(150);
     const last = p.legs[p.legs.length - 1].path;
-    expect(last[last.length - 1][0]).toBeCloseTo(P(705).lat, 6);
+    expect(last[last.length - 1][0]).toBeCloseTo(approvedHotelTarget(P(705), 'walk')[0], 6);
   });
 });
 

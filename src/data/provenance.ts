@@ -170,7 +170,7 @@ export const DATA_PROVENANCE: Readonly<Record<DataSourceId, DataSourceRecord>> =
     routingAllowed: true,
     path: 'data/urban-approved.json',
     description:
-      'Stage 6 Zones 1 & 2 owner-approved buildings (96 hotels: 57 South + 39 West; 90 footprinted with 4 OSM levels and 86 display-only 3D heights + 6 pin-only) and 265 verified OSM street corridors.',
+      'Stage 6 Zones 1–3 owner-approved buildings (157 hotels: 57 South + 39 West + 61 North; 149 footprinted with 4 OSM levels and 145 display-only 3D heights + 8 pin-only) and 355 verified OSM street corridors.',
   },
   'navq-interior-floor': {
     id: 'navq-interior-floor',

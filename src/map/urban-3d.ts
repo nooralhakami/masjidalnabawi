@@ -14,10 +14,12 @@ import type { SceneLight } from './scene-light';
 
 export const URBAN_GLB_URL = './models/urban-south-stage6.glb';
 export const URBAN_WEST_GLB_URL = './models/urban-west-stage6.glb';
+export const URBAN_NORTH_GLB_URL = './models/urban-north-stage6.glb';
 export const URBAN_LAYER_ID = 'urban-south-3d';
 export const URBAN_ZONES = [
   { id: 'south', url: URBAN_GLB_URL },
   { id: 'west', url: URBAN_WEST_GLB_URL },
+  { id: 'north', url: URBAN_NORTH_GLB_URL },
 ] as const;
 export type UrbanZoneId = (typeof URBAN_ZONES)[number]['id'];
 export const URBAN_STREETS_SOURCE_ID = 'urban-south-streets';
@@ -100,9 +102,9 @@ export interface GlbValidationResult {
 }
 
 /**
- * A9 Provenance GLB Guard: validates `public/models/urban-{south,west}-stage6.glb` before uploading
- * to WebGL, proving it carries only owner-approved buildings (`haram-urban-approved-v2`) matching
- * its declared zone, verified or display-tagged heights within expected bounds, and approved nodes.
+ * A9 Provenance GLB Guard: validates `public/models/urban-{south,west,north}-stage6.glb` before
+ * uploading to WebGL, proving it carries only owner-approved buildings (`haram-urban-approved-v2`)
+ * matching its declared zone, verified or display-tagged heights within expected bounds, and approved nodes.
  */
 export function validateUrbanGlb(rawGltf: unknown, expectedZone?: UrbanZoneId): GlbValidationResult {
   const gltf = rawGltf as UrbanGlbJson;
@@ -407,7 +409,7 @@ function closeDecodedImage(img: ImageBitmap | HTMLImageElement | null): void {
   if (img && 'close' in img && typeof img.close === 'function') img.close();
 }
 
-/** Lazy WebGL2 custom layer rendering Stage 6 Zones 1 & 2 (South + West) buildings, streets, and props. */
+/** Lazy WebGL2 custom layer rendering Stage 6 Zones 1–3 (South + West + North) buildings, streets, and props. */
 export class Urban3DLayer implements CustomLayerInterface {
   readonly id = URBAN_LAYER_ID;
   readonly type = 'custom' as const;
@@ -723,6 +725,7 @@ export class Urban3DLayer implements CustomLayerInterface {
     const zoneFade: Record<UrbanZoneId, number> = {
       south: urbanOpacityForCamera(bearing, pitch, 'south'),
       west: urbanOpacityForCamera(bearing, pitch, 'west'),
+      north: urbanOpacityForCamera(bearing, pitch, 'north'),
     };
     const eye = cameraEye(this.map);
 
@@ -791,7 +794,7 @@ export class Urban3DLayer implements CustomLayerInterface {
   }
 }
 
-/** Add Stage 6 Zone 1 South OSM corridor lines + Blender GLB custom layer lazily when 3D turns on. */
+/** Add Stage 6 Zones 1–3 OSM corridor lines + Blender GLB custom layer lazily when 3D turns on. */
 export function mountUrban3D(map: MLMap, light: SceneLight, before?: string): Urban3DLayer {
   if (!map.getSource(URBAN_STREETS_SOURCE_ID)) {
     map.addSource(URBAN_STREETS_SOURCE_ID, { type: 'geojson', data: buildUrbanStreetGeoJson() });

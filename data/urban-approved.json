@@ -1,15 +1,16 @@
 {
   "schema": "haram-urban-approved-v2",
-  "stage": "stage-6-zones-south-west",
+  "stage": "stage-6-zones-south-west-north",
   "tier": "verified",
   "approvedBy": "owner",
   "approvedAt": "2026-11-21",
-  "footprintSource": "microsoft-building-footprints-audit+osm-west-5+authority-2026-guide",
+  "footprintSource": "microsoft-building-footprints-audit+osm-west-5+osm-north-6+authority-2026-guide",
   "streetSource": "data/streets.json (osm-verified)",
   "heightMode": "verified_and_estimated_display_only",
   "zonesApproved": [
     "south",
-    "west"
+    "west",
+    "north"
   ],
   "buildings": [
     {
@@ -5807,6 +5808,3738 @@
         [
           39.603669,
           24.4707438
+        ]
+      ]
+    },
+    {
+      "buildingId": "N101",
+      "poiId": 706,
+      "guideNumber": 101,
+      "zone": "north",
+      "name_ar": "فندق بيلتمور المدينة",
+      "osm": "w362200996",
+      "areaM2": 2658.3,
+      "center": [
+        24.4714578,
+        39.6133669
+      ],
+      "entranceSide": "east",
+      "entrance": [
+        24.4716991,
+        39.6136104
+      ],
+      "dropoff": [
+        24.4718631,
+        39.6136107
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 0,
+      "seed": 0.4322,
+      "tint": -0.0481,
+      "polygon": [
+        [
+          39.6132529,
+          24.4717942
+        ],
+        [
+          39.6132273,
+          24.4717942
+        ],
+        [
+          39.6132202,
+          24.4717411
+        ],
+        [
+          39.6132094,
+          24.47174
+        ],
+        [
+          39.6132013,
+          24.4716387
+        ],
+        [
+          39.6132227,
+          24.4716393
+        ],
+        [
+          39.6131952,
+          24.4714014
+        ],
+        [
+          39.613184,
+          24.4713941
+        ],
+        [
+          39.6131807,
+          24.4713444
+        ],
+        [
+          39.6131738,
+          24.4712323
+        ],
+        [
+          39.6131715,
+          24.4712015
+        ],
+        [
+          39.6131727,
+          24.4711006
+        ],
+        [
+          39.6134326,
+          24.4711035
+        ],
+        [
+          39.6135337,
+          24.4711765
+        ],
+        [
+          39.6135417,
+          24.4711897
+        ],
+        [
+          39.6135305,
+          24.4712072
+        ],
+        [
+          39.6135129,
+          24.4712043
+        ],
+        [
+          39.6134278,
+          24.471213
+        ],
+        [
+          39.6134342,
+          24.4712627
+        ],
+        [
+          39.6135193,
+          24.4712568
+        ],
+        [
+          39.613553,
+          24.4712875
+        ],
+        [
+          39.6135578,
+          24.471381
+        ],
+        [
+          39.6135177,
+          24.4714277
+        ],
+        [
+          39.6135369,
+          24.4715956
+        ],
+        [
+          39.6135835,
+          24.4716292
+        ],
+        [
+          39.6135915,
+          24.4717387
+        ],
+        [
+          39.6135498,
+          24.4717869
+        ],
+        [
+          39.6132786,
+          24.4718088
+        ],
+        [
+          39.6132529,
+          24.4717942
+        ]
+      ]
+    },
+    {
+      "buildingId": "N103",
+      "poiId": 701,
+      "guideNumber": 103,
+      "zone": "north",
+      "name_ar": "فندق دار التقوى",
+      "osm": "w629631732",
+      "areaM2": 801.1,
+      "center": [
+        24.4711622,
+        39.6119428
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4710552,
+        39.6118861
+      ],
+      "dropoff": [
+        24.47132,
+        39.612311
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 11,
+      "heightM": 39.4,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 0,
+      "seed": 0.5774,
+      "tint": 0.0449,
+      "polygon": [
+        [
+          39.6116953,
+          24.4716524
+        ],
+        [
+          39.6116765,
+          24.4716524
+        ],
+        [
+          39.6116765,
+          24.471075
+        ],
+        [
+          39.6122755,
+          24.471075
+        ],
+        [
+          39.6122758,
+          24.4711797
+        ],
+        [
+          39.6116765,
+          24.4711813
+        ],
+        [
+          39.6116765,
+          24.4712117
+        ],
+        [
+          39.6116939,
+          24.4712117
+        ],
+        [
+          39.6116953,
+          24.4716524
+        ]
+      ]
+    },
+    {
+      "buildingId": "N104",
+      "poiId": 2104,
+      "guideNumber": 104,
+      "zone": "north",
+      "name_ar": "الأندلس الفاخر",
+      "osm": null,
+      "areaM2": 1337.3,
+      "center": [
+        24.4713641,
+        39.6115639
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4710552,
+        39.6115327
+      ],
+      "dropoff": [
+        24.47132,
+        39.612311
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.2939,
+      "tint": 0.0133,
+      "polygon": [
+        [
+          39.6116676,
+          24.4716524
+        ],
+        [
+          39.6114619,
+          24.471653
+        ],
+        [
+          39.6114601,
+          24.471075
+        ],
+        [
+          39.6116676,
+          24.471075
+        ],
+        [
+          39.6116676,
+          24.4711813
+        ],
+        [
+          39.6116509,
+          24.4711813
+        ],
+        [
+          39.611651,
+          24.4712118
+        ],
+        [
+          39.6116676,
+          24.4712118
+        ],
+        [
+          39.6116676,
+          24.4716524
+        ]
+      ]
+    },
+    {
+      "buildingId": "N106",
+      "poiId": 2106,
+      "guideNumber": 106,
+      "zone": "north",
+      "name_ar": "الفيروز شطة",
+      "osm": null,
+      "areaM2": 538.9,
+      "center": [
+        24.4716201,
+        39.6126185
+      ],
+      "entranceSide": "west",
+      "entrance": [
+        24.4716436,
+        39.6124543
+      ],
+      "dropoff": [
+        24.4716392,
+        39.6123
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.0468,
+      "tint": 0.0238,
+      "polygon": [
+        [
+          39.6124774,
+          24.4715344
+        ],
+        [
+          39.6127617,
+          24.4715374
+        ],
+        [
+          39.6127595,
+          24.4717059
+        ],
+        [
+          39.6124752,
+          24.4717028
+        ],
+        [
+          39.6124774,
+          24.4715344
+        ]
+      ]
+    },
+    {
+      "buildingId": "N107",
+      "poiId": 703,
+      "guideNumber": 107,
+      "zone": "north",
+      "name_ar": "جولدن توليب الذهبي",
+      "osm": "w65543016",
+      "areaM2": 586.1,
+      "center": [
+        24.4714344,
+        39.6126147
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.471325,
+        39.6126556
+      ],
+      "dropoff": [
+        24.47132,
+        39.612311
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.4979,
+      "tint": 0.0468,
+      "polygon": [
+        [
+          39.6124811,
+          24.4713367
+        ],
+        [
+          39.6127494,
+          24.471338
+        ],
+        [
+          39.6127482,
+          24.4715322
+        ],
+        [
+          39.6124799,
+          24.4715308
+        ],
+        [
+          39.6124811,
+          24.4713367
+        ]
+      ]
+    },
+    {
+      "buildingId": "N109",
+      "poiId": 715,
+      "guideNumber": 109,
+      "zone": "north",
+      "name_ar": "فندق دارالإيمان الحرم",
+      "osm": "r1021900",
+      "areaM2": 2498.4,
+      "center": [
+        24.4721148,
+        39.6133539
+      ],
+      "entranceSide": "west",
+      "entrance": [
+        24.4721842,
+        39.6131019
+      ],
+      "dropoff": [
+        24.471864,
+        39.6131012
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 11,
+      "heightM": 39.4,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.7081,
+      "tint": 0.0296,
+      "polygon": [
+        [
+          39.6131165,
+          24.4718812
+        ],
+        [
+          39.6135926,
+          24.4718822
+        ],
+        [
+          39.6135913,
+          24.4723485
+        ],
+        [
+          39.6131153,
+          24.4723474
+        ],
+        [
+          39.6131165,
+          24.4718812
+        ]
+      ]
+    },
+    {
+      "buildingId": "N110",
+      "poiId": 2110,
+      "guideNumber": 110,
+      "zone": "north",
+      "name_ar": "جراند بلازا المدينة",
+      "osm": null,
+      "areaM2": 1320.9,
+      "center": [
+        24.4721166,
+        39.6126067
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4718745,
+        39.6126452
+      ],
+      "dropoff": [
+        24.4718718,
+        39.6126451
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 0,
+      "seed": 0.312,
+      "tint": 0.0366,
+      "polygon": [
+        [
+          39.6127345,
+          24.4723462
+        ],
+        [
+          39.6124785,
+          24.4723459
+        ],
+        [
+          39.6124791,
+          24.4718869
+        ],
+        [
+          39.6127345,
+          24.4718872
+        ],
+        [
+          39.6127345,
+          24.4723462
+        ]
+      ]
+    },
+    {
+      "buildingId": "N112",
+      "poiId": 2112,
+      "guideNumber": 112,
+      "zone": "north",
+      "name_ar": "جراند بلازا بدر المقام",
+      "osm": null,
+      "areaM2": 1320.9,
+      "center": [
+        24.4721168,
+        39.6128713
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4718676,
+        39.6128715
+      ],
+      "dropoff": [
+        24.4718679,
+        39.6128715
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 11,
+      "heightM": 39.4,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 0,
+      "seed": 0.1152,
+      "tint": -0.0317,
+      "polygon": [
+        [
+          39.6129989,
+          24.4723465
+        ],
+        [
+          39.6127434,
+          24.4723462
+        ],
+        [
+          39.6127434,
+          24.4718872
+        ],
+        [
+          39.6129995,
+          24.4718875
+        ],
+        [
+          39.6129989,
+          24.4723465
+        ]
+      ]
+    },
+    {
+      "buildingId": "N113",
+      "poiId": 710,
+      "guideNumber": 113,
+      "zone": "north",
+      "name_ar": "فندق الساحة",
+      "osm": "n5945036047",
+      "areaM2": 0.0,
+      "center": [
+        24.4725304,
+        39.6125485
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4722753,
+        39.6126027
+      ],
+      "dropoff": [
+        24.4725845,
+        39.6126085
+      ],
+      "hasFootprint": false,
+      "footprintSplit": "none",
+      "levels": null,
+      "displayFloors": null,
+      "heightM": 0.0,
+      "heightSource": "none",
+      "confidence": "none",
+      "styleId": 0,
+      "seed": 0.3413,
+      "tint": 0.0,
+      "polygon": []
+    },
+    {
+      "buildingId": "N114",
+      "poiId": 709,
+      "guideNumber": 114,
+      "zone": "north",
+      "name_ar": "فندق دلة طيبة",
+      "osm": "w65543060",
+      "areaM2": 2004.1,
+      "center": [
+        24.4721324,
+        39.6121565
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4718877,
+        39.6122202
+      ],
+      "dropoff": [
+        24.4718724,
+        39.6122201
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 13,
+      "heightM": 45.7,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.6247,
+      "tint": -0.0352,
+      "polygon": [
+        [
+          39.6123583,
+          24.4719069
+        ],
+        [
+          39.6123604,
+          24.4723683
+        ],
+        [
+          39.6122893,
+          24.4723686
+        ],
+        [
+          39.6122892,
+          24.4723344
+        ],
+        [
+          39.6120491,
+          24.4723353
+        ],
+        [
+          39.6120492,
+          24.4723646
+        ],
+        [
+          39.6119285,
+          24.472365
+        ],
+        [
+          39.611928,
+          24.4722381
+        ],
+        [
+          39.6119655,
+          24.472238
+        ],
+        [
+          39.611964,
+          24.4719084
+        ],
+        [
+          39.6123583,
+          24.4719069
+        ]
+      ]
+    },
+    {
+      "buildingId": "N115",
+      "poiId": 707,
+      "guideNumber": 115,
+      "zone": "north",
+      "name_ar": "فندق سوفيتيل شهد المدينة",
+      "osm": "w65541436",
+      "areaM2": 2123.5,
+      "center": [
+        24.4720536,
+        39.6115184
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4717342,
+        39.6115634
+      ],
+      "dropoff": [
+        24.471943,
+        39.611814
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.476,
+      "tint": -0.0307,
+      "polygon": [
+        [
+          39.6116695,
+          24.4717422
+        ],
+        [
+          39.6116704,
+          24.4723647
+        ],
+        [
+          39.6113673,
+          24.4723651
+        ],
+        [
+          39.6113664,
+          24.4717426
+        ],
+        [
+          39.6116695,
+          24.4717422
+        ]
+      ]
+    },
+    {
+      "buildingId": "N116",
+      "poiId": 2116,
+      "guideNumber": 116,
+      "zone": "north",
+      "name_ar": "اجنحة الروضة الفاخرة",
+      "osm": null,
+      "areaM2": 2509.3,
+      "center": [
+        24.4728789,
+        39.6115798
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4726438,
+        39.6115036
+      ],
+      "dropoff": [
+        24.4725996,
+        39.6115031
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 13,
+      "heightM": 45.7,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 0,
+      "seed": 0.244,
+      "tint": -0.0082,
+      "polygon": [
+        [
+          39.6118408,
+          24.4726656
+        ],
+        [
+          39.6118377,
+          24.4730952
+        ],
+        [
+          39.6113188,
+          24.4730922
+        ],
+        [
+          39.6113218,
+          24.4726625
+        ],
+        [
+          39.6118408,
+          24.4726656
+        ]
+      ]
+    },
+    {
+      "buildingId": "N117",
+      "poiId": 2117,
+      "guideNumber": 117,
+      "zone": "north",
+      "name_ar": "سنابل المدينة",
+      "osm": null,
+      "areaM2": 680.5,
+      "center": [
+        24.4727596,
+        39.6120686
+      ],
+      "entranceSide": "west",
+      "entrance": [
+        24.4727921,
+        39.6119127
+      ],
+      "dropoff": [
+        24.4725947,
+        39.6119085
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 10,
+      "heightM": 36.2,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.346,
+      "tint": -0.0512,
+      "polygon": [
+        [
+          39.612218,
+          24.4728604
+        ],
+        [
+          39.6119225,
+          24.4728637
+        ],
+        [
+          39.6119197,
+          24.4726587
+        ],
+        [
+          39.612214,
+          24.4726554
+        ],
+        [
+          39.612218,
+          24.4728604
+        ]
+      ]
+    },
+    {
+      "buildingId": "N118",
+      "poiId": 2118,
+      "guideNumber": 118,
+      "zone": "north",
+      "name_ar": "اركان الذهبي",
+      "osm": null,
+      "areaM2": 692.5,
+      "center": [
+        24.4729958,
+        39.6120516
+      ],
+      "entranceSide": "west",
+      "entrance": [
+        24.4730323,
+        39.6119093
+      ],
+      "dropoff": [
+        24.4732782,
+        39.6119107
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 10,
+      "heightM": 36.2,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.3168,
+      "tint": -0.048,
+      "polygon": [
+        [
+          39.6121878,
+          24.4731084
+        ],
+        [
+          39.6119196,
+          24.4731125
+        ],
+        [
+          39.6119154,
+          24.4728831
+        ],
+        [
+          39.6121836,
+          24.472879
+        ],
+        [
+          39.6121878,
+          24.4731084
+        ]
+      ]
+    },
+    {
+      "buildingId": "N119",
+      "poiId": 718,
+      "guideNumber": 119,
+      "zone": "north",
+      "name_ar": "فندق صفوة المدينة",
+      "osm": "n6231238057",
+      "areaM2": 617.3,
+      "center": [
+        24.4727562,
+        39.6123586
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4726335,
+        39.6123969
+      ],
+      "dropoff": [
+        24.4725878,
+        39.6123961
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 10,
+      "heightM": 36.2,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.5293,
+      "tint": -0.0099,
+      "polygon": [
+        [
+          39.612491,
+          24.4726523
+        ],
+        [
+          39.6124937,
+          24.4728573
+        ],
+        [
+          39.6122268,
+          24.4728603
+        ],
+        [
+          39.6122229,
+          24.4726553
+        ],
+        [
+          39.612491,
+          24.4726523
+        ]
+      ]
+    },
+    {
+      "buildingId": "N120",
+      "poiId": 2120,
+      "guideNumber": 120,
+      "zone": "north",
+      "name_ar": "رؤى العالمي",
+      "osm": null,
+      "areaM2": 1231.1,
+      "center": [
+        24.473444,
+        39.612401
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4732586,
+        39.6124093
+      ],
+      "dropoff": [
+        24.473278,
+        39.611947
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 11,
+      "heightM": 39.4,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.9384,
+      "tint": -0.0103,
+      "polygon": [
+        [
+          39.6122607,
+          24.4732657
+        ],
+        [
+          39.6125577,
+          24.4732677
+        ],
+        [
+          39.6125577,
+          24.4736179
+        ],
+        [
+          39.6122645,
+          24.473616
+        ],
+        [
+          39.612265,
+          24.4735636
+        ],
+        [
+          39.612222,
+          24.4735633
+        ],
+        [
+          39.6122232,
+          24.4734193
+        ],
+        [
+          39.6122595,
+          24.4734195
+        ],
+        [
+          39.6122607,
+          24.4732657
+        ]
+      ]
+    },
+    {
+      "buildingId": "N121",
+      "poiId": 721,
+      "guideNumber": 121,
+      "zone": "north",
+      "name_ar": "فندق روف",
+      "osm": "w301813402",
+      "areaM2": 1169.9,
+      "center": [
+        24.4728011,
+        39.6127699
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4726275,
+        39.6127685
+      ],
+      "dropoff": [
+        24.4725825,
+        39.6127678
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.0719,
+      "tint": 0.0348,
+      "polygon": [
+        [
+          39.6129376,
+          24.4726461
+        ],
+        [
+          39.6129402,
+          24.4729537
+        ],
+        [
+          39.6126023,
+          24.472956
+        ],
+        [
+          39.6125997,
+          24.4726485
+        ],
+        [
+          39.6129376,
+          24.4726461
+        ]
+      ]
+    },
+    {
+      "buildingId": "N122",
+      "poiId": 723,
+      "guideNumber": 122,
+      "zone": "north",
+      "name_ar": "فندق المنى كريم ليدر",
+      "osm": "w413986850",
+      "areaM2": 946.3,
+      "center": [
+        24.472803,
+        39.6132967
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4726271,
+        39.613276
+      ],
+      "dropoff": [
+        24.4725757,
+        39.6132751
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 10,
+      "heightM": 36.2,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 0,
+      "seed": 0.469,
+      "tint": -0.0089,
+      "polygon": [
+        [
+          39.6131587,
+          24.4729567
+        ],
+        [
+          39.6131555,
+          24.4726797
+        ],
+        [
+          39.613193,
+          24.4726794
+        ],
+        [
+          39.6131926,
+          24.4726477
+        ],
+        [
+          39.6134313,
+          24.4726454
+        ],
+        [
+          39.6134349,
+          24.472954
+        ],
+        [
+          39.6131587,
+          24.4729567
+        ]
+      ]
+    },
+    {
+      "buildingId": "N123",
+      "poiId": 729,
+      "guideNumber": 123,
+      "zone": "north",
+      "name_ar": "فندق إعمار رويال",
+      "osm": "w413986849",
+      "areaM2": 1426.9,
+      "center": [
+        24.4731587,
+        39.6134302
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4730352,
+        39.6135119
+      ],
+      "dropoff": [
+        24.4730086,
+        39.6138166
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 13,
+      "heightM": 45.7,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.1197,
+      "tint": -0.0132,
+      "polygon": [
+        [
+          39.6137076,
+          24.4732712
+        ],
+        [
+          39.6131551,
+          24.4732757
+        ],
+        [
+          39.6131528,
+          24.4730462
+        ],
+        [
+          39.6137053,
+          24.4730417
+        ],
+        [
+          39.6137076,
+          24.4732712
+        ]
+      ]
+    },
+    {
+      "buildingId": "N124",
+      "poiId": 2124,
+      "guideNumber": 124,
+      "zone": "north",
+      "name_ar": "كيان العالمي",
+      "osm": null,
+      "areaM2": 516.5,
+      "center": [
+        24.4734018,
+        39.6128543
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4732618,
+        39.612881
+      ],
+      "dropoff": [
+        24.473247,
+        39.612957
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 11,
+      "heightM": 39.4,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.3193,
+      "tint": 0.05,
+      "polygon": [
+        [
+          39.6127676,
+          24.4732691
+        ],
+        [
+          39.612942,
+          24.4732703
+        ],
+        [
+          39.6129399,
+          24.473535
+        ],
+        [
+          39.6127676,
+          24.4735339
+        ],
+        [
+          39.6127676,
+          24.4732691
+        ]
+      ]
+    },
+    {
+      "buildingId": "N125",
+      "poiId": 2125,
+      "guideNumber": 125,
+      "zone": "north",
+      "name_ar": "دار النعيم",
+      "osm": null,
+      "areaM2": 631.9,
+      "center": [
+        24.4734172,
+        39.6126565
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4732601,
+        39.6126339
+      ],
+      "dropoff": [
+        24.473247,
+        39.612957
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 11,
+      "heightM": 39.4,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 0,
+      "seed": 0.7613,
+      "tint": 0.0132,
+      "polygon": [
+        [
+          39.6125666,
+          24.4732678
+        ],
+        [
+          39.6127587,
+          24.473269
+        ],
+        [
+          39.6127587,
+          24.4735338
+        ],
+        [
+          39.6126287,
+          24.473533
+        ],
+        [
+          39.6126281,
+          24.4736184
+        ],
+        [
+          39.6125666,
+          24.473618
+        ],
+        [
+          39.6125666,
+          24.4732678
+        ]
+      ]
+    },
+    {
+      "buildingId": "N126",
+      "poiId": 2126,
+      "guideNumber": 126,
+      "zone": "north",
+      "name_ar": "استونيست طيبة",
+      "osm": null,
+      "areaM2": 1293.0,
+      "center": [
+        24.4734808,
+        39.612066
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4732769,
+        39.6120193
+      ],
+      "dropoff": [
+        24.4732791,
+        39.6120192
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.8733,
+      "tint": 0.0423,
+      "polygon": [
+        [
+          39.6119279,
+          24.4736922
+        ],
+        [
+          39.6119172,
+          24.4732872
+        ],
+        [
+          39.6122094,
+          24.4732808
+        ],
+        [
+          39.6122194,
+          24.473659
+        ],
+        [
+          39.612088,
+          24.4736619
+        ],
+        [
+          39.6120887,
+          24.4736887
+        ],
+        [
+          39.6119279,
+          24.4736922
+        ]
+      ]
+    },
+    {
+      "buildingId": "N127",
+      "poiId": 2127,
+      "guideNumber": 127,
+      "zone": "north",
+      "name_ar": "بيننسولا وورث",
+      "osm": "w1357193295",
+      "areaM2": 2054.1,
+      "center": [
+        24.4735767,
+        39.6116297
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4733596,
+        39.6115383
+      ],
+      "dropoff": [
+        24.47328,
+        39.6115379
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 13,
+      "heightM": 45.7,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.3262,
+      "tint": -0.0249,
+      "polygon": [
+        [
+          39.6118519,
+          24.4737893
+        ],
+        [
+          39.6117118,
+          24.4737978
+        ],
+        [
+          39.6115685,
+          24.4738006
+        ],
+        [
+          39.6114502,
+          24.4737326
+        ],
+        [
+          39.6114004,
+          24.4736079
+        ],
+        [
+          39.6113755,
+          24.4734691
+        ],
+        [
+          39.6113693,
+          24.4733784
+        ],
+        [
+          39.6118519,
+          24.4733812
+        ],
+        [
+          39.6118519,
+          24.4737893
+        ]
+      ]
+    },
+    {
+      "buildingId": "N128",
+      "poiId": 727,
+      "guideNumber": 128,
+      "zone": "north",
+      "name_ar": "فندق دار الهجرة إنتركونتيننتال",
+      "osm": "r9265412",
+      "areaM2": 1760.4,
+      "center": [
+        24.4735462,
+        39.6107354
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4732844,
+        39.6107772
+      ],
+      "dropoff": [
+        24.47326,
+        39.6107772
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 11,
+      "heightM": 39.4,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.8629,
+      "tint": -0.0011,
+      "polygon": [
+        [
+          39.6108912,
+          24.4733018
+        ],
+        [
+          39.6109032,
+          24.473785
+        ],
+        [
+          39.6105934,
+          24.4737913
+        ],
+        [
+          39.6105928,
+          24.4737656
+        ],
+        [
+          39.6105782,
+          24.4737659
+        ],
+        [
+          39.6105669,
+          24.4733085
+        ],
+        [
+          39.6108912,
+          24.4733018
+        ]
+      ]
+    },
+    {
+      "buildingId": "N130",
+      "poiId": 731,
+      "guideNumber": 130,
+      "zone": "north",
+      "name_ar": "فندق شذا ريجنسي بلازا",
+      "osm": "w352925737",
+      "areaM2": 1574.0,
+      "center": [
+        24.473726,
+        39.6101794
+      ],
+      "entranceSide": "west",
+      "entrance": [
+        24.4737613,
+        39.609849
+      ],
+      "dropoff": [
+        24.4740082,
+        39.6098541
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.0573,
+      "tint": 0.0209,
+      "polygon": [
+        [
+          39.6105002,
+          24.4736148
+        ],
+        [
+          39.6105023,
+          24.473832
+        ],
+        [
+          39.6098586,
+          24.4738372
+        ],
+        [
+          39.6098565,
+          24.47362
+        ],
+        [
+          39.6105002,
+          24.4736148
+        ]
+      ]
+    },
+    {
+      "buildingId": "N131",
+      "poiId": 2131,
+      "guideNumber": 131,
+      "zone": "north",
+      "name_ar": "كون كود النزيل",
+      "osm": null,
+      "areaM2": 637.9,
+      "center": [
+        24.4734282,
+        39.6100777
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.473287,
+        39.6101103
+      ],
+      "dropoff": [
+        24.4732607,
+        39.6101099
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 11,
+      "heightM": 39.4,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 0,
+      "seed": 0.3809,
+      "tint": -0.0037,
+      "polygon": [
+        [
+          39.6099582,
+          24.4733091
+        ],
+        [
+          39.6101928,
+          24.4733056
+        ],
+        [
+          39.6101971,
+          24.4735472
+        ],
+        [
+          39.6099626,
+          24.4735507
+        ],
+        [
+          39.6099582,
+          24.4733091
+        ]
+      ]
+    },
+    {
+      "buildingId": "N132",
+      "poiId": 730,
+      "guideNumber": 132,
+      "zone": "north",
+      "name_ar": "فندق قصر الانصار جولدن توليب",
+      "osm": "r1021902",
+      "areaM2": 2130.2,
+      "center": [
+        24.4735642,
+        39.6095963
+      ],
+      "entranceSide": "west",
+      "entrance": [
+        24.4734863,
+        39.6094001
+      ],
+      "dropoff": [
+        24.4732682,
+        39.6093923
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 13,
+      "heightM": 45.7,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.5096,
+      "tint": 0.0098,
+      "polygon": [
+        [
+          39.6094138,
+          24.4738236
+        ],
+        [
+          39.609414,
+          24.4733047
+        ],
+        [
+          39.6097788,
+          24.4733048
+        ],
+        [
+          39.6097786,
+          24.4738236
+        ],
+        [
+          39.6094138,
+          24.4738236
+        ]
+      ]
+    },
+    {
+      "buildingId": "N134",
+      "poiId": 2134,
+      "guideNumber": 134,
+      "zone": "north",
+      "name_ar": "درة المدينة",
+      "osm": null,
+      "areaM2": 1151.2,
+      "center": [
+        24.4734276,
+        39.6090295
+      ],
+      "entranceSide": "west",
+      "entrance": [
+        24.4733894,
+        39.6088143
+      ],
+      "dropoff": [
+        24.473274,
+        39.608815
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 13,
+      "heightM": 45.7,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.7592,
+      "tint": 0.0081,
+      "polygon": [
+        [
+          39.6092368,
+          24.4733049
+        ],
+        [
+          39.6092353,
+          24.4735525
+        ],
+        [
+          39.6088222,
+          24.4735504
+        ],
+        [
+          39.6088238,
+          24.4733028
+        ],
+        [
+          39.6092368,
+          24.4733049
+        ]
+      ]
+    },
+    {
+      "buildingId": "N135",
+      "poiId": 2135,
+      "guideNumber": 135,
+      "zone": "north",
+      "name_ar": "المرسى",
+      "osm": null,
+      "areaM2": 475.1,
+      "center": [
+        24.4735442,
+        39.608577
+      ],
+      "entranceSide": "north",
+      "entrance": [
+        24.4736432,
+        39.608618
+      ],
+      "dropoff": [
+        24.4732779,
+        39.6086062
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.556,
+      "tint": 0.0306,
+      "polygon": [
+        [
+          39.6087093,
+          24.4734648
+        ],
+        [
+          39.6087108,
+          24.4736227
+        ],
+        [
+          39.6084453,
+          24.4736248
+        ],
+        [
+          39.6084437,
+          24.4734648
+        ],
+        [
+          39.6087093,
+          24.4734648
+        ]
+      ]
+    },
+    {
+      "buildingId": "N136",
+      "poiId": 733,
+      "guideNumber": 136,
+      "zone": "north",
+      "name_ar": "فندق زوار العالمي",
+      "osm": "w352925736",
+      "areaM2": 475.1,
+      "center": [
+        24.4733772,
+        39.608576
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4732776,
+        39.6086146
+      ],
+      "dropoff": [
+        24.4732777,
+        39.6086146
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.1586,
+      "tint": 0.0182,
+      "polygon": [
+        [
+          39.6084422,
+          24.4732987
+        ],
+        [
+          39.6087077,
+          24.4732966
+        ],
+        [
+          39.6087092,
+          24.4734567
+        ],
+        [
+          39.6084437,
+          24.4734567
+        ],
+        [
+          39.6084422,
+          24.4732987
+        ]
+      ]
+    },
+    {
+      "buildingId": "N137",
+      "poiId": 2137,
+      "guideNumber": 137,
+      "zone": "north",
+      "name_ar": "اودست المدينة",
+      "osm": null,
+      "areaM2": 1779.8,
+      "center": [
+        24.4735567,
+        39.6082235
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4732793,
+        39.6082692
+      ],
+      "dropoff": [
+        24.4732731,
+        39.6082694
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 13,
+      "heightM": 45.7,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 0,
+      "seed": 0.8362,
+      "tint": 0.0332,
+      "polygon": [
+        [
+          39.6083767,
+          24.473299
+        ],
+        [
+          39.6083774,
+          24.4738141
+        ],
+        [
+          39.6080704,
+          24.4738145
+        ],
+        [
+          39.6080696,
+          24.4732994
+        ],
+        [
+          39.6083767,
+          24.473299
+        ]
+      ]
+    },
+    {
+      "buildingId": "N138",
+      "poiId": 2138,
+      "guideNumber": 138,
+      "zone": "north",
+      "name_ar": "سجى المدينة",
+      "osm": null,
+      "areaM2": 2277.5,
+      "center": [
+        24.4736233,
+        39.6076882
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4734115,
+        39.6075852
+      ],
+      "dropoff": [
+        24.4734115,
+        39.607225
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 11,
+      "heightM": 39.4,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 0,
+      "seed": 0.1262,
+      "tint": 0.0041,
+      "polygon": [
+        [
+          39.6076778,
+          24.4734802
+        ],
+        [
+          39.6080007,
+          24.4734872
+        ],
+        [
+          39.6079925,
+          24.4738019
+        ],
+        [
+          39.6074001,
+          24.4737891
+        ],
+        [
+          39.6074098,
+          24.4734158
+        ],
+        [
+          39.6076793,
+          24.4734216
+        ],
+        [
+          39.6076778,
+          24.4734802
+        ]
+      ]
+    },
+    {
+      "buildingId": "N139",
+      "poiId": 2139,
+      "guideNumber": 139,
+      "zone": "north",
+      "name_ar": "قصر الأندلس الذهبي",
+      "osm": null,
+      "areaM2": 973.3,
+      "center": [
+        24.4731838,
+        39.6075432
+      ],
+      "entranceSide": "west",
+      "entrance": [
+        24.4730584,
+        39.6074149
+      ],
+      "dropoff": [
+        24.4730573,
+        39.607225
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 11,
+      "heightM": 39.4,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 0,
+      "seed": 0.3747,
+      "tint": 0.0211,
+      "polygon": [
+        [
+          39.6076758,
+          24.4730195
+        ],
+        [
+          39.6076771,
+          24.4733441
+        ],
+        [
+          39.6074076,
+          24.4733451
+        ],
+        [
+          39.6074065,
+          24.473079
+        ],
+        [
+          39.6074239,
+          24.4730789
+        ],
+        [
+          39.6074237,
+          24.4730203
+        ],
+        [
+          39.6076758,
+          24.4730195
+        ]
+      ]
+    },
+    {
+      "buildingId": "N140",
+      "poiId": 734,
+      "guideNumber": 140,
+      "zone": "north",
+      "name_ar": "فندق شيراتون طيبة ــ البرج ٢",
+      "osm": "w1357111980",
+      "areaM2": 899.2,
+      "center": [
+        24.4728762,
+        39.6075488
+      ],
+      "entranceSide": "north",
+      "entrance": [
+        24.4730135,
+        39.607591
+      ],
+      "dropoff": [
+        24.4730112,
+        39.6072254
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.5898,
+      "tint": -0.0055,
+      "polygon": [
+        [
+          39.6077052,
+          24.473003
+        ],
+        [
+          39.6073796,
+          24.472997
+        ],
+        [
+          39.6073869,
+          24.4728078
+        ],
+        [
+          39.6074492,
+          24.4727436
+        ],
+        [
+          39.6077083,
+          24.4727501
+        ],
+        [
+          39.6077052,
+          24.473003
+        ]
+      ]
+    },
+    {
+      "buildingId": "N141",
+      "poiId": 2141,
+      "guideNumber": 141,
+      "zone": "north",
+      "name_ar": "الأنصار بلاتينوم",
+      "osm": null,
+      "areaM2": 714.9,
+      "center": [
+        24.4728184,
+        39.6078677
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4726841,
+        39.6078945
+      ],
+      "dropoff": [
+        24.4726502,
+        39.6078939
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 10,
+      "heightM": 36.2,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.505,
+      "tint": -0.0113,
+      "polygon": [
+        [
+          39.6077258,
+          24.4727162
+        ],
+        [
+          39.6077795,
+          24.4727166
+        ],
+        [
+          39.6077796,
+          24.4727029
+        ],
+        [
+          39.6080089,
+          24.4727048
+        ],
+        [
+          39.6080068,
+          24.4729318
+        ],
+        [
+          39.6077238,
+          24.4729295
+        ],
+        [
+          39.6077258,
+          24.4727162
+        ]
+      ]
+    },
+    {
+      "buildingId": "N142",
+      "poiId": 726,
+      "guideNumber": 142,
+      "zone": "north",
+      "name_ar": "فندق الأنصار جولدن توليب",
+      "osm": "r1021904",
+      "areaM2": 2334.8,
+      "center": [
+        24.4728995,
+        39.6084679
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4726629,
+        39.6085411
+      ],
+      "dropoff": [
+        24.4726412,
+        39.6085407
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 13,
+      "heightM": 45.7,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.0363,
+      "tint": 0.0339,
+      "polygon": [
+        [
+          39.6082307,
+          24.472681
+        ],
+        [
+          39.6087081,
+          24.4726836
+        ],
+        [
+          39.6087052,
+          24.4731181
+        ],
+        [
+          39.6082278,
+          24.4731155
+        ],
+        [
+          39.6082307,
+          24.472681
+        ]
+      ]
+    },
+    {
+      "buildingId": "N146",
+      "poiId": 2146,
+      "guideNumber": 146,
+      "zone": "north",
+      "name_ar": "الشام الإقليمية (بروفنس)",
+      "osm": null,
+      "areaM2": 1795.4,
+      "center": [
+        24.472915,
+        39.609878
+      ],
+      "entranceSide": "west",
+      "entrance": [
+        24.4729865,
+        39.609677
+      ],
+      "dropoff": [
+        24.4729864,
+        39.6096672
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.0154,
+      "tint": -0.0102,
+      "polygon": [
+        [
+          39.6096891,
+          24.4727005
+        ],
+        [
+          39.6100521,
+          24.4726904
+        ],
+        [
+          39.6100669,
+          24.4731294
+        ],
+        [
+          39.6097039,
+          24.4731395
+        ],
+        [
+          39.6096891,
+          24.4727005
+        ]
+      ]
+    },
+    {
+      "buildingId": "N147",
+      "poiId": 2147,
+      "guideNumber": 147,
+      "zone": "north",
+      "name_ar": "مادن نزل رويال ان",
+      "osm": null,
+      "areaM2": 2474.8,
+      "center": [
+        24.4729017,
+        39.6103842
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4726576,
+        39.610457
+      ],
+      "dropoff": [
+        24.4726145,
+        39.6104562
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 11,
+      "heightM": 39.4,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.7126,
+      "tint": 0.0463,
+      "polygon": [
+        [
+          39.6101368,
+          24.4726799
+        ],
+        [
+          39.6106297,
+          24.4726761
+        ],
+        [
+          39.6106297,
+          24.4731241
+        ],
+        [
+          39.6101409,
+          24.4731279
+        ],
+        [
+          39.6101368,
+          24.4726799
+        ]
+      ]
+    },
+    {
+      "buildingId": "N148",
+      "poiId": 720,
+      "guideNumber": 148,
+      "zone": "north",
+      "name_ar": "فندق الريتز المدينة",
+      "osm": "n4454516094",
+      "areaM2": 0.0,
+      "center": [
+        24.4732826,
+        39.6104477
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4730852,
+        39.6104755
+      ],
+      "dropoff": [
+        24.47326,
+        39.6104755
+      ],
+      "hasFootprint": false,
+      "footprintSplit": "none",
+      "levels": null,
+      "displayFloors": null,
+      "heightM": 0.0,
+      "heightSource": "none",
+      "confidence": "none",
+      "styleId": 0,
+      "seed": 0.8608,
+      "tint": 0.0,
+      "polygon": []
+    },
+    {
+      "buildingId": "N149",
+      "poiId": 719,
+      "guideNumber": 149,
+      "zone": "north",
+      "name_ar": "فندق مآدن",
+      "osm": "n3752773995",
+      "areaM2": 1206.3,
+      "center": [
+        24.4728997,
+        39.6107582
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4726556,
+        39.6107214
+      ],
+      "dropoff": [
+        24.47261,
+        39.6107204
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 11,
+      "heightM": 39.4,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.3674,
+      "tint": -0.023,
+      "polygon": [
+        [
+          39.6106385,
+          24.472676
+        ],
+        [
+          39.6108757,
+          24.4726742
+        ],
+        [
+          39.6108799,
+          24.4731221
+        ],
+        [
+          39.6106385,
+          24.473124
+        ],
+        [
+          39.6106385,
+          24.472676
+        ]
+      ]
+    },
+    {
+      "buildingId": "N150",
+      "poiId": 705,
+      "guideNumber": 150,
+      "zone": "north",
+      "name_ar": "فندق المدينة هيلتون",
+      "osm": "w65542999",
+      "areaM2": 1976.0,
+      "center": [
+        24.4720498,
+        39.610714
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4717415,
+        39.6107583
+      ],
+      "dropoff": [
+        24.47183,
+        39.610503
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.4562,
+      "tint": 0.0055,
+      "polygon": [
+        [
+          39.6105674,
+          24.4723499
+        ],
+        [
+          39.6105682,
+          24.4717493
+        ],
+        [
+          39.6108606,
+          24.4717497
+        ],
+        [
+          39.6108598,
+          24.4723502
+        ],
+        [
+          39.6105674,
+          24.4723499
+        ]
+      ]
+    },
+    {
+      "buildingId": "N151",
+      "poiId": 2151,
+      "guideNumber": 151,
+      "zone": "north",
+      "name_ar": "مكارم برج المدينة",
+      "osm": "w1358320007",
+      "areaM2": 1566.5,
+      "center": [
+        24.4721618,
+        39.6103041
+      ],
+      "entranceSide": "east",
+      "entrance": [
+        24.472102,
+        39.610457
+      ],
+      "dropoff": [
+        24.4721027,
+        39.6104971
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.4877,
+      "tint": 0.0275,
+      "polygon": [
+        [
+          39.6101772,
+          24.4724369
+        ],
+        [
+          39.6101792,
+          24.4718835
+        ],
+        [
+          39.6103702,
+          24.4718835
+        ],
+        [
+          39.6104052,
+          24.4719097
+        ],
+        [
+          39.610436,
+          24.4719527
+        ],
+        [
+          39.6104339,
+          24.472379
+        ],
+        [
+          39.6104093,
+          24.472422
+        ],
+        [
+          39.6103682,
+          24.4724388
+        ],
+        [
+          39.6101772,
+          24.4724369
+        ]
+      ]
+    },
+    {
+      "buildingId": "N153",
+      "poiId": 708,
+      "guideNumber": 153,
+      "zone": "north",
+      "name_ar": "فندق مآدن الروضة",
+      "osm": "w301813400",
+      "areaM2": 994.4,
+      "center": [
+        24.4719559,
+        39.609878
+      ],
+      "entranceSide": "west",
+      "entrance": [
+        24.4719168,
+        39.6096784
+      ],
+      "dropoff": [
+        24.471761,
+        39.6096773
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 11,
+      "heightM": 39.4,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.339,
+      "tint": -0.028,
+      "polygon": [
+        [
+          39.6100579,
+          24.4718339
+        ],
+        [
+          39.6100549,
+          24.4720816
+        ],
+        [
+          39.6096982,
+          24.472078
+        ],
+        [
+          39.6097012,
+          24.4718303
+        ],
+        [
+          39.6100579,
+          24.4718339
+        ]
+      ]
+    },
+    {
+      "buildingId": "N154",
+      "poiId": 2154,
+      "guideNumber": 154,
+      "zone": "north",
+      "name_ar": "ميلينيوم العقيق",
+      "osm": null,
+      "areaM2": 2540.6,
+      "center": [
+        24.4721075,
+        39.6093928
+      ],
+      "entranceSide": "west",
+      "entrance": [
+        24.4721102,
+        39.609185
+      ],
+      "dropoff": [
+        24.4717633,
+        39.6091796
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 11,
+      "heightM": 39.4,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 0,
+      "seed": 0.1372,
+      "tint": -0.0121,
+      "polygon": [
+        [
+          39.6095944,
+          24.4723896
+        ],
+        [
+          39.6091975,
+          24.4723938
+        ],
+        [
+          39.6091903,
+          24.4718264
+        ],
+        [
+          39.6095952,
+          24.4718221
+        ],
+        [
+          39.609596,
+          24.4718843
+        ],
+        [
+          39.609588,
+          24.4718844
+        ],
+        [
+          39.6095944,
+          24.4723896
+        ]
+      ]
+    },
+    {
+      "buildingId": "N155",
+      "poiId": 712,
+      "guideNumber": 155,
+      "zone": "north",
+      "name_ar": "فندق ميسان الحارثية",
+      "osm": "w65541120",
+      "areaM2": 1702.7,
+      "center": [
+        24.4721081,
+        39.6089739
+      ],
+      "entranceSide": "east",
+      "entrance": [
+        24.4721856,
+        39.6091423
+      ],
+      "dropoff": [
+        24.4721902,
+        39.6086885
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 13,
+      "heightM": 45.7,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.181,
+      "tint": 0.0498,
+      "polygon": [
+        [
+          39.6088274,
+          24.4718503
+        ],
+        [
+          39.6091212,
+          24.4718508
+        ],
+        [
+          39.6091203,
+          24.4723659
+        ],
+        [
+          39.6088266,
+          24.4723654
+        ],
+        [
+          39.6088274,
+          24.4718503
+        ]
+      ]
+    },
+    {
+      "buildingId": "N156",
+      "poiId": 702,
+      "guideNumber": 156,
+      "zone": "north",
+      "name_ar": "اجنحة مكارم اطلالة الحرم",
+      "osm": "r1021909",
+      "areaM2": 4700.4,
+      "center": [
+        24.4713311,
+        39.6103232
+      ],
+      "entranceSide": "west",
+      "entrance": [
+        24.471387,
+        39.6098371
+      ],
+      "dropoff": [
+        24.4717601,
+        39.6098396
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 14,
+      "heightM": 48.8,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.0945,
+      "tint": 0.016,
+      "polygon": [
+        [
+          39.6098442,
+          24.4715375
+        ],
+        [
+          39.6098494,
+          24.4711077
+        ],
+        [
+          39.6098656,
+          24.4711032
+        ],
+        [
+          39.6099564,
+          24.4711041
+        ],
+        [
+          39.6099683,
+          24.4711395
+        ],
+        [
+          39.6100659,
+          24.4711125
+        ],
+        [
+          39.6101567,
+          24.4711134
+        ],
+        [
+          39.6101836,
+          24.4711938
+        ],
+        [
+          39.6101847,
+          24.4711015
+        ],
+        [
+          39.6102885,
+          24.4711025
+        ],
+        [
+          39.6103007,
+          24.471139
+        ],
+        [
+          39.6103571,
+          24.4711233
+        ],
+        [
+          39.6103429,
+          24.4710809
+        ],
+        [
+          39.6103642,
+          24.471075
+        ],
+        [
+          39.6107313,
+          24.471075
+        ],
+        [
+          39.6107555,
+          24.4711473
+        ],
+        [
+          39.6107547,
+          24.4712097
+        ],
+        [
+          39.6107535,
+          24.4712097
+        ],
+        [
+          39.6107495,
+          24.4711979
+        ],
+        [
+          39.610744,
+          24.4716515
+        ],
+        [
+          39.6105778,
+          24.4716498
+        ],
+        [
+          39.610579,
+          24.4715448
+        ],
+        [
+          39.6098442,
+          24.4715375
+        ]
+      ]
+    },
+    {
+      "buildingId": "N157",
+      "poiId": 2157,
+      "guideNumber": 157,
+      "zone": "north",
+      "name_ar": "واجهة طيبة",
+      "osm": null,
+      "areaM2": 2528.7,
+      "center": [
+        24.471309,
+        39.6094472
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4710552,
+        39.6095197
+      ],
+      "dropoff": [
+        24.4717616,
+        39.6095233
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 13,
+      "heightM": 45.7,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.6112,
+      "tint": 0.0056,
+      "polygon": [
+        [
+          39.6096866,
+          24.4715434
+        ],
+        [
+          39.6092065,
+          24.4715425
+        ],
+        [
+          39.6092076,
+          24.471075
+        ],
+        [
+          39.6096877,
+          24.471075
+        ],
+        [
+          39.6096866,
+          24.4715434
+        ]
+      ]
+    },
+    {
+      "buildingId": "N158",
+      "poiId": 704,
+      "guideNumber": 158,
+      "zone": "north",
+      "name_ar": "دار الايمان انتركونتيننتال",
+      "osm": "w65542515",
+      "areaM2": 2637.7,
+      "center": [
+        24.4712586,
+        39.6087094
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4710552,
+        39.6087109
+      ],
+      "dropoff": [
+        24.471648,
+        39.60868
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 13,
+      "heightM": 45.7,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 0,
+      "seed": 0.1338,
+      "tint": -0.0456,
+      "polygon": [
+        [
+          39.6090301,
+          24.471075
+        ],
+        [
+          39.6090248,
+          24.4714459
+        ],
+        [
+          39.6083865,
+          24.4714384
+        ],
+        [
+          39.6083917,
+          24.471075
+        ],
+        [
+          39.6090301,
+          24.471075
+        ]
+      ]
+    },
+    {
+      "buildingId": "N159",
+      "poiId": 714,
+      "guideNumber": 159,
+      "zone": "north",
+      "name_ar": "ديار عجوة، مجموعة تابيستري من هيلتون",
+      "osm": "n14182711851",
+      "areaM2": 1047.8,
+      "center": [
+        24.4720203,
+        39.6084444
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4718659,
+        39.6084908
+      ],
+      "dropoff": [
+        24.471826,
+        39.608556
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 11,
+      "heightM": 39.4,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.8891,
+      "tint": -0.0087,
+      "polygon": [
+        [
+          39.6082867,
+          24.4721687
+        ],
+        [
+          39.6082834,
+          24.4718759
+        ],
+        [
+          39.6086026,
+          24.471873
+        ],
+        [
+          39.6086058,
+          24.4721636
+        ],
+        [
+          39.6082867,
+          24.4721687
+        ]
+      ]
+    },
+    {
+      "buildingId": "N160",
+      "poiId": 2160,
+      "guideNumber": 160,
+      "zone": "north",
+      "name_ar": "مادن طيبة",
+      "osm": null,
+      "areaM2": 720.7,
+      "center": [
+        24.4722745,
+        39.6084477
+      ],
+      "entranceSide": "east",
+      "entrance": [
+        24.4723026,
+        39.6086291
+      ],
+      "dropoff": [
+        24.472302,
+        39.6086899
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 10,
+      "heightM": 36.2,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 0,
+      "seed": 0.6062,
+      "tint": 0.0212,
+      "polygon": [
+        [
+          39.608289,
+          24.4723763
+        ],
+        [
+          39.6082868,
+          24.4721768
+        ],
+        [
+          39.6086059,
+          24.4721717
+        ],
+        [
+          39.6086081,
+          24.4723734
+        ],
+        [
+          39.608289,
+          24.4723763
+        ]
+      ]
+    },
+    {
+      "buildingId": "N163",
+      "poiId": 716,
+      "guideNumber": 163,
+      "zone": "north",
+      "name_ar": "فندق انوار المدينة موفنبيك",
+      "osm": "r4250426",
+      "areaM2": 7028.2,
+      "center": [
+        24.4714968,
+        39.6077689
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4710624,
+        39.6076972
+      ],
+      "dropoff": [
+        24.471067,
+        39.60731
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 14,
+      "heightM": 48.8,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 0,
+      "seed": 0.5321,
+      "tint": -0.0405,
+      "polygon": [
+        [
+          39.6073986,
+          24.4720019
+        ],
+        [
+          39.6074055,
+          24.4716104
+        ],
+        [
+          39.6076307,
+          24.4716137
+        ],
+        [
+          39.6076318,
+          24.4715527
+        ],
+        [
+          39.6073985,
+          24.4715493
+        ],
+        [
+          39.6074028,
+          24.4713037
+        ],
+        [
+          39.6075047,
+          24.4713052
+        ],
+        [
+          39.6075055,
+          24.4712628
+        ],
+        [
+          39.607409,
+          24.4712614
+        ],
+        [
+          39.6074122,
+          24.471075
+        ],
+        [
+          39.6082264,
+          24.471075
+        ],
+        [
+          39.608218,
+          24.471549
+        ],
+        [
+          39.6079659,
+          24.4715453
+        ],
+        [
+          39.6079577,
+          24.4720101
+        ],
+        [
+          39.6073986,
+          24.4720019
+        ]
+      ]
+    },
+    {
+      "buildingId": "N164",
+      "poiId": 2164,
+      "guideNumber": 164,
+      "zone": "north",
+      "name_ar": "ايلاف طيبة",
+      "osm": null,
+      "areaM2": 735.9,
+      "center": [
+        24.4711938,
+        39.6069028
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4710669,
+        39.6069896
+      ],
+      "dropoff": [
+        24.4710687,
+        39.6069896
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 10,
+      "heightM": 36.2,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.6652,
+      "tint": -0.0393,
+      "polygon": [
+        [
+          39.6067713,
+          24.4713176
+        ],
+        [
+          39.6067578,
+          24.4710751
+        ],
+        [
+          39.6067592,
+          24.471075
+        ],
+        [
+          39.6067899,
+          24.471075
+        ],
+        [
+          39.6067903,
+          24.4710809
+        ],
+        [
+          39.6069171,
+          24.471075
+        ],
+        [
+          39.6070287,
+          24.471075
+        ],
+        [
+          39.607031,
+          24.4711161
+        ],
+        [
+          39.6070429,
+          24.4711155
+        ],
+        [
+          39.6070503,
+          24.471247
+        ],
+        [
+          39.607041,
+          24.4712475
+        ],
+        [
+          39.6070442,
+          24.471305
+        ],
+        [
+          39.6067713,
+          24.4713176
+        ]
+      ]
+    },
+    {
+      "buildingId": "N165",
+      "poiId": 2165,
+      "guideNumber": 165,
+      "zone": "north",
+      "name_ar": "اعمار إيليت",
+      "osm": "w261731120",
+      "areaM2": 806.4,
+      "center": [
+        24.4712806,
+        39.6065252
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4711448,
+        39.6064404
+      ],
+      "dropoff": [
+        24.4711019,
+        39.6064256
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.707,
+      "tint": 0.0015,
+      "polygon": [
+        [
+          39.6066746,
+          24.471392
+        ],
+        [
+          39.6063449,
+          24.4714018
+        ],
+        [
+          39.6063989,
+          24.4711884
+        ],
+        [
+          39.606479,
+          24.4711479
+        ],
+        [
+          39.6066741,
+          24.4711562
+        ],
+        [
+          39.6066746,
+          24.471392
+        ]
+      ]
+    },
+    {
+      "buildingId": "N169",
+      "poiId": 732,
+      "guideNumber": 169,
+      "zone": "north",
+      "name_ar": "فندق أركان المنار",
+      "osm": "n5945228160",
+      "areaM2": 983.5,
+      "center": [
+        24.4723769,
+        39.6069713
+      ],
+      "entranceSide": "east",
+      "entrance": [
+        24.4723043,
+        39.6071691
+      ],
+      "dropoff": [
+        24.4723043,
+        39.6071857
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.9952,
+      "tint": -0.0023,
+      "polygon": [
+        [
+          39.6068214,
+          24.4722416
+        ],
+        [
+          39.6071474,
+          24.4722365
+        ],
+        [
+          39.6071474,
+          24.4723408
+        ],
+        [
+          39.6071355,
+          24.472402
+        ],
+        [
+          39.6071039,
+          24.4724506
+        ],
+        [
+          39.6070624,
+          24.4724956
+        ],
+        [
+          39.6069536,
+          24.4725406
+        ],
+        [
+          39.6068214,
+          24.47254
+        ],
+        [
+          39.6068214,
+          24.4722416
+        ]
+      ]
+    },
+    {
+      "buildingId": "N170",
+      "poiId": 2170,
+      "guideNumber": 170,
+      "zone": "north",
+      "name_ar": "رويال المدينة",
+      "osm": null,
+      "areaM2": 732.0,
+      "center": [
+        24.4723069,
+        39.6066914
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4721739,
+        39.6067969
+      ],
+      "dropoff": [
+        24.4721783,
+        39.6064679
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 10,
+      "heightM": 36.2,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.1811,
+      "tint": -0.0257,
+      "polygon": [
+        [
+          39.6068121,
+          24.4724427
+        ],
+        [
+          39.6065721,
+          24.4724424
+        ],
+        [
+          39.6065725,
+          24.4721689
+        ],
+        [
+          39.6067884,
+          24.4721692
+        ],
+        [
+          39.6067884,
+          24.4721936
+        ],
+        [
+          39.6068125,
+          24.4721937
+        ],
+        [
+          39.6068121,
+          24.4724427
+        ]
+      ]
+    },
+    {
+      "buildingId": "N172",
+      "poiId": 737,
+      "guideNumber": 172,
+      "zone": "north",
+      "name_ar": "فندق درة الإيمان",
+      "osm": "w625635709",
+      "areaM2": 1203.2,
+      "center": [
+        24.47275,
+        39.606679
+      ],
+      "entranceSide": "west",
+      "entrance": [
+        24.4728064,
+        39.6065173
+      ],
+      "dropoff": [
+        24.4728057,
+        39.6064709
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.1366,
+      "tint": -0.0321,
+      "polygon": [
+        [
+          39.6065411,
+          24.4725574
+        ],
+        [
+          39.60682,
+          24.4725593
+        ],
+        [
+          39.6068169,
+          24.4729426
+        ],
+        [
+          39.6065379,
+          24.4729407
+        ],
+        [
+          39.6065411,
+          24.4725574
+        ]
+      ]
+    },
+    {
+      "buildingId": "N175",
+      "poiId": 2175,
+      "guideNumber": 175,
+      "zone": "north",
+      "name_ar": "الحياة العالمي",
+      "osm": null,
+      "areaM2": 596.6,
+      "center": [
+        24.4735589,
+        39.6069405
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.473461,
+        39.6070455
+      ],
+      "dropoff": [
+        24.4734605,
+        39.607225
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 10,
+      "heightM": 36.2,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.0216,
+      "tint": -0.043,
+      "polygon": [
+        [
+          39.6068447,
+          24.4734249
+        ],
+        [
+          39.607015,
+          24.4734334
+        ],
+        [
+          39.607013,
+          24.4734674
+        ],
+        [
+          39.6070623,
+          24.4734699
+        ],
+        [
+          39.6070532,
+          24.4736232
+        ],
+        [
+          39.6070238,
+          24.4736218
+        ],
+        [
+          39.6070195,
+          24.4736924
+        ],
+        [
+          39.6068298,
+          24.473683
+        ],
+        [
+          39.6068447,
+          24.4734249
+        ]
+      ]
+    },
+    {
+      "buildingId": "N176",
+      "poiId": 2176,
+      "guideNumber": 176,
+      "zone": "north",
+      "name_ar": "وقف عثمان بن عفان",
+      "osm": null,
+      "areaM2": 791.6,
+      "center": [
+        24.4735468,
+        39.6066925
+      ],
+      "entranceSide": "west",
+      "entrance": [
+        24.4735009,
+        39.60655
+      ],
+      "dropoff": [
+        24.4735006,
+        39.6064579
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 11,
+      "heightM": 39.4,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 0,
+      "seed": 0.0409,
+      "tint": 0.0156,
+      "polygon": [
+        [
+          39.6065643,
+          24.4734111
+        ],
+        [
+          39.6068358,
+          24.4734245
+        ],
+        [
+          39.6068209,
+          24.4736825
+        ],
+        [
+          39.6065489,
+          24.4736691
+        ],
+        [
+          39.6065643,
+          24.4734111
+        ]
+      ]
+    },
+    {
+      "buildingId": "N178",
+      "poiId": 2178,
+      "guideNumber": 178,
+      "zone": "north",
+      "name_ar": "المختارة العالمي",
+      "osm": null,
+      "areaM2": 1605.1,
+      "center": [
+        24.4731879,
+        39.6061727
+      ],
+      "entranceSide": "east",
+      "entrance": [
+        24.4731002,
+        39.6063786
+      ],
+      "dropoff": [
+        24.4731017,
+        39.6064653
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "single",
+      "levels": null,
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 2,
+      "seed": 0.7958,
+      "tint": -0.0475,
+      "polygon": [
+        [
+          39.6063694,
+          24.4730032
+        ],
+        [
+          39.6063704,
+          24.4732806
+        ],
+        [
+          39.6063463,
+          24.4732806
+        ],
+        [
+          39.6063467,
+          24.4733759
+        ],
+        [
+          39.6059819,
+          24.473377
+        ],
+        [
+          39.6059804,
+          24.4730044
+        ],
+        [
+          39.6063694,
+          24.4730032
+        ]
+      ]
+    },
+    {
+      "buildingId": "N180",
+      "poiId": 2180,
+      "guideNumber": 180,
+      "zone": "north",
+      "name_ar": "تريبل ون",
+      "osm": null,
+      "areaM2": 860.8,
+      "center": [
+        24.4723187,
+        39.6061867
+      ],
+      "entranceSide": "west",
+      "entrance": [
+        24.4722785,
+        39.6060155
+      ],
+      "dropoff": [
+        24.472272,
+        39.6059626
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 10,
+      "heightM": 36.2,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.8164,
+      "tint": 0.0488,
+      "polygon": [
+        [
+          39.60603,
+          24.4724456
+        ],
+        [
+          39.6060411,
+          24.4721897
+        ],
+        [
+          39.6063491,
+          24.4721995
+        ],
+        [
+          39.6063388,
+          24.4724363
+        ],
+        [
+          39.6062089,
+          24.4724317
+        ],
+        [
+          39.606208,
+          24.4724521
+        ],
+        [
+          39.60603,
+          24.4724456
+        ]
+      ]
+    },
+    {
+      "buildingId": "N181",
+      "poiId": 736,
+      "guideNumber": 181,
+      "zone": "north",
+      "name_ar": "فندق ديار الايمان",
+      "osm": "w625636527",
+      "areaM2": 1028.3,
+      "center": [
+        24.4720068,
+        39.6062335
+      ],
+      "entranceSide": "south",
+      "entrance": [
+        24.4718095,
+        39.6062825
+      ],
+      "dropoff": [
+        24.4718081,
+        39.6062836
+      ],
+      "hasFootprint": true,
+      "footprintSplit": "provisional_pin_partition",
+      "levels": null,
+      "displayFloors": 11,
+      "heightM": 39.4,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
+      "styleId": 1,
+      "seed": 0.6114,
+      "tint": -0.0123,
+      "polygon": [
+        [
+          39.6060414,
+          24.4721816
+        ],
+        [
+          39.6060431,
+          24.4721425
+        ],
+        [
+          39.6061128,
+          24.472145
+        ],
+        [
+          39.6061273,
+          24.471812
+        ],
+        [
+          39.6063656,
+          24.4718206
+        ],
+        [
+          39.6063495,
+          24.4721914
+        ],
+        [
+          39.6060414,
+          24.4721816
         ]
       ]
     }
@@ -13481,6 +17214,2194 @@
           24.470501
         ]
       ]
+    },
+    {
+      "wayIndex": 153,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.608788,
+          24.473273
+        ],
+        [
+          39.608793,
+          24.472638
+        ]
+      ]
+    },
+    {
+      "wayIndex": 157,
+      "zone": "north",
+      "kind": "arterial",
+      "road": true,
+      "widthM": 13.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.6139,
+          24.474114
+        ],
+        [
+          39.613846,
+          24.473993
+        ],
+        [
+          39.61368,
+          24.473944
+        ]
+      ]
+    },
+    {
+      "wayIndex": 166,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.608808,
+          24.471721
+        ],
+        [
+          39.608821,
+          24.471768
+        ],
+        [
+          39.608812,
+          24.471818
+        ],
+        [
+          39.60878,
+          24.471863
+        ],
+        [
+          39.608685,
+          24.4719
+        ],
+        [
+          39.608634,
+          24.471892
+        ],
+        [
+          39.608556,
+          24.471826
+        ],
+        [
+          39.608544,
+          24.471781
+        ],
+        [
+          39.608578,
+          24.471691
+        ],
+        [
+          39.608625,
+          24.471659
+        ],
+        [
+          39.60868,
+          24.471648
+        ],
+        [
+          39.608731,
+          24.471656
+        ],
+        [
+          39.608808,
+          24.471721
+        ]
+      ]
+    },
+    {
+      "wayIndex": 205,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.607158,
+          24.473892
+        ],
+        [
+          39.607226,
+          24.473805
+        ],
+        [
+          39.607225,
+          24.47346
+        ],
+        [
+          39.607225,
+          24.473418
+        ],
+        [
+          39.607225,
+          24.473062
+        ],
+        [
+          39.607228,
+          24.472659
+        ]
+      ]
+    },
+    {
+      "wayIndex": 239,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.608187,
+          24.472646
+        ],
+        [
+          39.608191,
+          24.473067
+        ],
+        [
+          39.608189,
+          24.473205
+        ],
+        [
+          39.608266,
+          24.473273
+        ],
+        [
+          39.608491,
+          24.473281
+        ],
+        [
+          39.608788,
+          24.473273
+        ],
+        [
+          39.608815,
+          24.473274
+        ],
+        [
+          39.609232,
+          24.473273
+        ],
+        [
+          39.6094,
+          24.473268
+        ],
+        [
+          39.609665,
+          24.473266
+        ]
+      ]
+    },
+    {
+      "wayIndex": 257,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.61367,
+          24.471863
+        ],
+        [
+          39.61377,
+          24.472569
+        ],
+        [
+          39.613775,
+          24.472614
+        ]
+      ]
+    },
+    {
+      "wayIndex": 264,
+      "zone": "north",
+      "kind": "boulevard",
+      "road": true,
+      "widthM": 9.5,
+      "oneway": 1,
+      "coords": [
+        [
+          39.607374,
+          24.474235
+        ],
+        [
+          39.606678,
+          24.474275
+        ],
+        [
+          39.606401,
+          24.474232
+        ],
+        [
+          39.606258,
+          24.474209
+        ]
+      ]
+    },
+    {
+      "wayIndex": 278,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.613057,
+          24.472579
+        ],
+        [
+          39.613062,
+          24.473049
+        ],
+        [
+          39.613062,
+          24.473103
+        ],
+        [
+          39.613015,
+          24.473198
+        ],
+        [
+          39.612957,
+          24.473247
+        ],
+        [
+          39.612824,
+          24.473292
+        ],
+        [
+          39.612642,
+          24.473289
+        ],
+        [
+          39.611947,
+          24.473278
+        ],
+        [
+          39.611335,
+          24.473281
+        ]
+      ]
+    },
+    {
+      "wayIndex": 293,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.608821,
+          24.471768
+        ],
+        [
+          39.609206,
+          24.471763
+        ],
+        [
+          39.609674,
+          24.471761
+        ],
+        [
+          39.609853,
+          24.47176
+        ],
+        [
+          39.610413,
+          24.471762
+        ],
+        [
+          39.610471,
+          24.471785
+        ],
+        [
+          39.610503,
+          24.47183
+        ],
+        [
+          39.610486,
+          24.472614
+        ]
+      ]
+    },
+    {
+      "wayIndex": 309,
+      "zone": "north",
+      "kind": "arterial",
+      "road": true,
+      "widthM": 13.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.605783,
+          24.472495
+        ],
+        [
+          39.60577,
+          24.473186
+        ],
+        [
+          39.605717,
+          24.473546
+        ]
+      ]
+    },
+    {
+      "wayIndex": 377,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.609665,
+          24.473266
+        ],
+        [
+          39.60967,
+          24.472626
+        ]
+      ]
+    },
+    {
+      "wayIndex": 412,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.608009,
+          24.473068
+        ],
+        [
+          39.607823,
+          24.473066
+        ],
+        [
+          39.607819,
+          24.473421
+        ],
+        [
+          39.607819,
+          24.473452
+        ],
+        [
+          39.608001,
+          24.473454
+        ],
+        [
+          39.608009,
+          24.473068
+        ],
+        [
+          39.608191,
+          24.473067
+        ]
+      ]
+    },
+    {
+      "wayIndex": 428,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.608694,
+          24.472639
+        ],
+        [
+          39.608685,
+          24.4719
+        ]
+      ]
+    },
+    {
+      "wayIndex": 449,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.607228,
+          24.472659
+        ],
+        [
+          39.607281,
+          24.472659
+        ],
+        [
+          39.608187,
+          24.472646
+        ],
+        [
+          39.608217,
+          24.472646
+        ],
+        [
+          39.608694,
+          24.472639
+        ],
+        [
+          39.608793,
+          24.472638
+        ],
+        [
+          39.609214,
+          24.472632
+        ],
+        [
+          39.60967,
+          24.472626
+        ],
+        [
+          39.610162,
+          24.472619
+        ],
+        [
+          39.610486,
+          24.472614
+        ],
+        [
+          39.611137,
+          24.472603
+        ],
+        [
+          39.611777,
+          24.472597
+        ],
+        [
+          39.611947,
+          24.472594
+        ],
+        [
+          39.61245,
+          24.472587
+        ],
+        [
+          39.612642,
+          24.472584
+        ],
+        [
+          39.613057,
+          24.472579
+        ],
+        [
+          39.613102,
+          24.472578
+        ],
+        [
+          39.61377,
+          24.472569
+        ]
+      ]
+    },
+    {
+      "wayIndex": 1415,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.605998,
+          24.472033
+        ],
+        [
+          39.605811,
+          24.472361
+        ]
+      ]
+    },
+    {
+      "wayIndex": 1529,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.611777,
+          24.472597
+        ],
+        [
+          39.611786,
+          24.472012
+        ],
+        [
+          39.611814,
+          24.471943
+        ],
+        [
+          39.611876,
+          24.4719
+        ],
+        [
+          39.611948,
+          24.471874
+        ],
+        [
+          39.612292,
+          24.471872
+        ]
+      ]
+    },
+    {
+      "wayIndex": 1545,
+      "zone": "north",
+      "kind": "arterial",
+      "road": true,
+      "widthM": 13.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.6139,
+          24.474114
+        ],
+        [
+          39.61398,
+          24.474067
+        ],
+        [
+          39.614068,
+          24.474068
+        ],
+        [
+          39.614104,
+          24.474112
+        ]
+      ]
+    },
+    {
+      "wayIndex": 1828,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.608544,
+          24.471781
+        ],
+        [
+          39.608347,
+          24.471784
+        ],
+        [
+          39.608203,
+          24.471783
+        ]
+      ]
+    },
+    {
+      "wayIndex": 2360,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.61245,
+          24.472587
+        ],
+        [
+          39.612456,
+          24.471875
+        ]
+      ]
+    },
+    {
+      "wayIndex": 2362,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.606462,
+          24.471816
+        ],
+        [
+          39.606468,
+          24.472183
+        ],
+        [
+          39.606475,
+          24.47259
+        ],
+        [
+          39.606466,
+          24.473066
+        ],
+        [
+          39.606458,
+          24.473467
+        ],
+        [
+          39.606457,
+          24.473718
+        ],
+        [
+          39.606482,
+          24.473826
+        ]
+      ]
+    },
+    {
+      "wayIndex": 4836,
+      "zone": "north",
+      "kind": "arterial",
+      "road": true,
+      "widthM": 13.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.616812,
+          24.472875
+        ],
+        [
+          39.616537,
+          24.473007
+        ],
+        [
+          39.61604,
+          24.473211
+        ],
+        [
+          39.614932,
+          24.473539
+        ],
+        [
+          39.614677,
+          24.473609
+        ],
+        [
+          39.61355,
+          24.473865
+        ]
+      ]
+    },
+    {
+      "wayIndex": 4837,
+      "zone": "north",
+      "kind": "boulevard",
+      "road": true,
+      "widthM": 9.5,
+      "oneway": 0,
+      "coords": [
+        [
+          39.616812,
+          24.472875
+        ],
+        [
+          39.616771,
+          24.47303
+        ],
+        [
+          39.616521,
+          24.473159
+        ],
+        [
+          39.615744,
+          24.473426
+        ],
+        [
+          39.615037,
+          24.473623
+        ],
+        [
+          39.614557,
+          24.473757
+        ],
+        [
+          39.61368,
+          24.473944
+        ],
+        [
+          39.611728,
+          24.474352
+        ]
+      ]
+    },
+    {
+      "wayIndex": 4839,
+      "zone": "north",
+      "kind": "arterial",
+      "road": true,
+      "widthM": 13.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.61186,
+          24.474047
+        ],
+        [
+          39.613503,
+          24.473711
+        ]
+      ]
+    },
+    {
+      "wayIndex": 4840,
+      "zone": "north",
+      "kind": "arterial",
+      "road": true,
+      "widthM": 13.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.613503,
+          24.473711
+        ],
+        [
+          39.614882,
+          24.473379
+        ],
+        [
+          39.615232,
+          24.473282
+        ],
+        [
+          39.615957,
+          24.473091
+        ],
+        [
+          39.616411,
+          24.472901
+        ],
+        [
+          39.616696,
+          24.472736
+        ],
+        [
+          39.616812,
+          24.472875
+        ]
+      ]
+    },
+    {
+      "wayIndex": 4841,
+      "zone": "north",
+      "kind": "arterial",
+      "road": true,
+      "widthM": 13.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.61355,
+          24.473865
+        ],
+        [
+          39.611885,
+          24.474211
+        ]
+      ]
+    },
+    {
+      "wayIndex": 4842,
+      "zone": "north",
+      "kind": "boulevard",
+      "road": true,
+      "widthM": 9.5,
+      "oneway": 1,
+      "coords": [
+        [
+          39.611728,
+          24.474352
+        ],
+        [
+          39.611653,
+          24.474298
+        ],
+        [
+          39.611586,
+          24.47417
+        ],
+        [
+          39.61162,
+          24.474034
+        ],
+        [
+          39.611698,
+          24.47393
+        ]
+      ]
+    },
+    {
+      "wayIndex": 4845,
+      "zone": "north",
+      "kind": "arterial",
+      "road": true,
+      "widthM": 13.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.610291,
+          24.474318
+        ],
+        [
+          39.608157,
+          24.474276
+        ]
+      ]
+    },
+    {
+      "wayIndex": 4846,
+      "zone": "north",
+      "kind": "boulevard",
+      "road": true,
+      "widthM": 9.5,
+      "oneway": 0,
+      "coords": [
+        [
+          39.614026,
+          24.473442
+        ],
+        [
+          39.614936,
+          24.47322
+        ],
+        [
+          39.615449,
+          24.473103
+        ],
+        [
+          39.616123,
+          24.472917
+        ],
+        [
+          39.616696,
+          24.472736
+        ]
+      ]
+    },
+    {
+      "wayIndex": 4853,
+      "zone": "north",
+      "kind": "boulevard",
+      "road": true,
+      "widthM": 9.5,
+      "oneway": 1,
+      "coords": [
+        [
+          39.610313,
+          24.474
+        ],
+        [
+          39.610436,
+          24.474113
+        ],
+        [
+          39.610495,
+          24.474225
+        ],
+        [
+          39.610471,
+          24.474361
+        ],
+        [
+          39.610389,
+          24.474436
+        ]
+      ]
+    },
+    {
+      "wayIndex": 4854,
+      "zone": "north",
+      "kind": "arterial",
+      "road": true,
+      "widthM": 13.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.605778,
+          24.474025
+        ],
+        [
+          39.605755,
+          24.474116
+        ],
+        [
+          39.605663,
+          24.474479
+        ]
+      ]
+    },
+    {
+      "wayIndex": 4879,
+      "zone": "north",
+      "kind": "arterial",
+      "road": true,
+      "widthM": 13.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.606482,
+          24.473826
+        ],
+        [
+          39.606826,
+          24.474022
+        ]
+      ]
+    },
+    {
+      "wayIndex": 4880,
+      "zone": "north",
+      "kind": "arterial",
+      "road": true,
+      "widthM": 13.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.605674,
+          24.473864
+        ],
+        [
+          39.605756,
+          24.473946
+        ],
+        [
+          39.605778,
+          24.474025
+        ]
+      ]
+    },
+    {
+      "wayIndex": 4881,
+      "zone": "north",
+      "kind": "arterial",
+      "road": true,
+      "widthM": 13.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.607641,
+          24.473941
+        ],
+        [
+          39.607944,
+          24.474122
+        ]
+      ]
+    },
+    {
+      "wayIndex": 4882,
+      "zone": "north",
+      "kind": "boulevard",
+      "road": true,
+      "widthM": 9.5,
+      "oneway": 1,
+      "coords": [
+        [
+          39.606258,
+          24.474209
+        ],
+        [
+          39.606223,
+          24.474203
+        ],
+        [
+          39.606113,
+          24.474183
+        ],
+        [
+          39.605755,
+          24.474116
+        ],
+        [
+          39.605538,
+          24.474076
+        ],
+        [
+          39.605153,
+          24.473971
+        ],
+        [
+          39.604772,
+          24.473817
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5010,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.613095,
+          24.471324
+        ],
+        [
+          39.613097,
+          24.471864
+        ],
+        [
+          39.613102,
+          24.472578
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5013,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.60835,
+          24.47105
+        ],
+        [
+          39.608347,
+          24.471784
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5019,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.60731,
+          24.471067
+        ],
+        [
+          39.607827,
+          24.471057
+        ],
+        [
+          39.60835,
+          24.47105
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5131,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.607192,
+          24.471784
+        ],
+        [
+          39.606462,
+          24.471816
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5216,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.606475,
+          24.47259
+        ],
+        [
+          39.607185,
+          24.472589
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5217,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.606458,
+          24.473467
+        ],
+        [
+          39.607225,
+          24.47346
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5218,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.606466,
+          24.473066
+        ],
+        [
+          39.607225,
+          24.473062
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5219,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.605881,
+          24.47307
+        ],
+        [
+          39.606466,
+          24.473066
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5220,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.607225,
+          24.473418
+        ],
+        [
+          39.607819,
+          24.473421
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5221,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.608494,
+          24.474014
+        ],
+        [
+          39.608492,
+          24.473642
+        ],
+        [
+          39.608491,
+          24.473281
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5222,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.610162,
+          24.47326
+        ],
+        [
+          39.610162,
+          24.472619
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5223,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.609396,
+          24.474016
+        ],
+        [
+          39.609398,
+          24.473638
+        ],
+        [
+          39.6094,
+          24.473268
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5224,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.612292,
+          24.471872
+        ],
+        [
+          39.612311,
+          24.47132
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5225,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.612292,
+          24.471872
+        ],
+        [
+          39.612456,
+          24.471875
+        ],
+        [
+          39.613097,
+          24.471864
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5226,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.613097,
+          24.471864
+        ],
+        [
+          39.61367,
+          24.471863
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5227,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.612311,
+          24.47132
+        ],
+        [
+          39.611828,
+          24.471323
+        ],
+        [
+          39.611818,
+          24.47176
+        ],
+        [
+          39.611814,
+          24.471943
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5228,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.611263,
+          24.471757
+        ],
+        [
+          39.611818,
+          24.47176
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5229,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.610413,
+          24.471762
+        ],
+        [
+          39.611047,
+          24.471757
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5246,
+      "zone": "north",
+      "kind": "arterial",
+      "road": true,
+      "widthM": 13.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.607455,
+          24.47424
+        ],
+        [
+          39.607478,
+          24.47408
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5247,
+      "zone": "north",
+      "kind": "arterial",
+      "road": true,
+      "widthM": 13.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.608165,
+          24.474142
+        ],
+        [
+          39.609842,
+          24.474187
+        ],
+        [
+          39.610294,
+          24.474176
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5261,
+      "zone": "north",
+      "kind": "boulevard",
+      "road": true,
+      "widthM": 9.5,
+      "oneway": 1,
+      "coords": [
+        [
+          39.610389,
+          24.474436
+        ],
+        [
+          39.607911,
+          24.474406
+        ],
+        [
+          39.607605,
+          24.474374
+        ],
+        [
+          39.606678,
+          24.474275
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5317,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.613775,
+          24.472614
+        ],
+        [
+          39.613821,
+          24.47305
+        ],
+        [
+          39.613844,
+          24.473271
+        ],
+        [
+          39.6139,
+          24.473368
+        ],
+        [
+          39.614026,
+          24.473442
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5318,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.608209,
+          24.472157
+        ],
+        [
+          39.608217,
+          24.472646
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5319,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.609398,
+          24.473638
+        ],
+        [
+          39.608811,
+          24.473642
+        ],
+        [
+          39.608815,
+          24.473274
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5320,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.608811,
+          24.473642
+        ],
+        [
+          39.608568,
+          24.473642
+        ],
+        [
+          39.608492,
+          24.473642
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5321,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.608203,
+          24.471783
+        ],
+        [
+          39.608207,
+          24.472039
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5324,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.607193,
+          24.471069
+        ],
+        [
+          39.60731,
+          24.471067
+        ],
+        [
+          39.607289,
+          24.472163
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5325,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.607289,
+          24.472163
+        ],
+        [
+          39.607281,
+          24.472659
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5326,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.607289,
+          24.472163
+        ],
+        [
+          39.607186,
+          24.472167
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5327,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.607186,
+          24.472167
+        ],
+        [
+          39.606468,
+          24.472183
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5328,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.607225,
+          24.473062
+        ],
+        [
+          39.607823,
+          24.473066
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5330,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.608207,
+          24.472039
+        ],
+        [
+          39.608209,
+          24.472157
+        ],
+        [
+          39.607289,
+          24.472163
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5384,
+      "zone": "north",
+      "kind": "boulevard",
+      "road": true,
+      "widthM": 9.5,
+      "oneway": 1,
+      "coords": [
+        [
+          39.606113,
+          24.474183
+        ],
+        [
+          39.605814,
+          24.474276
+        ],
+        [
+          39.605724,
+          24.474365
+        ],
+        [
+          39.605663,
+          24.474479
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5413,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.609849,
+          24.471377
+        ],
+        [
+          39.609853,
+          24.47176
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5756,
+      "zone": "north",
+      "kind": "boulevard",
+      "road": true,
+      "widthM": 9.5,
+      "oneway": 1,
+      "coords": [
+        [
+          39.60416,
+          24.472786
+        ],
+        [
+          39.604384,
+          24.473048
+        ],
+        [
+          39.604614,
+          24.473255
+        ],
+        [
+          39.604956,
+          24.473486
+        ],
+        [
+          39.605123,
+          24.473571
+        ],
+        [
+          39.605519,
+          24.473703
+        ],
+        [
+          39.605858,
+          24.473752
+        ],
+        [
+          39.606482,
+          24.473826
+        ],
+        [
+          39.607158,
+          24.473892
+        ],
+        [
+          39.607641,
+          24.473941
+        ],
+        [
+          39.608494,
+          24.474014
+        ],
+        [
+          39.608983,
+          24.474026
+        ],
+        [
+          39.609396,
+          24.474016
+        ],
+        [
+          39.609863,
+          24.474008
+        ],
+        [
+          39.610313,
+          24.474
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5767,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.612311,
+          24.47132
+        ],
+        [
+          39.613095,
+          24.471324
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5808,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.609206,
+          24.471763
+        ],
+        [
+          39.609214,
+          24.472632
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5809,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.609674,
+          24.471761
+        ],
+        [
+          39.60967,
+          24.472626
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5810,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.611947,
+          24.473278
+        ],
+        [
+          39.611947,
+          24.472594
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5811,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.612642,
+          24.473289
+        ],
+        [
+          39.612642,
+          24.472584
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5812,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.613062,
+          24.473049
+        ],
+        [
+          39.613821,
+          24.47305
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5845,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.609863,
+          24.474008
+        ],
+        [
+          39.609854,
+          24.473264
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5846,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.609232,
+          24.473273
+        ],
+        [
+          39.609229,
+          24.473168
+        ]
+      ]
+    },
+    {
+      "wayIndex": 5848,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.609218,
+          24.47272
+        ],
+        [
+          39.609214,
+          24.472632
+        ]
+      ]
+    },
+    {
+      "wayIndex": 6808,
+      "zone": "north",
+      "kind": "boulevard",
+      "road": true,
+      "widthM": 9.5,
+      "oneway": 1,
+      "coords": [
+        [
+          39.611698,
+          24.47393
+        ],
+        [
+          39.612296,
+          24.473838
+        ],
+        [
+          39.612934,
+          24.473708
+        ],
+        [
+          39.614026,
+          24.473442
+        ]
+      ]
+    },
+    {
+      "wayIndex": 6888,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.612957,
+          24.473247
+        ],
+        [
+          39.613063,
+          24.473375
+        ]
+      ]
+    },
+    {
+      "wayIndex": 6892,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.608568,
+          24.473642
+        ],
+        [
+          39.608571,
+          24.473719
+        ]
+      ]
+    },
+    {
+      "wayIndex": 6893,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.611136,
+          24.472716
+        ],
+        [
+          39.611131,
+          24.474448
+        ]
+      ]
+    },
+    {
+      "wayIndex": 6894,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.611047,
+          24.471757
+        ],
+        [
+          39.611149,
+          24.471757
+        ],
+        [
+          39.611263,
+          24.471757
+        ]
+      ]
+    },
+    {
+      "wayIndex": 6895,
+      "zone": "north",
+      "kind": "promenade",
+      "road": false,
+      "widthM": 5.5,
+      "oneway": 0,
+      "coords": [
+        [
+          39.611149,
+          24.471757
+        ],
+        [
+          39.611139,
+          24.472489
+        ]
+      ]
+    },
+    {
+      "wayIndex": 6896,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.611139,
+          24.472489
+        ],
+        [
+          39.611137,
+          24.472603
+        ],
+        [
+          39.611136,
+          24.472716
+        ]
+      ]
+    },
+    {
+      "wayIndex": 6897,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.610162,
+          24.47326
+        ],
+        [
+          39.611013,
+          24.47326
+        ]
+      ]
+    },
+    {
+      "wayIndex": 6898,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.609665,
+          24.473266
+        ],
+        [
+          39.609854,
+          24.473264
+        ],
+        [
+          39.610162,
+          24.47326
+        ]
+      ]
+    },
+    {
+      "wayIndex": 7064,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.606223,
+          24.474203
+        ],
+        [
+          39.606286,
+          24.474385
+        ]
+      ]
+    },
+    {
+      "wayIndex": 7065,
+      "zone": "north",
+      "kind": "local",
+      "road": true,
+      "widthM": 7.0,
+      "oneway": 1,
+      "coords": [
+        [
+          39.606286,
+          24.474385
+        ],
+        [
+          39.606401,
+          24.474232
+        ]
+      ]
+    },
+    {
+      "wayIndex": 7348,
+      "zone": "north",
+      "kind": "footway",
+      "road": false,
+      "widthM": 3.0,
+      "oneway": 0,
+      "coords": [
+        [
+          39.608521,
+          24.471998
+        ],
+        [
+          39.608634,
+          24.471892
+        ]
+      ]
     }
   ],
   "urbanProps": {
@@ -16571,6 +22492,828 @@
           "lng": 39.6004726,
           "scale": 0.995,
           "rotRad": 6.064
+        }
+      ]
+    },
+    "north": {
+      "parkingPortals": [],
+      "streetLamps": [
+        {
+          "lat": 24.473724,
+          "lng": 39.6072737,
+          "rotRad": -1.573
+        },
+        {
+          "lat": 24.4733371,
+          "lng": 39.6072729,
+          "rotRad": -1.571
+        },
+        {
+          "lat": 24.4729814,
+          "lng": 39.6072735,
+          "rotRad": -1.564
+        },
+        {
+          "lat": 24.472747,
+          "lng": 39.6071794,
+          "rotRad": 1.578
+        },
+        {
+          "lat": 24.4727273,
+          "lng": 39.6081399,
+          "rotRad": 1.562
+        },
+        {
+          "lat": 24.4732296,
+          "lng": 39.6091607,
+          "rotRad": 3.139
+        },
+        {
+          "lat": 24.4733139,
+          "lng": 39.6093224,
+          "rotRad": -0.033
+        },
+        {
+          "lat": 24.4719488,
+          "lng": 39.6136338,
+          "rotRad": 1.443
+        },
+        {
+          "lat": 24.4721696,
+          "lng": 39.6137617,
+          "rotRad": 4.584
+        },
+        {
+          "lat": 24.4724126,
+          "lng": 39.6136995,
+          "rotRad": 1.443
+        },
+        {
+          "lat": 24.4741854,
+          "lng": 39.6072815,
+          "rotRad": 3.079
+        },
+        {
+          "lat": 24.4742148,
+          "lng": 39.6067687,
+          "rotRad": 3.079
+        },
+        {
+          "lat": 24.4742073,
+          "lng": 39.6066005,
+          "rotRad": -2.973
+        },
+        {
+          "lat": 24.4726604,
+          "lng": 39.6130099,
+          "rotRad": 1.561
+        },
+        {
+          "lat": 24.4728933,
+          "lng": 39.6131083,
+          "rotRad": 4.703
+        },
+        {
+          "lat": 24.4732469,
+          "lng": 39.612736,
+          "rotRad": -3.123
+        },
+        {
+          "lat": 24.473244,
+          "lng": 39.6125539,
+          "rotRad": -3.124
+        },
+        {
+          "lat": 24.4732359,
+          "lng": 39.6120402,
+          "rotRad": -3.124
+        },
+        {
+          "lat": 24.4732348,
+          "lng": 39.6118578,
+          "rotRad": 3.136
+        },
+        {
+          "lat": 24.4733233,
+          "lng": 39.6116014,
+          "rotRad": 6.278
+        },
+        {
+          "lat": 24.4718105,
+          "lng": 39.6089106,
+          "rotRad": -0.014
+        },
+        {
+          "lat": 24.4718062,
+          "lng": 39.6092951,
+          "rotRad": -0.005
+        },
+        {
+          "lat": 24.4717179,
+          "lng": 39.6095516,
+          "rotRad": 3.137
+        },
+        {
+          "lat": 24.4718041,
+          "lng": 39.6097632,
+          "rotRad": -0.006
+        },
+        {
+          "lat": 24.4718039,
+          "lng": 39.6099417,
+          "rotRad": 0.004
+        },
+        {
+          "lat": 24.4717176,
+          "lng": 39.610199,
+          "rotRad": 3.146
+        },
+        {
+          "lat": 24.4719101,
+          "lng": 39.6104533,
+          "rotRad": 1.591
+        },
+        {
+          "lat": 24.4721455,
+          "lng": 39.6105441,
+          "rotRad": 4.732
+        },
+        {
+          "lat": 24.4723776,
+          "lng": 39.6104432,
+          "rotRad": 1.591
+        },
+        {
+          "lat": 24.4725747,
+          "lng": 39.6057039,
+          "rotRad": 1.588
+        },
+        {
+          "lat": 24.4728109,
+          "lng": 39.6058546,
+          "rotRad": 4.73
+        },
+        {
+          "lat": 24.4730423,
+          "lng": 39.6056951,
+          "rotRad": 1.588
+        },
+        {
+          "lat": 24.4732568,
+          "lng": 39.6056813,
+          "rotRad": 1.704
+        },
+        {
+          "lat": 24.4731854,
+          "lng": 39.6097136,
+          "rotRad": -1.564
+        },
+        {
+          "lat": 24.472951,
+          "lng": 39.6096195,
+          "rotRad": 1.578
+        },
+        {
+          "lat": 24.4725576,
+          "lng": 39.6087409,
+          "rotRad": -1.582
+        },
+        {
+          "lat": 24.4723248,
+          "lng": 39.6086422,
+          "rotRad": 1.56
+        },
+        {
+          "lat": 24.47209,
+          "lng": 39.6087352,
+          "rotRad": -1.582
+        },
+        {
+          "lat": 24.4727013,
+          "lng": 39.6073707,
+          "rotRad": -0.016
+        },
+        {
+          "lat": 24.4726104,
+          "lng": 39.607626,
+          "rotRad": 3.126
+        },
+        {
+          "lat": 24.472694,
+          "lng": 39.6078844,
+          "rotRad": -0.016
+        },
+        {
+          "lat": 24.4725973,
+          "lng": 39.608562,
+          "rotRad": 3.125
+        },
+        {
+          "lat": 24.4726803,
+          "lng": 39.6088827,
+          "rotRad": -0.016
+        },
+        {
+          "lat": 24.4725895,
+          "lng": 39.609138,
+          "rotRad": 3.126
+        },
+        {
+          "lat": 24.4726744,
+          "lng": 39.6093036,
+          "rotRad": -0.014
+        },
+        {
+          "lat": 24.4725838,
+          "lng": 39.6095591,
+          "rotRad": 3.127
+        },
+        {
+          "lat": 24.4726683,
+          "lng": 39.6097597,
+          "rotRad": -0.016
+        },
+        {
+          "lat": 24.4725775,
+          "lng": 39.610015,
+          "rotRad": 3.126
+        },
+        {
+          "lat": 24.4726612,
+          "lng": 39.6102517,
+          "rotRad": -0.017
+        },
+        {
+          "lat": 24.4726561,
+          "lng": 39.6105758,
+          "rotRad": -0.019
+        },
+        {
+          "lat": 24.4725646,
+          "lng": 39.6108309,
+          "rotRad": 3.123
+        },
+        {
+          "lat": 24.4726458,
+          "lng": 39.6112264,
+          "rotRad": -0.01
+        },
+        {
+          "lat": 24.4725561,
+          "lng": 39.6114823,
+          "rotRad": 3.131
+        },
+        {
+          "lat": 24.472639,
+          "lng": 39.6118668,
+          "rotRad": -0.019
+        },
+        {
+          "lat": 24.4726364,
+          "lng": 39.6120366,
+          "rotRad": -0.015
+        },
+        {
+          "lat": 24.4725456,
+          "lng": 39.612292,
+          "rotRad": 3.126
+        },
+        {
+          "lat": 24.4726292,
+          "lng": 39.6125397,
+          "rotRad": -0.017
+        },
+        {
+          "lat": 24.4726265,
+          "lng": 39.6127316,
+          "rotRad": -0.013
+        },
+        {
+          "lat": 24.4726204,
+          "lng": 39.6131916,
+          "rotRad": -0.015
+        },
+        {
+          "lat": 24.4725297,
+          "lng": 39.6134471,
+          "rotRad": 3.127
+        },
+        {
+          "lat": 24.4720848,
+          "lng": 39.6059145,
+          "rotRad": 2.049
+        },
+        {
+          "lat": 24.4722817,
+          "lng": 39.6117339,
+          "rotRad": 1.585
+        },
+        {
+          "lat": 24.4717387,
+          "lng": 39.6084543,
+          "rotRad": 3.125
+        },
+        {
+          "lat": 24.4718976,
+          "lng": 39.6064154,
+          "rotRad": 1.556
+        },
+        {
+          "lat": 24.4722646,
+          "lng": 39.6064215,
+          "rotRad": 1.555
+        },
+        {
+          "lat": 24.472497,
+          "lng": 39.6065213,
+          "rotRad": 4.697
+        },
+        {
+          "lat": 24.4726702,
+          "lng": 39.6064256,
+          "rotRad": 1.588
+        },
+        {
+          "lat": 24.4729055,
+          "lng": 39.606517,
+          "rotRad": 4.73
+        },
+        {
+          "lat": 24.4731461,
+          "lng": 39.6064165,
+          "rotRad": 1.589
+        },
+        {
+          "lat": 24.4733815,
+          "lng": 39.6065076,
+          "rotRad": 4.731
+        },
+        {
+          "lat": 24.4735478,
+          "lng": 39.6064098,
+          "rotRad": 1.574
+        },
+        {
+          "lat": 24.4728503,
+          "lng": 39.6166972,
+          "rotRad": 2.656
+        },
+        {
+          "lat": 24.4729759,
+          "lng": 39.6164241,
+          "rotRad": 2.718
+        },
+        {
+          "lat": 24.4732007,
+          "lng": 39.6162536,
+          "rotRad": 5.86
+        },
+        {
+          "lat": 24.4731689,
+          "lng": 39.6159314,
+          "rotRad": 2.827
+        },
+        {
+          "lat": 24.4733755,
+          "lng": 39.6157351,
+          "rotRad": 5.969
+        },
+        {
+          "lat": 24.4733135,
+          "lng": 39.6154429,
+          "rotRad": 2.827
+        },
+        {
+          "lat": 24.4734948,
+          "lng": 39.6148245,
+          "rotRad": 2.849
+        },
+        {
+          "lat": 24.4735601,
+          "lng": 39.6145719,
+          "rotRad": 2.897
+        },
+        {
+          "lat": 24.4736733,
+          "lng": 39.6140734,
+          "rotRad": 2.897
+        },
+        {
+          "lat": 24.4730222,
+          "lng": 39.6166639,
+          "rotRad": 2.626
+        },
+        {
+          "lat": 24.4731363,
+          "lng": 39.6164165,
+          "rotRad": 2.781
+        },
+        {
+          "lat": 24.4735706,
+          "lng": 39.615431,
+          "rotRad": 5.986
+        },
+        {
+          "lat": 24.4737677,
+          "lng": 39.6147241,
+          "rotRad": 5.986
+        },
+        {
+          "lat": 24.4738822,
+          "lng": 39.614234,
+          "rotRad": 6.053
+        }
+      ],
+      "palms": [
+        {
+          "lat": 24.4741909,
+          "lng": 39.6070838,
+          "scale": 1.002,
+          "rotRad": 5.489
+        },
+        {
+          "lat": 24.4742033,
+          "lng": 39.6068669,
+          "scale": 1.03,
+          "rotRad": 2.913
+        },
+        {
+          "lat": 24.4741613,
+          "lng": 39.6063445,
+          "scale": 0.892,
+          "rotRad": 5.517
+        },
+        {
+          "lat": 24.4727544,
+          "lng": 39.6056941,
+          "scale": 0.97,
+          "rotRad": 6.156
+        },
+        {
+          "lat": 24.4729523,
+          "lng": 39.6056904,
+          "scale": 0.898,
+          "rotRad": 6.14
+        },
+        {
+          "lat": 24.4734343,
+          "lng": 39.6056487,
+          "scale": 0.9,
+          "rotRad": 2.799
+        },
+        {
+          "lat": 24.4730445,
+          "lng": 39.6162413,
+          "scale": 0.966,
+          "rotRad": 5.211
+        },
+        {
+          "lat": 24.473219,
+          "lng": 39.6157415,
+          "scale": 1.053,
+          "rotRad": 4.902
+        },
+        {
+          "lat": 24.4732802,
+          "lng": 39.6155348,
+          "scale": 1.152,
+          "rotRad": 1.916
+        },
+        {
+          "lat": 24.4733414,
+          "lng": 39.6153281,
+          "scale": 1.014,
+          "rotRad": 6.189
+        },
+        {
+          "lat": 24.4734026,
+          "lng": 39.6151214,
+          "scale": 1.008,
+          "rotRad": 6.135
+        },
+        {
+          "lat": 24.473598,
+          "lng": 39.6143787,
+          "scale": 1.019,
+          "rotRad": 1.994
+        },
+        {
+          "lat": 24.4736459,
+          "lng": 39.6141678,
+          "scale": 1.018,
+          "rotRad": 2.235
+        },
+        {
+          "lat": 24.4736938,
+          "lng": 39.6139569,
+          "scale": 0.976,
+          "rotRad": 3.712
+        },
+        {
+          "lat": 24.4737417,
+          "lng": 39.613746,
+          "scale": 1.123,
+          "rotRad": 3.897
+        },
+        {
+          "lat": 24.4741078,
+          "lng": 39.6119459,
+          "scale": 1.052,
+          "rotRad": 0.052
+        },
+        {
+          "lat": 24.4740644,
+          "lng": 39.612158,
+          "scale": 0.983,
+          "rotRad": 3.348
+        },
+        {
+          "lat": 24.474021,
+          "lng": 39.6123701,
+          "scale": 1.142,
+          "rotRad": 3.168
+        },
+        {
+          "lat": 24.4739777,
+          "lng": 39.6125821,
+          "scale": 0.967,
+          "rotRad": 6.104
+        },
+        {
+          "lat": 24.4739343,
+          "lng": 39.6127942,
+          "scale": 1.113,
+          "rotRad": 1.364
+        },
+        {
+          "lat": 24.4738909,
+          "lng": 39.6130063,
+          "scale": 0.958,
+          "rotRad": 4.598
+        },
+        {
+          "lat": 24.4738475,
+          "lng": 39.6132184,
+          "scale": 1.0,
+          "rotRad": 4.652
+        },
+        {
+          "lat": 24.4738042,
+          "lng": 39.6134305,
+          "scale": 0.986,
+          "rotRad": 2.828
+        },
+        {
+          "lat": 24.4737688,
+          "lng": 39.6135913,
+          "scale": 1.029,
+          "rotRad": 1.742
+        },
+        {
+          "lat": 24.4735158,
+          "lng": 39.6146421,
+          "scale": 1.076,
+          "rotRad": 4.175
+        },
+        {
+          "lat": 24.4734338,
+          "lng": 39.6149726,
+          "scale": 1.093,
+          "rotRad": 3.336
+        },
+        {
+          "lat": 24.4731342,
+          "lng": 39.6160549,
+          "scale": 0.892,
+          "rotRad": 4.402
+        },
+        {
+          "lat": 24.4729317,
+          "lng": 39.6165144,
+          "scale": 0.886,
+          "rotRad": 0.337
+        },
+        {
+          "lat": 24.4742151,
+          "lng": 39.6116835,
+          "scale": 0.914,
+          "rotRad": 3.77
+        },
+        {
+          "lat": 24.4740162,
+          "lng": 39.6117141,
+          "scale": 1.14,
+          "rotRad": 1.445
+        },
+        {
+          "lat": 24.4734843,
+          "lng": 39.6141101,
+          "scale": 1.003,
+          "rotRad": 5.787
+        },
+        {
+          "lat": 24.4734331,
+          "lng": 39.61432,
+          "scale": 1.092,
+          "rotRad": 0.16
+        },
+        {
+          "lat": 24.4733819,
+          "lng": 39.61453,
+          "scale": 1.06,
+          "rotRad": 3.815
+        },
+        {
+          "lat": 24.4733307,
+          "lng": 39.6147399,
+          "scale": 1.092,
+          "rotRad": 5.814
+        },
+        {
+          "lat": 24.4732636,
+          "lng": 39.6150193,
+          "scale": 0.988,
+          "rotRad": 5.888
+        },
+        {
+          "lat": 24.4732155,
+          "lng": 39.6152302,
+          "scale": 0.999,
+          "rotRad": 5.039
+        },
+        {
+          "lat": 24.4740874,
+          "lng": 39.6103143,
+          "scale": 0.989,
+          "rotRad": 2.308
+        },
+        {
+          "lat": 24.474196,
+          "lng": 39.6104058,
+          "scale": 0.962,
+          "rotRad": 5.994
+        },
+        {
+          "lat": 24.4741602,
+          "lng": 39.6056576,
+          "scale": 1.013,
+          "rotRad": 3.15
+        },
+        {
+          "lat": 24.4743529,
+          "lng": 39.6056088,
+          "scale": 0.924,
+          "rotRad": 3.857
+        },
+        {
+          "lat": 24.4739242,
+          "lng": 39.6064961,
+          "scale": 1.013,
+          "rotRad": 1.299
+        },
+        {
+          "lat": 24.4740292,
+          "lng": 39.6066803,
+          "scale": 1.081,
+          "rotRad": 4.24
+        },
+        {
+          "lat": 24.4740394,
+          "lng": 39.6076527,
+          "scale": 1.086,
+          "rotRad": 2.551
+        },
+        {
+          "lat": 24.474148,
+          "lng": 39.6078345,
+          "scale": 0.99,
+          "rotRad": 2.14
+        },
+        {
+          "lat": 24.4741109,
+          "lng": 39.6060587,
+          "scale": 0.882,
+          "rotRad": 3.112
+        },
+        {
+          "lat": 24.474071,
+          "lng": 39.6058458,
+          "scale": 0.897,
+          "rotRad": 1.637
+        },
+        {
+          "lat": 24.474044,
+          "lng": 39.6057005,
+          "scale": 0.942,
+          "rotRad": 5.586
+        },
+        {
+          "lat": 24.4739998,
+          "lng": 39.6054909,
+          "scale": 1.05,
+          "rotRad": 5.429
+        },
+        {
+          "lat": 24.473943,
+          "lng": 39.6052827,
+          "scale": 0.953,
+          "rotRad": 4.81
+        },
+        {
+          "lat": 24.47389,
+          "lng": 39.6051169,
+          "scale": 0.929,
+          "rotRad": 4.036
+        },
+        {
+          "lat": 24.4738097,
+          "lng": 39.6049182,
+          "scale": 1.132,
+          "rotRad": 0.159
+        },
+        {
+          "lat": 24.4741875,
+          "lng": 39.6075472,
+          "scale": 1.019,
+          "rotRad": 1.378
+        },
+        {
+          "lat": 24.4743613,
+          "lng": 39.609234,
+          "scale": 1.154,
+          "rotRad": 5.241
+        },
+        {
+          "lat": 24.4743587,
+          "lng": 39.6090166,
+          "scale": 1.073,
+          "rotRad": 0.034
+        },
+        {
+          "lat": 24.474356,
+          "lng": 39.6087993,
+          "scale": 0.946,
+          "rotRad": 0.181
+        },
+        {
+          "lat": 24.4743534,
+          "lng": 39.6085819,
+          "scale": 0.924,
+          "rotRad": 1.992
+        },
+        {
+          "lat": 24.4743508,
+          "lng": 39.6083646,
+          "scale": 1.138,
+          "rotRad": 4.873
+        },
+        {
+          "lat": 24.4743482,
+          "lng": 39.6081472,
+          "scale": 1.159,
+          "rotRad": 0.679
+        },
+        {
+          "lat": 24.4743385,
+          "lng": 39.6078499,
+          "scale": 0.9,
+          "rotRad": 2.736
+        },
+        {
+          "lat": 24.472873,
+          "lng": 39.6041498,
+          "scale": 0.962,
+          "rotRad": 2.026
+        },
+        {
+          "lat": 24.4730291,
+          "lng": 39.6042833,
+          "scale": 0.968,
+          "rotRad": 0.058
+        },
+        {
+          "lat": 24.4731354,
+          "lng": 39.6043863,
+          "scale": 1.081,
+          "rotRad": 1.445
+        },
+        {
+          "lat": 24.4733413,
+          "lng": 39.6046298,
+          "scale": 0.906,
+          "rotRad": 1.578
+        },
+        {
+          "lat": 24.4734592,
+          "lng": 39.6048043,
+          "scale": 1.045,
+          "rotRad": 6.205
+        },
+        {
+          "lat": 24.4735697,
+          "lng": 39.6049838,
+          "scale": 1.022,
+          "rotRad": 1.279
         }
       ]
     }

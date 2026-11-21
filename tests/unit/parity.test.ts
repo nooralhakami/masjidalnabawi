@@ -93,17 +93,17 @@ describe('parity: Rawdah schedule (R5), 16 October 2026', () => {
 });
 
 describe('parity: places and category counts (SPEC F1)', () => {
-  it('432 places (with 20 west expansion outer gates 401–420 as 1401–1420 and 87 Stage 6 South+West hotels), 8 hidden (wheelchair areas 401–408), 424 shown', () => {
-    expect(POIS).toHaveLength(432);
+  it('464 places (with 20 west expansion outer gates 401–420 as 1401–1420 and Stage 6 South+West+North hotels), 8 hidden (wheelchair areas 401–408), 456 shown', () => {
+    expect(POIS).toHaveLength(464);
     expect(POIS.filter((p) => p.subCategory === 'wheelchair_zone').map((p) => p.id)).toEqual([401, 402, 403, 404, 405, 406, 407, 408]);
   });
   it('each pill counts what it shows, computed the way the live app does', () => {
     const fac = new Facilities();
     const counts = Object.fromEntries(FILTERS.map(({ id }) => [id, visiblePois(id, 'all', '', fac, undefined, id === 'parking' ? 'all' : undefined).length]));
     // Owner, 2026-11-04 (docs/DECISIONS.md): unapproved hotels and restaurants hidden until verified;
-    // 2026-11-21: Stage 6 Zones 1 & 2 reveal 96 owner-approved South+West hotels (57 South + 39 West).
-    expect(counts).toEqual({ all: 333, gates: 132, women: 35, toilets: 40, hotels: 96, food: 0, shopping: 15, landmarks: 39, historic: 17, parking: 13, emergency: 9 });
-    expect(counts.all + counts.parking).toBe(346);
+    // 2026-11-21: Stage 6 Zones 1–3 reveal 157 owner-approved South+West+North hotels (57 South + 39 West + 61 North).
+    expect(counts).toEqual({ all: 394, gates: 132, women: 35, toilets: 40, hotels: 157, food: 0, shopping: 15, landmarks: 39, historic: 17, parking: 13, emergency: 9 });
+    expect(counts.all + counts.parking).toBe(407);
   });
 });
 

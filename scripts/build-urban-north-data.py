@@ -81,11 +81,13 @@ RESCUED_NORTH_GUIDES = {169: 732}
 # Duplicate guide numbers skipped as separate POIs (merged into primary alias)
 DUPLICATE_GUIDE_TO_PRIMARY_POI = {171: 734}
 
-# 4 verified non-overlapping OSM hotel footprints for North hotels lacking MS footprints
+# 6 verified non-overlapping OSM hotel footprints (4 missing MS footprints + 2 broken 4-pt MS roof slivers #101 & #165)
 OSM_FOOTPRINT_BY_GUIDE = {
+    101: 362200996,
     127: 1357193295,
     140: 1357111980,
     151: 1358320007,
+    165: 261731120,
     169: 625636529,
 }
 
@@ -558,11 +560,11 @@ def main() -> None:
         if f["properties"]["zone"] == "N" and f["properties"]["role"] == "footprint"
     }
 
-    # Group MS polygons by ring geometry
+    # Group MS polygons by ring geometry (skipping guides overridden by cleaner OSM footprints)
     groups: dict[tuple, list[dict]] = defaultdict(list)
     for num, h in sorted(n_joined.items()):
         fp = n_fp_by_num.get(num)
-        if fp:
+        if fp and num not in OSM_FOOTPRINT_BY_GUIDE:
             ring = fp["geometry"]["coordinates"][0]
             key = tuple(tuple(round(c, 6) for c in pt) for pt in ring)
             groups[key].append({"number": num, "hotel": h, "xy": to_xy(h["lng"], h["lat"]), "fp": fp})
@@ -582,12 +584,16 @@ def main() -> None:
             for num, cell in parts.items():
                 resolved_polys[num] = (clean_ring_xy(cell), "provisional_pin_partition")
 
-    # Add the 4 non-overlapping OSM footprints (#127, #140, #151, #169)
+    # Add the 6 non-overlapping OSM footprints (#101, #127, #140, #151, #165, #169)
     for gnum, oid in OSM_FOOTPRINT_BY_GUIDE.items():
-        assert gnum not in resolved_polys, f"Guide #{gnum} unexpectedly has both MS and OSM footprint"
+        assert gnum not in resolved_polys or gnum in (101, 165)
         elem = osm_by_id[oid]
         pts = elem["geometry"]
-        raw_ring = [to_xy(g["lon"], g["lat"]) for g in pts]
+        raw_ring = clean_ring_xy([to_xy(g["lon"], g["lat"]) for g in pts])
+        if gnum == 169 and 170 in resolved_polys:
+            # Trim shared full-block OSM footprint w625636529 east of MS parcel #170 (0.9 m gap)
+            max_x_170 = max(pt[0] for pt in resolved_polys[170][0])
+            raw_ring = clip_halfplane(raw_ring, (0.0, 0.0), (-1.0, 0.0), -(max_x_170 + 0.9))
         resolved_polys[gnum] = (clean_ring_xy(raw_ring), "single")
 
     # Clip every North polygon strictly north of HARAM_NORTH_CLIP_LAT (`y >= y_clip`)
@@ -949,7 +955,7 @@ def main() -> None:
         "tier": "verified",
         "approvedBy": "owner",
         "approvedAt": "2026-11-21",
-        "footprintSource": "microsoft-building-footprints-audit+osm-west-5+osm-north-4+authority-2026-guide",
+        "footprintSource": "microsoft-building-footprints-audit+osm-west-5+osm-north-6+authority-2026-guide",
         "streetSource": "data/streets.json (osm-verified)",
         "heightMode": "verified_and_estimated_display_only",
         "zonesApproved": ["south", "west", "north"],
@@ -1055,7 +1061,7 @@ def main() -> None:
         "width": 2600,
         "title": "أطلس مراجعة المنطقة 3 — الشمال (101–181) · المرحلة 6 [2026-11-21]",
         "legend": [
-            ["#2d7d46", "بصمة مفردة (36 MS + 4 OSM؛ تقليم ≥3.5 م عن السور الشمالي)"],
+            ["#2d7d46", "بصمة مفردة (34 MS + 6 OSM؛ تقليم ≥3.5 م عن السور الشمالي)"],
             ["#d97706", "بصمة مشتركة مقسّمة مبدئيًا (9 كتل / 19 فندقًا)"],
             ["#e11d48", "فندق بلا بصمة (113 جوار الساحة + 148 الريتز) — تخطّي 166/167 ودمج 171←140"],
             ["#0ea5e9", "نقطة مدخل الفندق على الواجهة / الشارع"],

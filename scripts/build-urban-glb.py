@@ -927,7 +927,7 @@ def build_zone(zone: str, data: dict, fence: dict) -> None:
 def main() -> None:
     argv = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
     parser = argparse.ArgumentParser()
-    parser.add_argument("--zone", choices=["south", "west", "all"], default="south")
+    parser.add_argument("--zone", choices=["south", "west", "north", "all"], default="south")
     args = parser.parse_args(argv)
 
     data = json.loads(INPUT_JSON.read_text("utf-8"))
@@ -935,7 +935,7 @@ def main() -> None:
     if data.get("tier") != "verified" or data.get("approvedBy") != "owner" or data.get("schema") != "haram-urban-approved-v2":
         raise RuntimeError("Refusing build: data/urban-approved.json failed A7/v2 approval check")
 
-    zones = ["south", "west"] if args.zone == "all" else [args.zone]
+    zones = ["south", "west", "north"] if args.zone == "all" else [args.zone]
     for zone in zones:
         build_zone(zone, data, fence)
 

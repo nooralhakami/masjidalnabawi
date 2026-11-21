@@ -2831,7 +2831,9 @@
     "lng": 39.6118539,
     "direction": "north",
     "description_ar": "فندق 5 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 30 م من بوابة 337.",
-    "osm": "w629631732"
+    "osm": "w629631732",
+    "guideNumber": 103,
+    "alias": "103"
   },
   {
     "id": 702,
@@ -2842,7 +2844,9 @@
     "lng": 39.610385,
     "direction": "north",
     "description_ar": "فندق 5 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 60 م من بوابة 331.",
-    "osm": "r1021909"
+    "osm": "r1021909",
+    "guideNumber": 156,
+    "alias": "156 Makarem Haram View Suites - Madinah"
   },
   {
     "id": 703,
@@ -2853,7 +2857,9 @@
     "lng": 39.6125656,
     "direction": "north",
     "description_ar": "فندق 4 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 70 م من بوابة 338.",
-    "osm": "w65543016"
+    "osm": "w65543016",
+    "guideNumber": 107,
+    "alias": "107 Golden Tulip Al Zahabi"
   },
   {
     "id": 704,
@@ -2864,7 +2870,9 @@
     "lng": 39.6087731,
     "direction": "north",
     "description_ar": "فندق في حي بضاعة بالمنطقة المركزية، على بعد نحو 50 م من بوابة 328.",
-    "osm": "w65542515"
+    "osm": "w65542515",
+    "guideNumber": 158,
+    "alias": "158 فندق دار الإيمان إنتركونتيننتال"
   },
   {
     "id": 705,
@@ -2875,7 +2883,9 @@
     "lng": 39.6107978,
     "direction": "north",
     "description_ar": "فندق 5 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 140 م من بوابة 331.",
-    "osm": "w65542999"
+    "osm": "w65542999",
+    "guideNumber": 150,
+    "alias": "150"
   },
   {
     "id": 706,
@@ -2886,7 +2896,9 @@
     "lng": 39.6133815,
     "direction": "north",
     "description_ar": "فندق 4 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 60 م من بوابة 341.",
-    "osm": "w362200996"
+    "osm": "w362200996",
+    "guideNumber": 101,
+    "alias": "101 The Biltmore Almadinah Hotel"
   },
   {
     "id": 707,
@@ -2897,7 +2909,9 @@
     "lng": 39.6114893,
     "direction": "north",
     "description_ar": "فندق 4 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 140 م من بوابة 337.",
-    "osm": "w65541436"
+    "osm": "w65541436",
+    "guideNumber": 115,
+    "alias": "115"
   },
   {
     "id": 708,
@@ -2908,7 +2922,9 @@
     "lng": 39.6099199,
     "direction": "north",
     "description_ar": "فندق 5 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 120 م من بوابة 330.",
-    "osm": "w301813400"
+    "osm": "w301813400",
+    "guideNumber": 153,
+    "alias": "153 فندق مادن الروضة"
   },
   {
     "id": 709,
@@ -2919,7 +2935,9 @@
     "lng": 39.6121397,
     "direction": "north",
     "description_ar": "فندق في حي بضاعة بالمنطقة المركزية، على بعد نحو 140 م من بوابة 338.",
-    "osm": "w65543060"
+    "osm": "w65543060",
+    "guideNumber": 114,
+    "alias": "114"
   },
   {
     "id": 710,
@@ -2930,7 +2948,9 @@
     "lng": 39.6126027,
     "direction": "north",
     "description_ar": "فندق 4 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 160 م من بوابة 338.",
-    "osm": "n5945036047"
+    "osm": "n5945036047",
+    "guideNumber": 113,
+    "alias": "113"
   },
   {
     "id": 711,
@@ -2954,7 +2974,9 @@
     "lng": 39.6089602,
     "direction": "north",
     "description_ar": "فندق 5 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 150 م من بوابة 328.",
-    "osm": "w65541120"
+    "osm": "w65541120",
+    "guideNumber": 155,
+    "alias": "155"
   },
   {
     "id": 713,
@@ -2978,7 +3000,9 @@
     "lng": 39.6084941,
     "direction": "north",
     "description_ar": "فندق 4 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 120 م من بوابة 328.",
-    "osm": "n14182711851"
+    "osm": "n14182711851",
+    "guideNumber": 159,
+    "alias": "159 ديار أجوا، مجموعة تابيستري من هيلتون"
   },
   {
     "id": 715,
@@ -2989,7 +3013,9 @@
     "lng": 39.6134327,
     "direction": "north",
     "description_ar": "فندق 4 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 140 م من بوابة 341.",
-    "osm": "r1021900"
+    "osm": "r1021900",
+    "guideNumber": 109,
+    "alias": "109 فندق دار الإيمان الحرم"
   },
   {
     "id": 716,
@@ -3000,7 +3026,9 @@
     "lng": 39.6078201,
     "direction": "north",
     "description_ar": "فندق 5 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 100 م من بوابة 327.",
-    "osm": "r4250426"
+    "osm": "r4250426",
+    "guideNumber": 163,
+    "alias": "163 فندق أنوار المدينة موڤنبيك"
   },
   {
     "id": 717,
@@ -3022,7 +3050,9 @@
     "lng": 39.6124296,
     "direction": "north",
     "description_ar": "فندق 4 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 210 م من بوابة 338.",
-    "osm": "n6231238057"
+    "osm": "n6231238057",
+    "guideNumber": 119,
+    "alias": "119"
   },
   {
     "id": 719,
@@ -3033,7 +3063,9 @@
     "lng": 39.6108774,
     "direction": "north",
     "description_ar": "فندق 5 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 230 م من بوابة 331.",
-    "osm": "n3752773995"
+    "osm": "n3752773995",
+    "guideNumber": 149,
+    "alias": "149 فندق مادن"
   },
   {
     "id": 720,
@@ -3044,7 +3076,9 @@
     "lng": 39.6104755,
     "direction": "north",
     "description_ar": "فندق 4 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 240 م من بوابة 331.",
-    "osm": "n4454516094"
+    "osm": "n4454516094",
+    "guideNumber": 148,
+    "alias": "148"
   },
   {
     "id": 721,
@@ -3055,7 +3089,9 @@
     "lng": 39.6128425,
     "direction": "north",
     "description_ar": "فندق 5 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 220 م من بوابة 339.",
-    "osm": "w301813402"
+    "osm": "w301813402",
+    "guideNumber": 121,
+    "alias": "121 فندق روڤ المدينة"
   },
   {
     "id": 722,
@@ -3079,7 +3115,9 @@
     "lng": 39.6133379,
     "direction": "north",
     "description_ar": "فندق 4 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 220 م من بوابة 340.",
-    "osm": "w413986850"
+    "osm": "w413986850",
+    "guideNumber": 122,
+    "alias": "122"
   },
   {
     "id": 724,
@@ -3116,7 +3154,9 @@
     "lng": 39.6085102,
     "direction": "north",
     "description_ar": "فندق 3 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 230 م من بوابة 328.",
-    "osm": "r1021904"
+    "osm": "r1021904",
+    "guideNumber": 142,
+    "alias": "142"
   },
   {
     "id": 727,
@@ -3127,7 +3167,9 @@
     "lng": 39.6107962,
     "direction": "north",
     "description_ar": "فندق 5 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 300 م من بوابة 331.",
-    "osm": "r9265412"
+    "osm": "r9265412",
+    "guideNumber": 128,
+    "alias": "128"
   },
   {
     "id": 728,
@@ -3151,7 +3193,9 @@
     "lng": 39.6134508,
     "direction": "north",
     "description_ar": "فندق 5 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 260 م من بوابة 341.",
-    "osm": "w413986849"
+    "osm": "w413986849",
+    "guideNumber": 123,
+    "alias": "123"
   },
   {
     "id": 730,
@@ -3162,7 +3206,9 @@
     "lng": 39.6096446,
     "direction": "north",
     "description_ar": "فندق 3 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 310 م من بوابة 329.",
-    "osm": "r1021902"
+    "osm": "r1021902",
+    "guideNumber": 132,
+    "alias": "132 فندق قصر الانصار جولدن تیولب"
   },
   {
     "id": 731,
@@ -3173,7 +3219,9 @@
     "lng": 39.6102474,
     "direction": "north",
     "description_ar": "فندق 5 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 320 م من بوابة 331.",
-    "osm": "w352925737"
+    "osm": "w352925737",
+    "guideNumber": 130,
+    "alias": "130"
   },
   {
     "id": 732,
@@ -3184,7 +3232,9 @@
     "lng": 39.6070051,
     "direction": "north",
     "description_ar": "فندق 4 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 200 م من بوابة 327.",
-    "osm": "n5945228160"
+    "osm": "n5945228160",
+    "guideNumber": 169,
+    "alias": "169"
   },
   {
     "id": 733,
@@ -3195,7 +3245,9 @@
     "lng": 39.608647,
     "direction": "north",
     "description_ar": "فندق 4 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 290 م من بوابة 328.",
-    "osm": "w352925736"
+    "osm": "w352925736",
+    "guideNumber": 136,
+    "alias": "136 زوار إنترناشيونال"
   },
   {
     "id": 734,
@@ -3206,7 +3258,9 @@
     "lng": 39.607544,
     "direction": "north",
     "description_ar": "فندق في حي بضاعة بالمنطقة المركزية، على بعد نحو 240 م من بوابة 327.",
-    "osm": "w1357111980"
+    "osm": "w1357111980",
+    "guideNumber": 140,
+    "alias": "140 171 فندق شيراتون طيبة - البرج ٢"
   },
   {
     "id": 735,
@@ -3228,7 +3282,9 @@
     "lng": 39.6062542,
     "direction": "west",
     "description_ar": "فندق 4 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 220 م من بوابة 327.",
-    "osm": "w625636527"
+    "osm": "w625636527",
+    "guideNumber": 181,
+    "alias": "181"
   },
   {
     "id": 737,
@@ -3239,7 +3295,9 @@
     "lng": 39.6067446,
     "direction": "north",
     "description_ar": "فندق 4 نجوم في حي بضاعة بالمنطقة المركزية، على بعد نحو 260 م من بوابة 327.",
-    "osm": "w625635709"
+    "osm": "w625635709",
+    "guideNumber": 172,
+    "alias": "172"
   },
   {
     "id": 738,
@@ -5118,5 +5176,421 @@
     "alias": "256 فندق آرجوان الذهبي",
     "source": "pm-central-guide-ar-2026",
     "guideNumber": 256
+  },
+  {
+    "id": 2104,
+    "name_ar": "الأندلس الفاخر",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4715679,
+    "lng": 39.6114019,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 104).",
+    "alias": "104 فندق الاندلس الفاخر للشقق الفندقية",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 104
+  },
+  {
+    "id": 2106,
+    "name_ar": "الفيروز شطة",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4717196,
+    "lng": 39.6125227,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 106).",
+    "alias": "106 فندق الفيروز شطة",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 106
+  },
+  {
+    "id": 2110,
+    "name_ar": "جراند بلازا المدينة",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4721166,
+    "lng": 39.6126067,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 110).",
+    "alias": "110",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 110
+  },
+  {
+    "id": 2112,
+    "name_ar": "جراند بلازا بدر المقام",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4721168,
+    "lng": 39.6128713,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 112).",
+    "alias": "112 جراند بلازا المدينة",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 112
+  },
+  {
+    "id": 2116,
+    "name_ar": "اجنحة الروضة الفاخرة",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4730149,
+    "lng": 39.6115967,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 116).",
+    "alias": "116",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 116
+  },
+  {
+    "id": 2117,
+    "name_ar": "سنابل المدينة",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4727769,
+    "lng": 39.6120506,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 117).",
+    "alias": "117 فندق سنابل المدينة",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 117
+  },
+  {
+    "id": 2118,
+    "name_ar": "اركان الذهبي",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4731778,
+    "lng": 39.6120056,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 118).",
+    "alias": "118 فندق أركان الذهبي",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 118
+  },
+  {
+    "id": 2120,
+    "name_ar": "رؤى العالمي",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4731999,
+    "lng": 39.6124189,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 120).",
+    "alias": "120 فندق رؤى العالمي",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 120
+  },
+  {
+    "id": 2124,
+    "name_ar": "كيان العالمي",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4733947,
+    "lng": 39.6128209,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 124).",
+    "alias": "124 Kayan International Hotel",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 124
+  },
+  {
+    "id": 2125,
+    "name_ar": "دار النعيم",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4735894,
+    "lng": 39.6127054,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 125).",
+    "alias": "125 فندق دار النعيم",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 125
+  },
+  {
+    "id": 2126,
+    "name_ar": "استونيست طيبة",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4734519,
+    "lng": 39.6120322,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 126).",
+    "alias": "126 فندق استونيست طيبة",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 126
+  },
+  {
+    "id": 2127,
+    "name_ar": "بيننسولا وورث",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4735081,
+    "lng": 39.611547,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 127).",
+    "alias": "127 فندق وورث بيننسولا",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 127
+  },
+  {
+    "id": 2131,
+    "name_ar": "كون كود النزيل",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.473306,
+    "lng": 39.6101715,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 131).",
+    "alias": "131 فندق كون كود النزيل",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 131
+  },
+  {
+    "id": 2134,
+    "name_ar": "درة المدينة",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4733875,
+    "lng": 39.6090244,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 134).",
+    "alias": "134",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 134
+  },
+  {
+    "id": 2135,
+    "name_ar": "المرسى",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4735442,
+    "lng": 39.608577,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 135).",
+    "alias": "135 فندق المرسى",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 135
+  },
+  {
+    "id": 2137,
+    "name_ar": "اودست المدينة",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4733946,
+    "lng": 39.6082147,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 137).",
+    "alias": "137 Odst Al Madinah Hotel - فندق اودست المدينة",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 137
+  },
+  {
+    "id": 2138,
+    "name_ar": "سجى المدينة",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4737293,
+    "lng": 39.607696,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 138).",
+    "alias": "138 فندق سجى المدينة",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 138
+  },
+  {
+    "id": 2139,
+    "name_ar": "قصر الأندلس الذهبي",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4731493,
+    "lng": 39.6076053,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 139).",
+    "alias": "139 فندق قصر الأندلس الذهبي",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 139
+  },
+  {
+    "id": 2141,
+    "name_ar": "الأنصار بلاتينوم",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4728133,
+    "lng": 39.6079631,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 141).",
+    "alias": "141 فندق الانصار بلاتينوم",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 141
+  },
+  {
+    "id": 2146,
+    "name_ar": "الشام الإقليمية (بروفنس)",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.473198,
+    "lng": 39.6098165,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 146).",
+    "alias": "146",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 146
+  },
+  {
+    "id": 2147,
+    "name_ar": "مادن نزل رويال ان",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.472755,
+    "lng": 39.610553,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 147).",
+    "alias": "147 نزل رويال ان",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 147
+  },
+  {
+    "id": 2151,
+    "name_ar": "مكارم برج المدينة",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4720222,
+    "lng": 39.6103928,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 151).",
+    "alias": "151 فندق مكارم برج المدينة",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 151
+  },
+  {
+    "id": 2154,
+    "name_ar": "ميلينيوم العقيق",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4720668,
+    "lng": 39.6093024,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 154).",
+    "alias": "154 فندق العقيق",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 154
+  },
+  {
+    "id": 2157,
+    "name_ar": "واجهة طيبة",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4713061,
+    "lng": 39.6096906,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 157).",
+    "alias": "157 فندق واجهة طيبة",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 157
+  },
+  {
+    "id": 2160,
+    "name_ar": "مادن طيبة",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4724161,
+    "lng": 39.608571,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 160).",
+    "alias": "160",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 160
+  },
+  {
+    "id": 2164,
+    "name_ar": "ايلاف طيبة",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4711913,
+    "lng": 39.6070442,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 164).",
+    "alias": "164 فندق إيلاف طيبة",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 164
+  },
+  {
+    "id": 2165,
+    "name_ar": "اعمار إيليت",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4711553,
+    "lng": 39.6066329,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 165).",
+    "alias": "165 اعمار ايليت",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 165
+  },
+  {
+    "id": 2170,
+    "name_ar": "رويال المدينة",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4723125,
+    "lng": 39.6065625,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 170).",
+    "alias": "170 فندق رويال المدينة",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 170
+  },
+  {
+    "id": 2175,
+    "name_ar": "الحياة العالمي",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4736124,
+    "lng": 39.6070959,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 175).",
+    "alias": "175 فندق حياة العالمي",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 175
+  },
+  {
+    "id": 2176,
+    "name_ar": "وقف عثمان بن عفان",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4734695,
+    "lng": 39.6065712,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 176).",
+    "alias": "176 فندق وقف عثمان بن عفان",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 176
+  },
+  {
+    "id": 2178,
+    "name_ar": "المختارة العالمي",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4731199,
+    "lng": 39.6063389,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 178).",
+    "alias": "178 فندق المختارة العالمي",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 178
+  },
+  {
+    "id": 2180,
+    "name_ar": "تريبل ون",
+    "category": "hotels",
+    "subCategory": "hotel",
+    "lat": 24.4722923,
+    "lng": 39.6062611,
+    "direction": "north",
+    "description_ar": "فندق في المنطقة الشمالية (دليل الهيئة 2026 — رقم 180).",
+    "alias": "180 Triple One Hotel فندق تريبل ون",
+    "source": "pm-central-guide-ar-2026",
+    "guideNumber": 180
   }
 ]
