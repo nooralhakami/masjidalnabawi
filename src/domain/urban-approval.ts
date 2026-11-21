@@ -294,10 +294,7 @@ const PRISMS_MODEL: readonly PrismModel[] = APPROVED_FOOTPRINT_BUILDINGS.map((bu
  * Ray-vs-prism intersection in model metres (`+X` east, `+Y` up, `+Z` south) so tapping any
  * approved 3D hotel facade or roof picks that building cleanly without GPU readback.
  */
-export function pickApprovedBuildingRay(
-  origin: readonly [number, number, number],
-  dir: readonly [number, number, number],
-): ApprovedBuilding | null {
+export function pickApprovedBuildingRay(origin: readonly [number, number, number], dir: readonly [number, number, number]): ApprovedBuilding | null {
   const [ox, oy, oz] = origin;
   const [dx, dy, dz] = dir;
   let bestT = Number.POSITIVE_INFINITY;
@@ -385,7 +382,7 @@ export function pickApprovedBuildingRay(
 export function urbanOpacityForCamera(bearingDeg: number, pitchDeg: number, zone: 'south' | 'west' = 'south'): number {
   if (pitchDeg < 30) return 1;
   const targetDeg = zone === 'west' ? 90 : 0;
-  const diff = Math.abs((((bearingDeg - targetDeg + 180) % 360) + 360) % 360 - 180);
+  const diff = Math.abs(((((bearingDeg - targetDeg + 180) % 360) + 360) % 360) - 180);
   if (diff > 55) return 1;
   return diff <= 35 && pitchDeg >= 45 ? 0.28 : 0.32;
 }

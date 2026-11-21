@@ -9,6 +9,7 @@ import { saqifahAndSurroundings3D, saqifahGround2D } from '../../src/map/saqifah
 import { womenRawdahCorridorBarriers } from '../../src/map/women-barriers';
 import { walkPath, walkShortcutPath } from '../../src/routing/walk';
 import { SHORTCUT_PAINT, shortcutBadgeMeta } from '../../src/map/route';
+import { pointInApprovedBuilding } from '../../src/domain/urban-approval';
 
 function pointInPolygon([lat, lng]: [number, number], ring: readonly [number, number][]): boolean {
   let inside = false;
@@ -111,10 +112,14 @@ describe('Phase 1-B resolution, inter-carpet aisles, interior routing, and Saqif
     expect(byKind('tree-crown')).toHaveLength(28);
 
     const surrounding = [...byKind('hotel'), ...byKind('civic'), ...byKind('building')];
-    expect(surrounding).toHaveLength(45);
+    expect(surrounding).toHaveLength(25);
 
     for (const f of surrounding) {
       expect(/^(209|21\d|22[0-2])$/.test((f.properties.name ?? '').trim())).toBe(false);
+      const pts = f.geometry.coordinates[0];
+      const clat = pts.reduce((s, p) => s + p[1], 0) / pts.length;
+      const clng = pts.reduce((s, p) => s + p[0], 0) / pts.length;
+      expect(pointInApprovedBuilding([clat, clng]), f.properties.id).toBeNull();
     }
 
     // Ensure GLB canopy anchor constant was not dropped

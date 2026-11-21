@@ -22,14 +22,14 @@ const shown = (filter: FilterId, toiletSub: 'all' | 'open' | 'closed' = 'all') =
 describe('filters', () => {
   it('"all" shows everything except parking and the hidden places (wheelchair zones, unapproved hotels, restaurants)', () => {
     const all = shown('all');
-    // 395 places (including 401–420 west expansion gates 1401–1420 and 50 Stage 6 South hotels), less 13 car parks,
-    // 8 wheelchair zones, 36 unapproved hotels (57 Stage 6 Zone 1 South hotels verified & visible), and 44 restaurants.
-    expect(all).toHaveLength(395 - 13 - 8 - 36 - 44);
+    // 432 places (including 401–420 west expansion gates 1401–1420, 50 Stage 6 South hotels, and 37 new West hotels),
+    // less 13 car parks, 8 wheelchair zones, 34 unapproved hotels (96 Stage 6 South+West hotels visible), and 44 restaurants.
+    expect(all).toHaveLength(432 - 13 - 8 - 34 - 44);
     expect(all.some((p) => p.category === 'parking')).toBe(false);
     expect(all.some((p) => p.category === 'food')).toBe(false);
     const visibleHotelIds = all.filter((p) => p.category === 'hotels').map((p) => p.id);
-    expect(visibleHotelIds).toHaveLength(57);
-    expect(visibleHotelIds).toEqual(expect.arrayContaining([711, 713, 722, 724, 725, 728, 735]));
+    expect(visibleHotelIds).toHaveLength(96);
+    expect(visibleHotelIds).toEqual(expect.arrayContaining([711, 713, 722, 724, 725, 728, 735, 738, 743]));
   });
 
   it('parking appears only with its pill or while searching', () => {
@@ -87,8 +87,8 @@ describe('filters', () => {
 
   it('category pills match their category', () => {
     expect(shown('gates')).toHaveLength(132);
-    // Stage 6 Zone 1 South: 57 owner-approved South hotels are visible; remaining 36 unapproved hotels and all food stay hidden.
-    expect(shown('hotels')).toHaveLength(57);
+    // Stage 6 Zones 1 & 2: 96 owner-approved South+West hotels are visible; remaining 34 unapproved hotels and all food stay hidden.
+    expect(shown('hotels')).toHaveLength(96);
     expect(shown('food')).toHaveLength(0);
     expect(shown('shopping')).toHaveLength(15);
     expect(shown('emergency')).toHaveLength(9);

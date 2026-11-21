@@ -1152,6 +1152,14 @@ export class MapEngine {
     if (place === null && this.mode3d && this.models?.toggleDomeAt(x, y)) return;
     // In 3D, a tap on no place but on a canopy opens or closes it (owner, 2026-11-06).
     if (place === null && this.mode3d && this.models?.toggleCanopyAt(x, y)) return;
+    // In 3D, tapping directly on an approved hotel tower opens its PlaceCard (owner, 2026-11-21).
+    if (place === null && this.mode3d) {
+      const hotelId = this.urban?.hotelAt(x, y) ?? null;
+      if (hotelId !== null) {
+        this.opts.onPick?.(hotelId);
+        return;
+      }
+    }
     this.opts.onPick?.(place);
   }
 }

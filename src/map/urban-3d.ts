@@ -1,18 +1,30 @@
 import type { CustomLayerInterface, CustomRenderMethodInput, Map as MLMap } from 'maplibre-gl';
-import { APPROVED_BUILDINGS, APPROVED_BY_POI_ID, APPROVED_FOOTPRINT_BUILDINGS, urbanOpacityForCamera } from '../domain/urban-approval';
+import {
+  approvedFootprintBuildingsForZone,
+  APPROVED_BUILDINGS,
+  APPROVED_BY_POI_ID,
+  pickApprovedBuildingRay,
+  pointInApprovedBuilding,
+  urbanOpacityForCamera,
+} from '../domain/urban-approval';
 import { streetCorridors } from '../../data/urban-approved.json';
 import { frameMatrix, mulMat4, parseGlbBuffer } from './glb-layer';
 import { cameraEye } from './plaza-layer';
 import type { SceneLight } from './scene-light';
 
 export const URBAN_GLB_URL = './models/urban-south-stage6.glb';
+export const URBAN_WEST_GLB_URL = './models/urban-west-stage6.glb';
 export const URBAN_LAYER_ID = 'urban-south-3d';
-export const URBAN_ZONES = [{ id: 'south', url: URBAN_GLB_URL }] as const;
+export const URBAN_ZONES = [
+  { id: 'south', url: URBAN_GLB_URL },
+  { id: 'west', url: URBAN_WEST_GLB_URL },
+] as const;
+export type UrbanZoneId = (typeof URBAN_ZONES)[number]['id'];
 export const URBAN_STREETS_SOURCE_ID = 'urban-south-streets';
 export const URBAN_STREETS_LAYER_ID = 'urban-south-streets-line';
 
-const APPROVED_FOOTPRINT_IDS = APPROVED_FOOTPRINT_BUILDINGS.map((b) => b.poiId);
 const VALID_HEIGHT_SOURCES = new Set(['osm_levels', 'estimated_display_only', 'owner_verified']);
+const VALID_ZONES = new Set<string>(URBAN_ZONES.map((z) => z.id));
 const COMPONENT_BYTES: Record<number, number> = { 5120: 1, 5121: 1, 5122: 2, 5123: 2, 5125: 4, 5126: 4 };
 const TYPE_COMPONENTS: Record<string, number> = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 };
 
@@ -88,11 +100,11 @@ export interface GlbValidationResult {
 }
 
 /**
- * A9 Provenance GLB Guard: validates `public/models/urban-south-stage6.glb` before uploading to
- * WebGL, proving it carries only owner-approved Zone 1 South buildings (`haram-urban-approved-v2`),
- * verified or display-tagged heights within expected bounds, and approved street/prop nodes.
+ * A9 Provenance GLB Guard: validates `public/models/urban-{south,west}-stage6.glb` before uploading
+ * to WebGL, proving it carries only owner-approved buildings (`haram-urban-approved-v2`) matching
+ * its declared zone, verified or display-tagged heights within expected bounds, and approved nodes.
  */
-export function validateUrbanGlb(rawGltf: unknown): GlbValidationResult {
+export function validateUrbanGlb(rawGltf: unknown, expectedZone?: UrbanZoneId): GlbValidationResult {
   const gltf = rawGltf as UrbanGlbJson;
   const extras = gltf.asset?.extras ?? gltf.scenes?.[0]?.extras;
   if (!extras || extras.schema !== 'haram-urban-approved-v2' || extras.tier !== 'verified' || extras.approvedBy !== 'owner') {
@@ -101,6 +113,19 @@ export function validateUrbanGlb(rawGltf: unknown): GlbValidationResult {
   if (extras.heightMode !== 'verified_and_estimated_display_only') {
     return { ok: false, reason: 'GLB heightMode is not verified_and_estimated_display_only', buildingCount: 0, maxHeightM: 0 };
   }
+  const glbZone = String(extras.zone ?? '');
+  if (!VALID_ZONES.has(glbZone) || (expectedZone && glbZone !== expectedZone)) {
+    return {
+      ok: false,
+      reason: `Unexpected GLB zone "${glbZone}"${expectedZone ? ` (expected "${expectedZone}")` : ''}`,
+      buildingCount: 0,
+      maxHeightM: 0,
+    };
+  }
+  const zoneId = glbZone as UrbanZoneId;
+  const expectedFootprintIds = approvedFootprintBuildingsForZone(zoneId).map((b) => b.poiId);
+  const streetPrefix = `urban-street-${zoneId}-`;
+  const propPrefix = `urban-prop-${zoneId}-`;
 
   const nodes = gltf.nodes ?? [];
   const meshes = gltf.meshes ?? [];
@@ -111,8 +136,8 @@ export function validateUrbanGlb(rawGltf: unknown): GlbValidationResult {
   for (const node of nodes) {
     const name = node.name ?? '';
     const isHotel = name.startsWith('urban-hotel-');
-    const isStreet = name.startsWith('urban-street-south-');
-    const isProp = name.startsWith('urban-prop-south-');
+    const isStreet = name.startsWith(streetPrefix);
+    const isProp = name.startsWith(propPrefix);
     if (!isHotel && !isStreet && !isProp) {
       return { ok: false, reason: `Unapproved GLB node "${name}" rejected by A9 guard`, buildingCount: 0, maxHeightM };
     }
@@ -120,7 +145,7 @@ export function validateUrbanGlb(rawGltf: unknown): GlbValidationResult {
       const poiId = Number(node.extras?.poiId);
       const approved = APPROVED_BY_POI_ID.get(poiId);
       const src = String(node.extras?.heightSource ?? '');
-      if (!approved || !approved.hasFootprint || node.extras?.buildingId !== approved.buildingId || !VALID_HEIGHT_SOURCES.has(src)) {
+      if (!approved || !approved.hasFootprint || approved.zone !== zoneId || node.extras?.buildingId !== approved.buildingId || !VALID_HEIGHT_SOURCES.has(src)) {
         return { ok: false, reason: `Unapproved or invalid hotel node "${name}"`, buildingCount: 0, maxHeightM };
       }
       if (typeof node.mesh === 'number') {
@@ -145,10 +170,10 @@ export function validateUrbanGlb(rawGltf: unknown): GlbValidationResult {
     }
   }
 
-  if (seenBuildings.size !== APPROVED_FOOTPRINT_IDS.length || !APPROVED_FOOTPRINT_IDS.every((id) => seenBuildings.has(id))) {
+  if (seenBuildings.size !== expectedFootprintIds.length || !expectedFootprintIds.every((id) => seenBuildings.has(id))) {
     return {
       ok: false,
-      reason: `Expected ${APPROVED_FOOTPRINT_IDS.length} footprinted approved hotels (${APPROVED_BUILDINGS.length} total), got ${seenBuildings.size}`,
+      reason: `Expected ${expectedFootprintIds.length} footprinted ${zoneId} hotels (${APPROVED_BUILDINGS.length} total), got ${seenBuildings.size}`,
       buildingCount: seenBuildings.size,
       maxHeightM,
     };
@@ -301,16 +326,56 @@ interface GpuPart {
   indexType: number;
   color: [number, number, number, number];
   kind: number; // 0=building, 1=street, 2=prop, 3=lamp_glow
+  zone: UrbanZoneId;
   seed: number;
   tint: number;
   useTex: boolean;
 }
 
 interface PendingLoad {
+  zone: UrbanZoneId;
   gltf: UrbanGlbJson;
   bin: Uint8Array;
   albedoImg: ImageBitmap | HTMLImageElement | null;
   maskImg: ImageBitmap | HTMLImageElement | null;
+}
+
+function invertMat4(m: Float64Array): Float64Array | null {
+  const inv = new Float64Array(16);
+  inv[0] = m[5] * m[10] * m[15] - m[5] * m[11] * m[14] - m[9] * m[6] * m[15] + m[9] * m[7] * m[14] + m[13] * m[6] * m[11] - m[13] * m[7] * m[10];
+  inv[4] = -m[4] * m[10] * m[15] + m[4] * m[11] * m[14] + m[8] * m[6] * m[15] - m[8] * m[7] * m[14] - m[12] * m[6] * m[11] + m[12] * m[7] * m[10];
+  inv[8] = m[4] * m[9] * m[15] - m[4] * m[11] * m[13] - m[8] * m[5] * m[15] + m[8] * m[7] * m[13] + m[12] * m[5] * m[11] - m[12] * m[7] * m[9];
+  inv[12] = -m[4] * m[9] * m[14] + m[4] * m[10] * m[13] + m[8] * m[5] * m[14] - m[8] * m[6] * m[13] - m[12] * m[5] * m[10] + m[12] * m[6] * m[9];
+
+  inv[1] = -m[1] * m[10] * m[15] + m[1] * m[11] * m[14] + m[9] * m[2] * m[15] - m[9] * m[3] * m[14] - m[13] * m[2] * m[11] + m[13] * m[3] * m[10];
+  inv[5] = m[0] * m[10] * m[15] - m[0] * m[11] * m[14] - m[8] * m[2] * m[15] + m[8] * m[3] * m[14] + m[12] * m[2] * m[11] - m[12] * m[3] * m[10];
+  inv[9] = -m[0] * m[9] * m[15] + m[0] * m[11] * m[13] + m[8] * m[1] * m[15] - m[8] * m[3] * m[13] - m[12] * m[1] * m[11] + m[12] * m[3] * m[9];
+  inv[13] = m[0] * m[9] * m[14] - m[0] * m[10] * m[13] - m[8] * m[1] * m[14] + m[8] * m[2] * m[13] + m[12] * m[1] * m[10] - m[12] * m[2] * m[9];
+
+  inv[2] = m[1] * m[6] * m[15] - m[1] * m[7] * m[14] - m[5] * m[2] * m[15] + m[5] * m[3] * m[14] + m[13] * m[2] * m[7] - m[13] * m[3] * m[6];
+  inv[6] = -m[0] * m[6] * m[15] + m[0] * m[7] * m[14] + m[4] * m[2] * m[15] - m[4] * m[3] * m[14] - m[12] * m[2] * m[7] + m[12] * m[3] * m[6];
+  inv[10] = m[0] * m[5] * m[15] - m[0] * m[7] * m[13] - m[4] * m[1] * m[15] + m[4] * m[3] * m[13] + m[12] * m[1] * m[7] - m[12] * m[3] * m[5];
+  inv[14] = -m[0] * m[5] * m[14] + m[0] * m[6] * m[13] + m[4] * m[1] * m[14] - m[4] * m[2] * m[13] - m[12] * m[1] * m[6] + m[12] * m[2] * m[5];
+
+  inv[3] = -m[1] * m[6] * m[11] + m[1] * m[7] * m[10] + m[5] * m[2] * m[11] - m[5] * m[3] * m[10] - m[9] * m[2] * m[7] + m[9] * m[3] * m[6];
+  inv[7] = m[0] * m[6] * m[11] - m[0] * m[7] * m[10] - m[4] * m[2] * m[11] + m[4] * m[3] * m[10] + m[8] * m[2] * m[7] - m[8] * m[3] * m[6];
+  inv[11] = -m[0] * m[5] * m[11] + m[0] * m[7] * m[9] + m[4] * m[1] * m[11] - m[4] * m[3] * m[9] - m[8] * m[1] * m[7] + m[8] * m[3] * m[5];
+  inv[15] = m[0] * m[5] * m[10] - m[0] * m[6] * m[9] - m[4] * m[1] * m[10] + m[4] * m[2] * m[9] + m[8] * m[1] * m[6] - m[8] * m[2] * m[5];
+
+  const det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+  if (!Number.isFinite(det) || Math.abs(det) < 1e-24) return null;
+  const invDet = 1 / det;
+  for (let i = 0; i < 16; i++) inv[i] *= invDet;
+  return inv;
+}
+
+function unprojectClip(inv: Float64Array, nx: number, ny: number, nz: number): [number, number, number] | null {
+  const x = inv[0] * nx + inv[4] * ny + inv[8] * nz + inv[12];
+  const y = inv[1] * nx + inv[5] * ny + inv[9] * nz + inv[13];
+  const z = inv[2] * nx + inv[6] * ny + inv[10] * nz + inv[14];
+  const w = inv[3] * nx + inv[7] * ny + inv[11] * nz + inv[15];
+  if (!Number.isFinite(w) || Math.abs(w) < 1e-12) return null;
+  return [x / w, y / w, z / w];
 }
 
 async function decodeGlbImage(bytes: Uint8Array, mime: string): Promise<ImageBitmap | HTMLImageElement | null> {
@@ -342,7 +407,7 @@ function closeDecodedImage(img: ImageBitmap | HTMLImageElement | null): void {
   if (img && 'close' in img && typeof img.close === 'function') img.close();
 }
 
-/** Lazy WebGL2 custom layer rendering Stage 6 Zone 1 South buildings, streets, and urban props. */
+/** Lazy WebGL2 custom layer rendering Stage 6 Zones 1 & 2 (South + West) buildings, streets, and props. */
 export class Urban3DLayer implements CustomLayerInterface {
   readonly id = URBAN_LAYER_ID;
   readonly type = 'custom' as const;
@@ -351,6 +416,7 @@ export class Urban3DLayer implements CustomLayerInterface {
   private map: MLMap | null = null;
   private light: SceneLight;
   private mercatorMatrix = frameMatrix();
+  private lastMvp: Float64Array | null = null;
   private program: WebGLProgram | null = null;
   private uMvp: WebGLUniformLocation | null = null;
   private uEye: WebGLUniformLocation | null = null;
@@ -363,7 +429,7 @@ export class Urban3DLayer implements CustomLayerInterface {
   private uMeta: WebGLUniformLocation | null = null;
   private uAlbedo: WebGLUniformLocation | null = null;
   private uMask: WebGLUniformLocation | null = null;
-  private pending: PendingLoad | null = null;
+  private pendingZones: PendingLoad[] = [];
   private parts: GpuPart[] = [];
   private vaos: WebGLVertexArrayObject[] = [];
   private buffers: WebGLBuffer[] = [];
@@ -385,16 +451,16 @@ export class Urban3DLayer implements CustomLayerInterface {
     this.map = map;
     this.initProgram(gl);
     const gen = ++this.generation;
-    void this.loadGlb(gen);
+    for (const z of URBAN_ZONES) void this.loadZoneGlb(gen, z.id, z.url);
   }
 
   onRemove(_map: MLMap, gl: WebGL2RenderingContext): void {
     this.generation++;
-    if (this.pending) {
-      closeDecodedImage(this.pending.albedoImg);
-      closeDecodedImage(this.pending.maskImg);
-      this.pending = null;
+    for (const pending of this.pendingZones) {
+      closeDecodedImage(pending.albedoImg);
+      closeDecodedImage(pending.maskImg);
     }
+    this.pendingZones = [];
     for (const t of this.textures) gl.deleteTexture(t);
     for (const v of this.vaos) gl.deleteVertexArray(v);
     for (const b of this.buffers) gl.deleteBuffer(b);
@@ -402,6 +468,7 @@ export class Urban3DLayer implements CustomLayerInterface {
     this.textures = [];
     this.albedoTex = null;
     this.maskTex = null;
+    this.lastMvp = null;
     this.vaos = [];
     this.buffers = [];
     this.parts = [];
@@ -438,16 +505,16 @@ export class Urban3DLayer implements CustomLayerInterface {
     this.uMask = gl.getUniformLocation(prog, 'u_mask');
   }
 
-  private async loadGlb(gen: number): Promise<void> {
+  private async loadZoneGlb(gen: number, zone: UrbanZoneId, url: string): Promise<void> {
     try {
-      const res = await fetch(URBAN_GLB_URL);
+      const res = await fetch(url);
       if (!res.ok) return;
       const { gltf: rawGltf, bin } = parseGlbBuffer(await res.arrayBuffer());
       if (gen !== this.generation) return;
       const gltf = rawGltf as unknown as UrbanGlbJson;
-      const check = validateUrbanGlb(gltf);
+      const check = validateUrbanGlb(gltf, zone);
       if (!check.ok) {
-        console.warn(`[urban-3d] A9 guard blocked GLB load: ${check.reason}`);
+        console.warn(`[urban-3d] A9 guard blocked ${zone} GLB load: ${check.reason}`);
         return;
       }
 
@@ -463,14 +530,17 @@ export class Urban3DLayer implements CustomLayerInterface {
         return decodeGlbImage(bytes, imgMeta.mimeType ?? 'image/jpeg');
       };
 
+      const needTextures = !this.albedoTex && !this.pendingZones.some((z) => z.albedoImg !== null);
       const facadeMat = gltf.materials?.[0];
-      const [albedoImg, maskImg] = await Promise.all([decodeTex(facadeMat?.pbrMetallicRoughness?.baseColorTexture?.index), decodeTex(facadeMat?.emissiveTexture?.index)]);
+      const [albedoImg, maskImg] = needTextures
+        ? await Promise.all([decodeTex(facadeMat?.pbrMetallicRoughness?.baseColorTexture?.index), decodeTex(facadeMat?.emissiveTexture?.index)])
+        : [null, null];
       if (gen !== this.generation) {
         closeDecodedImage(albedoImg);
         closeDecodedImage(maskImg);
         return;
       }
-      this.pending = { gltf, bin, albedoImg, maskImg };
+      this.pendingZones.push({ zone, gltf, bin, albedoImg, maskImg });
       this.map?.triggerRepaint();
     } catch {
       // Offline or test DOM without fetch: map keeps operating safely.
@@ -507,14 +577,18 @@ export class Urban3DLayer implements CustomLayerInterface {
   }
 
   private upload(gl: WebGL2RenderingContext, loaded: PendingLoad): void {
-    const { gltf, bin, albedoImg, maskImg } = loaded;
-    this.albedoTex = this.uploadImageTexture(gl, albedoImg, [230, 218, 194, 255]);
-    this.maskTex = this.uploadImageTexture(gl, maskImg, [0, 0, 0, 255]);
+    const { zone, gltf, bin, albedoImg, maskImg } = loaded;
+    if (!this.albedoTex) this.albedoTex = this.uploadImageTexture(gl, albedoImg, [230, 218, 194, 255]);
+    else closeDecodedImage(albedoImg);
+    if (!this.maskTex) this.maskTex = this.uploadImageTexture(gl, maskImg, [0, 0, 0, 255]);
+    else closeDecodedImage(maskImg);
 
     const bvs = gltf.bufferViews ?? [];
     const accs = gltf.accessors ?? [];
     const mats = gltf.materials ?? [];
     const meshes = gltf.meshes ?? [];
+    const streetPrefix = `urban-street-${zone}-`;
+    const lampGlowName = `urban-prop-${zone}-lamp-glow`;
     const glBuffers = bvs.map((bv, i) => {
       const isIndex = accs.some((a) => a.bufferView === i && a.type === 'SCALAR');
       if (isIndex) return null;
@@ -530,8 +604,8 @@ export class Urban3DLayer implements CustomLayerInterface {
       if (typeof node.mesh !== 'number') continue;
       const name = node.name ?? '';
       const isBuilding = name.startsWith('urban-hotel-');
-      const isStreet = name.startsWith('urban-street-south-');
-      const isLampGlow = name === 'urban-prop-south-lamp-glow';
+      const isStreet = name.startsWith(streetPrefix);
+      const isLampGlow = name === lampGlowName;
       const kind = isBuilding ? 0 : isStreet ? 1 : isLampGlow ? 3 : 2;
       const seed = Number(node.extras?.seed ?? 0);
       const tint = Number(node.extras?.tint ?? 0);
@@ -592,6 +666,7 @@ export class Urban3DLayer implements CustomLayerInterface {
           indexType: idxAcc.componentType,
           color: baseColor,
           kind,
+          zone,
           seed,
           tint,
           useTex,
@@ -601,11 +676,39 @@ export class Urban3DLayer implements CustomLayerInterface {
     gl.bindVertexArray(null);
   }
 
+  /** Direct 3D ray pick against extruded Stage 6 hotel buildings at CSS pixel `[x, y]`. */
+  hotelAt(x: number, y: number): number | null {
+    if (!this.map || !this.parts.length) return null;
+    const canvas = this.map.getCanvas();
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    if (this.lastMvp && w > 0 && h > 0) {
+      const inv = invertMat4(this.lastMvp);
+      if (inv) {
+        const ndcX = (x / w) * 2 - 1;
+        const ndcY = 1 - (y / h) * 2;
+        const pNear = unprojectClip(inv, ndcX, ndcY, -1);
+        const pFar = unprojectClip(inv, ndcX, ndcY, 0.5);
+        if (pNear && pFar) {
+          const dx = pFar[0] - pNear[0];
+          const dy = pFar[1] - pNear[1];
+          const dz = pFar[2] - pNear[2];
+          const len = Math.hypot(dx, dy, dz);
+          if (len > 1e-6) {
+            return pickApprovedBuildingRay(pNear, [dx / len, dy / len, dz / len])?.poiId ?? null;
+          }
+        }
+      }
+    }
+    const ll = this.map.unproject([x, y]);
+    return pointInApprovedBuilding([ll.lat, ll.lng])?.poiId ?? null;
+  }
+
   render(gl: WebGL2RenderingContext, options: CustomRenderMethodInput): void {
     if (!this.program || !this.map) return;
-    if (this.pending) {
-      this.upload(gl, this.pending);
-      this.pending = null;
+    if (this.pendingZones.length) {
+      for (const pending of this.pendingZones) this.upload(gl, pending);
+      this.pendingZones = [];
     }
     if (!this.parts.length) return;
 
@@ -613,8 +716,14 @@ export class Urban3DLayer implements CustomLayerInterface {
     if (!proj) return;
     const mvp64 = new Float64Array(16);
     mulMat4(mvp64, proj as unknown as ArrayLike<number>, this.mercatorMatrix);
+    this.lastMvp = mvp64;
 
-    const fade = urbanOpacityForCamera(this.map.getBearing(), this.map.getPitch());
+    const bearing = this.map.getBearing();
+    const pitch = this.map.getPitch();
+    const zoneFade: Record<UrbanZoneId, number> = {
+      south: urbanOpacityForCamera(bearing, pitch, 'south'),
+      west: urbanOpacityForCamera(bearing, pitch, 'west'),
+    };
     const eye = cameraEye(this.map);
 
     gl.useProgram(this.program);
@@ -642,7 +751,7 @@ export class Urban3DLayer implements CustomLayerInterface {
     gl.depthMask(true);
     for (const part of this.parts) {
       if (part.kind === 3) continue;
-      const alpha = part.kind === 0 ? part.color[3] * fade : part.color[3];
+      const alpha = part.kind === 0 ? part.color[3] * zoneFade[part.zone] : part.color[3];
       if (alpha < 0.99) continue;
       gl.uniform4f(this.uColor, part.color[0], part.color[1], part.color[2], alpha);
       gl.uniform4f(this.uMeta, part.seed, part.tint, part.kind, part.useTex ? 1 : 0);
@@ -656,7 +765,7 @@ export class Urban3DLayer implements CustomLayerInterface {
     gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     for (const part of this.parts) {
       if (part.kind === 3) continue;
-      const alpha = part.kind === 0 ? part.color[3] * fade : part.color[3];
+      const alpha = part.kind === 0 ? part.color[3] * zoneFade[part.zone] : part.color[3];
       if (alpha >= 0.99) continue;
       gl.uniform4f(this.uColor, part.color[0], part.color[1], part.color[2], alpha);
       gl.uniform4f(this.uMeta, part.seed, part.tint, part.kind, part.useTex ? 1 : 0);
