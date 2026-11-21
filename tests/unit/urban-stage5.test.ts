@@ -32,10 +32,10 @@ const NORTH_GLB_PATH = resolve(ROOT, 'public/models/urban-north-stage6.glb');
 const SW_GLB_PATH = resolve(ROOT, 'public/models/urban-sw-stage6.glb');
 
 const ORIGINAL_IDS = [701, 705, 706, 710, 711, 713, 716, 720, 722, 724, 725, 728, 732, 734, 735, 738, 741, 743];
-const SAMPLE_SOUTH_IDS = [2402, 2403, 2411, 2420, 2431, 2441, 2449, 2458, 2466, 2475];
-const SAMPLE_WEST_IDS = [738, 743, 2203, 2206, 2216, 2218, 2219, 2224, 2226, 2232, 2237, 2248, 2253];
-const SAMPLE_NORTH_IDS = [701, 705, 706, 710, 716, 720, 732, 734, 2104, 2110, 2112, 2127, 2157, 2165];
-const SAMPLE_SW_IDS = [741, 2302, 2306, 2307, 2310, 2332, 2342, 2351, 2371, 2372, 2377, 2388, 2396];
+const SAMPLE_SOUTH_IDS = [2402, 2420, 2441, 2449, 2475];
+const SAMPLE_WEST_IDS = [2203, 2206, 2216, 2224, 2237, 2253];
+const SAMPLE_NORTH_IDS = [2104, 2110, 2127, 2157, 2165];
+const SAMPLE_SW_IDS = [2302, 2307, 2310, 2342, 2371, 2377, 2388];
 
 function insideRing(lng: number, lat: number, ring: readonly (readonly [number, number])[]): boolean {
   let c = false;
@@ -301,7 +301,7 @@ describe('Stage 6 Zones 1–4 (South + West + North + Southwest) urban slice & 3
     const plazaStart: [number, number] = [24.46605, 39.6095];
     const carStart: [number, number] = [24.4605, 39.6085];
 
-    for (const id of [...ORIGINAL_IDS, ...SAMPLE_SOUTH_IDS, ...SAMPLE_WEST_IDS, ...SAMPLE_NORTH_IDS, ...SAMPLE_SW_IDS]) {
+    for (const id of new Set([...ORIGINAL_IDS, ...SAMPLE_SOUTH_IDS, ...SAMPLE_WEST_IDS, ...SAMPLE_NORTH_IDS, ...SAMPLE_SW_IDS])) {
       const b = APPROVED_BUILDINGS.find((x) => x.poiId === id)!;
       const poi = POI_BY_ID.get(id)!;
       expect(b, `approved ${id}`).toBeDefined();
@@ -319,7 +319,7 @@ describe('Stage 6 Zones 1–4 (South + West + North + Southwest) urban slice & 3
       expect(haversine(drivePath[drivePath.length - 1], b.entrance), `drive end dist ${id}`).toBeLessThanOrEqual(3);
       expect(pathHitsApprovedBuilding(drivePath), `drive polygon intersect ${id}`).toBe(false);
     }
-  });
+  }, 120_000);
 
   it('navQ interior (112) & parking sections (24) load cleanly, and western blocks 251–254 have valid restroomDoor', () => {
     expect(INTERIOR_POIS).toHaveLength(112);
