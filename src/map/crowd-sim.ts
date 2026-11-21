@@ -416,7 +416,7 @@ export class Crowd {
       if (outerWalk === 0) continue;
       // Carve a narrow apron strip across the shaded portico up to the outer plaza without bridging men/women zones or carpets.
       const otherZone = outerWalk === 2 ? 1 : 2;
-      const halfU = Math.max(1.1, bay.widthM * 0.38);
+      const halfU = Math.max(1.35, bay.widthM * 0.44);
       const maxS = outerDist + 1.2;
       const minX = Math.min(bay.x - tx * halfU - ox * 1.6, bay.x + tx * halfU + ox * maxS, bay.x - tx * halfU + ox * maxS, bay.x + tx * halfU - ox * 1.6);
       const maxX = Math.max(bay.x - tx * halfU - ox * 1.6, bay.x + tx * halfU + ox * maxS, bay.x - tx * halfU + ox * maxS, bay.x + tx * halfU - ox * 1.6);
@@ -934,7 +934,7 @@ export class Crowd {
           if (!this.standable(ex, ez, man, true)) continue;
           let clear = true;
           for (let b = 0; b < this.n && clear; b++) {
-            if (b !== a && !Number.isNaN(this.px[b]) && (this.px[b] - ex) ** 2 + (this.pz[b] - ez) ** 2 < 0.72) clear = false;
+            if (b !== a && !Number.isNaN(this.px[b]) && (this.px[b] - ex) ** 2 + (this.pz[b] - ez) ** 2 < 1.44) clear = false;
           }
           if (!clear) continue;
           this.px[a] = ex;
@@ -1011,8 +1011,8 @@ export class Crowd {
       } else if (
         portal &&
         (x - portal.x) * portal.ox + (z - portal.z) * portal.oz > -1.4 &&
-        (x - portal.x) * portal.ox + (z - portal.z) * portal.oz < 4.5 &&
-        Math.abs((x - portal.x) * portal.tx + (z - portal.z) * portal.tz) < 4.5
+        (x - portal.x) * portal.ox + (z - portal.z) * portal.oz < 9.5 &&
+        Math.abs((x - portal.x) * portal.tx + (z - portal.z) * portal.tz) < 3.5
       ) {
         // Steer straight through the open leaves toward the vestibule throat (`-1.25 m` inside).
         const gx = portal.x - portal.ox * 1.25 - x;
@@ -1137,13 +1137,28 @@ export class Crowd {
         const push = (minD - dist) / 2;
         const ux = rx / dist;
         const uz = rz / dist;
-        if (this.mode[a] !== FIXED && this.standable(px[a] - ux * push, pz[a] - uz * push, !this.woman[a], this.mode[a] === FREE)) {
+        const canA = this.mode[a] !== FIXED && this.standable(px[a] - ux * push, pz[a] - uz * push, !this.woman[a], this.mode[a] === FREE);
+        const canB = this.mode[o] !== FIXED && this.standable(px[o] + ux * push, pz[o] + uz * push, !this.woman[o], this.mode[o] === FREE);
+        if (canA && canB) {
           px[a] -= ux * push;
           pz[a] -= uz * push;
-        }
-        if (this.mode[o] !== FIXED && this.standable(px[o] + ux * push, pz[o] + uz * push, !this.woman[o], this.mode[o] === FREE)) {
           px[o] += ux * push;
           pz[o] += uz * push;
+        } else if (canA && this.standable(px[a] - ux * push * 2, pz[a] - uz * push * 2, !this.woman[a], this.mode[a] === FREE)) {
+          px[a] -= ux * push * 2;
+          pz[a] -= uz * push * 2;
+        } else if (canB && this.standable(px[o] + ux * push * 2, pz[o] + uz * push * 2, !this.woman[o], this.mode[o] === FREE)) {
+          px[o] += ux * push * 2;
+          pz[o] += uz * push * 2;
+        } else {
+          if (canA) {
+            px[a] -= ux * push;
+            pz[a] -= uz * push;
+          }
+          if (canB) {
+            px[o] += ux * push;
+            pz[o] += uz * push;
+          }
         }
       }
     }
