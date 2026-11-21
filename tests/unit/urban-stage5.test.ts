@@ -31,7 +31,7 @@ const WEST_GLB_PATH = resolve(ROOT, 'public/models/urban-west-stage6.glb');
 const ORIGINAL_IDS = [711, 713, 722, 724, 725, 728, 735, 738, 743];
 // Representative Stage 6 South + 10 West hotels (single, provisional split, OSM-level, OSM-footprint, pin-only #2441/#2206)
 const SAMPLE_SOUTH_IDS = [2402, 2403, 2411, 2420, 2431, 2441, 2449, 2458, 2466, 2475];
-const SAMPLE_WEST_IDS = [738, 743, 2203, 2206, 2216, 2224, 2232, 2237, 2248, 2253];
+const SAMPLE_WEST_IDS = [738, 743, 2203, 2206, 2216, 2218, 2219, 2224, 2226, 2232, 2237, 2248, 2253];
 
 function insideRing(lng: number, lat: number, ring: readonly (readonly [number, number])[]): boolean {
   let c = false;

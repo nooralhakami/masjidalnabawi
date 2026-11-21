@@ -82,8 +82,8 @@ describe('walking routes', () => {
 describe('every reachable place, from every plaza side', () => {
   // The whole data set, not a sample: any change to the walkway network must keep all of these true.
   const SIDES: [string, LatLng][] = [...STARTS, ['east plaza', [24.4688, 39.614]]];
-  // Places in the Haram (plaza walkways); places outside it are reached through the streets (streets.test.ts).
-  const reachable = POIS.filter((p) => !inObstacle([p.lat, p.lng]) && inHaram([p.lat, p.lng]));
+  // Places inside the Haram (plaza walkways); hotels & city places outside it are reached through the streets (streets.test.ts / urban-stage5.test.ts).
+  const reachable = POIS.filter((p) => p.category !== 'hotels' && !inObstacle([p.lat, p.lng]) && inHaram([p.lat, p.lng]));
 
   it('covers the outdoor places (facilities, outer gates, parking, services)', () => {
     expect(reachable.length).toBeGreaterThan(140);

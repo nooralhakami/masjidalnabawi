@@ -189,9 +189,9 @@ function runRouteSafetyAudit() {
     return { key, label, category: 'plaza_side', coord, coordM, isWomen: womenZoneIds.length > 0, womenZoneIds };
   });
 
-  const reachablePois = POIS.filter((p) => p.category !== 'parking' && p.subCategory !== 'wheelchair_zone' && !inObstacle([p.lat, p.lng]) && inHaram([p.lat, p.lng])).map(
-    endpointOfPoi,
-  );
+  const reachablePois = POIS.filter(
+    (p) => p.category !== 'parking' && p.category !== 'hotels' && p.subCategory !== 'wheelchair_zone' && !inObstacle([p.lat, p.lng]) && inHaram([p.lat, p.lng]),
+  ).map(endpointOfPoi);
 
   // Deduplicate start coordinates while covering all 4 plaza sides + outer gates + inner gates/restrooms/services inside Haram.
   const starts: AuditEndpoint[] = [...plazaStarts, ...reachablePois];

@@ -226,7 +226,7 @@ async function walkOptions(a: LatLng, b: LatLng): Promise<LatLng[][]> {
   if (ia && ib) {
     // The walkway route always stands; another way along the walkways only if it stays clear too.
     const [first, ...others] = walkPaths(a, b);
-    return [first, ...others.filter((p) => !crossesObstacle(p))];
+    return [clearApprovedBuildings(first), ...others.filter((p) => !crossesObstacle(p)).map((p) => clearApprovedBuildings(p))];
   }
   const S = await loadStreets();
   if (!S) return [walkPath(a, b)]; // no street data (offline before first load): the old straight approach
