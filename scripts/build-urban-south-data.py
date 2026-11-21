@@ -61,6 +61,60 @@ EXISTING_BUILDING_IDS = {
     735: "S017",
 }
 
+# Clean English hotel names for the 50 Authority South hotels across the 22 LTR locales (`ur`/`fa`/`ps` keep Arabic name).
+EN_HOTEL_NAMES = {
+    "ميسان رحاب المسك": "Maysan Rehab Al-Misk Hotel",
+    "كاسيل": "Castle Hotel",
+    "حياة الواحة": "Hayat Al-Waha Hotel",
+    "المحراب طيبة": "Al-Mihrab Taiba Hotel",
+    "سبال الماسي": "Sebal Al-Masi Hotel",
+    "نسك الإيمان": "Nusk Al-Iman Hotel",
+    "ون إن": "One Inn Hotel",
+    "مسك البلد روافد": "Misk Al-Balad Rawafid Hotel",
+    "المدينة الذهبي": "Al-Madinah Golden Hotel",
+    "منازلي المدينة - زوار": "Manazili Al-Madinah Zowar Hotel",
+    "رؤى الأندلس البلاتيني": "Roaa Al-Andalus Platinum Hotel",
+    "نسك الهجرة": "Nusk Al-Hijrah Hotel",
+    "منازل الصافية - زوار": "Manazel Al-Safiyah Zowar Hotel",
+    "حياة بلازا": "Hayat Plaza Hotel",
+    "براء طيبة": "Baraa Taiba Hotel",
+    "هدى طيبة": "Huda Taiba Hotel",
+    "منار المنورة": "Manar Al-Munawwarah Hotel",
+    "نسك المدينة": "Nusk Al-Madinah Hotel",
+    "جوار المدينة": "Jewar Al-Madinah Hotel",
+    "صفا طيبة": "Safa Taiba Hotel",
+    "منازل الأسواف": "Manazel Al-Aswaf Hotel",
+    "راما المدينة": "Rama Al-Madinah Hotel",
+    "جوار الأندلس": "Gewar Al-Andalus Hotel",
+    "فيو المدينة": "View Al-Madinah Hotel",
+    "فندا المدينة": "Fenda Al-Madinah Hotel",
+    "فالي المدينة": "Valley Al-Madinah Hotel",
+    "معين طيبة": "Moeen Taiba Hotel",
+    "انكيرا من كونتننت": "Ancyra Madinah Hotel",
+    "تاج ورد": "Taj Ward Hotel",
+    "نقاط ثلاثة الكوثر": "Triple Three Al-Kawthar Hotel",
+    "نقاط ثلاثة الرضا": "Triple Three Al-Rida Hotel",
+    "نقاط ثلاثة الأمين": "Triple Three Al-Ameen Hotel",
+    "جايدن": "Jayden Hotel",
+    "سرايا هارموني (A)": "Saraya Harmony A Hotel",
+    "سكاي فيو": "Sky View Hotel",
+    "سرايا هارموني (B)": "Saraya Harmony B Hotel",
+    "سرايا هارموني (C)": "Saraya Harmony C Hotel",
+    "رؤى الماسي": "Rua Al-Masi Hotel",
+    "ميسان التقوى": "Maysan Al-Taqwa Hotel",
+    "ديار الحبيب": "Diyar Al-Habib Hotel",
+    "درة طابة": "Durrat Tabah Hotel",
+    "ديار طيبة": "Diyar Taiba Hotel",
+    "جلنار طيبة": "Jelnar Taiba Hotel",
+    "روز هوليداي i3": "Rose Holiday i3 Hotel",
+    "ماسة البستان": "Masat Al-Bustan Hotel",
+    "المختارة بلازا": "Al-Mukhtara Plaza Hotel",
+    "الأندلس الماسي": "Al-Andalus Al-Masi Hotel",
+    "مراج طيبة": "Miraj Taiba Hotel",
+    "ديوان الهجرة": "Diwan Al-Hijrah Hotel",
+    "مجمع الجزيرة": "Al-Jazeera Complex",
+}
+
 SOUTH_BBOX = {"min_lat": 24.4628, "max_lat": 24.46595, "min_lng": 39.6062, "max_lng": 39.6174}
 
 
@@ -465,6 +519,8 @@ def main() -> None:
     records_spec: list[dict] = []
     for b in existing_urban["buildings"]:
         pid = b["poiId"]
+        if pid not in EXISTING_BUILDING_IDS:
+            continue
         gnum = EXISTING_GUIDE_BY_POI.get(pid)
         records_spec.append({"poiId": pid, "guideNumber": gnum, "existing": b})
     for num in sorted(s_joined):
@@ -896,6 +952,20 @@ def main() -> None:
     (ROOT / "data/pois.json").write_text(
         json.dumps(pois, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
+
+    # Update data/i18n.json with non-Arabic hotel names so all 26 language packs cover every new POI
+    i18n_path = ROOT / "data/i18n.json"
+    i18n_data = json.loads(i18n_path.read_text("utf-8"))
+    for p in pois:
+        if p["id"] >= 2000 and p["name_ar"] in EN_HOTEL_NAMES:
+            ar_name = p["name_ar"]
+            en_name = EN_HOTEL_NAMES[ar_name]
+            for lang, pack in i18n_data.items():
+                if lang == "ar":
+                    continue
+                names_map = pack.setdefault("names", {})
+                names_map[ar_name] = ar_name if lang in ("ur", "fa", "ps") else en_name
+    i18n_path.write_text(json.dumps(i18n_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     # Stats check
     n_fp = sum(1 for b in buildings_out if b["hasFootprint"])
