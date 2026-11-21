@@ -6,15 +6,7 @@
  * claim about official pilgrim demographics) and may be overridden per installation or via URL.
  */
 
-export const CROWD_ARCHETYPES = [
-  'gulf_man',
-  'south_asian_man',
-  'se_asian_man',
-  'ihram_man',
-  'kaftan_man',
-  'abaya_woman',
-  'bright_hijab_woman',
-] as const;
+export const CROWD_ARCHETYPES = ['gulf_man', 'south_asian_man', 'se_asian_man', 'ihram_man', 'kaftan_man', 'abaya_woman', 'bright_hijab_woman'] as const;
 
 export type CrowdArchetype = (typeof CROWD_ARCHETYPES)[number];
 export const ARCHETYPE_COUNT = CROWD_ARCHETYPES.length;
@@ -43,17 +35,17 @@ export interface NationalityMix {
  */
 export const SEASON_MIXES: Record<SeasonPreset, NationalityMix> = {
   regular: {
-    men: { gulf_man: 0.34, south_asian_man: 0.22, se_asian_man: 0.16, ihram_man: 0.10, kaftan_man: 0.18 },
+    men: { gulf_man: 0.34, south_asian_man: 0.22, se_asian_man: 0.16, ihram_man: 0.1, kaftan_man: 0.18 },
     women: { abaya_woman: 0.72, bright_hijab_woman: 0.28 },
     womenShare: 0.46,
   },
   umrah: {
-    men: { gulf_man: 0.22, south_asian_man: 0.23, se_asian_man: 0.21, ihram_man: 0.20, kaftan_man: 0.14 },
+    men: { gulf_man: 0.22, south_asian_man: 0.23, se_asian_man: 0.21, ihram_man: 0.2, kaftan_man: 0.14 },
     women: { abaya_woman: 0.66, bright_hijab_woman: 0.34 },
     womenShare: 0.46,
   },
   ramadan: {
-    men: { gulf_man: 0.28, south_asian_man: 0.24, se_asian_man: 0.20, ihram_man: 0.14, kaftan_man: 0.14 },
+    men: { gulf_man: 0.28, south_asian_man: 0.24, se_asian_man: 0.2, ihram_man: 0.14, kaftan_man: 0.14 },
     women: { abaya_woman: 0.68, bright_hijab_woman: 0.32 },
     womenShare: 0.46,
   },
@@ -148,7 +140,7 @@ const SKIN_BANDS: readonly [number, number][] = [
   [0.18, 0.42], // gulf_man
   [0.36, 0.72], // south_asian_man
   [0.32, 0.56], // se_asian_man
-  [0.20, 0.78], // ihram_man (global pilgrims)
+  [0.2, 0.78], // ihram_man (global pilgrims)
   [0.24, 0.96], // kaftan_man (African / Levantine / Turkish range)
   [0.18, 0.55], // abaya_woman
   [0.24, 0.85], // bright_hijab_woman
@@ -171,7 +163,7 @@ const SOUTH_ASIAN_ROBES: readonly RGB[] = [
   [0.86, 0.93, 0.98],
   [0.94, 0.92, 0.88],
   [0.84, 0.88, 0.85],
-  [0.90, 0.88, 0.94],
+  [0.9, 0.88, 0.94],
 ];
 
 const SE_ASIAN_ROBES: readonly RGB[] = [
@@ -189,7 +181,7 @@ const KAFTAN_ROBES: readonly RGB[] = [
 
 const ABAYA_ROBES: readonly RGB[] = [
   [0.96, 0.96, 0.98],
-  [0.88, 0.90, 0.98],
+  [0.88, 0.9, 0.98],
   [0.94, 0.89, 0.88],
 ];
 
@@ -200,17 +192,17 @@ const ABAYA_HIJABS: readonly RGB[] = [
 ];
 
 const BRIGHT_WOMAN_ROBES: readonly RGB[] = [
-  [0.92, 0.90, 0.85], // cream/beige abaya
-  [0.72, 0.80, 0.75], // sage green
+  [0.92, 0.9, 0.85], // cream/beige abaya
+  [0.72, 0.8, 0.75], // sage green
   [0.76, 0.64, 0.68], // muted dusty plum
-  [0.68, 0.72, 0.80], // slate blue
+  [0.68, 0.72, 0.8], // slate blue
 ];
 
 const BRIGHT_WOMAN_HIJABS: readonly RGB[] = [
   [0.95, 0.94, 0.91],
-  [0.34, 0.30, 0.28],
+  [0.34, 0.3, 0.28],
   [0.24, 0.29, 0.36],
-  [0.45, 0.28, 0.30],
+  [0.45, 0.28, 0.3],
 ];
 
 function pickWeightedIndex(u: number, weights: readonly number[]): number {

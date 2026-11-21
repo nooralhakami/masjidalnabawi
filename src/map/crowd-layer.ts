@@ -576,11 +576,7 @@ const MAX_WORSHIPPERS = 1200;
  * are women (owner, 2026-11-07: more women about their areas). A worshipper's sex, and a child's
  * smaller height, come from the place it was laid out at (`opts`).
  */
-export function looks(
-  n: number,
-  seed: number,
-  opts: CrowdProfileOptions = {},
-): CrowdProfileBatch {
+export function looks(n: number, seed: number, opts: CrowdProfileOptions = {}): CrowdProfileBatch {
   return assignCrowdProfiles(n, seed, opts);
 }
 
@@ -613,7 +609,10 @@ function clipForPostureCode(poseIdx: number, hasRehal: boolean, index: number): 
 
 /** Reads an accessor slice cleanly from the parsed GLB payload. */
 function sliceAccessor(
-  gltf: { accessors: { bufferView: number; byteOffset?: number; componentType: number; count: number; type: string }[]; bufferViews: { byteOffset?: number; byteLength: number }[] },
+  gltf: {
+    accessors: { bufferView: number; byteOffset?: number; componentType: number; count: number; type: string }[];
+    bufferViews: { byteOffset?: number; byteLength: number }[];
+  },
   bin: Uint8Array,
   accIdx: number,
 ): Uint8Array {
@@ -706,7 +705,7 @@ export class CrowdLayer implements CustomLayerInterface {
   private buffers: WebGLBuffer[] = [];
   private instBuf: WebGLBuffer | null = null;
   private mesh = personMesh();
-  private who = looks(CROWD_SIZE, 1234);
+  private who: CrowdProfileBatch;
   private crowd: Crowd | null = null;
   private columns: [number, number][] | null = null;
   private inst = new Float32Array(CROWD_SIZE * 4);
@@ -749,6 +748,7 @@ export class CrowdLayer implements CustomLayerInterface {
   private worshipBucketOffsets = new Int32Array(ARCHETYPE_COUNT);
   private worshipBucketCounts = new Int32Array(ARCHETYPE_COUNT);
   private worshipBatch: CrowdProfileBatch | null = null;
+  private packedWorshipCount = -1;
   private season: ReturnType<typeof parseCrowdSeasonOverride>;
   private perfGuard: CrowdPerfGuard;
   private animClockStart = 0;
@@ -1202,13 +1202,7 @@ export class CrowdLayer implements CustomLayerInterface {
     if (this.kit && this.skinProgram && this.walkerPackBuf && this.worshipPackBuf) {
       const lodTier: 0 | 1 | 2 = zoom >= 19.0 && activeCaps.allowLod0 ? 0 : zoom >= 17.8 || !activeCaps.allowLod0 ? 1 : 2;
       const sessionClip =
-        prayer?.posture === 'ruku'
-          ? CROWD_CLIP.ruku
-          : prayer?.posture === 'sujud'
-            ? CROWD_CLIP.sujud
-            : prayer?.posture === 'juloos'
-              ? CROWD_CLIP.juloos
-              : CROWD_CLIP.stand;
+        prayer?.posture === 'ruku' ? CROWD_CLIP.ruku : prayer?.posture === 'sujud' ? CROWD_CLIP.sujud : prayer?.posture === 'juloos' ? CROWD_CLIP.juloos : CROWD_CLIP.stand;
 
       gl.useProgram(this.skinProgram);
       gl.uniformMatrix4fv(this.skinU.u_mvp, false, mvpF32);
@@ -1250,9 +1244,11 @@ export class CrowdLayer implements CustomLayerInterface {
       }
 
       if (wCount > 0) {
-        if (wCount < this.worshipCount) {
-          // Re-pack subset cleanly when throttled to Lite/Static cap
+        if (this.packedWorshipCount !== wCount) {
           this.repackWorshippers(wCount);
+          gl.bindBuffer(gl.ARRAY_BUFFER, this.worshipPackBuf);
+          gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.worshipPackData.subarray(0, wCount * INSTANCE_FLOATS));
+          this.packedWorshipCount = wCount;
         }
         this.drawSkinnedBuckets(gl, this.kit, this.worshipPackBuf, this.worshipBucketOffsets, this.worshipBucketCounts, wCount, lodTier);
       }
@@ -1336,18 +1332,13 @@ export class CrowdLayer implements CustomLayerInterface {
     this.rehalCount = rehals;
     if (!this.worshipInst || !this.worshipPose || !this.worshipLook) return;
     this.worshipBatch = looks(n, 4321, { women, scale, season: this.season });
+    this.packedWorshipCount = -1;
     gl.bindBuffer(gl.ARRAY_BUFFER, this.worshipInst);
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.worshipInstData.subarray(0, n * 4));
     gl.bindBuffer(gl.ARRAY_BUFFER, this.worshipPose);
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.worshipPoseData.subarray(0, n * 4));
     gl.bindBuffer(gl.ARRAY_BUFFER, this.worshipLook);
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.worshipBatch.data.subarray(0, n * 8));
-    if (n > 0 && this.worshipPackBuf) {
-      const activeCount = Math.min(n, capsForTier(this.perfGuard.current).worshippers);
-      this.repackWorshippers(activeCount);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.worshipPackBuf);
-      gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.worshipPackData.subarray(0, activeCount * INSTANCE_FLOATS));
-    }
     if (this.rehalInst) {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.rehalInst);
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.rehalData.subarray(0, rehals * 4));

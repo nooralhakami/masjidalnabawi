@@ -137,21 +137,21 @@ function clipPose(clip: number, frame: number): FramePose {
     }
 
     case CROWD_CLIP.sujud: {
-      // Forehead, palms and knees grounded in prostration (`y_head ≈ 0.14..0.22 m`)
-      p.rootT[0] = -0.05;
-      p.rootT[1] = -0.58; // pelvis ≈ 0.34 m above ground
-      p.rot[0][2] = -0.55;
-      p.rot[1][2] = -0.72;
-      p.rot[2][2] = -0.62; // total torso pitch ≈ -1.89 rad (~108 deg) bringing head to carpet
-      p.rot[3][2] = 0.12;
-      p.rot[4][2] = 1.35;
-      p.rot[5][2] = 0.65;
-      p.rot[6][2] = 1.35;
-      p.rot[7][2] = 0.65;
-      p.rot[8][2] = 1.35; // thighs folded forward/down
-      p.rot[9][2] = -2.35; // shins resting flat back on carpet
-      p.rot[10][2] = 1.35;
-      p.rot[11][2] = -2.35;
+      // Forehead, palms and knees grounded in prostration (raised hips, vertical thighs, shins flat)
+      p.rootT[0] = -0.04;
+      p.rootT[1] = -0.49; // pelvis ≈ 0.43 m so vertical thighs place knees cleanly near y ≈ 0.04 m
+      p.rot[0][2] = -1.78;
+      p.rot[1][2] = -0.15;
+      p.rot[2][2] = -0.08 + 0.008 * s; // straight sloped back (~ -2.01 rad / 115 deg)
+      p.rot[3][2] = -0.05;
+      p.rot[4][2] = 1.25;
+      p.rot[5][2] = 0.55;
+      p.rot[6][2] = 1.25;
+      p.rot[7][2] = 0.55;
+      p.rot[8][2] = 1.78; // counteract pelvis pitch so thighs descend vertically to knees
+      p.rot[9][2] = -1.58; // shins tucked flat backward on prayer carpet
+      p.rot[10][2] = 1.78;
+      p.rot[11][2] = -1.58;
       break;
     }
 
@@ -192,14 +192,14 @@ function clipPose(clip: number, frame: number): FramePose {
     }
 
     case CROWD_CLIP.dua: {
-      // Standing supplication: forearms raised calmly before the chest with subtle breathing sway
+      // Standing supplication: forearms raised calmly before the upper chest with subtle breathing sway
       p.rot[2][2] = -0.04 + 0.015 * s;
       p.rot[3][2] = -0.06;
-      p.rot[4][2] = 0.24;
-      p.rot[5][2] = 1.25 + 0.04 * s;
+      p.rot[4][2] = 0.34;
+      p.rot[5][2] = 1.52 + 0.04 * s;
       p.rot[5][1] = -0.24;
-      p.rot[6][2] = 0.24;
-      p.rot[7][2] = 1.25 + 0.04 * s;
+      p.rot[6][2] = 0.34;
+      p.rot[7][2] = 1.52 + 0.04 * s;
       p.rot[7][1] = 0.24;
       break;
     }
@@ -283,7 +283,7 @@ export function buildBoneAnimationTexture(): BoneAnimationTexture {
   const height = CLIP_COUNT * FRAMES_PER_CLIP; // 144 rows
   const data = new Float32Array(width * height * 4);
 
-  const world = Array.from({ length: BONE_COUNT }, () => new Float32Array(16));
+  const world: Float32Array[] = Array.from({ length: BONE_COUNT }, () => new Float32Array(16));
 
   for (let clip = 0; clip < CLIP_COUNT; clip++) {
     for (let frame = 0; frame < FRAMES_PER_CLIP; frame++) {
