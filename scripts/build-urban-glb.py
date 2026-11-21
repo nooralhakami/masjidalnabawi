@@ -39,16 +39,6 @@ MAX_GZIP_BYTES = 250 * 1024
 
 # Pixel bands (top-down y in [0, 512)) from `build-urban-facade-atlas.py` with 1px inner margin.
 BAND_CROWN = (1.0, 51.0)
-STYLE_BANDS_2F = {
-    0: (53.0, 175.0),
-    1: (177.0, 299.0),
-    2: (301.0, 411.0),
-}
-STYLE_BANDS_1F = {
-    0: (53.0, 114.0),
-    1: (177.0, 238.0),
-    2: (301.0, 356.0),
-}
 BAND_PODIUM = (413.0, 491.0)
 BAND_CORNICE = (413.0, 420.0)
 UV_ROOF_PATCH = (262.0 / ATLAS_W, 378.0 / ATLAS_W, 494.0, 510.0)
@@ -95,14 +85,13 @@ def clean_polygon(ring_lng_lat: list[list[float]]) -> list[tuple[float, float]]:
     raw = [to_blender_xy(c[0], c[1]) for c in ring_lng_lat[:-1]]
     dedup: list[tuple[float, float]] = []
     for p in raw:
-        if not dedup or math.hypot(p[0] - dedup[-1][0], p[1] - dedup[-1][1]) > 0.45:
+        if not dedup or math.hypot(p[0] - dedup[-1][0], p[1] - dedup[-1][1]) > 0.70:
             dedup.append(p)
-    if len(dedup) >= 2 and math.hypot(dedup[0][0] - dedup[-1][0], dedup[0][1] - dedup[-1][1]) <= 0.45:
+    if len(dedup) >= 2 and math.hypot(dedup[0][0] - dedup[-1][0], dedup[0][1] - dedup[-1][1]) <= 0.70:
         dedup.pop()
     if len(dedup) < 3:
         dedup = raw[:]
 
-    # Drop near-collinear intermediate vertices so edges remain clean for architectural bays.
     out = dedup[:]
     changed = True
     while changed and len(out) > 4:
@@ -119,7 +108,7 @@ def clean_polygon(ring_lng_lat: list[list[float]]) -> list[tuple[float, float]]:
             lc = math.hypot(bcx, bcy)
             if la > 1e-6 and lc > 1e-6:
                 sin_ang = abs(abx * bcy - aby * bcx) / (la * lc)
-                if sin_ang < 0.04 and (abx * bcx + aby * bcy) > 0:
+                if sin_ang < 0.075 and (abx * bcx + aby * bcy) > 0:
                     changed = True
                     continue
             nxt.append(b)
@@ -129,6 +118,33 @@ def clean_polygon(ring_lng_lat: list[list[float]]) -> list[tuple[float, float]]:
     if signed_area(out) < 0:
         out.reverse()
     return out
+
+
+def simplify_polyline(pts: list[tuple[float, float]], tol: float = 0.65) -> list[tuple[float, float]]:
+    if len(pts) <= 2:
+        return pts
+    out = [pts[0]]
+    for p in pts[1:-1]:
+        ax, ay = out[-1]
+        if math.hypot(p[0] - ax, p[1] - ay) >= tol:
+            out.append(p)
+    out.append(pts[-1])
+    if len(out) <= 2:
+        return out
+    res = [out[0]]
+    for i in range(1, len(out) - 1):
+        ax, ay = res[-1]
+        bx, by = out[i]
+        cx, cy = out[i + 1]
+        dx, dy = cx - ax, cy - ay
+        l = math.hypot(dx, dy)
+        if l > 1e-6:
+            perp = abs((bx - ax) * dy - (by - ay) * dx) / l
+            if perp < tol:
+                continue
+        res.append(out[i])
+    res.append(out[-1])
+    return res
 
 
 def point_in_poly(p: tuple[float, float], poly: list[tuple[float, float]]) -> bool:
@@ -160,10 +176,7 @@ def poly_centroid(pts: list[tuple[float, float]]) -> tuple[float, float]:
 
 
 def offset_polygon(pts: list[tuple[float, float]], offset_m: float) -> list[tuple[float, float]] | None:
-    """
-    Offset a CCW 2D polygon (`offset_m < 0` moves inward, `> 0` moves outward).
-    Returns `None` if clamping or self-inversion indicates unsafe geometry.
-    """
+    """Offset a CCW 2D polygon (`offset_m < 0` inward, `> 0` outward), returning None if degenerate."""
     n = len(pts)
     if n < 3:
         return None
@@ -182,10 +195,8 @@ def offset_polygon(pts: list[tuple[float, float]], offset_m: float) -> list[tupl
         elen = math.hypot(dx, dy)
         if elen < 1e-6:
             return None
-        # Outward normal for CCW ring is `(dy, -dx) / elen`
         nx, ny = dy / elen, -dx / elen
-        ox, oy = p0[0] + nx * offset_m, p0[1] + ny * offset_m
-        lines.append(((ox, oy), (dx / elen, dy / elen)))
+        lines.append(((p0[0] + nx * offset_m, p0[1] + ny * offset_m), (dx / elen, dy / elen)))
 
     res: list[tuple[float, float]] = []
     limit = max(1.0, abs(offset_m) * 3.5)
@@ -194,12 +205,9 @@ def offset_polygon(pts: list[tuple[float, float]], offset_m: float) -> list[tupl
         (p1x, p1y), (d1x, d1y) = lines[i]
         det = d0x * d1y - d0y * d1x
         if abs(det) < 1e-3:
-            # Parallel adjacent edges: shift directly along line normal
-            nx, ny = d1y, -d1x
-            cand = (pts[i][0] + nx * offset_m, pts[i][1] + ny * offset_m)
+            cand = (pts[i][0] + d1y * offset_m, pts[i][1] - d1x * offset_m)
         else:
-            rx, ry = p1x - p0x, p1y - p0y
-            t = (rx * d1y - ry * d1x) / det
+            t = ((p1x - p0x) * d1y - (p1y - p0y) * d1x) / det
             cand = (p0x + t * d0x, p0y + t * d0y)
         if math.hypot(cand[0] - pts[i][0], cand[1] - pts[i][1]) > limit:
             return None
@@ -236,13 +244,13 @@ def add_wall_ring(
     pts: list[tuple[float, float]],
     z0: float,
     z1: float,
-    y_top_px: float,
-    y_bot_px: float,
+    v_gltf_bot: float,
+    v_gltf_top: float,
     inward: bool = False,
     mat_idx: int = 0,
 ) -> None:
-    v0 = v_px(y_bot_px)
-    v1 = v_px(y_top_px)
+    vb0 = 1.0 - v_gltf_bot
+    vb1 = 1.0 - v_gltf_top
     n = len(pts)
     for i in range(n):
         x0, y0 = pts[i]
@@ -257,7 +265,7 @@ def add_wall_ring(
                 bm,
                 uv_layer,
                 ((x0, y0, z0), (x1, y1, z0), (x1, y1, z1), (x0, y0, z1)),
-                ((0.0, v0), (u1, v0), (u1, v1), (0.0, v1)),
+                ((0.0, vb0), (u1, vb0), (u1, vb1), (0.0, vb1)),
                 mat_idx,
             )
         else:
@@ -265,7 +273,7 @@ def add_wall_ring(
                 bm,
                 uv_layer,
                 ((x1, y1, z0), (x0, y0, z0), (x0, y0, z1), (x1, y1, z1)),
-                ((0.0, v0), (u1, v0), (u1, v1), (0.0, v1)),
+                ((0.0, vb0), (u1, vb0), (u1, vb1), (0.0, vb1)),
                 mat_idx,
             )
 
@@ -311,7 +319,6 @@ def add_box(
     uv_bottom: tuple[float, float, float, float] | None = None,
     mat_idx: int = 0,
 ) -> None:
-    """Create an oriented rectangular prism rotated by `yaw_rad` around `center_xy`."""
     x0, y0, z0 = p_min
     x1, y1, z1 = p_max
     ca, sa = math.cos(yaw_rad), math.sin(yaw_rad)
@@ -320,14 +327,8 @@ def add_box(
     def xf(lx: float, ly: float, lz: float) -> tuple[float, float, float]:
         return (cx + lx * ca - ly * sa, cy + lx * sa + ly * ca, lz)
 
-    b0 = xf(x0, y0, z0)
-    b1 = xf(x1, y0, z0)
-    b2 = xf(x1, y1, z0)
-    b3 = xf(x0, y1, z0)
-    t0 = xf(x0, y0, z1)
-    t1 = xf(x1, y0, z1)
-    t2 = xf(x1, y1, z1)
-    t3 = xf(x0, y1, z1)
+    b0, b1, b2, b3 = xf(x0, y0, z0), xf(x1, y0, z0), xf(x1, y1, z0), xf(x0, y1, z0)
+    t0, t1, t2, t3 = xf(x0, y0, z1), xf(x1, y0, z1), xf(x1, y1, z1), xf(x0, y1, z1)
 
     su0, su1, sy0, sy1 = uv_side
     sv0, sv1 = v_px(sy1), v_px(sy0)
@@ -368,17 +369,16 @@ def build_hotel_mesh(b: dict, mat_facade: bpy.types.Material) -> bpy.types.Objec
     bm = bmesh.new()
     uv_layer = bm.loops.layers.uv.new("UVMap")
 
-    # 1. Commercial Arcade Podium (0.0 -> 8.8 m) + projecting cornice (8.6 -> 9.1 m)
-    add_wall_ring(bm, uv_layer, pts, 0.0, podium_h, BAND_PODIUM[0], BAND_PODIUM[1], inward=False)
+    # 1. Commercial Arcade Podium (0.0 -> 8.8 m) + projecting stone cornice (8.6 -> 9.1 m)
+    add_wall_ring(bm, uv_layer, pts, 0.0, podium_h, BAND_PODIUM[1] / ATLAS_H, BAND_PODIUM[0] / ATLAS_H, inward=False)
     cornice_pts = offset_polygon(pts, 0.28)
     if cornice_pts is not None:
-        add_wall_ring(bm, uv_layer, cornice_pts, 8.6, cornice_h, BAND_CORNICE[0], BAND_CORNICE[1], inward=False)
+        add_wall_ring(bm, uv_layer, cornice_pts, 8.6, cornice_h, BAND_CORNICE[1] / ATLAS_H, BAND_CORNICE[0] / ATLAS_H, inward=False)
         add_cap_poly(bm, uv_layer, cornice_pts, cornice_h, UV_STONE_PATCH, flip_down=False)
-        add_cap_poly(bm, uv_layer, cornice_pts, 8.6, UV_STONE_PATCH, flip_down=True)
     else:
         add_cap_poly(bm, uv_layer, pts, cornice_h, UV_STONE_PATCH, flip_down=False)
 
-    # 2. Hotel Entrance Canopy along edge nearest `entrance`
+    # 2. Hotel Entrance Canopy on edge closest to `entrance`
     ex, ey = to_blender_xy(b["entrance"][1], b["entrance"][0])
     best_edge = 0
     best_d = float("inf")
@@ -401,65 +401,48 @@ def build_hotel_mesh(b: dict, mat_facade: bpy.types.Material) -> bpy.types.Objec
     elen = math.hypot(edx, edy)
     if elen >= 2.6:
         canopy_w = min(4.6, elen * 0.55)
-        yaw = math.atan2(edy, edx)
-        # Local +X along edge, local -Y outward (since CCW outward normal is (dy, -dx))
         add_box(
             bm,
             uv_layer,
             (-canopy_w * 0.5, -1.45, 3.8),
             (canopy_w * 0.5, 0.05, 4.2),
-            yaw_rad=yaw,
+            yaw_rad=math.atan2(edy, edx),
             center_xy=best_proj,
             uv_side=UV_STONE_PATCH,
             uv_bottom=UV_GLOW_PATCH,
         )
 
-    # 3. Modular Tower Body (9.1 m -> crown_bot)
+    # 3. Modular Tower Body (9.1 m -> crown_bot) as 1 clean vertical ring!
+    # Encode `v_gltf = 2.0 + style_id * 10.0 + cycles` (2 floors = 6.30 m = 1.0 cycle)
+    # so the WebGL2 shader folds cleanly into the style band with exact 3.15 m/floor proportions!
     inset_m = -0.35 if b["areaM2"] >= 600 else -0.20
     tower_pts = offset_polygon(pts, inset_m) or pts
     shaft_h = crown_bot - cornice_h
     n_floors = max(1, round(shaft_h / 3.15))
-    f = 0
-    while f < n_floors:
-        step = 2 if (f + 2 <= n_floors) else 1
-        f_next = f + step
-        z0 = cornice_h + (f / n_floors) * shaft_h
-        z1 = cornice_h + (f_next / n_floors) * shaft_h
-        y_top, y_bot = (STYLE_BANDS_2F if step == 2 else STYLE_BANDS_1F)[style_id]
-        add_wall_ring(bm, uv_layer, tower_pts, z0, z1, y_top, y_bot, inward=False)
-        f = f_next
+    cycles = n_floors * 0.5
+    v_gltf_bot = 2.0 + style_id * 10.0
+    v_gltf_top = v_gltf_bot + cycles
+    add_wall_ring(bm, uv_layer, tower_pts, cornice_h, crown_bot, v_gltf_bot, v_gltf_top, inward=False)
 
-    # 4. Islamic Parapet Crown (crown_bot -> H) & Recessed Roof / Penthouse
-    add_wall_ring(bm, uv_layer, tower_pts, crown_bot, h, BAND_CROWN[0], BAND_CROWN[1], inward=False)
-    inner_pts = offset_polygon(tower_pts, -0.85)
-    if inner_pts is not None:
-        roof_z = h - 1.25
-        add_wall_ring(bm, uv_layer, inner_pts, roof_z, h, BAND_CROWN[0], BAND_CROWN[1], inward=True)
-        add_cap_poly(bm, uv_layer, inner_pts, roof_z, UV_ROOF_PATCH, flip_down=False)
-        # Stepped ring top on parapet wall
-        add_cap_poly(bm, uv_layer, tower_pts, h, UV_STONE_PATCH, flip_down=False)
-    else:
-        roof_z = h
-        add_cap_poly(bm, uv_layer, tower_pts, roof_z, UV_ROOF_PATCH, flip_down=False)
+    # 4. Islamic Parapet Crown (crown_bot -> H) & Roof + Low MEP Louver Penthouse + North Roof Sign
+    add_wall_ring(bm, uv_layer, tower_pts, crown_bot, h, BAND_CROWN[1] / ATLAS_H, BAND_CROWN[0] / ATLAS_H, inward=False)
+    add_cap_poly(bm, uv_layer, tower_pts, h, UV_ROOF_PATCH, flip_down=False)
 
-    # Low centered MEP louver box (never exceeding H + 0.35 m so maxY matches heightM cleanly)
     cx, cy = poly_centroid(tower_pts)
     xs = [p[0] for p in tower_pts]
     ys = [p[1] for p in tower_pts]
-    mep_hx = max(1.4, min(4.5, (max(xs) - min(xs)) * 0.16))
-    mep_hy = max(1.4, min(4.5, (max(ys) - min(ys)) * 0.16))
-    mep_top = min(h + 0.35, roof_z + 1.55)
-    if mep_top > roof_z + 0.35 and (inner_pts is None or point_in_poly((cx, cy), inner_pts)):
+    mep_hx = max(1.4, min(4.2, (max(xs) - min(xs)) * 0.16))
+    mep_hy = max(1.4, min(4.2, (max(ys) - min(ys)) * 0.16))
+    if point_in_poly((cx, cy), tower_pts):
         add_box(
             bm,
             uv_layer,
-            (-mep_hx, -mep_hy, roof_z),
-            (mep_hx, mep_hy, mep_top),
+            (-mep_hx, -mep_hy, h),
+            (mep_hx, mep_hy, h + 0.38),
             center_xy=(cx, cy),
             uv_side=UV_ROOF_PATCH,
         )
 
-    # Illuminated rooftop sign fascia on the northernmost edge facing the Mosque
     north_edge = max(
         range(len(tower_pts)),
         key=lambda i: 0.5 * (tower_pts[i][1] + tower_pts[(i + 1) % len(tower_pts)][1]),
@@ -472,8 +455,8 @@ def build_hotel_mesh(b: dict, mat_facade: bpy.types.Material) -> bpy.types.Objec
         add_box(
             bm,
             uv_layer,
-            (-sign_w * 0.5, -0.22, h - 0.90),
-            (sign_w * 0.5, 0.0, h - 0.10),
+            (-sign_w * 0.5, -0.20, h - 0.90),
+            (sign_w * 0.5, 0.0, h - 0.12),
             yaw_rad=math.atan2(ndy, ndx),
             center_xy=(0.5 * (na[0] + nb[0]), 0.5 * (na[1] + nb[1])),
             uv_side=UV_GLOW_PATCH,
@@ -520,7 +503,7 @@ def build_streets_and_sidewalks(
         return any(point_in_poly(pt, bp) for bp in building_polys)
 
     for c in corridors:
-        pts = [to_blender_xy(lng, lat) for (lng, lat) in c["coords"]]
+        pts = simplify_polyline([to_blender_xy(lng, lat) for (lng, lat) in c["coords"]], tol=0.65)
         hw = float(c.get("widthM", 6.0)) * 0.5
         kind = c.get("kind", "local")
         is_road = bool(c.get("road"))
@@ -533,7 +516,7 @@ def build_streets_and_sidewalks(
             x1, y1 = pts[i + 1]
             dx, dy = x1 - x0, y1 - y0
             slen = math.hypot(dx, dy)
-            if slen < 0.25:
+            if slen < 0.35:
                 continue
             nx, ny = (-dy / slen), (dx / slen)
 
@@ -546,8 +529,7 @@ def build_streets_and_sidewalks(
             except ValueError:
                 pass
 
-            # Flanking raised sidewalks along arterials & boulevards (clipped strictly outside buildings & Haram)
-            if kind in ("arterial", "boulevard") and slen >= 3.0:
+            if kind in ("arterial", "boulevard") and slen >= 3.5:
                 sw_w = 1.9
                 for sign in (-1.0, 1.0):
                     in_off = hw * sign
@@ -557,18 +539,19 @@ def build_streets_and_sidewalks(
                     my = 0.5 * (y0 + y1) + ny * mid_off
                     if blocked_xy((mx, my)):
                         continue
-                    a0 = (x0 + nx * min(in_off, out_off), y0 + ny * min(in_off, out_off), 0.20)
-                    a1 = (x1 + nx * min(in_off, out_off), y1 + ny * min(in_off, out_off), 0.20)
-                    b1 = (x1 + nx * max(in_off, out_off), y1 + ny * max(in_off, out_off), 0.20)
-                    b0 = (x0 + nx * max(in_off, out_off), y0 + ny * max(in_off, out_off), 0.20)
+                    lo_off, hi_off = min(in_off, out_off), max(in_off, out_off)
                     try:
                         bm_walk.faces.new(
-                            [bm_walk.verts.new(a0), bm_walk.verts.new(a1), bm_walk.verts.new(b1), bm_walk.verts.new(b0)]
+                            [
+                                bm_walk.verts.new((x0 + nx * lo_off, y0 + ny * lo_off, 0.20)),
+                                bm_walk.verts.new((x1 + nx * lo_off, y1 + ny * lo_off, 0.20)),
+                                bm_walk.verts.new((x1 + nx * hi_off, y1 + ny * hi_off, 0.20)),
+                                bm_walk.verts.new((x0 + nx * hi_off, y0 + ny * hi_off, 0.20)),
+                            ]
                         )
                     except ValueError:
                         pass
 
-                # Raised central median on wide arterials
                 if kind == "arterial":
                     mw = 0.65
                     mx, my = 0.5 * (x0 + x1), 0.5 * (y0 + y1)
@@ -614,7 +597,6 @@ def build_props(
     for p in props.get("parkingPortals", []):
         cx, cy = to_blender_xy(p["lng"], p["lat"])
         yaw = float(p.get("headingRad", 0.0))
-        # Left & right granite piers + lintel cap + dark recessed tunnel void (local X = street axis)
         add_box(bm_portal, None, (-2.8, -4.6, 0.0), (2.8, -3.5, 4.4), yaw, (cx, cy), mat_idx=0)
         add_box(bm_portal, None, (-2.8, 3.5, 0.0), (2.8, 4.6, 4.4), yaw, (cx, cy), mat_idx=0)
         add_box(bm_portal, None, (-3.0, -4.8, 4.2), (3.0, 4.8, 5.2), yaw, (cx, cy), mat_idx=0)
@@ -630,35 +612,50 @@ def build_props(
     bpy.context.collection.objects.link(o_portal)
     o_portal["kind"] = "prop"
 
-    # 2. Streetlamps (110 poles + separate night glow node for lantern heads & radial ground pools)
+    # 2. Streetlamps (lean 3-sided bronze shafts + crossarm blades, plus compact glow pyramids & ground pools)
     bm_pole = bmesh.new()
     bm_glow = bmesh.new()
     uv_glow = bm_glow.loops.layers.uv.new("UVMap")
 
     for lmp in props.get("streetLamps", []):
         cx, cy = to_blender_xy(lmp["lng"], lmp["lat"])
-        ang = float(lmp.get("angleRad", 0.0))
-        # Perpendicular twin arms across sidewalk/road
-        perp = ang + math.pi * 0.5
+        perp = float(lmp.get("angleRad", 0.0)) + math.pi * 0.5
         ca, sa = math.cos(perp), math.sin(perp)
 
-        # Tapered 4-sided shaft (0..7.5 m)
+        # 3-sided tapered shaft sharing smooth vertices -> only 6 verts per pole!
         r_bot, r_top, h_pole = 0.14, 0.07, 7.5
-        b_ring = [bm_pole.verts.new((cx + dx * r_bot, cy + dy * r_bot, 0.18)) for dx, dy in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
-        t_ring = [bm_pole.verts.new((cx + dx * r_top, cy + dy * r_top, h_pole)) for dx, dy in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
-        for i in range(4):
-            j = (i + 1) % 4
-            bm_pole.faces.new((b_ring[i], b_ring[j], t_ring[j], t_ring[i]))
-        bm_pole.faces.new(t_ring)
+        b_v = []
+        t_v = []
+        for k in range(3):
+            a = perp + (2.0 * math.pi * k) / 3.0
+            b_v.append(bm_pole.verts.new((cx + math.cos(a) * r_bot, cy + math.sin(a) * r_bot, 0.18)))
+            t_v.append(bm_pole.verts.new((cx + math.cos(a) * r_top, cy + math.sin(a) * r_top, h_pole)))
+        for k in range(3):
+            kn = (k + 1) % 3
+            bm_pole.faces.new((b_v[k], b_v[kn], t_v[kn], t_v[k]))
+        # Crossarm V-blade (two angled quads)
+        px, py = -sa * 0.06, ca * 0.06
+        arm_l = 1.05
+        for z_off in (7.30, 7.42):
+            v0 = bm_pole.verts.new((cx - ca * arm_l - px, cy - sa * arm_l - py, z_off))
+            v1 = bm_pole.verts.new((cx + ca * arm_l - px, cy + sa * arm_l - py, z_off))
+            v2 = bm_pole.verts.new((cx + ca * arm_l + px, cy + sa * arm_l + py, z_off))
+            v3 = bm_pole.verts.new((cx - ca * arm_l + px, cy - sa * arm_l + py, z_off))
+            bm_pole.faces.new((v0, v1, v2, v3))
 
-        # Crossarm bar at top
-        add_box(bm_pole, None, (-1.1, -0.07, 7.25), (1.1, 0.07, 7.42), perp, (cx, cy), mat_idx=0)
-
-        # Twin lantern head quads + 4.4 m ground light pool quad (UV [0..1] for radial falloff)
+        # Twin compact 4-sided lantern heads (5 verts each) + 1 radial ground light pool quad (4 verts)
         for sgn in (-1.0, 1.0):
-            hx = cx + ca * sgn * 1.0
-            hy = cy + sa * sgn * 1.0
-            add_box(bm_glow, uv_glow, (-0.18, -0.18, 7.05), (0.18, 0.18, 7.26), perp, (hx, hy), uv_side=(0.0, 0.0, 1.0, 1.0))
+            hx, hy = cx + ca * sgn * 1.0, cy + sa * sgn * 1.0
+            r_l = 0.20
+            b0 = bm_glow.verts.new((hx - r_l, hy - r_l, 7.05))
+            b1 = bm_glow.verts.new((hx + r_l, hy - r_l, 7.05))
+            b2 = bm_glow.verts.new((hx + r_l, hy + r_l, 7.05))
+            b3 = bm_glow.verts.new((hx - r_l, hy + r_l, 7.05))
+            apex = bm_glow.verts.new((hx, hy, 7.28))
+            for tri in ((b0, b1, apex), (b1, b2, apex), (b2, b3, apex), (b3, b0, apex), (b3, b2, b1, b0)):
+                f = bm_glow.faces.new(tri)
+                for loop in f.loops:
+                    loop[uv_glow].uv = (0.5, 0.5)
 
         pool_r = 2.3
         add_uv_quad(
@@ -691,7 +688,7 @@ def build_props(
     bpy.context.collection.objects.link(o_glow)
     o_glow["kind"] = "lamp_glow"
 
-    # 3. Madinah Date Palms (90 instances merged cleanly)
+    # 3. Madinah Date Palms (4-sided tapered trunks sharing verts + 5 arched frond blades)
     bm_palm = bmesh.new()
     for pm in props.get("palms", []):
         cx, cy = to_blender_xy(pm["lng"], pm["lat"])
@@ -702,27 +699,26 @@ def build_props(
 
         b_v = []
         t_v = []
-        for k in range(5):
-            a = rot0 + (2.0 * math.pi * k) / 5.0
+        for k in range(4):
+            a = rot0 + (2.0 * math.pi * k) / 4.0
             ca, sa = math.cos(a), math.sin(a)
             b_v.append(bm_palm.verts.new((cx + rb * ca, cy + rb * sa, 0.18)))
             t_v.append(bm_palm.verts.new((cx + rt * ca, cy + rt * sa, th)))
-        for k in range(5):
-            kn = (k + 1) % 5
+        for k in range(4):
+            kn = (k + 1) % 4
             f = bm_palm.faces.new((b_v[k], b_v[kn], t_v[kn], t_v[k]))
             f.material_index = 0
 
-        # 7 arched frond blades (2-segment curved diamond leaflets)
-        for k in range(7):
-            fa = rot0 + (2.0 * math.pi * k) / 7.0
+        v_root = bm_palm.verts.new((cx, cy, th))
+        for k in range(5):
+            fa = rot0 + (2.0 * math.pi * k) / 5.0
             cf, sf = math.cos(fa), math.sin(fa)
             px, py = -sf, cf
             l1, l2 = 1.45 * sc, 2.75 * sc
             z_apex = th + 0.72 * sc
             z_tip = th - 0.55 * sc
-            w_mid = 0.42 * sc
+            w_mid = 0.48 * sc
 
-            v_root = bm_palm.verts.new((cx, cy, th))
             v_l = bm_palm.verts.new((cx + cf * l1 + px * w_mid, cy + sf * l1 + py * w_mid, z_apex))
             v_r = bm_palm.verts.new((cx + cf * l1 - px * w_mid, cy + sf * l1 - py * w_mid, z_apex))
             v_tip = bm_palm.verts.new((cx + cf * l2, cy + sf * l2, z_tip))
@@ -799,7 +795,6 @@ def patch_and_verify_glb(glb_path: Path, data: dict, footprinted: list[dict]) ->
         "footprintedPoiIds": [int(b["poiId"]) for b in footprinted],
     }
 
-    # Verify both textures are embedded and every building's maxY is valid
     imgs = gltf.get("images", [])
     mats = gltf.get("materials", [])
     facade_mat = mats[0] if mats else {}
@@ -894,7 +889,7 @@ def main() -> None:
         export_extras=True,
         export_apply=True,
         export_image_format="JPEG",
-        export_image_quality=82,
+        export_image_quality=80,
         export_draco_mesh_compression_enable=False,
     )
     patch_and_verify_glb(OUTPUT_GLB, data, footprinted)
