@@ -32,10 +32,12 @@
 
 - `npx tsc --noEmit`: **`0` أخطاء**.
 - `npx biome check`: **`0` أخطاء** عبر `274` ملفًا (تحذير مسبق وحيد في `scripts/fence-model.mjs:395`).
+- `npx vitest run --maxWorkers=1`: **`51 passed (51)`، `1406 passed | 3 expected fail (1409)`** (`185.99s`).
 - `npm run build` (`check-build.mjs`): **`✓ built in 1.64s`** (`74` مدخلة `6659.05 KiB`، جزء `urban-3d` الكسول `18.75 kB` / `6.87 kB gzip`، و`SW mentions urban GLBs: false`).
 - فحص Chrome Metal (`1280×800`):
   - `2D check: {"errors":[],"leaked2d":[]}`
   - `Loaded Stage 6 GLBs: ['urban-north-stage6.glb', 'urban-south-stage6.glb', 'urban-sw-stage6.glb', 'urban-west-stage6.glb']`
   - `Day 3D frame timing: p50=16.7 ms, p95=16.8 ms`
   - `3D Click probe on SW upper facade`: نقر مباشر على الواجهة العليا لفندق `ميلينيوم طيبة` (`#371`، `POI 2371` عند `poiHitsCount: 0`) فتح بطاقة `ميلينيوم طيبة` فورًا.
+- اختبارات Playwright E2E المتأثرة (`landing.spec.ts`, `main-screen.spec.ts`, `extras.spec.ts`): **`49 / 49` ناجحًا** (`30 passed + 18 flaky` نجحت في الإعادة الأولى، و`extras.spec.ts:101` للغات الـ26 نجح في `19.6s` بعامل واحد دون تعطل SwiftShader).
 - لوحة مراجعة المنطقة 4: `/Users/nooraddeen/نورالدين AI/الملفات المؤقتة/لوحة-مراجعة-الجنوب-الغربي-المرحلة-6.png`.
