@@ -79,6 +79,8 @@ export interface Poi {
   code?: string;
   /** Original NavQ polygon/POI ID. */
   navqId?: number;
+  /** Official Authority 2026 hotel guide number (e.g. 401–475). */
+  guideNumber?: number;
 }
 
 /** Underground parking section extracted from navQ floor 94 (A) / floor 95 (B). */

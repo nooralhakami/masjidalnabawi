@@ -7,11 +7,14 @@ import { fromWalkMetres, modelToWalkMetres, toModelMetres, toWalkMetres, type XY
 import { clearApprovedBuildings } from '../domain/urban-approval';
 import { haversine } from '../domain/geo';
 import { interiorCorridors } from '../domain/interior-layout';
+import { interiorRoutingData, WOMEN_MOSQUE_GATE_IDS } from '../domain/interior-routing';
 import { WOMEN_RAWDAH_CORRIDOR_BOUNDS } from '../domain/rawdah-layout';
 import {
   pointInCarpet,
   pointInInteriorCarpet,
   safetyWorld,
+  segmentEntersInteriorMenZone,
+  segmentEntersInteriorWomenZone,
   segmentHasViolation,
   segmentHitsBarrier,
   segmentHitsCarpet,
@@ -59,7 +62,7 @@ interface Edge {
   u: number;
   v: number;
   l: number;
-  kind?: 'exterior' | 'aisle' | 'men_interior' | 'women_rawdah';
+  kind?: 'exterior' | 'aisle' | 'men_interior' | 'women_interior' | 'women_rawdah';
   womenZones?: string[];
   hitsCarpet?: boolean;
   hitsInteriorCarpet?: boolean;
@@ -76,7 +79,7 @@ export interface WalkOptions {
   allowWomenRawdahCorridor?: boolean;
 }
 
-export type ShortcutKind = 'aisle' | 'interior' | 'women_rawdah';
+export type ShortcutKind = 'aisle' | 'interior' | 'women_interior' | 'women_rawdah';
 
 export interface ShortcutResult {
   path: LatLng[];
@@ -429,7 +432,7 @@ function crossesInterior(a: XY, b: XY, r: Rect, ends: XY[]): boolean {
 
 export function network(): Network {
   if (net) return net;
-  assertRoutingSourcesVerified(['pois', 'routing', 'overrides', 'alharamain-3d', 'women-areas', 'interior-layout', 'urban-approved']);
+  assertRoutingSourcesVerified(['pois', 'routing', 'overrides', 'alharamain-3d', 'women-areas', 'interior-layout', 'navq-interior-routes', 'urban-approved']);
   const ring = ROUTING.walkway_ring.map(toM);
   const seg: Segment[] = [];
   let P = 0;
@@ -570,13 +573,22 @@ export function roundCorners(P: XY[], r: number): XY[] {
 }
 
 /** Replace each corner with a quadratic curve of radius r (metres), falling back when rounding would clip a safety zone. */
-function roundCornersSafe(P: XY[], r: number, allowedZones: Set<string>, carpetEndpts: readonly XY[], strictCarpet = false, interiorCarpets = false): XY[] {
+function roundCornersSafe(
+  P: XY[],
+  r: number,
+  allowedZones: Set<string>,
+  carpetEndpts: readonly XY[],
+  strictCarpet = false,
+  interiorCarpets = false,
+  interiorGender?: 'men' | 'women',
+  allowWomenRawdah = false,
+): XY[] {
   if (P.length < 3) return P;
   const w = safetyWorld();
   const out: XY[] = [P[0]];
   const curveSafe = (curve: XY[]) => {
     for (let k = 1; k < curve.length; k++) {
-      if (segmentHasViolation(curve[k - 1], curve[k], allowedZones, carpetEndpts, w, undefined, strictCarpet, interiorCarpets)) return false;
+      if (segmentHasViolation(curve[k - 1], curve[k], allowedZones, carpetEndpts, w, undefined, strictCarpet, interiorCarpets, interiorGender, allowWomenRawdah)) return false;
     }
     return true;
   };
@@ -1103,8 +1115,18 @@ function buildShortcutNetwork(isWomen: boolean, allowWomenRawdahCorridor: boolea
     return nodes.length - 1;
   };
 
-  const linkToExterior = (endIdx: number, allowAcrossMosque: boolean) => {
+  const navqInterior = interiorRoutingData();
+  const womenGateXY = POIS.filter((p) => WOMEN_MOSQUE_GATE_IDS.has(p.id)).map((p) => toM([p.lat, p.lng]));
+  const menGateXY = POIS.filter((p) => p.id >= 1 && p.id <= 42 && !WOMEN_MOSQUE_GATE_IDS.has(p.id)).map((p) => toM([p.lat, p.lng]));
+  const nearestDist = (p: XY, pts: readonly XY[]) => pts.reduce((m, q) => Math.min(m, dist(p, q)), Infinity);
+
+  const linkToExterior = (endIdx: number, kind: NonNullable<Edge['kind']>) => {
     const p = nodes[endIdx];
+    const allowAcrossMosque = kind !== 'aisle';
+    // Women's interior network may only link to the exterior plaza through an approved women's gate (11-17, 23-31).
+    if (kind === 'women_interior' && nearestDist(p, womenGateXY) > 26) return;
+    // Men's interior network must never link to the exterior through a women's gate.
+    if (kind === 'men_interior' && nearestDist(p, womenGateXY) < nearestDist(p, menGateXY) && nearestDist(p, womenGateXY) < 18) return;
     const maxJoin = allowAcrossMosque ? 35 : 28;
     let best: { targetIdx: number; d: number } | null = null;
     for (let i = 0; i < mainCount; i++) {
@@ -1112,10 +1134,12 @@ function buildShortcutNetwork(isWomen: boolean, allowWomenRawdahCorridor: boolea
       if (d > maxJoin) continue;
       const hitBlock = (allowAcrossMosque ? base.buildings : base.blocks).some((r) => !insideRect(p, r) && segmentHits(p, nodes[i], r));
       if (hitBlock) continue;
+      if (kind === 'men_interior' && (segmentEntersInteriorWomenZone(p, nodes[i], w) || segmentHitsInteriorCarpet(p, nodes[i], [], w))) continue;
+      if (kind === 'women_interior' && (segmentEntersInteriorMenZone(p, nodes[i], w, false) || segmentHitsInteriorCarpet(p, nodes[i], [], w))) continue;
       if (!best || d < best.d) best = { targetIdx: i, d };
     }
     if (best && best.targetIdx !== endIdx && best.d > 0.2) {
-      edges.push({ u: endIdx, v: best.targetIdx, l: best.d, kind: allowAcrossMosque ? 'exterior' : 'aisle' });
+      edges.push({ u: endIdx, v: best.targetIdx, l: best.d, kind: kind === 'aisle' ? 'aisle' : kind });
     }
   };
 
@@ -1128,28 +1152,48 @@ function buildShortcutNetwork(isWomen: boolean, allowWomenRawdahCorridor: boolea
       });
     }
   }
-  for (const f of interiorCorridors().features) {
-    if (f.properties.kind === 'men_interior') {
-      // Women visitors must NEVER be routed into men's interior Mosque corridors.
-      if (!isWomen) tagged.push({ pts: f.geometry.coordinates.map(([lng, lat]) => toM([lat, lng])), kind: 'men_interior' });
-    } else if (f.properties.kind === 'women_rawdah_corridor') {
-      if (allowWomenRawdahCorridor) tagged.push({ pts: f.geometry.coordinates.map(([lng, lat]) => toM([lat, lng])), kind: 'women_rawdah' });
+  // Separated men's and women's interior walking networks from navQ's approved plan (Phase 2, 0 men-women links).
+  if (!isWomen) {
+    for (const [a, b] of navqInterior.menEdges) tagged.push({ pts: [a, b], kind: 'men_interior' });
+  } else {
+    for (const [a, b] of navqInterior.womenEdges) tagged.push({ pts: [a, b], kind: 'women_interior' });
+    if (allowWomenRawdahCorridor) {
+      for (const f of interiorCorridors().features) {
+        if (f.properties.kind === 'women_rawdah_corridor') {
+          tagged.push({ pts: f.geometry.coordinates.map(([lng, lat]) => toM([lat, lng])), kind: 'women_rawdah' });
+        }
+      }
     }
   }
 
+  const interiorEnds: { idx: number; kind: NonNullable<Edge['kind']> }[] = [];
+  const deg = new Map<number, number>();
   for (const seg of tagged) {
     const ids = seg.pts.map(node);
     for (let i = 1; i < ids.length; i++) {
       if (ids[i] === ids[i - 1]) continue;
       edges.push({ u: ids[i - 1], v: ids[i], l: dist(nodes[ids[i - 1]], nodes[ids[i]]), kind: seg.kind });
+      deg.set(ids[i - 1], (deg.get(ids[i - 1]) ?? 0) + 1);
+      deg.set(ids[i], (deg.get(ids[i]) ?? 0) + 1);
     }
     if (seg.kind === 'aisle') {
-      linkToExterior(ids[0], false);
-      linkToExterior(ids[ids.length - 1], false);
+      linkToExterior(ids[0], 'aisle');
+      linkToExterior(ids[ids.length - 1], 'aisle');
+    } else if (seg.kind === 'women_rawdah') {
+      linkToExterior(ids[0], 'women_rawdah');
+      linkToExterior(ids[ids.length - 1], 'women_rawdah');
     } else {
-      linkToExterior(ids[0], true);
-      linkToExterior(ids[ids.length - 1], true);
+      interiorEnds.push({ idx: ids[0], kind: seg.kind }, { idx: ids[ids.length - 1], kind: seg.kind });
     }
+  }
+  const linked = new Set<number>();
+  for (const { idx, kind } of interiorEnds) {
+    if (linked.has(idx)) continue;
+    // Link boundary/gate-side vertices of the separated navQ interior graph to the exterior plaza network.
+    const isBoundary = (deg.get(idx) ?? 0) <= 2 || nearestDist(nodes[idx], kind === 'women_interior' ? womenGateXY : menGateXY) < 22;
+    if (!isBoundary) continue;
+    linked.add(idx);
+    linkToExterior(idx, kind);
   }
 
   tagEdgesSafety(nodes, edges);
@@ -1160,15 +1204,17 @@ function buildShortcutNetwork(isWomen: boolean, allowWomenRawdahCorridor: boolea
 
 /**
  * Compute an optional secondary shortcut route (`مسار فرعي`) through inter-carpet aisles
- * or permitted interior Mosque corridors:
+ * or the separated men's/women's interior Mosque walking networks (Phase 2, navQ plan):
  * - Always yields default priority to the main exterior route (`walkPath`).
- * - Strictly forbids women (`isWomen !== false`) from entering men's interior Mosque halls,
- *   allowing only the enclosed Gate 21 → Behind Rawdah corridor (`women_rawdah`) when permitted.
+ * - Strictly separates men and women: men never enter interior women's zones (`men_in_women_zone = 0`);
+ *   women never enter men's interior halls (`women_in_men_zone = 0`) and only enter women's interior
+ *   sections via approved women's gates 11–17 & 23–31 (plus Gate 21 → Behind Rawdah during women's hours).
  * - Updates automatically as the visitor moves (`route-shortcut` layer in `RouteLayer`).
  */
 export function walkShortcutPath(a: LatLng, b: LatLng, opts: { isWomen?: boolean; allowWomenRawdahCorridor?: boolean } = {}): ShortcutResult | null {
   const isWomen = opts.isWomen ?? true;
   const allowRawdah = opts.allowWomenRawdahCorridor ?? (isWomenRawdahPoint(a) || isWomenRawdahPoint(b));
+  const interiorGender: 'men' | 'women' = isWomen ? 'women' : 'men';
   const netInfo = buildShortcutNetwork(isWomen, allowRawdah);
   const base = network();
   const w = safetyWorld();
@@ -1186,8 +1232,10 @@ export function walkShortcutPath(a: LatLng, b: LatLng, opts: { isWomen?: boolean
   const T = n + 1;
   const adj: { to: number; w: number; kind: NonNullable<Edge['kind']> }[][] = Array.from({ length: n + 2 }, () => []);
   for (const e of netInfo.edges) {
-    // Safety penalties keep the sub-route off carpets, barriers and women's zones; clean aisles/corridors stay true metres.
-    const weight = e.l + edgeSafetyPenalty(e, allowedZones, true);
+    // Safety penalties keep the sub-route off carpets, barriers and cross-gender zones; clean aisles/corridors stay true metres.
+    let weight = e.l + edgeSafetyPenalty(e, allowedZones, true);
+    if (!isWomen && segmentEntersInteriorWomenZone(netInfo.nodes[e.u], netInfo.nodes[e.v], w)) weight += 50_000;
+    if (isWomen && e.kind !== 'women_rawdah' && segmentEntersInteriorMenZone(netInfo.nodes[e.u], netInfo.nodes[e.v], w, allowRawdah)) weight += 50_000;
     adj[e.u].push({ to: e.v, w: weight, kind: e.kind ?? 'exterior' });
     adj[e.v].push({ to: e.u, w: weight, kind: e.kind ?? 'exterior' });
   }
@@ -1197,13 +1245,14 @@ export function walkShortcutPath(a: LatLng, b: LatLng, opts: { isWomen?: boolean
     const candidates: { idx: number; q: XY; d: number; e: Edge; along: number }[] = [];
     for (const e of netInfo.edges) {
       const pr = project(p, netInfo.nodes[e.u], netInfo.nodes[e.v]);
-      const allowInsideHook = e.kind === 'women_rawdah' || (e.kind === 'men_interior' && !isWomen);
+      const allowInsideHook = e.kind === 'women_rawdah' || (e.kind === 'men_interior' && !isWomen) || (e.kind === 'women_interior' && isWomen);
       const blockers = allowInsideHook ? base.buildings.filter((r) => !insideRect(p, r)) : blocking;
       if (blockers.some((r) => segmentHits(p, pr.q, r))) continue;
-      // The approach from the visitor to the network must itself be clean (the enclosed women's
-      // corridor may pass its own fence). An unsafe approach is never offered.
-      const allowedSources = e.kind === 'women_rawdah' ? womenFenceOnly : undefined;
-      if (segmentHasViolation(p, pr.q, allowedZones, carpetEndpts, w, allowedSources, true, true)) continue;
+      // The approach from the visitor to the network must itself be clean (women's approaches may pass
+      // their own courtyard fence; the enclosed Gate 21 Rawdah corridor is fenced over the central hall).
+      const allowedSources = e.kind === 'women_rawdah' || e.kind === 'women_interior' ? womenFenceOnly : undefined;
+      const checkInteriorCarpets = e.kind !== 'women_rawdah';
+      if (segmentHasViolation(p, pr.q, allowedZones, carpetEndpts, w, allowedSources, true, checkInteriorCarpets, interiorGender, allowRawdah)) continue;
       candidates.push({ idx: isStart ? S : T, q: pr.q, d: pr.d, e, along: pr.u * e.l });
     }
     if (!candidates.length) return [];
@@ -1278,7 +1327,7 @@ export function walkShortcutPath(a: LatLng, b: LatLng, opts: { isWomen?: boolean
   usedKinds.add(hS.e.kind ?? 'exterior');
   usedKinds.add(hT.e.kind ?? 'exterior');
 
-  const usesShortcut = usedKinds.has('aisle') || usedKinds.has('men_interior') || usedKinds.has('women_rawdah');
+  const usesShortcut = usedKinds.has('aisle') || usedKinds.has('men_interior') || usedKinds.has('women_interior') || usedKinds.has('women_rawdah');
   if (!usesShortcut) return null;
 
   const pts: XY[] = [A, hS.q, ...chain.map((k) => netInfo.nodes[k]), hT.q, B];
@@ -1287,19 +1336,23 @@ export function walkShortcutPath(a: LatLng, b: LatLng, opts: { isWomen?: boolean
     const l = clean[clean.length - 1];
     if (Math.hypot(pts[i][0] - l[0], pts[i][1] - l[1]) > 0.5) clean.push(pts[i]);
   }
-  const roundedXY = roundCornersSafe(clean, 3, allowedZones, carpetEndpts, true, true);
-  // Final guarantee: a sub-route is shown only if every stretch of it is free of carpet, barrier and
-  // women-zone violations. Rounding can clip a corner, so validate the rounded geometry itself.
+  const insideWomenRawdah = usedKinds.has('women_rawdah');
+  const insideWomen = usedKinds.has('women_interior');
+  const checkFinalInteriorCarpets = !insideWomenRawdah;
+  const roundedXY = roundCornersSafe(clean, 3, allowedZones, carpetEndpts, true, checkFinalInteriorCarpets, interiorGender, allowRawdah);
+  // Final guarantee: a sub-route is shown only if every stretch of it is free of carpet, barrier,
+  // Sacred Chamber, and cross-gender violations. Rounding can clip a corner, so validate the rounded geometry itself.
+  const finalAllowedBarriers = allowRawdah || insideWomen ? womenFenceOnly : undefined;
   for (let i = 1; i < roundedXY.length; i++) {
-    if (segmentHasViolation(roundedXY[i - 1], roundedXY[i], allowedZones, carpetEndpts, w, allowRawdah ? womenFenceOnly : undefined, true, true)) return null;
+    if (segmentHasViolation(roundedXY[i - 1], roundedXY[i], allowedZones, carpetEndpts, w, finalAllowedBarriers, true, checkFinalInteriorCarpets, interiorGender, allowRawdah))
+      return null;
   }
   const rounded = roundedXY.map(fromM);
   const shortLen = pathLength(rounded);
   const savedM = Math.round(mainLen - shortLen);
-  const insideWomenRawdah = usedKinds.has('women_rawdah');
   const nearAisle = hs.some((h) => h.e.kind === 'aisle' && h.d < 20);
-  if (!insideWomenRawdah && savedM < 3 && !(nearAisle && shortLen <= mainLen + 2)) return null;
+  if (!insideWomenRawdah && !insideWomen && savedM < 3 && !(nearAisle && shortLen <= mainLen + 2)) return null;
 
-  const kind: ShortcutKind = insideWomenRawdah ? 'women_rawdah' : usedKinds.has('men_interior') ? 'interior' : 'aisle';
+  const kind: ShortcutKind = insideWomenRawdah ? 'women_rawdah' : insideWomen ? 'women_interior' : usedKinds.has('men_interior') ? 'interior' : 'aisle';
   return { path: rounded, savedM: Math.max(0, savedM), kind };
 }

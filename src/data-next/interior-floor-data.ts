@@ -11,12 +11,26 @@ export interface InteriorCarpetData {
   poi: number[];
 }
 
+export interface InteriorMarbleData {
+  navq: number;
+  ring: [number, number][];
+  women?: boolean;
+}
+
+export interface InteriorLandmarksData {
+  minbar?: [number, number];
+  mihrab?: [number, number];
+  salamFront?: [number, number];
+}
+
 export interface InteriorFloorData {
   source: Record<string, string>;
-  marble: { navq: number; ring: [number, number][] }[];
+  marble: InteriorMarbleData[];
   men: InteriorCarpetData[];
   women: InteriorCarpetData[];
   courtyard: { navq: number; name: string; ring: [number, number][] }[];
+  chamber?: { navq: number; name: string; ring: [number, number][] } | null;
+  landmarks?: InteriorLandmarksData;
 }
 
 export function loadInteriorFloorData(): Promise<InteriorFloorData> {

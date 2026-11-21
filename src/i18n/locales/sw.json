@@ -36,6 +36,8 @@
   "dl_png": "Pakua msimbo wa QR kama PNG",
   "door_always_closed": "{name}: mlango huu hufungwa daima",
   "door_closed": "{name} umefungwa",
+  "door_entry_closed": "Mlango huu umefungwa — gusa kuufungua au ingia kupitia mlango ulio wazi",
+  "door_entry_open_only": "Kuingia Msikitini kunawezekana kupitia milango iliyo wazi pekee",
   "door_never_closed": "{name}: mlango huu hubaki wazi daima",
   "door_opened": "{name} umefunguliwa",
   "drive_fallback": "Hakuna njia ya gari iliyopatikana, kwa hiyo njia ni ya miguu",

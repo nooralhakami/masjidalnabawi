@@ -20,8 +20,8 @@ test.describe('landing', () => {
     const page = await ctx.newPage();
     await page.goto('./');
     await expect(page.locator('h1')).toHaveText('دليل زوار المسجد النبوي');
-    // 257: 230 + 20 West Expansion outer gates (401–420) + 7 owner-approved Stage 5 Southern Plaza hotels (2026-11-14).
-    await expect(page.locator('.stats dd').first()).toHaveText('257');
+    // 478: 230 + 20 West Expansion outer gates (401–420) + 228 owner-approved Stage 6 South+West+North+SW hotels (2026-11-21).
+    await expect(page.locator('.stats dd').first()).toHaveText('478');
     await ctx.close();
   });
 

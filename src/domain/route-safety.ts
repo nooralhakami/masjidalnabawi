@@ -1,7 +1,8 @@
 import { WOMEN_AREAS } from '../data-next/women-areas';
-import { modelToWalkMetres, toWalkMetres, type XY } from './frames';
-import { interiorCarpetBlocks } from './interior-layout';
-import { GREETING_BARRIERS, QUEUE_RAILS, RAWDAH_APPROACH_BARRIERS, RAWDAH_HALL_BARRIERS } from './rawdah-layout';
+import { modelToWalkMetres, toWalkMetres, walkToModelMetres, type XY } from './frames';
+import { insideMosqueMetres } from './interior-reveal';
+import { interiorRoutingData } from './interior-routing';
+import { GREETING_BARRIERS, QUEUE_RAILS, RAWDAH_APPROACH_BARRIERS, RAWDAH_HALL_BARRIERS, WOMEN_RAWDAH_CORRIDOR_BOUNDS } from './rawdah-layout';
 import { currentRugLayout, type RugLayout } from './rug-layout';
 
 export type BarrierSource = 'prayer_barrier' | 'greeting_barrier' | 'queue_rail' | 'rawdah_barrier' | 'women_fence';
@@ -45,9 +46,11 @@ export interface PatchBox {
 export interface SafetyWorld {
   carpets: CarpetQuad[];
   carpetGrid: Map<string, CarpetQuad[]>;
-  /** Carpets inside the Mosque halls: only interior shortcuts are bound by them (exterior ways never enter the building). */
+  /** Carpets inside the Mosque halls (navQ FF5/FF6 + Sacred Chamber): only interior shortcuts are bound by them. */
   interiorCarpets: CarpetQuad[];
   interiorCarpetGrid: Map<string, CarpetQuad[]>;
+  /** NavQ interior women's zones (FF0 parts 34, 291, 425 + FF6 women's prayer areas) in walk metres. */
+  interiorWomenZones: WomenZonePoly[];
   barriers: BarrierSeg[];
   barrierGrid: Map<string, BarrierSeg[]>;
   womenZones: WomenZonePoly[];
@@ -149,16 +152,22 @@ export function safetyWorld(): SafetyWorld {
     carpets.push(quad);
     addToGrid(carpetGrid, quad, quad);
   }
-  // Interior prayer-hall carpets (between the marble walkways), kept apart from the plaza carpets so
-  // only interior shortcuts are bound by them; an exterior way hugging the Mosque wall stays valid.
+  // Interior prayer-hall carpets from navQ's approved plan (FF5 men + FF6 women + Sacred Chamber FF1 #13),
+  // kept apart from the plaza carpets so only interior shortcuts are bound by them; exterior ways stay untouched.
+  const interiorData = interiorRoutingData();
   const interiorCarpets: CarpetQuad[] = [];
   const interiorCarpetGrid = new Map<string, CarpetQuad[]>();
-  for (const r of interiorCarpetBlocks()) {
-    const poly = [modelToWalkMetres([r.x0, r.z0]), modelToWalkMetres([r.x1, r.z0]), modelToWalkMetres([r.x1, r.z1]), modelToWalkMetres([r.x0, r.z1])];
+  for (const poly of [...interiorData.menCarpets, ...interiorData.womenCarpets, interiorData.chamber]) {
+    if (poly.length < 3) continue;
     const quad: CarpetQuad = { poly, ...bboxOf(poly) };
     interiorCarpets.push(quad);
     addToGrid(interiorCarpetGrid, quad, quad);
   }
+  const interiorWomenZones: WomenZonePoly[] = [...interiorData.womenFloor, ...interiorData.womenCarpets].map((poly, i) => ({
+    id: `navq-women-${i}`,
+    poly,
+    ...bboxOf(poly),
+  }));
 
   const barriers: BarrierSeg[] = [];
   const barrierGrid = new Map<string, BarrierSeg[]>();
@@ -253,7 +262,7 @@ export function safetyWorld(): SafetyWorld {
     }
   }
 
-  cachedWorld = { carpets, carpetGrid, interiorCarpets, interiorCarpetGrid, barriers, barrierGrid, womenZones, patchBoxes, detourAnchors };
+  cachedWorld = { carpets, carpetGrid, interiorCarpets, interiorCarpetGrid, interiorWomenZones, barriers, barrierGrid, womenZones, patchBoxes, detourAnchors };
   return cachedWorld;
 }
 
@@ -346,6 +355,50 @@ export function segmentTransitsWomen(a: XY, b: XY, allowedZoneIds: Set<string>, 
   return false;
 }
 
+/** Check whether `p` (walk metres) lies inside navQ's interior women's zones (FF0 34/291/425 or FF6). */
+export function pointInInteriorWomenZone(p: XY, w = safetyWorld()): boolean {
+  return w.interiorWomenZones.some((z) => p[0] > z.minX && p[0] < z.maxX && p[1] > z.minY && p[1] < z.maxY && pointInPoly(p, z.poly));
+}
+
+function pointInWomenRawdahBox(p: XY): boolean {
+  const b = WOMEN_RAWDAH_CORRIDOR_BOUNDS;
+  const sw = toWalkMetres([b.southLat - 0.00012, b.westLng - 0.00008]);
+  const ne = toWalkMetres([b.northLat + 0.00018, b.eastLng + 0.00008]);
+  return p[0] >= sw[0] && p[0] <= ne[0] && p[1] >= sw[1] && p[1] <= ne[1];
+}
+
+/** Check whether `p` (walk metres) stands inside the Mosque's men-only interior halls (inset 2.5 m from outer wall). */
+export function pointInInteriorMenZone(p: XY, w = safetyWorld(), allowRawdahCorridor = false): boolean {
+  if (pointInInteriorWomenZone(p, w)) return false;
+  if (allowRawdahCorridor && pointInWomenRawdahBox(p)) return false;
+  const [mx, mz] = walkToModelMetres(p);
+  if (!insideMosqueMetres([mx, mz])) return false;
+  // Require 2.5 m inside the Mosque envelope so exterior apron walkways hugging the outer wall stay unaffected.
+  return insideMosqueMetres([mx - 2.5, mz]) && insideMosqueMetres([mx + 2.5, mz]) && insideMosqueMetres([mx, mz - 2.5]) && insideMosqueMetres([mx, mz + 2.5]);
+}
+
+/** Check whether straight segment `a -> b` enters navQ's interior women's zones (forbidden for men). */
+export function segmentEntersInteriorWomenZone(a: XY, b: XY, w = safetyWorld()): boolean {
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const steps = Math.max(1, Math.ceil(len / 1.2));
+  for (let k = 0; k <= steps; k++) {
+    const u = k / steps;
+    if (pointInInteriorWomenZone([a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u], w)) return true;
+  }
+  return false;
+}
+
+/** Check whether straight segment `a -> b` enters the Mosque's men-only interior halls (forbidden for women). */
+export function segmentEntersInteriorMenZone(a: XY, b: XY, w = safetyWorld(), allowRawdahCorridor = false): boolean {
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const steps = Math.max(1, Math.ceil(len / 1.2));
+  for (let k = 0; k <= steps; k++) {
+    const u = k / steps;
+    if (pointInInteriorMenZone([a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u], w, allowRawdahCorridor)) return true;
+  }
+  return false;
+}
+
 export function segmentHasViolation(
   a: XY,
   b: XY,
@@ -355,10 +408,14 @@ export function segmentHasViolation(
   allowedBarrierSources?: Set<BarrierSource>,
   strictCarpet = false,
   interiorCarpets = false,
+  interiorGender?: 'men' | 'women',
+  allowWomenRawdah = false,
 ): boolean {
   if (segmentHitsBarrier(a, b, w, allowedBarrierSources)) return true;
   if (segmentHitsCarpet(a, b, allowedCarpetEndpts, w, strictCarpet)) return true;
   if (interiorCarpets && segmentHitsInteriorCarpet(a, b, allowedCarpetEndpts, w)) return true;
   if (segmentTransitsWomen(a, b, allowedWomenZones, w)) return true;
+  if (interiorGender === 'men' && segmentEntersInteriorWomenZone(a, b, w)) return true;
+  if (interiorGender === 'women' && segmentEntersInteriorMenZone(a, b, w, allowWomenRawdah)) return true;
   return false;
 }

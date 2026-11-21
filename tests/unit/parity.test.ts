@@ -57,7 +57,7 @@ describe('parity: driving to the car park under the Haram', () => {
 describe('parity: search', () => {
   const ids = (q: string) => search(POIS, q).map((p) => p.id);
   it('215 and ٢١٥ find restroom 215 first', () => {
-    expect(ids('215')).toEqual([215, 906, 907]);
+    expect(ids('215')).toEqual([215, 2215, 2151, 2154, 2157, 906, 907]);
     expect(ids('٢١٥')).toEqual(ids('215'));
   });
   it('«Al Baik» finds the five branches', () => expect(ids('Al Baik')).toEqual([824, 827, 828, 829, 830]));
@@ -93,17 +93,17 @@ describe('parity: Rawdah schedule (R5), 16 October 2026', () => {
 });
 
 describe('parity: places and category counts (SPEC F1)', () => {
-  it('345 places (with 20 west expansion outer gates 401–420 as 1401–1420), 8 hidden (wheelchair areas 401–408), 337 shown', () => {
-    expect(POIS).toHaveLength(345);
+  it('534 places (with 20 west expansion outer gates 401–420 as 1401–1420 and Stage 6 South+West+North+SW hotels), 8 hidden (wheelchair areas 401–408), 526 shown', () => {
+    expect(POIS).toHaveLength(534);
     expect(POIS.filter((p) => p.subCategory === 'wheelchair_zone').map((p) => p.id)).toEqual([401, 402, 403, 404, 405, 406, 407, 408]);
   });
   it('each pill counts what it shows, computed the way the live app does', () => {
     const fac = new Facilities();
     const counts = Object.fromEntries(FILTERS.map(({ id }) => [id, visiblePois(id, 'all', '', fac, undefined, id === 'parking' ? 'all' : undefined).length]));
-    // Owner, 2026-11-04 (docs/DECISIONS.md): hotels and restaurants hidden until verified;
-    // 2026-11-14: gates 401–420 (1401–1420) added (+20) and Stage 5 owner-approved 7 Southern Plaza hotels revealed (+7).
-    expect(counts).toEqual({ all: 244, gates: 132, women: 35, toilets: 40, hotels: 7, food: 0, shopping: 15, landmarks: 39, historic: 17, parking: 13, emergency: 9 });
-    expect(counts.all + counts.parking).toBe(257);
+    // Owner, 2026-11-04 (docs/DECISIONS.md): unapproved hotels and restaurants hidden until verified;
+    // 2026-11-21: Stage 6 Zones 1–4 reveal 228 owner-approved South+West+North+SW hotels (57 South + 39 West + 61 North + 71 SW).
+    expect(counts).toEqual({ all: 465, gates: 132, women: 35, toilets: 40, hotels: 228, food: 0, shopping: 15, landmarks: 39, historic: 17, parking: 13, emergency: 9 });
+    expect(counts.all + counts.parking).toBe(478);
   });
 });
 

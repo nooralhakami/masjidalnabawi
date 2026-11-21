@@ -36,6 +36,8 @@
   "dl_png": "Unduh kode QR PNG",
   "door_always_closed": "{name}: pintu ini selalu tertutup",
   "door_closed": "{name} ditutup",
+  "door_entry_closed": "Pintu ini tertutup — ketuk untuk membuka atau masuk lewat pintu terbuka",
+  "door_entry_open_only": "Masuk ke Masjid hanya melalui pintu yang terbuka",
   "door_never_closed": "{name}: pintu ini selalu terbuka",
   "door_opened": "{name} dibuka",
   "drive_fallback": "Rute mobil tidak ditemukan, jadi rute dibuat untuk jalan kaki",

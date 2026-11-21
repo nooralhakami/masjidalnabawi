@@ -91,11 +91,9 @@ function distToSegment(p: XY, a: XY, b: XY): number {
 export function interiorReveal(input: RevealInput): InteriorReveal {
   const share = smoothstep(REVEAL_LEGACY_ZOOM[0], REVEAL_LEGACY_ZOOM[1], input.legacyZoom);
   if (share <= 0) return NO_REVEAL;
+  // Tapping or zooming to a gate must NEVER punch a hole through the roof (owner, 2026-11-20);
+  // visitors look and enter directly through the open 3D doorways instead.
   const discs: [number, number, number][] = [];
-  if (input.door) {
-    const { x, z, outward } = input.door;
-    discs.push([x - outward[0] * DOOR_REVEAL_INSET_M, z - outward[1] * DOOR_REVEAL_INSET_M, DOOR_REVEAL_RADIUS_M * share]);
-  }
   const parts: { seg: [XY, XY]; d: number }[] = [];
   for (const route of input.routes)
     for (let i = 1; i < route.length; i++) {

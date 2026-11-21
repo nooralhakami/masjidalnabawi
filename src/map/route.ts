@@ -68,6 +68,7 @@ export const SHORTCUT_PAINT = {
 
 export function shortcutBadgeMeta(kind: ShortcutKind): { glyph: string; label: string; color: string } {
   if (kind === 'interior') return { glyph: '♂', label: 'للرجال', color: '#2563eb' };
+  if (kind === 'women_interior') return { glyph: '♀', label: 'للنساء · داخل المسجد', color: '#db2777' };
   if (kind === 'women_rawdah') return { glyph: '♀', label: 'للنساء · باب ٢١', color: '#c026d3' };
   return { glyph: '⇣', label: 'ممر فرعي', color: '#10b981' };
 }
@@ -164,7 +165,7 @@ export class RouteLayer {
       source: 'route-shortcut',
       layout: { 'line-cap': 'round', 'line-join': 'round' },
       paint: {
-        'line-color': ['match', ['get', 'kind'], 'interior', '#2563eb', 'women_rawdah', '#c026d3', '#10b981'],
+        'line-color': ['match', ['get', 'kind'], 'interior', '#2563eb', 'women_interior', '#db2777', 'women_rawdah', '#c026d3', '#10b981'],
         'line-opacity': SHORTCUT_PAINT.lineOpacity,
         'line-width': SHORTCUT_PAINT.lineWidth,
         'line-dasharray': [...SHORTCUT_PAINT.dasharray],

@@ -3,7 +3,7 @@ import { elevatorBadge, isClosed, pairOf, type Facilities } from '../../domain/f
 import { nearestOuterGate } from '../../domain/nearby';
 import { lotLevels, parkingSectionsForLot } from '../../domain/parking';
 import { rawdahState } from '../../domain/rawdah';
-import { isApprovedHotel } from '../../domain/urban-approval';
+import { approvedHotelInfo, isApprovedHotel } from '../../domain/urban-approval';
 import { num } from '../../i18n';
 import { lookOf } from '../../presentation/markers';
 import { kindLabel } from '../../presentation/search-view';
@@ -69,6 +69,8 @@ export function PlaceCard({ p, fac, travel, level, accessible = false, onTravel,
   const gate = nearestOuterGate(p);
   const by = status === 'works' ? fac.worksBy(p.id) : undefined;
   const parkingSections = p.category === 'parking' ? parkingSectionsForLot(p.id) : [];
+  const hotelInfo = isApprovedHotel(p.id) ? approvedHotelInfo(p.id) : undefined;
+  const displayId = p.id >= 2000 && p.guideNumber ? p.guideNumber : outerGateNumber(p.id);
   return (
     <article class="place-card" aria-label={nm(p)} style={{ '--c': placeColor(p, closed) }}>
       <header class="pc-head" data-sheet-drag>
@@ -108,14 +110,13 @@ export function PlaceCard({ p, fac, travel, level, accessible = false, onTravel,
             {t('a_works')}
           </Chip>
         ) : null}
-        <Chip>{t('num_label', { id: outerGateNumber(p.id) })}</Chip>
-        {isApprovedHotel(p.id) ? (
+        <Chip>{t('num_label', { id: displayId })}</Chip>
+        {hotelInfo ? (
           <>
             <Chip tone="ok" icon="check">
               {t('verified_badge')}
             </Chip>
-            <Chip>{t('west_facade_door')}</Chip>
-            <Chip tone="info">{t('floors_pending')}</Chip>
+            {hotelInfo.hasFootprint && hotelInfo.entranceSide === 'west' ? <Chip>{t('west_facade_door')}</Chip> : null}
           </>
         ) : null}
         {p.interiorOnly ? (

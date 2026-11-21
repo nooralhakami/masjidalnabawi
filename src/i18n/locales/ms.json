@@ -36,6 +36,8 @@
   "dl_png": "Muat turun kod QR sebagai PNG",
   "door_always_closed": "{name}: pintu ini sentiasa ditutup",
   "door_closed": "{name} ditutup",
+  "door_entry_closed": "Pintu ini tertutup — ketik untuk membuka atau masuk melalui pintu yang terbuka",
+  "door_entry_open_only": "Masuk ke Masjid hanya dibenarkan melalui pintu yang terbuka",
   "door_never_closed": "{name}: pintu ini sentiasa dibuka",
   "door_opened": "{name} dibuka",
   "drive_fallback": "Tiada laluan memandu ditemui, jadi laluan berjalan kaki ditunjukkan",

@@ -25,10 +25,12 @@ export type DataSourceId =
   | 'alharamain-prayers'
   | 'women-areas'
   | 'haram-fence'
+  | 'mosque-doors-3d'
   | 'vertical-nodes'
   | 'interior-layout'
   | 'mosque-interior-3d'
   | 'navq-interior-floor'
+  | 'navq-interior-routes'
   | 'navq-interior'
   | 'navq-parking-sections'
   | 'urban-approved'
@@ -126,6 +128,14 @@ export const DATA_PROVENANCE: Readonly<Record<DataSourceId, DataSourceRecord>> =
     path: 'data/haram-fence.json',
     description: 'Verified Haram outer boundary perimeter segments and gates.',
   },
+  'mosque-doors-3d': {
+    id: 'mosque-doors-3d',
+    tier: 'verified',
+    routingAllowed: true,
+    path: 'data/mosque-doors-3d.json',
+    description:
+      'Verified 3D doorway bay inventory and coordinates for all 42 inner Mosque gates extracted from haram-3d.glb with owner-approved bay counts and partial-open defaults (2026-11-20).',
+  },
   'vertical-nodes': {
     id: 'vertical-nodes',
     tier: 'verified',
@@ -159,7 +169,8 @@ export const DATA_PROVENANCE: Readonly<Record<DataSourceId, DataSourceRecord>> =
     tier: 'verified',
     routingAllowed: true,
     path: 'data/urban-approved.json',
-    description: 'Stage 5 owner-approved Southern Plaza buildings (7 hotels, flat pending owner floors, western facade entrances) and verified OSM street corridors.',
+    description:
+      'Stage 6 Zones 1–4 owner-approved buildings (228 hotels: 57 South + 39 West + 61 North + 71 Southwest; 219 footprinted with 7 OSM levels and 212 display-only 3D heights + 9 pin-only) and 419 verified OSM street corridors.',
   },
   'navq-interior-floor': {
     id: 'navq-interior-floor',
@@ -167,7 +178,15 @@ export const DATA_PROVENANCE: Readonly<Record<DataSourceId, DataSourceRecord>> =
     routingAllowed: true,
     path: 'data/navq-interior-floor.json',
     description:
-      "The Mosque's interior floor from navQ's ground-floor plan (FF0 marble walkways, FF5 men's and FF6 women's carpeted prayer areas, the First Hasawa); owner-approved 2026-11-18. Drawn now; the men's and women's interior routes are built on it next (Phase 2).",
+      "The Mosque's interior floor from navQ's ground-floor plan (FF0 marble walkways, FF5 men's and FF6 women's carpeted prayer areas, the First Hasawa, the Sacred Chamber exterior, and Minbar/Mihrab/Salam landmarks); owner-approved 2026-11-18.",
+  },
+  'navq-interior-routes': {
+    id: 'navq-interior-routes',
+    tier: 'verified',
+    routingAllowed: true,
+    path: 'data/navq-interior-routes.json',
+    description:
+      "Separated men's and women's interior walking networks (0 men-women links) built from navQ's approved floor plan and harvested /path/trip edges (Phase 2), respecting FF5/FF6 carpets, Rawdah waiting hall barriers, Sacred Chamber, and women's gates 11-17 & 23-31.",
   },
   'mosque-interior-3d': {
     id: 'mosque-interior-3d',

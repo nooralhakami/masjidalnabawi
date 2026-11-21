@@ -22,12 +22,14 @@ const shown = (filter: FilterId, toiletSub: 'all' | 'open' | 'closed' = 'all') =
 describe('filters', () => {
   it('"all" shows everything except parking and the hidden places (wheelchair zones, unapproved hotels, restaurants)', () => {
     const all = shown('all');
-    // 345 places (including 401–420 west expansion gates 1401–1420), less 13 car parks, 8 wheelchair zones,
-    // 36 unapproved hotels (7 Stage 5 Southern Plaza hotels verified & visible), and 44 restaurants.
-    expect(all).toHaveLength(345 - 13 - 8 - 36 - 44);
+    // 534 places (including 401–420 west expansion gates 1401–1420 and Stage 6 South+West+North+SW hotels),
+    // less 13 car parks, 8 wheelchair zones, 4 unapproved hotels (228 Stage 6 South+West+North+SW hotels visible), and 44 restaurants.
+    expect(all).toHaveLength(534 - 13 - 8 - 4 - 44);
     expect(all.some((p) => p.category === 'parking')).toBe(false);
     expect(all.some((p) => p.category === 'food')).toBe(false);
-    expect(all.filter((p) => p.category === 'hotels').map((p) => p.id)).toEqual([711, 713, 722, 724, 725, 728, 735]);
+    const visibleHotelIds = all.filter((p) => p.category === 'hotels').map((p) => p.id);
+    expect(visibleHotelIds).toHaveLength(228);
+    expect(visibleHotelIds).toEqual(expect.arrayContaining([701, 705, 711, 716, 732, 734, 735, 738, 741, 743]));
   });
 
   it('parking appears only with its pill or while searching', () => {
@@ -85,8 +87,8 @@ describe('filters', () => {
 
   it('category pills match their category', () => {
     expect(shown('gates')).toHaveLength(132);
-    // Stage 5: 7 owner-approved Southern Plaza hotels are visible; remaining 36 hotels and all food stay hidden.
-    expect(shown('hotels')).toHaveLength(7);
+    // Stage 6 Zones 1–4: 228 owner-approved South+West+North+SW hotels are visible; remaining 4 unapproved hotels and all food stay hidden.
+    expect(shown('hotels')).toHaveLength(228);
     expect(shown('food')).toHaveLength(0);
     expect(shown('shopping')).toHaveLength(15);
     expect(shown('emergency')).toHaveLength(9);

@@ -12,7 +12,7 @@ describe('grouped results', () => {
       const groups = groupResults(search(POIS, q));
       expect(shownOrder(groups)[0].id).toBe(215);
       expect(groups[0].label).toBe('p_toilets');
-      expect(groups.map((g) => g.label)).toEqual(['p_toilets', 'p_parking']);
+      expect(groups.map((g) => g.label)).toEqual(['p_toilets', 'p_hotels', 'p_parking']);
     }
   });
   it('at most eight rows, as the live app', () => {

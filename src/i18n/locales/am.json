@@ -36,6 +36,8 @@
   "dl_png": "QR ኮዱን በPNG አውርድ",
   "door_always_closed": "{name}: ይህ በር ሁልጊዜ ዝግ ነው",
   "door_closed": "{name} ተዘግቷል",
+  "door_entry_closed": "ይህ በር ዝግ ነው — ለመክፈት ይንኩት ወይም በተከፈተ በር ይግቡ",
+  "door_entry_open_only": "ወደ መስጂዱ መግባት በተከፈቱ በሮች ብቻ ነው",
   "door_never_closed": "{name}: ይህ በር ሁልጊዜ ክፍት ነው",
   "door_opened": "{name} ተከፍቷል",
   "drive_fallback": "የመኪና መንገድ አልተገኘም፣ ስለዚህ የእግር መንገድ ይታያል",

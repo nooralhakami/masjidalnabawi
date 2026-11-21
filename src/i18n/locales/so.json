@@ -36,6 +36,8 @@
   "dl_png": "Soo deji koodhka QR sida PNG",
   "door_always_closed": "{name}: albaabkan had iyo jeer waa xiran yahay",
   "door_closed": "{name} waa la xiray",
+  "door_entry_closed": "Albaabkan waa xiran yahay — taabo si aad u furto ama ka gal albaab furan",
+  "door_entry_open_only": "Gelitaanka Masaajidka wuxuu ku egyahay albaabada furan oo keliya",
   "door_never_closed": "{name}: albaabkan had iyo jeer waa furan yahay",
   "door_opened": "{name} waa la furay",
   "drive_fallback": "Jid gaari lama helin, sidaas darteed jidku waa lug",

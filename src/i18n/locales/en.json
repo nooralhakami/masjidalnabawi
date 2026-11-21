@@ -36,6 +36,8 @@
   "dl_png": "Download QR as PNG",
   "door_always_closed": "{name}: this gate is always closed",
   "door_closed": "{name} closed",
+  "door_entry_closed": "This door is closed — tap to open it or enter through an open doorway",
+  "door_entry_open_only": "Entry into the Mosque is through open doorways only",
   "door_never_closed": "{name}: this gate remains open permanently",
   "door_opened": "{name} opened",
   "drive_fallback": "No driving route found, so the route is on foot",

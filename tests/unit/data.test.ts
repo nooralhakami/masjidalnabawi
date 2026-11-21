@@ -64,11 +64,11 @@ describe('inner gate names and descriptions', () => {
 });
 
 describe('pois.json', () => {
-  it('has 345 POIs with unique ids (including 20 west expansion outer gates 401–420 as 1401–1420)', () => {
-    expect(POIS).toHaveLength(345);
+  it('has 534 POIs with unique ids (including 20 west expansion outer gates 401–420 as 1401–1420 and Stage 6 South+West+North+SW hotels)', () => {
+    expect(POIS).toHaveLength(534);
     expect(POI_BY_ID.has(523)).toBe(false);
     expect(POI_BY_ID.has(524)).toBe(false);
-    expect(POI_BY_ID.size).toBe(345);
+    expect(POI_BY_ID.size).toBe(534);
     expect(POI_BY_ID.has(409)).toBe(false);
     expect(POI_BY_ID.has(410)).toBe(false);
     expect(POI_BY_ID.get(604)?.category).toBe('landmarks');
@@ -82,7 +82,7 @@ describe('pois.json', () => {
     ['wheelchair', 8],
     ['emergency', 9],
     ['women', 2],
-    ['hotels', 43],
+    ['hotels', 232],
     ['food', 44],
     ['shopping', 15],
   ] as const)('category %s has %i POIs', (cat, n) => {
@@ -330,9 +330,10 @@ describe('hotels, food and landmarks (OpenStreetMap, 2026-10-09)', () => {
   const m = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => Math.hypot((a.lat - b.lat) * 111_320, (a.lng - b.lng) * 101_330);
   const of = (c: string) => POIS.filter((p) => p.category === c);
 
-  it('every hotel and food place has a source (an OSM element, or Al Baik’s own branch list)', () => {
+  it('every hotel and food place has a source (an OSM element, Authority 2026 guide, or Al Baik’s own branch list)', () => {
     for (const p of of('hotels')) {
-      expect(p.osm, p.name_ar).toMatch(/^[nwr]\d+$/);
+      expect(p.osm ?? p.source, p.name_ar).toBeTruthy();
+      if (p.osm) expect(p.osm, p.name_ar).toMatch(/^[nwr]\d+$/);
       expect(m(p, { lat: 24.4686, lng: 39.6111 }), p.name_ar).toBeLessThan(1500); // the central area
     }
     for (const p of of('food')) {
@@ -343,7 +344,17 @@ describe('hotels, food and landmarks (OpenStreetMap, 2026-10-09)', () => {
 
   it('no hotel is listed twice (towers and duplicate map entries collapse)', () => {
     const h = of('hotels');
-    for (let i = 0; i < h.length; i++) for (let j = i + 1; j < h.length; j++) expect(m(h[i], h[j]), `${h[i].name_ar} / ${h[j].name_ar}`).toBeGreaterThan(40);
+    const osmOnly = h.filter((p) => p.osm && !p.guideNumber);
+    for (let i = 0; i < osmOnly.length; i++) {
+      for (let j = i + 1; j < osmOnly.length; j++) {
+        expect(m(osmOnly[i], osmOnly[j]), `${osmOnly[i].name_ar} / ${osmOnly[j].name_ar}`).toBeGreaterThan(40);
+      }
+    }
+    for (let i = 0; i < h.length; i++) {
+      for (let j = i + 1; j < h.length; j++) {
+        expect(m(h[i], h[j]), `${h[i].name_ar} / ${h[j].name_ar}`).toBeGreaterThan(5);
+      }
+    }
     expect(new Set(h.map((p) => p.name_ar)).size).toBe(h.length);
   });
 
