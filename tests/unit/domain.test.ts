@@ -87,8 +87,8 @@ describe('filters', () => {
 
   it('category pills match their category', () => {
     expect(shown('gates')).toHaveLength(132);
-    // Stage 5: 7 owner-approved Southern Plaza hotels are visible; remaining 36 hotels and all food stay hidden.
-    expect(shown('hotels')).toHaveLength(7);
+    // Stage 6 Zone 1 South: 57 owner-approved South hotels are visible; remaining 36 unapproved hotels and all food stay hidden.
+    expect(shown('hotels')).toHaveLength(57);
     expect(shown('food')).toHaveLength(0);
     expect(shown('shopping')).toHaveLength(15);
     expect(shown('emergency')).toHaveLength(9);
