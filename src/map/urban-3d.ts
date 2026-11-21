@@ -223,7 +223,7 @@ void main() {
   vec2 duv_dy = dFdy(v_uv);
   if (u_meta.w > 0.5 && uv.y >= 2.0) {
     float sid = min(2.0, floor((uv.y - 2.0) / 10.0));
-    float fcycle = fract(uv.y - (2.0 + sid * 10.0));
+    float fcycle = fract(max(uv.y - (2.0 + sid * 10.0) - 0.0005, 0.0));
     float yTop = sid < 0.5 ? 53.0 : (sid < 1.5 ? 177.0 : 301.0);
     float yBot = sid < 0.5 ? 175.0 : (sid < 1.5 ? 299.0 : 411.0);
     float bandScale = (yBot - yTop) / 512.0;
@@ -314,7 +314,9 @@ interface PendingLoad {
 }
 
 async function decodeGlbImage(bytes: Uint8Array, mime: string): Promise<ImageBitmap | HTMLImageElement | null> {
-  const blob = new Blob([bytes], { type: mime });
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  const blob = new Blob([copy], { type: mime });
   if (typeof createImageBitmap === 'function') {
     try {
       return await createImageBitmap(blob);
@@ -462,10 +464,7 @@ export class Urban3DLayer implements CustomLayerInterface {
       };
 
       const facadeMat = gltf.materials?.[0];
-      const [albedoImg, maskImg] = await Promise.all([
-        decodeTex(facadeMat?.pbrMetallicRoughness?.baseColorTexture?.index),
-        decodeTex(facadeMat?.emissiveTexture?.index),
-      ]);
+      const [albedoImg, maskImg] = await Promise.all([decodeTex(facadeMat?.pbrMetallicRoughness?.baseColorTexture?.index), decodeTex(facadeMat?.emissiveTexture?.index)]);
       if (gen !== this.generation) {
         closeDecodedImage(albedoImg);
         closeDecodedImage(maskImg);
@@ -698,7 +697,15 @@ export function mountUrban3D(map: MLMap, light: SceneLight, before?: string): Ur
         layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: {
           'line-color': ['match', ['get', 'kind'], ['arterial', 'boulevard', 'local', 'service'], '#3d4550', '#c9beaa'],
-          'line-width': ['interpolate', ['linear'], ['zoom'], 15, ['match', ['get', 'kind'], 'arterial', 4, 'boulevard', 3, 2], 18, ['match', ['get', 'kind'], 'arterial', 9, 'boulevard', 7, 5]],
+          'line-width': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            15,
+            ['match', ['get', 'kind'], 'arterial', 4, 'boulevard', 3, 2],
+            18,
+            ['match', ['get', 'kind'], 'arterial', 9, 'boulevard', 7, 5],
+          ],
           'line-opacity': 0.72,
         },
       },

@@ -22,12 +22,14 @@ const shown = (filter: FilterId, toiletSub: 'all' | 'open' | 'closed' = 'all') =
 describe('filters', () => {
   it('"all" shows everything except parking and the hidden places (wheelchair zones, unapproved hotels, restaurants)', () => {
     const all = shown('all');
-    // 345 places (including 401–420 west expansion gates 1401–1420), less 13 car parks, 8 wheelchair zones,
-    // 36 unapproved hotels (7 Stage 5 Southern Plaza hotels verified & visible), and 44 restaurants.
-    expect(all).toHaveLength(345 - 13 - 8 - 36 - 44);
+    // 395 places (including 401–420 west expansion gates 1401–1420 and 50 Stage 6 South hotels), less 13 car parks,
+    // 8 wheelchair zones, 36 unapproved hotels (57 Stage 6 Zone 1 South hotels verified & visible), and 44 restaurants.
+    expect(all).toHaveLength(395 - 13 - 8 - 36 - 44);
     expect(all.some((p) => p.category === 'parking')).toBe(false);
     expect(all.some((p) => p.category === 'food')).toBe(false);
-    expect(all.filter((p) => p.category === 'hotels').map((p) => p.id)).toEqual([711, 713, 722, 724, 725, 728, 735]);
+    const visibleHotelIds = all.filter((p) => p.category === 'hotels').map((p) => p.id);
+    expect(visibleHotelIds).toHaveLength(57);
+    expect(visibleHotelIds).toEqual(expect.arrayContaining([711, 713, 722, 724, 725, 728, 735]));
   });
 
   it('parking appears only with its pill or while searching', () => {
