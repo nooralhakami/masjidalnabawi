@@ -20,18 +20,19 @@ import {
 } from '../../src/domain/urban-approval';
 import { visiblePois } from '../../src/domain/visible';
 import { lngLatFromMetres, parseGlbBuffer } from '../../src/map/glb-layer';
-import { validateUrbanGlb, type UrbanZoneId } from '../../src/map/urban-3d';
+import { type UrbanZoneId, validateUrbanGlb } from '../../src/map/urban-3d';
 import { fullPath, planRoutes } from '../../src/routing/plan';
 import { restroomDoor } from '../../src/routing/walk';
 
 const ROOT = resolve(import.meta.dirname, '../..');
 const SOUTH_GLB_PATH = resolve(ROOT, 'public/models/urban-south-stage6.glb');
 const WEST_GLB_PATH = resolve(ROOT, 'public/models/urban-west-stage6.glb');
+const NORTH_GLB_PATH = resolve(ROOT, 'public/models/urban-north-stage6.glb');
 
-const ORIGINAL_IDS = [711, 713, 722, 724, 725, 728, 735, 738, 743];
-// Representative Stage 6 South + 10 West hotels (single, provisional split, OSM-level, OSM-footprint, pin-only #2441/#2206)
+const ORIGINAL_IDS = [701, 705, 706, 710, 711, 713, 716, 720, 722, 724, 725, 728, 732, 734, 735, 738, 743];
 const SAMPLE_SOUTH_IDS = [2402, 2403, 2411, 2420, 2431, 2441, 2449, 2458, 2466, 2475];
 const SAMPLE_WEST_IDS = [738, 743, 2203, 2206, 2216, 2218, 2219, 2224, 2226, 2232, 2237, 2248, 2253];
+const SAMPLE_NORTH_IDS = [701, 705, 706, 710, 716, 720, 732, 734, 2104, 2110, 2112, 2127, 2157, 2165];
 
 function insideRing(lng: number, lat: number, ring: readonly (readonly [number, number])[]): boolean {
   let c = false;
@@ -43,24 +44,32 @@ function insideRing(lng: number, lat: number, ring: readonly (readonly [number, 
   return c;
 }
 
-describe('Stage 6 Zones 1 & 2 (South + West) urban slice & 3D pick verification', () => {
-  it('A7 gate reveals 96 owner-approved South+West hotels (90 footprinted, 6 pin-only) and keeps 34 unapproved hotels, food, and wheelchair hidden', () => {
-    expect(APPROVED_BUILDINGS).toHaveLength(96);
+describe('Stage 6 Zones 1–3 (South + West + North) urban slice & 3D pick verification', () => {
+  it('A7 gate reveals 157 owner-approved South+West+North hotels (149 footprinted, 8 pin-only) and hides 5 unapproved hotels, food, and wheelchair', () => {
+    expect(APPROVED_BUILDINGS).toHaveLength(157);
     expect(APPROVED_BUILDINGS.filter((b) => b.zone === 'south')).toHaveLength(57);
     expect(APPROVED_BUILDINGS.filter((b) => b.zone === 'west')).toHaveLength(39);
-    expect(APPROVED_FOOTPRINT_BUILDINGS).toHaveLength(90);
+    expect(APPROVED_BUILDINGS.filter((b) => b.zone === 'north')).toHaveLength(61);
+    expect(APPROVED_FOOTPRINT_BUILDINGS).toHaveLength(149);
     expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.zone === 'south')).toHaveLength(52);
     expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.zone === 'west')).toHaveLength(38);
-    expect(APPROVED_BUILDINGS.filter((b) => !b.hasFootprint)).toHaveLength(6);
-    expect(APPROVED_HOTEL_IDS.size).toBe(96);
+    expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.zone === 'north')).toHaveLength(59);
+    expect(APPROVED_BUILDINGS.filter((b) => !b.hasFootprint)).toHaveLength(8);
+    expect(APPROVED_HOTEL_IDS.size).toBe(157);
     for (const id of ORIGINAL_IDS) expect(APPROVED_HOTEL_IDS.has(id)).toBe(true);
+
+    // Unmatched South/West/North & duplicate #171 are never duplicated as separate POIs; #171 sits in 734's alias.
     expect(POI_BY_ID.has(2244)).toBe(false);
+    expect(POI_BY_ID.has(2166)).toBe(false);
+    expect(POI_BY_ID.has(2167)).toBe(false);
+    expect(POI_BY_ID.has(2171)).toBe(false);
+    expect((POI_BY_ID.get(734)?.alias ?? '').split(/\s+/)).toContain('171');
 
     const hotels = POIS.filter((p) => p.subCategory === 'hotel');
-    expect(hotels).toHaveLength(130);
+    expect(hotels).toHaveLength(162);
 
     const visibleHotels = hotels.filter((p) => !isHidden(p));
-    expect(visibleHotels).toHaveLength(96);
+    expect(visibleHotels).toHaveLength(157);
     for (const h of hotels) {
       expect(isApprovedHotel(h.id)).toBe(APPROVED_HOTEL_IDS.has(h.id));
     }
@@ -72,6 +81,7 @@ describe('Stage 6 Zones 1 & 2 (South + West) urban slice & 3D pick verification'
   it.each([
     ['south', SOUTH_GLB_PATH, 52],
     ['west', WEST_GLB_PATH, 38],
+    ['north', NORTH_GLB_PATH, 59],
   ] as readonly [UrbanZoneId, string, number][])(
     'A9 provenance guard validates urban-%s-stage6.glb under <= 250 KiB gzip with %d tiered buildings',
     (zone, glbPath, expectedCount) => {
@@ -86,7 +96,7 @@ describe('Stage 6 Zones 1 & 2 (South + West) urban slice & 3D pick verification'
       expect(res.maxHeightM).toBeGreaterThanOrEqual(10);
       expect(res.maxHeightM).toBeLessThanOrEqual(72);
 
-      const otherZone: UrbanZoneId = zone === 'south' ? 'west' : 'south';
+      const otherZone: UrbanZoneId = zone === 'south' ? 'west' : zone === 'west' ? 'north' : 'south';
       expect(validateUrbanGlb(gltf, otherZone).ok).toBe(false);
 
       const accs = (gltf as { accessors: { min?: number[]; max?: number[] }[] }).accessors;
@@ -123,11 +133,11 @@ describe('Stage 6 Zones 1 & 2 (South + West) urban slice & 3D pick verification'
     },
   );
 
-  it('height provenance & zero Haram fence intrusion across all 90 footprinted South+West hotels', () => {
+  it('height provenance & zero Haram fence intrusion across all 149 footprinted South+West+North hotels', () => {
     const est = APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.heightSource === 'estimated_display_only');
     const osm = APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.heightSource === 'osm_levels');
     expect(osm.length).toBe(4);
-    expect(est.length).toBe(86);
+    expect(est.length).toBe(145);
     for (const b of est) {
       expect(b.levels).toBeNull();
       expect(b.displayFloors).toBeGreaterThanOrEqual(10);
@@ -145,13 +155,15 @@ describe('Stage 6 Zones 1 & 2 (South + West) urban slice & 3D pick verification'
     }
   });
 
-  it('A8 obstruction fade dims South looking North (0°) and West looking East (90°) independently', () => {
+  it('A8 obstruction fade dims South looking North (0°), West looking East (90°), and North looking South (180°) independently', () => {
     expect(urbanOpacityForCamera(0, 0, 'south')).toBe(1);
     expect(urbanOpacityForCamera(22, 15, 'south')).toBe(1);
     expect(urbanOpacityForCamera(180, 45, 'south')).toBe(1);
     expect(urbanOpacityForCamera(90, 50, 'south')).toBe(1);
     expect(urbanOpacityForCamera(0, 50, 'west')).toBe(1);
     expect(urbanOpacityForCamera(-90, 50, 'west')).toBe(1);
+    expect(urbanOpacityForCamera(0, 50, 'north')).toBe(1);
+    expect(urbanOpacityForCamera(90, 50, 'north')).toBe(1);
 
     for (const [b, p] of [
       [0, 45],
@@ -174,11 +186,22 @@ describe('Stage 6 Zones 1 & 2 (South + West) urban slice & 3D pick verification'
       expect(a).toBeGreaterThanOrEqual(0.25);
       expect(a).toBeLessThanOrEqual(0.35);
     }
+
+    for (const [b, p] of [
+      [180, 45],
+      [-180, 50],
+      [150, 48],
+      [-155, 35],
+    ]) {
+      const a = urbanOpacityForCamera(b, p, 'north');
+      expect(a).toBeGreaterThanOrEqual(0.25);
+      expect(a).toBeLessThanOrEqual(0.35);
+    }
   });
 
-  it('pickApprovedBuildingRay hits roofs, upper facades, ignores sky/Haram, and picks nearest occluded tower', () => {
-    // 1. Vertical downward ray onto South tower 2449 & West tower 2224
-    for (const pid of [2449, 2224]) {
+  it('pickApprovedBuildingRay hits roofs, upper facades across South+West+North, ignores sky/Haram, and picks nearest occluded tower', () => {
+    // 1. Vertical downward ray onto South tower 2449, West tower 2224, & North tower 701
+    for (const pid of [2449, 2224, 701]) {
       const b = APPROVED_FOOTPRINT_BUILDINGS.find((x) => x.poiId === pid)!;
       const [mx, mz] = toModelMetres([b.center[1], b.center[0]]);
       const hitRoof = pickApprovedBuildingRay([mx, 200, mz], [0, -1, 0]);
@@ -188,24 +211,38 @@ describe('Stage 6 Zones 1 & 2 (South + West) urban slice & 3D pick verification'
       expect(pickApprovedBuildingRay([mx, b.heightM + 10, mz], [0, 1, 0])).toBeNull();
     }
 
-    // 2. Angled camera ray from unobstructed East courtyard hitting upper facade (y = 0.65 * heightM) of West tower 2224
+    // 2. Angled camera rays from unobstructed Haram courtyard hitting upper facades (y = 0.65 * heightM) of West 2224 & North 701
     const b2224 = APPROVED_FOOTPRINT_BUILDINGS.find((x) => x.poiId === 2224)!;
-    const [tx, tz] = toModelMetres([b2224.center[1], b2224.center[0]]);
-    const targetY = b2224.heightM * 0.65;
-    const ox = tx + 160;
-    const oy = 75;
-    const oz = tz + 40;
-    const dx = tx - ox;
-    const dy = targetY - oy;
-    const dz = tz - oz;
-    const len = Math.hypot(dx, dy, dz);
-    expect(pickApprovedBuildingRay([ox, oy, oz], [dx / len, dy / len, dz / len])?.poiId).toBe(2224);
+    const [wx, wz] = toModelMetres([b2224.center[1], b2224.center[0]]);
+    {
+      const ox = wx + 160;
+      const oy = 75;
+      const oz = wz + 40;
+      const dx = wx - ox;
+      const dy = b2224.heightM * 0.65 - oy;
+      const dz = wz - oz;
+      const len = Math.hypot(dx, dy, dz);
+      expect(pickApprovedBuildingRay([ox, oy, oz], [dx / len, dy / len, dz / len])?.poiId).toBe(2224);
+    }
+
+    const b701 = APPROVED_FOOTPRINT_BUILDINGS.find((x) => x.poiId === 701)!;
+    const [nx, nz] = toModelMetres([b701.center[1], b701.center[0]]);
+    {
+      const ox = nx;
+      const oy = 75;
+      const oz = nz + 140;
+      const dx = nx - ox;
+      const dy = b701.heightM * 0.65 - oy;
+      const dz = nz - oz;
+      const len = Math.hypot(dx, dy, dz);
+      expect(pickApprovedBuildingRay([ox, oy, oz], [dx / len, dy / len, dz / len])?.poiId).toBe(701);
+    }
 
     // 3. Courtyard center straight down misses all buildings
     const [hx, hz] = toModelMetres([39.6111, 24.4673]);
     expect(pickApprovedBuildingRay([hx, 200, hz], [0, -1, 0])).toBeNull();
 
-    // 4. Occlusion: ray from east through #226 (2226) toward #228 (2228) behind it picks closer #226 first
+    // 4. Occlusion: ray through #226 (2226) toward #228 (2228) behind it picks closer #226 first
     const b226 = APPROVED_FOOTPRINT_BUILDINGS.find((x) => x.poiId === 2226)!;
     const b228 = APPROVED_FOOTPRINT_BUILDINGS.find((x) => x.poiId === 2228)!;
     const [x226, z226] = toModelMetres([b226.center[1], b226.center[0]]);
@@ -218,11 +255,11 @@ describe('Stage 6 Zones 1 & 2 (South + West) urban slice & 3D pick verification'
     expect(pickApprovedBuildingRay([camX, 15, camZ], [rdx / rlen, 0, rdz / rlen])?.poiId).toBe(2226);
   });
 
-  it('walk and drive routes to original + representative South & 10 West hotels end <= 3 m from entrance with 0 polygon intersections', async () => {
+  it('walk and drive routes to original + representative South, West & North hotels end <= 3 m from entrance with 0 polygon intersections', async () => {
     const plazaStart: [number, number] = [24.46605, 39.6095];
     const carStart: [number, number] = [24.4605, 39.6085];
 
-    for (const id of [...ORIGINAL_IDS, ...SAMPLE_SOUTH_IDS, ...SAMPLE_WEST_IDS]) {
+    for (const id of [...ORIGINAL_IDS, ...SAMPLE_SOUTH_IDS, ...SAMPLE_WEST_IDS, ...SAMPLE_NORTH_IDS]) {
       const b = APPROVED_BUILDINGS.find((x) => x.poiId === id)!;
       const poi = POI_BY_ID.get(id)!;
       expect(b, `approved ${id}`).toBeDefined();

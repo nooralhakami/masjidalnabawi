@@ -28,14 +28,14 @@ test.describe('filters', () => {
   // The live app's counts (tests/e2e/app.spec.ts there), in the order of the pills. Hotels (43) and
   // restaurants (44) are hidden with their pills until the owner adds them again (2026-11-04).
   const EXPECTED: [string, number][] = [
-    ['all', 333],
+    ['all', 394],
     ['gates', 132],
     ['women', 35],
     ['toilets', 40],
     // Historic sites and car parks after the restrooms (owner, 2026-10-17).
     ['historic', 17],
     ['parking', 13],
-    ['hotels', 96],
+    ['hotels', 157],
     ['shopping', 15],
     ['landmarks', 39],
     ['emergency', 9],
