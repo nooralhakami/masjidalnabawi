@@ -289,7 +289,7 @@ describe('Stage 6 Zones 1–4 (South + West + North + Southwest) urban slice & 3
     expect(pickApprovedBuildingRay([camX, 15, camZ], [rdx / rlen, 0, rdz / rlen])?.poiId).toBe(2226);
 
     // 5. Urban3DLayer tracks selected / routed hotel POI ID for 3D warm amber highlight
-    const layer = new Urban3DLayer(sceneLight({ altitude: 45, azimuth: 180 }));
+    const layer = new Urban3DLayer(sceneLight({ elevation: 45, azimuth: 180 }));
     expect(layer.getSelectedPoiId()).toBeNull();
     layer.setSelectedPoiId(2371);
     expect(layer.getSelectedPoiId()).toBe(2371);
