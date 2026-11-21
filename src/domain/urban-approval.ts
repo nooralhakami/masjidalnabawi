@@ -231,9 +231,9 @@ export function pathHitsApprovedBuilding(path: readonly LatLng[]): boolean {
  * round its exterior outline so walk and last-mile kerb legs never intersect a building polygon.
  */
 export function clearApprovedBuildings(path: readonly LatLng[], clearanceM = 1.2): LatLng[] {
-  if (path.length < 2 || POLYS_M.length === 0) return [...path];
+  if (path.length < 2 || POLYS_M.length === 0 || !pathHitsApprovedBuilding(path)) return [...path];
   let pts = path.map(toWalkMetres);
-  for (let pass = 0; pass < 3; pass++) {
+  for (let pass = 0; pass < 2; pass++) {
     let changed = false;
     for (const poly of POLYS_M) {
       if (pointInRing(pts[0], poly.ring) || pointInRing(pts[pts.length - 1], poly.ring)) continue;
