@@ -636,7 +636,7 @@ export class MapEngine {
       this.glow = null;
       for (const id of [
         ...NEAR_IMAGERY.map(([near]) => near),
-        'urban-south-stage5-3d',
+        'urban-south-3d',
         'urban-south-streets-line',
         'alharamain-3d-models',
         'mosque-interior-3d',
@@ -862,7 +862,7 @@ export class MapEngine {
       'alharamain-3d-plaza',
       'alharamain-3d-ground',
       'saqifah-and-surroundings-3d',
-      'urban-south-stage5-3d',
+      'urban-south-3d',
       'urban-south-streets-line',
       'saqifah-2d',
       'interior-prayer-areas',
