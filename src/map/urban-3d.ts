@@ -249,8 +249,8 @@ void main() {
 
   vec3 sDir = normalize(u_sunDir);
   float ndotl = max(dot(n, sDir), 0.0);
-  float hemi = 0.20 * (0.5 + 0.5 * n.y);
-  vec3 lit = baseRgb * (u_ambient * (0.85 + hemi) + u_sun * (0.82 * ndotl + 0.14));
+  float hemi = 0.18 * (0.5 + 0.5 * n.y);
+  vec3 lit = baseRgb * (u_ambient * (0.68 + hemi) + u_sun * (0.95 * ndotl + 0.08));
 
   // Fresnel sky reflection + solar specular on building curtain/window glass
   if (u_meta.w > 0.5 && glassMask > 0.22) {
@@ -261,13 +261,13 @@ void main() {
 
     float skyT = clamp(R.y * 0.5 + 0.5, 0.0, 1.0);
     float golden = clamp(u_sun.r * 1.4 - u_sun.b * 1.6, 0.0, 1.0);
-    vec3 daySky = mix(vec3(0.84, 0.82, 0.78), vec3(0.32, 0.56, 0.86), skyT);
+    vec3 daySky = mix(vec3(0.84, 0.82, 0.78), vec3(0.20, 0.46, 0.78), skyT);
     vec3 goldSky = mix(vec3(0.95, 0.60, 0.34), vec3(0.26, 0.42, 0.68), skyT);
     vec3 nightSky = mix(vec3(0.22, 0.19, 0.24), vec3(0.03, 0.06, 0.14), skyT);
     vec3 reflSky = mix(mix(daySky, goldSky, golden), nightSky, u_night);
 
     float spec = pow(max(dot(R, sDir), 0.0), 48.0);
-    lit = mix(lit, reflSky, glassMask * fresnel * 0.72) + u_sun * (spec * 0.90 * glassMask);
+    lit = mix(lit, reflSky, glassMask * fresnel * 0.65) + u_sun * (spec * 0.90 * glassMask);
   }
 
   // Night architectural lighting: randomized room windows + commercial arcade / canopy / crown glow
@@ -286,9 +286,9 @@ void main() {
     }
   }
 
-  // Subtle atmospheric haze matching SceneLight fog beyond 450 m
+  // Subtle atmospheric haze only at long distance (> 1.2 km), keeping near/mid facades crisp like haram-3d
   float dist = length(u_eye - v_worldPos);
-  float fogF = clamp((dist - 450.0) / 1450.0, 0.0, 0.62);
+  float fogF = smoothstep(1200.0, 4800.0, dist) * 0.45;
   lit = mix(lit, u_fog, fogF);
 
   fragColor = vec4(clamp(lit, 0.0, 1.0), u_color.a);
