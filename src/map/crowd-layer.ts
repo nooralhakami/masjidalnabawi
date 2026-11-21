@@ -1,9 +1,22 @@
 import type { CustomLayerInterface, CustomRenderMethodInput, Map as MLMap } from 'maplibre-gl';
+import {
+  ARCHETYPE_COUNT,
+  assignCrowdProfiles,
+  type CrowdQualityTier,
+  CrowdPerfGuard,
+  type CrowdProfileBatch,
+  type CrowdProfileOptions,
+  capsForTier,
+  parseCrowdQualityOverride,
+  parseCrowdSeasonOverride,
+  resolveInitialCrowdTier,
+} from '../domain/crowd-profiles';
+import { buildBoneAnimationTexture, CROWD_CLIP } from '../domain/crowd-rig';
 import type { PrayerDemoOverride } from '../domain/prayer-session';
 import { Flows } from './crowd-flows';
 import { Crowd, POSTURE_CODE, Worshippers, worshipperPose } from './crowd-sim';
 import { crowdInput } from './crowd-world';
-import { frameMatrix, metresFromOrigin, mulMat4 } from './glb-layer';
+import { frameMatrix, metresFromOrigin, mulMat4, parseGlbBuffer } from './glb-layer';
 import type { SceneLight } from './scene-light';
 
 /** How many walk the courtyards at once, and from which zoom they are shown (and walk). */
@@ -11,6 +24,7 @@ export const CROWD_SIZE = 500;
 export const CROWD_MIN_ZOOM = 17;
 /** The walk is drawn about 30 times a second: smooth enough, and kinder to a phone than 60. */
 const FRAME_MS = 33;
+const CROWD_KIT_URL = './models/haram-crowd-kit.glb';
 
 const VERT_SRC = `#version 300 es
 precision highp float;
@@ -134,6 +148,128 @@ void main() {
   lit += u_sun * rim * (v_mat == 1.0 ? 0.08 : 0.05);
   // At night the plazas' lamps light people from above, near white.
   lit += v_color * vec3(0.42, 0.41, 0.38) * u_night * (0.6 + 0.4 * max(n.y, 0.0));
+  fragColor = vec4(lit, 1.0);
+}
+`;
+
+const SKINNED_VERT_SRC = `#version 300 es
+precision highp float;
+layout(location = 0) in vec3 a_pos;
+layout(location = 1) in vec3 a_normal;
+layout(location = 2) in vec2 a_uv;
+layout(location = 3) in vec4 a_mask;    // RGBA dye mask: r=robe, g=head, b=skin, a=fixed atlas
+layout(location = 4) in vec4 a_joints;  // up to 4 bone indices (0..11)
+layout(location = 5) in vec4 a_weights; // normalized weights summing to 1.0
+layout(location = 6) in vec4 a_inst;    // x, z, heading, gait phase
+layout(location = 7) in vec4 a_robe;    // robe tint rgb, heightM
+layout(location = 8) in vec4 a_head;    // head tint rgb, woman + skin * 0.49
+layout(location = 9) in vec4 a_anim;    // clip (<0 uses u_sessionClip), framePhase (0..16), 0, 0
+
+uniform mat4 u_mvp;
+uniform sampler2D u_boneTex;
+uniform float u_sessionClip;
+uniform float u_breathPhase;
+
+out vec3 v_normal;
+out vec2 v_uv;
+out vec4 v_mask;
+out vec3 v_robe;
+out vec3 v_head;
+out vec3 v_skin;
+out float v_y;
+
+void accumBone(int j, float w, int row0, int row1, float alpha, vec4 p4, vec3 n3, inout vec3 sp, inout vec3 sn) {
+  if (w <= 0.001) return;
+  int bx = j * 3;
+  vec4 r0 = mix(texelFetch(u_boneTex, ivec2(bx, row0), 0), texelFetch(u_boneTex, ivec2(bx, row1), 0), alpha);
+  vec4 r1 = mix(texelFetch(u_boneTex, ivec2(bx + 1, row0), 0), texelFetch(u_boneTex, ivec2(bx + 1, row1), 0), alpha);
+  vec4 r2 = mix(texelFetch(u_boneTex, ivec2(bx + 2, row0), 0), texelFetch(u_boneTex, ivec2(bx + 2, row1), 0), alpha);
+  sp += w * vec3(dot(r0, p4), dot(r1, p4), dot(r2, p4));
+  sn += w * vec3(dot(r0.xyz, n3), dot(r1.xyz, n3), dot(r2.xyz, n3));
+}
+
+void main() {
+  if (a_inst.y > 1e5) {
+    gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
+    return;
+  }
+  int clip = a_anim.x < -0.5 ? int(u_sessionClip + 0.5) : int(a_anim.x + 0.5);
+  float fRaw = (clip == 1 || clip == 8) ? (a_inst.w / 6.2831853) * 16.0 : (a_anim.y + u_breathPhase);
+  float fWrapped = mod(fRaw, 16.0);
+  int f0 = int(floor(fWrapped));
+  int f1 = f0 == 15 ? 0 : f0 + 1;
+  float alpha = fract(fWrapped);
+  int row0 = clip * 16 + f0;
+  int row1 = clip * 16 + f1;
+
+  vec4 p4 = vec4(a_pos, 1.0);
+  vec3 sp = vec3(0.0);
+  vec3 sn = vec3(0.0);
+  accumBone(int(a_joints.x + 0.5), a_weights.x, row0, row1, alpha, p4, a_normal, sp, sn);
+  accumBone(int(a_joints.y + 0.5), a_weights.y, row0, row1, alpha, p4, a_normal, sp, sn);
+  accumBone(int(a_joints.z + 0.5), a_weights.z, row0, row1, alpha, p4, a_normal, sp, sn);
+  accumBone(int(a_joints.w + 0.5), a_weights.w, row0, row1, alpha, p4, a_normal, sp, sn);
+
+  float s = a_robe.w / 1.75;
+  float xzScale = mix(1.0, s, 0.65);
+  vec3 q = sp * vec3(xzScale, s, xzScale);
+  float c = cos(a_inst.z);
+  float snRot = sin(a_inst.z);
+  vec3 world = vec3(a_inst.x + q.x * c - q.z * snRot, q.y, a_inst.y + q.x * snRot + q.z * c);
+  gl_Position = u_mvp * vec4(world, 1.0);
+
+  v_normal = vec3(sn.x * c - sn.z * snRot, sn.y, sn.x * snRot + sn.z * c);
+  v_uv = a_uv;
+  v_mask = a_mask;
+  v_robe = a_robe.rgb;
+  v_head = a_head.rgb;
+  float skinT = clamp(fract(a_head.w) * 2.0, 0.0, 1.0);
+  v_skin = mix(vec3(0.86, 0.68, 0.55), vec3(0.36, 0.24, 0.17), skinT);
+  v_y = clamp(sp.y / 1.75, 0.0, 1.0);
+}
+`;
+
+const SKINNED_FRAG_SRC = `#version 300 es
+precision highp float;
+in vec3 v_normal;
+in vec2 v_uv;
+in vec4 v_mask;
+in vec3 v_robe;
+in vec3 v_head;
+in vec3 v_skin;
+in float v_y;
+
+uniform sampler2D u_atlas;
+uniform vec3 u_sunDir;
+uniform vec3 u_sun;
+uniform vec3 u_ambient;
+uniform float u_night;
+
+out vec4 fragColor;
+
+void main() {
+  vec3 tex = texture(u_atlas, v_uv).rgb;
+  vec3 baseCol = tex;
+  if (v_mask.r > 0.5) {
+    baseCol = tex * v_robe;
+  } else if (v_mask.g > 0.5) {
+    float whiteGhutra = step(0.99, v_head.b);
+    vec3 ghutraCol = vec3(0.96, 0.95, 0.92) * (0.88 + 0.12 * tex.r);
+    baseCol = mix(tex * v_head, ghutraCol, whiteGhutra);
+  } else if (v_mask.b > 0.5) {
+    baseCol = v_skin;
+  }
+
+  vec3 n = normalize(v_normal);
+  vec3 l = normalize(u_sunDir);
+  float direct = max((dot(n, l) + 0.22) / 1.22, 0.0);
+  float sky = 0.74 + 0.26 * n.y;
+  float ao = mix(0.66, 1.0, smoothstep(0.0, 0.42, v_y));
+  vec3 bounce = vec3(0.9, 0.86, 0.8) * 0.12 * max(-n.y, 0.0);
+  vec3 lit = baseCol * (u_ambient * sky * ao + u_sun * direct * mix(0.82, 1.0, ao) + bounce);
+  float rim = pow(1.0 - abs(n.y), 3.0) * max(dot(n, l), 0.0);
+  lit += u_sun * rim * (v_mask.b > 0.5 ? 0.07 : 0.045);
+  lit += baseCol * vec3(0.42, 0.41, 0.38) * u_night * (0.6 + 0.4 * max(n.y, 0.0));
   fragColor = vec4(lit, 1.0);
 }
 `;
@@ -440,89 +576,117 @@ const MAX_WORSHIPPERS = 1200;
  * are women (owner, 2026-11-07: more women about their areas). A worshipper's sex, and a child's
  * smaller height, come from the place it was laid out at (`opts`).
  */
-export function looks(n: number, seed: number, opts: { women?: ArrayLike<number>; scale?: ArrayLike<number> } = {}): { data: Float32Array; women: Uint8Array } {
-  let s = seed;
-  const r = () => {
-    s = (s * 1664525 + 1013904223) >>> 0;
-    return s / 4294967296;
+export function looks(
+  n: number,
+  seed: number,
+  opts: CrowdProfileOptions = {},
+): CrowdProfileBatch {
+  return assignCrowdProfiles(n, seed, opts);
+}
+
+interface SkinnedMeshGpu {
+  vao: WebGLVertexArrayObject;
+  buffers: WebGLBuffer[];
+  indexCount: number;
+  indexType: number;
+}
+
+interface CrowdKitGpu {
+  lod0: SkinnedMeshGpu[];
+  lod1: SkinnedMeshGpu[];
+  lod2: SkinnedMeshGpu;
+  atlasTex: WebGLTexture;
+  boneTex: WebGLTexture;
+}
+
+const INSTANCE_FLOATS = 16; // inst(4) + robe(4) + head(4) + anim(4)
+const INSTANCE_STRIDE = INSTANCE_FLOATS * 4;
+
+/** Maps simulation/session postures to bone-rig clip codes. */
+function clipForPostureCode(poseIdx: number, hasRehal: boolean, index: number): number {
+  if (hasRehal) return CROWD_CLIP.quran_sitting;
+  if (poseIdx === 1) return CROWD_CLIP.ruku;
+  if (poseIdx === 2) return CROWD_CLIP.sujud;
+  if (poseIdx === 3) return CROWD_CLIP.juloos;
+  return index % 5 === 0 ? CROWD_CLIP.dua : CROWD_CLIP.stand;
+}
+
+/** Reads an accessor slice cleanly from the parsed GLB payload. */
+function sliceAccessor(
+  gltf: { accessors: { bufferView: number; byteOffset?: number; componentType: number; count: number; type: string }[]; bufferViews: { byteOffset?: number; byteLength: number }[] },
+  bin: Uint8Array,
+  accIdx: number,
+): Uint8Array {
+  const acc = gltf.accessors[accIdx];
+  const bv = gltf.bufferViews[acc.bufferView];
+  const compSize = acc.componentType === 5126 ? 4 : acc.componentType === 5123 ? 2 : 1;
+  const comps = acc.type === 'VEC4' ? 4 : acc.type === 'VEC3' ? 3 : acc.type === 'VEC2' ? 2 : 1;
+  const start = (bv.byteOffset ?? 0) + (acc.byteOffset ?? 0);
+  const len = acc.count * compSize * comps;
+  return bin.subarray(start, start + len);
+}
+
+function compileShaderProgram(gl: WebGL2RenderingContext, vertSrc: string, fragSrc: string): WebGLProgram {
+  const compile = (type: number, src: string) => {
+    const sh = gl.createShader(type)!;
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    return sh;
   };
-  const pick = <T>(list: readonly T[]): T => list[Math.floor(r() * list.length)];
-  const out = new Float32Array(n * 8);
-  const women = new Uint8Array(n);
-  for (let a = 0; a < n; a++) {
-    const kind = r();
-    // 0 a man in a thobe, 1 a woman in an abaya, 2 a pilgrim in coloured clothes.
-    const branch = opts.women ? (r() < 0.18 ? 2 : opts.women[a] ? 1 : 0) : kind < 0.42 ? 0 : kind < 0.82 ? 1 : 2;
-    let robe: number[];
-    let head: number[];
-    let woman = 0;
-    let height: number;
-    if (branch === 0) {
-      // A man in a white thobe (some off-white or light grey), with a white or red shemagh.
-      const w = 0.88 + r() * 0.08;
-      robe = pick([
-        [w, w, w * 0.97],
-        [w, w, w * 0.97],
-        [w * 0.95, w * 0.93, w * 0.86],
-        [w * 0.86, w * 0.87, w * 0.88],
-      ]);
-      head = pick([
-        [0.95, 0.95, 0.93],
-        [0.95, 0.95, 0.93],
-        [0.76, 0.22, 0.24],
-        [0.8, 0.3, 0.3],
-      ]);
-      height = 1.66 + r() * 0.18;
-    } else if (branch === 1) {
-      // A woman in a black abaya and hijab; some in dark blue, beige or brown.
-      woman = 1;
-      const dark = r() < 0.75;
-      robe = dark
-        ? pick([
-            [0.05, 0.05, 0.06],
-            [0.07, 0.07, 0.08],
-            [0.06, 0.07, 0.11],
-          ])
-        : pick([
-            [0.6, 0.5, 0.4],
-            [0.43, 0.34, 0.28],
-            [0.3, 0.31, 0.36],
-          ]);
-      head = dark
-        ? [0.04, 0.04, 0.05]
-        : pick([
-            [0.64, 0.54, 0.44],
-            [0.7, 0.58, 0.6],
-            [0.07, 0.07, 0.08],
-          ]);
-      height = 1.54 + r() * 0.16;
-    } else {
-      // Pilgrims in coloured clothes.
-      robe = pick([
-        [0.52, 0.64, 0.78],
-        [0.4, 0.56, 0.46],
-        [0.64, 0.6, 0.53],
-        [0.56, 0.56, 0.58],
-        [0.78, 0.6, 0.64],
-      ]);
-      woman = opts.women ? (opts.women[a] ? 1 : 0) : r() < 0.45 ? 1 : 0;
-      head = woman
-        ? pick([
-            [0.92, 0.92, 0.9],
-            [0.14, 0.14, 0.16],
-            [0.58, 0.48, 0.4],
-          ])
-        : pick([
-            [0.94, 0.94, 0.92],
-            [0.2, 0.2, 0.22],
-          ]);
-      height = woman ? 1.52 + r() * 0.14 : 1.62 + r() * 0.16;
-    }
-    women[a] = woman;
-    // A child is drawn at its place's scale (0.62, `prayer-session`), a grown worshipper at 1.
-    out.set([...robe, height * (opts.scale?.[a] ?? 1), ...head, woman + r() * 0.49], a * 8);
+  const prog = gl.createProgram()!;
+  const vs = compile(gl.VERTEX_SHADER, vertSrc);
+  const fs = compile(gl.FRAGMENT_SHADER, fragSrc);
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fs);
+  gl.linkProgram(prog);
+  gl.deleteShader(vs);
+  gl.deleteShader(fs);
+  return prog;
+}
+
+/** Packs active people grouped into contiguous `archetype` (`0..6`) buckets in `out` (`16` floats/person). */
+function packBuckets(
+  count: number,
+  archetypes: Uint8Array,
+  instSrc: Float32Array,
+  lookSrc: Float32Array,
+  getAnim: (a: number) => [number, number],
+  out: Float32Array,
+  bucketOffsets: Int32Array,
+  bucketCounts: Int32Array,
+): number {
+  bucketCounts.fill(0);
+  for (let a = 0; a < count; a++) bucketCounts[archetypes[a]]++;
+  let cursor = 0;
+  for (let arch = 0; arch < ARCHETYPE_COUNT; arch++) {
+    bucketOffsets[arch] = cursor;
+    cursor += bucketCounts[arch];
   }
-  return { data: out, women };
+  const writeIdx = bucketOffsets.slice();
+  for (let a = 0; a < count; a++) {
+    const arch = archetypes[a];
+    const dst = writeIdx[arch]++ * INSTANCE_FLOATS;
+    const i4 = a * 4;
+    const l8 = a * 8;
+    const [clip, fPhase] = getAnim(a);
+    out[dst] = instSrc[i4];
+    out[dst + 1] = instSrc[i4 + 1];
+    out[dst + 2] = instSrc[i4 + 2];
+    out[dst + 3] = instSrc[i4 + 3];
+    out[dst + 4] = lookSrc[l8];
+    out[dst + 5] = lookSrc[l8 + 1];
+    out[dst + 6] = lookSrc[l8 + 2];
+    out[dst + 7] = lookSrc[l8 + 3];
+    out[dst + 8] = lookSrc[l8 + 4];
+    out[dst + 9] = lookSrc[l8 + 5];
+    out[dst + 10] = lookSrc[l8 + 6];
+    out[dst + 11] = lookSrc[l8 + 7];
+    out[dst + 12] = clip;
+    out[dst + 13] = fPhase;
+    out[dst + 14] = 0;
+    out[dst + 15] = 0;
+  }
+  return count;
 }
 
 /**
@@ -570,11 +734,42 @@ export class CrowdLayer implements CustomLayerInterface {
   private rehalCount = 0;
   private rehalData = new Float32Array(MAX_WORSHIPPERS * 4);
 
+  // Stage 5 GPU-skinned glTF crowd kit + 12-bone rig + fabric atlas
+  private skinProgram: WebGLProgram | null = null;
+  private skinU: Record<string, WebGLUniformLocation | null> = {};
+  private kit: CrowdKitGpu | null = null;
+  private kitRequested = false;
+  private kitDisposed = false;
+  private walkerPackBuf: WebGLBuffer | null = null;
+  private walkerPackData = new Float32Array(CROWD_SIZE * INSTANCE_FLOATS);
+  private walkerBucketOffsets = new Int32Array(ARCHETYPE_COUNT);
+  private walkerBucketCounts = new Int32Array(ARCHETYPE_COUNT);
+  private worshipPackBuf: WebGLBuffer | null = null;
+  private worshipPackData = new Float32Array(MAX_WORSHIPPERS * INSTANCE_FLOATS);
+  private worshipBucketOffsets = new Int32Array(ARCHETYPE_COUNT);
+  private worshipBucketCounts = new Int32Array(ARCHETYPE_COUNT);
+  private worshipBatch: CrowdProfileBatch | null = null;
+  private season: ReturnType<typeof parseCrowdSeasonOverride>;
+  private perfGuard: CrowdPerfGuard;
+  private animClockStart = 0;
+  private lastTickWall = 0;
+
   /** `demo` names a prayer scene for a preview link (`?prayerDemo=fajr`); without it, the clock. */
   constructor(
     private light: SceneLight,
     private demo: PrayerDemoOverride | null = null,
-  ) {}
+  ) {
+    const search = typeof location !== 'undefined' ? location.search : '';
+    const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.season = parseCrowdSeasonOverride(search);
+    this.perfGuard = new CrowdPerfGuard(resolveInitialCrowdTier(reduced, parseCrowdQualityOverride(search)));
+    this.who = looks(CROWD_SIZE, 1234, { season: this.season });
+  }
+
+  /** Current adaptive quality tier (`'full' | 'lite' | 'static'`). */
+  get qualityTier(): CrowdQualityTier {
+    return this.perfGuard.current;
+  }
 
   /** Where the canopy and lamp columns stand: the walkers can be placed once they are known. */
   setColumns(lngLats: [number, number][]): void {
@@ -589,22 +784,18 @@ export class CrowdLayer implements CustomLayerInterface {
 
   onAdd(map: MLMap, gl: WebGL2RenderingContext): void {
     this.map = map;
-    const compile = (type: number, src: string) => {
-      const sh = gl.createShader(type)!;
-      gl.shaderSource(sh, src);
-      gl.compileShader(sh);
-      return sh;
-    };
-    const prog = gl.createProgram()!;
-    const vs = compile(gl.VERTEX_SHADER, VERT_SRC);
-    const fs = compile(gl.FRAGMENT_SHADER, FRAG_SRC);
-    gl.attachShader(prog, vs);
-    gl.attachShader(prog, fs);
-    gl.linkProgram(prog);
-    gl.deleteShader(vs);
-    gl.deleteShader(fs);
+    this.kitDisposed = false;
+    this.animClockStart = performance.now();
+
+    const prog = compileShaderProgram(gl, VERT_SRC, FRAG_SRC);
     this.program = prog;
     for (const name of ['u_mvp', 'u_sunDir', 'u_sun', 'u_ambient', 'u_night', 'u_posture']) this.u[name] = gl.getUniformLocation(prog, name);
+
+    const skinProg = compileShaderProgram(gl, SKINNED_VERT_SRC, SKINNED_FRAG_SRC);
+    this.skinProgram = skinProg;
+    for (const name of ['u_mvp', 'u_boneTex', 'u_atlas', 'u_sessionClip', 'u_breathPhase', 'u_sunDir', 'u_sun', 'u_ambient', 'u_night']) {
+      this.skinU[name] = gl.getUniformLocation(skinProg, name);
+    }
 
     const vao = gl.createVertexArray()!;
     gl.bindVertexArray(vao);
@@ -637,6 +828,17 @@ export class CrowdLayer implements CustomLayerInterface {
     gl.bindVertexArray(null);
     this.vao = vao;
     this.instBuf = inst;
+
+    const wPack = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, wPack);
+    gl.bufferData(gl.ARRAY_BUFFER, this.walkerPackData.byteLength, gl.DYNAMIC_DRAW);
+    this.walkerPackBuf = wPack;
+
+    const wrPack = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, wrPack);
+    gl.bufferData(gl.ARRAY_BUFFER, this.worshipPackData.byteLength, gl.DYNAMIC_DRAW);
+    this.worshipPackBuf = wrPack;
+
     // The biers: their own mesh and places; their look is constant (attributes 4 and 5 left off).
     const bvao = gl.createVertexArray()!;
     gl.bindVertexArray(bvao);
@@ -662,7 +864,7 @@ export class CrowdLayer implements CustomLayerInterface {
     gl.bindVertexArray(null);
     this.bierVao = bvao;
     this.bierInst = binst;
-    // The worshippers: the same figure, their own places, looks and pose.
+    // The worshippers: shadows and fallback body use their own places, looks and pose.
     const wvao = gl.createVertexArray()!;
     gl.bindVertexArray(wvao);
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
@@ -726,16 +928,26 @@ export class CrowdLayer implements CustomLayerInterface {
     gl.bindVertexArray(null);
     this.rehalVao = rvao;
     this.rehalInst = rinst;
-    this.buffers = [vbo, inst, look, bvbo, binst, wInst, wLook, wPose, rvbo, rinst];
+    this.buffers = [vbo, inst, look, wPack, wrPack, bvbo, binst, wInst, wLook, wPose, rvbo, rinst];
   }
 
   onRemove(_map: MLMap, gl: WebGL2RenderingContext): void {
+    this.kitDisposed = true;
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
     if (this.vao) gl.deleteVertexArray(this.vao);
     if (this.bierVao) gl.deleteVertexArray(this.bierVao);
     if (this.worshipVao) gl.deleteVertexArray(this.worshipVao);
     if (this.rehalVao) gl.deleteVertexArray(this.rehalVao);
+    if (this.kit) {
+      for (const m of [...this.kit.lod0, ...this.kit.lod1, this.kit.lod2]) {
+        gl.deleteVertexArray(m.vao);
+        for (const b of m.buffers) gl.deleteBuffer(b);
+      }
+      gl.deleteTexture(this.kit.atlasTex);
+      gl.deleteTexture(this.kit.boneTex);
+      this.kit = null;
+    }
     this.bierVao = null;
     this.bierInst = null;
     this.worshipVao = null;
@@ -744,25 +956,174 @@ export class CrowdLayer implements CustomLayerInterface {
     this.worshipLook = null;
     this.rehalVao = null;
     this.rehalInst = null;
+    this.walkerPackBuf = null;
+    this.worshipPackBuf = null;
     this.worshipCount = 0;
     this.rehalCount = 0;
     this.flows = null;
     for (const b of this.buffers) gl.deleteBuffer(b);
     if (this.program) gl.deleteProgram(this.program);
+    if (this.skinProgram) gl.deleteProgram(this.skinProgram);
     this.vao = null;
     this.program = null;
+    this.skinProgram = null;
     this.buffers = [];
     this.map = null;
   }
 
+  private ensureCrowdKit(gl: WebGL2RenderingContext): void {
+    if (this.kit || this.kitRequested || typeof fetch !== 'function') return;
+    this.kitRequested = true;
+    void fetch(CROWD_KIT_URL)
+      .then((res) => (res.ok ? res.arrayBuffer() : Promise.reject(new Error(`crowd kit HTTP ${res.status}`))))
+      .then((buf) => this.uploadCrowdKit(gl, buf))
+      .catch(() => {
+        // Fallback procedural mesh remains active if offline / unavailable.
+      });
+  }
+
+  private async uploadCrowdKit(gl: WebGL2RenderingContext, buffer: ArrayBuffer): Promise<void> {
+    const { gltf, bin } = parseGlbBuffer(buffer);
+    const imgMeta = gltf.images?.[0];
+    if (!imgMeta) return;
+    const imgBv = gltf.bufferViews[imgMeta.bufferView];
+    const imgBytes = bin.slice(imgBv.byteOffset ?? 0, (imgBv.byteOffset ?? 0) + imgBv.byteLength);
+    const bitmap = await createImageBitmap(new Blob([imgBytes], { type: imgMeta.mimeType }));
+    if (this.kitDisposed) {
+      bitmap.close();
+      return;
+    }
+
+    const atlasTex = gl.createTexture()!;
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, atlasTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmap);
+    bitmap.close();
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    const rig = buildBoneAnimationTexture();
+    const boneTex = gl.createTexture()!;
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, boneTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, rig.width, rig.height, 0, gl.RGBA, gl.FLOAT, rig.data);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    const uploadPrimitive = (meshName: string): SkinnedMeshGpu => {
+      const mDef = gltf.meshes.find((m) => m.name === meshName);
+      if (!mDef) throw new Error(`Missing mesh ${meshName} in crowd kit`);
+      const prim = mDef.primitives[0] as unknown as {
+        attributes: Record<string, number>;
+        indices: number;
+      };
+      const vao = gl.createVertexArray()!;
+      gl.bindVertexArray(vao);
+      const bufs: WebGLBuffer[] = [];
+
+      const bindAttr = (attrName: string, loc: number, size: number, type: number, normalized: boolean) => {
+        const b = gl.createBuffer()!;
+        gl.bindBuffer(gl.ARRAY_BUFFER, b);
+        gl.bufferData(gl.ARRAY_BUFFER, sliceAccessor(gltf, bin, prim.attributes[attrName]), gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(loc);
+        gl.vertexAttribPointer(loc, size, type, normalized, 0, 0);
+        bufs.push(b);
+      };
+
+      bindAttr('POSITION', 0, 3, gl.FLOAT, false);
+      bindAttr('NORMAL', 1, 3, gl.FLOAT, false);
+      bindAttr('TEXCOORD_0', 2, 2, gl.FLOAT, false);
+      bindAttr('COLOR_0', 3, 4, gl.UNSIGNED_BYTE, true);
+      bindAttr('JOINTS_0', 4, 4, gl.UNSIGNED_BYTE, false);
+      bindAttr('WEIGHTS_0', 5, 4, gl.UNSIGNED_BYTE, true);
+
+      // Enable instance slots 6..9 on VAO; buffer binding & byte offsets set per archetype batch
+      for (const loc of [6, 7, 8, 9]) {
+        gl.enableVertexAttribArray(loc);
+        gl.vertexAttribDivisor(loc, 1);
+      }
+
+      const idxAcc = gltf.accessors[prim.indices];
+      const ibo = gl.createBuffer()!;
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, sliceAccessor(gltf, bin, prim.indices), gl.STATIC_DRAW);
+      bufs.push(ibo);
+      gl.bindVertexArray(null);
+
+      return { vao, buffers: bufs, indexCount: idxAcc.count, indexType: idxAcc.componentType };
+    };
+
+    const lod0 = Array.from({ length: ARCHETYPE_COUNT }, (_, i) => uploadPrimitive(`Archetype_${i}_LOD0`));
+    const lod1 = Array.from({ length: ARCHETYPE_COUNT }, (_, i) => uploadPrimitive(`Archetype_${i}_LOD1`));
+    const lod2 = uploadPrimitive('Crowd_LOD2');
+
+    this.kit = { lod0, lod1, lod2, atlasTex, boneTex };
+    this.map?.triggerRepaint();
+  }
+
+  private drawSkinnedBuckets(
+    gl: WebGL2RenderingContext,
+    kit: CrowdKitGpu,
+    instBuf: WebGLBuffer,
+    offsets: Int32Array,
+    counts: Int32Array,
+    totalCount: number,
+    lodTier: 0 | 1 | 2,
+  ): void {
+    if (totalCount <= 0) return;
+    if (lodTier === 2) {
+      gl.bindVertexArray(kit.lod2.vao);
+      gl.bindBuffer(gl.ARRAY_BUFFER, instBuf);
+      gl.vertexAttribPointer(6, 4, gl.FLOAT, false, INSTANCE_STRIDE, 0);
+      gl.vertexAttribPointer(7, 4, gl.FLOAT, false, INSTANCE_STRIDE, 16);
+      gl.vertexAttribPointer(8, 4, gl.FLOAT, false, INSTANCE_STRIDE, 32);
+      gl.vertexAttribPointer(9, 4, gl.FLOAT, false, INSTANCE_STRIDE, 48);
+      gl.drawElementsInstanced(gl.TRIANGLES, kit.lod2.indexCount, kit.lod2.indexType, 0, totalCount);
+      return;
+    }
+    const meshes = lodTier === 0 ? kit.lod0 : kit.lod1;
+    for (let arch = 0; arch < ARCHETYPE_COUNT; arch++) {
+      const cnt = counts[arch];
+      if (cnt <= 0) continue;
+      const byteOff = offsets[arch] * INSTANCE_STRIDE;
+      const mesh = meshes[arch];
+      gl.bindVertexArray(mesh.vao);
+      gl.bindBuffer(gl.ARRAY_BUFFER, instBuf);
+      gl.vertexAttribPointer(6, 4, gl.FLOAT, false, INSTANCE_STRIDE, byteOff);
+      gl.vertexAttribPointer(7, 4, gl.FLOAT, false, INSTANCE_STRIDE, byteOff + 16);
+      gl.vertexAttribPointer(8, 4, gl.FLOAT, false, INSTANCE_STRIDE, byteOff + 32);
+      gl.vertexAttribPointer(9, 4, gl.FLOAT, false, INSTANCE_STRIDE, byteOff + 48);
+      gl.drawElementsInstanced(gl.TRIANGLES, mesh.indexCount, mesh.indexType, 0, cnt);
+    }
+  }
+
   render(gl: WebGL2RenderingContext, options: CustomRenderMethodInput): void {
     const map = this.map;
-    if (!map || !this.program || !this.vao || !this.instBuf || map.getZoom() < CROWD_MIN_ZOOM) return;
+    const zoom = map ? map.getZoom() : 0;
+    if (!map || !this.program || !this.vao || !this.instBuf || zoom < CROWD_MIN_ZOOM) return;
+    this.ensureCrowdKit(gl);
+
+    const now = performance.now();
+    const caps = capsForTier(this.perfGuard.current);
+    const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const still = reduced || !caps.animate;
+    if (!still && this.lastTickWall > 0) {
+      const wallGap = now - this.lastTickWall;
+      if (wallGap < 500) this.perfGuard.recordFrame(wallGap);
+    }
+    this.lastTickWall = now;
+    const activeCaps = capsForTier(this.perfGuard.current);
+
     // The walkers keep about what is being looked at: a circle round the view's centre as wide as
     // the screen, so the corridors there are as busy as the photographs, at the same cost.
     const centre = map.getCenter();
     const [cx, cz] = metresFromOrigin([centre.lng, centre.lat]);
-    const metresPerPixel = (40_075_016.686 * Math.cos((centre.lat * Math.PI) / 180)) / (512 * 2 ** map.getZoom());
+    const metresPerPixel = (40_075_016.686 * Math.cos((centre.lat * Math.PI) / 180)) / (512 * 2 ** zoom);
     const canvas = map.getCanvas();
     const radius = Math.max(40, Math.min(320, metresPerPixel * Math.max(canvas.clientWidth, canvas.clientHeight) * 0.7));
     if (!this.crowd) {
@@ -770,14 +1131,12 @@ export class CrowdLayer implements CustomLayerInterface {
       this.crowd = new Crowd(crowdInput(this.columns), CROWD_SIZE, 7, this.who.women);
       this.crowd.keepNear(cx, cz, radius, 0);
       this.flows = new Flows(this.crowd);
-      this.last = performance.now();
+      this.last = now;
     }
     this.crowd.keepNear(cx, cz, radius);
     const projMatrix = options.defaultProjectionData?.mainMatrix ?? options.modelViewProjectionMatrix;
     if (!projMatrix) return;
     const crowd = this.crowd;
-    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const now = performance.now();
     const clock = new Date();
     // The worshippers at prayer (owner, 2026-11-09): laid out when the scene changes, then drawn as they are.
     if (this.worshippers.sync(clock, this.demo, { columns: this.columns ?? [] })) this.buildWorshippers(gl);
@@ -790,24 +1149,29 @@ export class CrowdLayer implements CustomLayerInterface {
     this.flows?.update(still ? 0 : dt, clock, Flows.near(cx, cz, radius));
     if (!still) crowd.step(dt);
     this.last = now;
-    // Each walker keeps its own looks (the looks buffer is by walker): one not placed is drawn far
-    // below the ground, out of sight.
-    const k = crowd.n;
 
+    const k = Math.min(crowd.n, activeCaps.walkers);
+    const wCount = Math.min(this.worshipCount, activeCaps.worshippers);
     const mvp = new Float64Array(16);
     mulMat4(mvp, projMatrix as unknown as ArrayLike<number>, this.frame);
-    gl.useProgram(this.program);
-    gl.uniformMatrix4fv(this.u.u_mvp, false, new Float32Array(mvp));
-    gl.uniform3fv(this.u.u_sunDir, this.light.sunDir);
-    gl.uniform3fv(this.u.u_sun, this.light.sun);
-    gl.uniform3fv(this.u.u_ambient, this.light.ambient);
-    gl.uniform1f(this.u.u_night, this.light.night);
+    const mvpF32 = new Float32Array(mvp);
+
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.disable(gl.CULL_FACE);
     gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+    // Base shader draws shadows, fallback bodies (until GLB finishes), Rehals, and Biers
+    gl.useProgram(this.program);
+    gl.uniformMatrix4fv(this.u.u_mvp, false, mvpF32);
+    gl.uniform3fv(this.u.u_sunDir, this.light.sunDir);
+    gl.uniform3fv(this.u.u_sun, this.light.sun);
+    gl.uniform3fv(this.u.u_ambient, this.light.ambient);
+    gl.uniform1f(this.u.u_night, this.light.night);
+
+    const biers = this.flows?.biers() ?? [];
     if (!congregational) {
-      for (let a = 0; a < crowd.n; a++) {
+      for (let a = 0; a < k; a++) {
         const off = Number.isNaN(crowd.px[a]);
         this.inst.set([off ? 0 : crowd.px[a], off ? 1e6 : crowd.pz[a], crowd.heading[a], crowd.phase[a]], a * 4);
       }
@@ -815,26 +1179,88 @@ export class CrowdLayer implements CustomLayerInterface {
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.inst.subarray(0, k * 4));
       gl.uniform1f(this.u.u_posture, 0);
       gl.bindVertexArray(this.vao);
-      // The shadows first, blended on the ground; then the people, solid.
       gl.enable(gl.BLEND);
       gl.depthMask(false);
       gl.drawArraysInstanced(gl.TRIANGLES, this.mesh.shadowFirst, this.mesh.shadowCount, k);
       gl.depthMask(true);
       gl.disable(gl.BLEND);
-      gl.drawArraysInstanced(gl.TRIANGLES, 0, this.mesh.count, k);
+      if (!this.kit) gl.drawArraysInstanced(gl.TRIANGLES, 0, this.mesh.count, k);
     }
-    // The rows: the session's posture moves them all together (a uniform, not a new crowd).
-    if (this.worshipCount && this.worshipVao) {
+
+    if (wCount && this.worshipVao) {
       gl.bindVertexArray(this.worshipVao);
       gl.uniform1f(this.u.u_posture, POSTURE_CODE[prayer?.posture ?? 'standing']);
       gl.enable(gl.BLEND);
       gl.depthMask(false);
-      gl.drawArraysInstanced(gl.TRIANGLES, this.mesh.shadowFirst, this.mesh.shadowCount, this.worshipCount);
+      gl.drawArraysInstanced(gl.TRIANGLES, this.mesh.shadowFirst, this.mesh.shadowCount, wCount);
       gl.depthMask(true);
       gl.disable(gl.BLEND);
-      gl.drawArraysInstanced(gl.TRIANGLES, 0, this.mesh.count, this.worshipCount);
+      if (!this.kit) gl.drawArraysInstanced(gl.TRIANGLES, 0, this.mesh.count, wCount);
     }
-    // The rehals before those reading; their wood and pages are constant colours.
+
+    // Skinned glTF Stage 5 Sample 2 pass (LOD0 / LOD1 / LOD2)
+    if (this.kit && this.skinProgram && this.walkerPackBuf && this.worshipPackBuf) {
+      const lodTier: 0 | 1 | 2 = zoom >= 19.0 && activeCaps.allowLod0 ? 0 : zoom >= 17.8 || !activeCaps.allowLod0 ? 1 : 2;
+      const sessionClip =
+        prayer?.posture === 'ruku'
+          ? CROWD_CLIP.ruku
+          : prayer?.posture === 'sujud'
+            ? CROWD_CLIP.sujud
+            : prayer?.posture === 'juloos'
+              ? CROWD_CLIP.juloos
+              : CROWD_CLIP.stand;
+
+      gl.useProgram(this.skinProgram);
+      gl.uniformMatrix4fv(this.skinU.u_mvp, false, mvpF32);
+      gl.uniform3fv(this.skinU.u_sunDir, this.light.sunDir);
+      gl.uniform3fv(this.skinU.u_sun, this.light.sun);
+      gl.uniform3fv(this.skinU.u_ambient, this.light.ambient);
+      gl.uniform1f(this.skinU.u_night, this.light.night);
+      gl.uniform1f(this.skinU.u_sessionClip, sessionClip);
+      gl.uniform1f(this.skinU.u_breathPhase, still ? 0 : ((now - this.animClockStart) / 1000) * 1.4);
+
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.kit.atlasTex);
+      gl.uniform1i(this.skinU.u_atlas, 0);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, this.kit.boneTex);
+      gl.uniform1i(this.skinU.u_boneTex, 1);
+
+      if (!congregational && k > 0) {
+        packBuckets(
+          k,
+          this.who.archetype,
+          this.inst,
+          this.who.data,
+          (a) => {
+            const spd = crowd.vx[a] * crowd.vx[a] + crowd.vz[a] * crowd.vz[a];
+            if (spd < 0.015) return [CROWD_CLIP.stand, this.who.meta[a * 4 + 3] * 2.5];
+            const wx = crowd.px[a];
+            const wz = crowd.pz[a];
+            const nearBier = biers.some((b) => Math.hypot(b.x - wx, b.z - wz) < 1.65);
+            return [nearBier ? CROWD_CLIP.carrying : CROWD_CLIP.walk, 0];
+          },
+          this.walkerPackData,
+          this.walkerBucketOffsets,
+          this.walkerBucketCounts,
+        );
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.walkerPackBuf);
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.walkerPackData.subarray(0, k * INSTANCE_FLOATS));
+        this.drawSkinnedBuckets(gl, this.kit, this.walkerPackBuf, this.walkerBucketOffsets, this.walkerBucketCounts, k, lodTier);
+      }
+
+      if (wCount > 0) {
+        if (wCount < this.worshipCount) {
+          // Re-pack subset cleanly when throttled to Lite/Static cap
+          this.repackWorshippers(wCount);
+        }
+        this.drawSkinnedBuckets(gl, this.kit, this.worshipPackBuf, this.worshipBucketOffsets, this.worshipBucketCounts, wCount, lodTier);
+      }
+      gl.activeTexture(gl.TEXTURE0);
+    }
+
+    // The rehals and funeral biers remain cleanly rendered in base shader
+    gl.useProgram(this.program);
     if (this.rehalCount && this.rehalVao) {
       gl.bindVertexArray(this.rehalVao);
       gl.uniform1f(this.u.u_posture, 0);
@@ -842,13 +1268,13 @@ export class CrowdLayer implements CustomLayerInterface {
       gl.vertexAttrib4f(5, REHAL_PAGES[0], REHAL_PAGES[1], REHAL_PAGES[2], 0);
       gl.drawArraysInstanced(gl.TRIANGLES, 0, this.rehal.count, this.rehalCount);
     }
-    const biers = this.flows?.biers() ?? [];
     if (biers.length && this.bierVao && this.bierInst) {
       const nb = Math.min(MAX_BIERS, biers.length);
       for (let b = 0; b < nb; b++) this.bierData.set([biers[b].x, biers[b].z, biers[b].heading, 0], b * 4);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.bierInst);
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.bierData.subarray(0, nb * 4));
       gl.bindVertexArray(this.bierVao);
+      gl.uniform1f(this.u.u_posture, 0);
       gl.vertexAttrib4f(4, BIER_COVER[0], BIER_COVER[1], BIER_COVER[2], 1.75);
       gl.vertexAttrib4f(5, 0, 0, 0, 0);
       gl.drawArraysInstanced(gl.TRIANGLES, 0, this.bier.count, nb);
@@ -862,6 +1288,27 @@ export class CrowdLayer implements CustomLayerInterface {
         this.map?.triggerRepaint();
       }, FRAME_MS);
     }
+  }
+
+  private repackWorshippers(count: number): void {
+    if (!this.worshipBatch || !this.worshipPackBuf || count <= 0) return;
+    const batch = this.worshipBatch;
+    packBuckets(
+      count,
+      batch.archetype,
+      this.worshipInstData,
+      batch.data,
+      (a) => {
+        const poseFlag = this.worshipPoseData[a * 4];
+        const hasRehal = this.worshipPoseData[a * 4 + 1] > 0.5;
+        const phaseOff = batch.meta[a * 4 + 3] * 2.5;
+        if (poseFlag < 0.5) return [-1, phaseOff]; // follows global congregation clip
+        return [clipForPostureCode(Math.round(poseFlag - 1), hasRehal, a), phaseOff];
+      },
+      this.worshipPackData,
+      this.worshipBucketOffsets,
+      this.worshipBucketCounts,
+    );
   }
 
   /**
@@ -888,12 +1335,19 @@ export class CrowdLayer implements CustomLayerInterface {
     this.worshipCount = n;
     this.rehalCount = rehals;
     if (!this.worshipInst || !this.worshipPose || !this.worshipLook) return;
+    this.worshipBatch = looks(n, 4321, { women, scale, season: this.season });
     gl.bindBuffer(gl.ARRAY_BUFFER, this.worshipInst);
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.worshipInstData.subarray(0, n * 4));
     gl.bindBuffer(gl.ARRAY_BUFFER, this.worshipPose);
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.worshipPoseData.subarray(0, n * 4));
     gl.bindBuffer(gl.ARRAY_BUFFER, this.worshipLook);
-    gl.bufferSubData(gl.ARRAY_BUFFER, 0, looks(n, 4321, { women, scale }).data.subarray(0, n * 8));
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.worshipBatch.data.subarray(0, n * 8));
+    if (n > 0 && this.worshipPackBuf) {
+      const activeCount = Math.min(n, capsForTier(this.perfGuard.current).worshippers);
+      this.repackWorshippers(activeCount);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.worshipPackBuf);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.worshipPackData.subarray(0, activeCount * INSTANCE_FLOATS));
+    }
     if (this.rehalInst) {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.rehalInst);
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.rehalData.subarray(0, rehals * 4));

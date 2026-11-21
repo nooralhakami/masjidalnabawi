@@ -162,9 +162,9 @@ const GULF_THOBES: readonly RGB[] = [
 ];
 
 const GULF_HEADS: readonly RGB[] = [
-  [1.0, 1.0, 1.0], // red/white shemagh carries its woven pattern in atlas
-  [0.99, 0.98, 0.97],
-  [0.96, 0.96, 0.95],
+  [1.0, 0.99, 0.96], // iconic crimson-and-cream Saudi Shemagh
+  [1.0, 0.98, 0.95], // crimson-and-cream Shemagh variant
+  [0.96, 0.96, 0.995], // pure white woven cotton Ghutra (`b >= 0.99` switch)
 ];
 
 const SOUTH_ASIAN_ROBES: readonly RGB[] = [
