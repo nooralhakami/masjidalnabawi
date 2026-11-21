@@ -344,12 +344,12 @@ def split_shared_polygon(
 def build_haram_fence_polygon(haram_data: dict) -> list[tuple[float, float]]:
     pts_ll: list[tuple[float, float]] = []
     for run in haram_data["runs"]:
-        for pt in run["pts"]:
+        for pt in run["path"]:
             pts_ll.append((pt[0], pt[1]))
     cx = sum(p[0] for p in pts_ll) / len(pts_ll)
     cy = sum(p[1] for p in pts_ll) / len(pts_ll)
-    pts_ll.sort(key=lambda p: math.atan2(p[0] - cx, p[1] - cy))
-    return clean_ring_xy([to_xy(lng, lat) for lat, lng in pts_ll])
+    pts_ll.sort(key=lambda p: math.atan2(p[1] - cy, p[0] - cx))
+    return clean_ring_xy([to_xy(lng, lat) for lng, lat in pts_ll])
 
 
 def main() -> None:

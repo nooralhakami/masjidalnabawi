@@ -1,6 +1,7 @@
 """
-Build Stage 6 Zone 1 (South 401-475 + 735) 3D GLB (`public/models/urban-south-stage6.glb`)
-from `data/urban-approved.json` and the architectural Trim Sheet Atlas (`scripts/urban-facade-atlas.jpg`
+Build Stage 6 Zones 1 & 2 (South 401-475 + 735, West 203-256) 3D GLBs
+(`public/models/urban-{south,west}-stage6.glb`) from `data/urban-approved.json`
+and the architectural Trim Sheet Atlas (`scripts/urban-facade-atlas.jpg`
 & `scripts/urban-facade-mask.jpg`) in Blender 5.3.0.
 
 Coordinate frame matches `src/domain/frames.ts` & `src/map/glb-layer.ts`:
@@ -8,15 +9,17 @@ Coordinate frame matches `src/domain/frames.ts` & `src/map/glb-layer.ts`:
   - glTF (export_yup=True): X = east, Y = up, Z = south
 
 Usage:
-  /Applications/Blender.app/Contents/MacOS/Blender --background --python scripts/build-urban-glb.py
+  /Applications/Blender.app/Contents/MacOS/Blender --background --python scripts/build-urban-glb.py -- --zone all
 """
 
 from __future__ import annotations
 
+import argparse
 import gzip
 import json
 import math
 import struct
+import sys
 from pathlib import Path
 
 import bmesh
@@ -27,7 +30,6 @@ INPUT_JSON = ROOT / "data" / "urban-approved.json"
 FENCE_JSON = ROOT / "data" / "haram-fence.json"
 ATLAS_JPG = ROOT / "scripts" / "urban-facade-atlas.jpg"
 MASK_JPG = ROOT / "scripts" / "urban-facade-mask.jpg"
-OUTPUT_GLB = ROOT / "public" / "models" / "urban-south-stage6.glb"
 
 ORIGIN_LNG = 39.611752
 ORIGIN_LAT = 24.466806
@@ -485,7 +487,7 @@ def build_hotel_mesh(b: dict, mat_facade: bpy.types.Material) -> bpy.types.Objec
     bpy.context.collection.objects.link(obj)
     obj["poiId"] = int(b["poiId"])
     obj["buildingId"] = b["buildingId"]
-    obj["zone"] = "south"
+    obj["zone"] = b.get("zone", "south")
     obj["heightM"] = float(h)
     obj["heightSource"] = b["heightSource"]
     obj["footprintSplit"] = b["footprintSplit"]
@@ -497,6 +499,7 @@ def build_hotel_mesh(b: dict, mat_facade: bpy.types.Material) -> bpy.types.Objec
 
 
 def build_streets_and_sidewalks(
+    zone: str,
     corridors: list[dict],
     building_polys: list[list[tuple[float, float]]],
     haram_poly: list[tuple[float, float]],
@@ -580,10 +583,13 @@ def build_streets_and_sidewalks(
                             pass
 
     for obj_name, bm, mat in (
-        ("urban-street-south-roads", bm_road, mat_road),
-        ("urban-street-south-sidewalks", bm_walk, mat_sidewalk),
-        ("urban-street-south-promenades", bm_prom, mat_promenade),
+        (f"urban-street-{zone}-roads", bm_road, mat_road),
+        (f"urban-street-{zone}-sidewalks", bm_walk, mat_sidewalk),
+        (f"urban-street-{zone}-promenades", bm_prom, mat_promenade),
     ):
+        if len(bm.faces) == 0:
+            bm.free()
+            continue
         bmesh.ops.triangulate(bm, faces=bm.faces[:])
         mesh = bpy.data.meshes.new(obj_name)
         bm.to_mesh(mesh)
@@ -595,6 +601,7 @@ def build_streets_and_sidewalks(
 
 
 def build_props(
+    zone: str,
     props: dict,
     mat_portal: bpy.types.Material,
     mat_portal_dark: bpy.types.Material,
@@ -604,24 +611,26 @@ def build_props(
     mat_frond: bpy.types.Material,
 ) -> None:
     # 1. Parking portals (`omar`, `quba`, `qurban`)
-    bm_portal = bmesh.new()
-    for p in props.get("parkingPortals", []):
-        cx, cy = to_blender_xy(p["lng"], p["lat"])
-        yaw = float(p.get("headingRad", 0.0))
-        add_box(bm_portal, None, (-2.8, -4.6, 0.0), (2.8, -3.5, 4.4), yaw, (cx, cy), mat_idx=0)
-        add_box(bm_portal, None, (-2.8, 3.5, 0.0), (2.8, 4.6, 4.4), yaw, (cx, cy), mat_idx=0)
-        add_box(bm_portal, None, (-3.0, -4.8, 4.2), (3.0, 4.8, 5.2), yaw, (cx, cy), mat_idx=0)
-        add_box(bm_portal, None, (-2.6, -3.5, 0.05), (2.6, 3.5, 4.2), yaw, (cx, cy), mat_idx=1)
+    portals = props.get("parkingPortals", [])
+    if portals:
+        bm_portal = bmesh.new()
+        for p in portals:
+            cx, cy = to_blender_xy(p["lng"], p["lat"])
+            yaw = float(p.get("headingRad", 0.0))
+            add_box(bm_portal, None, (-2.8, -4.6, 0.0), (2.8, -3.5, 4.4), yaw, (cx, cy), mat_idx=0)
+            add_box(bm_portal, None, (-2.8, 3.5, 0.0), (2.8, 4.6, 4.4), yaw, (cx, cy), mat_idx=0)
+            add_box(bm_portal, None, (-3.0, -4.8, 4.2), (3.0, 4.8, 5.2), yaw, (cx, cy), mat_idx=0)
+            add_box(bm_portal, None, (-2.6, -3.5, 0.05), (2.6, 3.5, 4.2), yaw, (cx, cy), mat_idx=1)
 
-    bmesh.ops.triangulate(bm_portal, faces=bm_portal.faces[:])
-    m_portal = bpy.data.meshes.new("urban-prop-south-parking-portals")
-    bm_portal.to_mesh(m_portal)
-    bm_portal.free()
-    m_portal.materials.append(mat_portal)
-    m_portal.materials.append(mat_portal_dark)
-    o_portal = bpy.data.objects.new("urban-prop-south-parking-portals", m_portal)
-    bpy.context.collection.objects.link(o_portal)
-    o_portal["kind"] = "prop"
+        bmesh.ops.triangulate(bm_portal, faces=bm_portal.faces[:])
+        m_portal = bpy.data.meshes.new(f"urban-prop-{zone}-parking-portals")
+        bm_portal.to_mesh(m_portal)
+        bm_portal.free()
+        m_portal.materials.append(mat_portal)
+        m_portal.materials.append(mat_portal_dark)
+        o_portal = bpy.data.objects.new(f"urban-prop-{zone}-parking-portals", m_portal)
+        bpy.context.collection.objects.link(o_portal)
+        o_portal["kind"] = "prop"
 
     # 2. Streetlamps (lean 3-sided bronze shafts + crossarm blades, plus compact glow pyramids & ground pools)
     bm_pole = bmesh.new()
@@ -630,7 +639,7 @@ def build_props(
 
     for lmp in props.get("streetLamps", []):
         cx, cy = to_blender_xy(lmp["lng"], lmp["lat"])
-        perp = float(lmp.get("angleRad", 0.0)) + math.pi * 0.5
+        perp = float(lmp.get("angleRad", lmp.get("rotRad", 0.0))) + math.pi * 0.5
         ca, sa = math.cos(perp), math.sin(perp)
 
         # 3-sided tapered shaft sharing smooth vertices -> only 6 verts per pole!
@@ -684,20 +693,20 @@ def build_props(
         )
 
     bmesh.ops.triangulate(bm_pole, faces=bm_pole.faces[:])
-    m_pole = bpy.data.meshes.new("urban-prop-south-streetlamps")
+    m_pole = bpy.data.meshes.new(f"urban-prop-{zone}-streetlamps")
     bm_pole.to_mesh(m_pole)
     bm_pole.free()
     m_pole.materials.append(mat_pole)
-    o_pole = bpy.data.objects.new("urban-prop-south-streetlamps", m_pole)
+    o_pole = bpy.data.objects.new(f"urban-prop-{zone}-streetlamps", m_pole)
     bpy.context.collection.objects.link(o_pole)
     o_pole["kind"] = "prop"
 
     bmesh.ops.triangulate(bm_glow, faces=bm_glow.faces[:])
-    m_glow = bpy.data.meshes.new("urban-prop-south-lamp-glow")
+    m_glow = bpy.data.meshes.new(f"urban-prop-{zone}-lamp-glow")
     bm_glow.to_mesh(m_glow)
     bm_glow.free()
     m_glow.materials.append(mat_glow)
-    o_glow = bpy.data.objects.new("urban-prop-south-lamp-glow", m_glow)
+    o_glow = bpy.data.objects.new(f"urban-prop-{zone}-lamp-glow", m_glow)
     bpy.context.collection.objects.link(o_glow)
     o_glow["kind"] = "lamp_glow"
 
@@ -744,12 +753,12 @@ def build_props(
                     pass
 
     bmesh.ops.triangulate(bm_palm, faces=bm_palm.faces[:])
-    m_palm = bpy.data.meshes.new("urban-prop-south-palms")
+    m_palm = bpy.data.meshes.new(f"urban-prop-{zone}-palms")
     bm_palm.to_mesh(m_palm)
     bm_palm.free()
     m_palm.materials.append(mat_trunk)
     m_palm.materials.append(mat_frond)
-    o_palm = bpy.data.objects.new("urban-prop-south-palms", m_palm)
+    o_palm = bpy.data.objects.new(f"urban-prop-{zone}-palms", m_palm)
     bpy.context.collection.objects.link(o_palm)
     o_palm["kind"] = "prop"
 
@@ -786,7 +795,9 @@ def make_facade_material() -> bpy.types.Material:
     return mat
 
 
-def patch_and_verify_glb(glb_path: Path, data: dict, footprinted: list[dict]) -> None:
+def patch_and_verify_glb(
+    glb_path: Path, data: dict, zone: str, zone_buildings: list[dict], footprinted: list[dict]
+) -> None:
     raw = glb_path.read_bytes()
     magic, version, _ = struct.unpack_from("<3I", raw, 0)
     assert magic == 0x46546C67 and version == 2
@@ -802,9 +813,9 @@ def patch_and_verify_glb(glb_path: Path, data: dict, footprinted: list[dict]) ->
         "approvedBy": data["approvedBy"],
         "approvedAt": data["approvedAt"],
         "heightMode": data["heightMode"],
-        "zone": "south",
+        "zone": zone,
         "buildingCount": len(footprinted),
-        "approvedPoiIds": [int(b["poiId"]) for b in data["buildings"]],
+        "approvedPoiIds": [int(b["poiId"]) for b in zone_buildings],
         "footprintedPoiIds": [int(b["poiId"]) for b in footprinted],
     }
 
@@ -845,12 +856,7 @@ def patch_and_verify_glb(glb_path: Path, data: dict, footprinted: list[dict]) ->
         raise RuntimeError(f"GLB gzip size {gz} B exceeds {MAX_GZIP_BYTES} B budget")
 
 
-def main() -> None:
-    data = json.loads(INPUT_JSON.read_text("utf-8"))
-    fence = json.loads(FENCE_JSON.read_text("utf-8"))
-    if data.get("tier") != "verified" or data.get("approvedBy") != "owner" or data.get("schema") != "haram-urban-approved-v2":
-        raise RuntimeError("Refusing build: data/urban-approved.json failed A7/v2 approval check")
-
+def build_zone(zone: str, data: dict, fence: dict) -> None:
     bpy.ops.wm.read_factory_settings(use_empty=True)
 
     mat_facade = make_facade_material()
@@ -864,7 +870,11 @@ def main() -> None:
     mat_trunk = make_solid_material("UrbanPalmTrunkMat", (0.42, 0.31, 0.21, 1.0), 0.90)
     mat_frond = make_solid_material("UrbanPalmFrondMat", (0.22, 0.36, 0.15, 1.0), 0.75)
 
-    footprinted = [b for b in data["buildings"] if b.get("hasFootprint") and len(b.get("polygon", [])) >= 4]
+    zone_buildings = [b for b in data["buildings"] if b.get("zone") == zone]
+    footprinted = [b for b in zone_buildings if b.get("hasFootprint") and len(b.get("polygon", [])) >= 4]
+    if not footprinted:
+        raise RuntimeError(f"No footprinted buildings found for zone {zone!r}")
+
     building_polys: list[list[tuple[float, float]]] = []
     for b in footprinted:
         if b.get("heightSource") not in ("osm_levels", "estimated_display_only", "owner_verified") or b["heightM"] < 10.0:
@@ -873,16 +883,21 @@ def main() -> None:
         build_hotel_mesh(b, mat_facade)
 
     haram_poly = [to_blender_xy(lng, lat) for run in fence["runs"] for (lng, lat) in run["path"]]
+    zone_corridors = [c for c in data["streetCorridors"] if c.get("zone", "south") == zone]
     build_streets_and_sidewalks(
-        data["streetCorridors"],
+        zone,
+        zone_corridors,
         building_polys,
         haram_poly,
         mat_road,
         mat_sidewalk,
         mat_promenade,
     )
+    props_by_zone = data.get("urbanPropsByZone") or {}
+    zone_props = props_by_zone.get(zone, data.get("urbanProps", {}) if zone == "south" else {})
     build_props(
-        data.get("urbanProps", {}),
+        zone,
+        zone_props,
         mat_portal,
         mat_portal_dark,
         mat_pole,
@@ -891,9 +906,10 @@ def main() -> None:
         mat_frond,
     )
 
-    OUTPUT_GLB.parent.mkdir(parents=True, exist_ok=True)
+    output_glb = ROOT / "public" / "models" / f"urban-{zone}-stage6.glb"
+    output_glb.parent.mkdir(parents=True, exist_ok=True)
     bpy.ops.export_scene.gltf(
-        filepath=str(OUTPUT_GLB),
+        filepath=str(output_glb),
         export_format="GLB",
         export_yup=True,
         export_normals=True,
@@ -905,7 +921,23 @@ def main() -> None:
         export_image_quality=80,
         export_draco_mesh_compression_enable=False,
     )
-    patch_and_verify_glb(OUTPUT_GLB, data, footprinted)
+    patch_and_verify_glb(output_glb, data, zone, zone_buildings, footprinted)
+
+
+def main() -> None:
+    argv = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--zone", choices=["south", "west", "all"], default="south")
+    args = parser.parse_args(argv)
+
+    data = json.loads(INPUT_JSON.read_text("utf-8"))
+    fence = json.loads(FENCE_JSON.read_text("utf-8"))
+    if data.get("tier") != "verified" or data.get("approvedBy") != "owner" or data.get("schema") != "haram-urban-approved-v2":
+        raise RuntimeError("Refusing build: data/urban-approved.json failed A7/v2 approval check")
+
+    zones = ["south", "west"] if args.zone == "all" else [args.zone]
+    for zone in zones:
+        build_zone(zone, data, fence)
 
 
 if __name__ == "__main__":

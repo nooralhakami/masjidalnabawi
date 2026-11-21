@@ -1,4 +1,5 @@
 import type { Feature, FeatureCollection, Polygon } from 'geojson';
+import { pointInApprovedBuilding } from '../domain/urban-approval';
 
 /**
  * 3D Saqifat Bani Sa'idah Garden (سقيفة بني ساعدة) and the surrounding West-zone OSM buildings.
@@ -850,6 +851,17 @@ export function saqifahGround2D(): FeatureCollection<Polygon, Saqifah2DProps> {
   return { type: 'FeatureCollection', features };
 }
 
+function overlapsApprovedBuilding(ring: readonly (readonly [number, number])[]): boolean {
+  let sumLng = 0;
+  let sumLat = 0;
+  for (const [lng, lat] of ring) {
+    if (pointInApprovedBuilding([lat, lng])) return true;
+    sumLng += lng;
+    sumLat += lat;
+  }
+  return ring.length > 0 && pointInApprovedBuilding([sumLat / ring.length, sumLng / ring.length]) !== null;
+}
+
 export function saqifahAndSurroundings3D(): FeatureCollection<Polygon, Saqifah3DProps> {
   const features: Feature<Polygon, Saqifah3DProps>[] = [];
   const push = (
@@ -880,6 +892,7 @@ export function saqifahAndSurroundings3D(): FeatureCollection<Polygon, Saqifah3D
   }
 
   for (const b of SURROUNDING_OSM_BUILDINGS) {
+    if (overlapsApprovedBuilding(b.ring)) continue;
     push(b.id, b.kind, BUILDING_COLORS[b.kind], 0, b.height, 0.94, b.ring, b.name);
   }
 

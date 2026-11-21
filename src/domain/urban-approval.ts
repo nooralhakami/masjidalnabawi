@@ -1,6 +1,6 @@
 import { approvedBy, buildings, tier } from '../../data/urban-approved.json';
 import type { LatLng, Poi } from '../data/types';
-import { fromWalkMetres, toWalkMetres, type XY } from './frames';
+import { fromWalkMetres, toModelMetres, toWalkMetres, type XY } from './frames';
 
 export interface ApprovedBuilding {
   buildingId: string;
@@ -261,13 +261,131 @@ export function clearApprovedBuildings(path: readonly LatLng[], clearanceM = 1.2
   return pts.map(fromWalkMetres);
 }
 
+export function approvedFootprintBuildingsForZone(zone: string): readonly ApprovedBuilding[] {
+  return APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.zone === zone);
+}
+
+interface PrismModel {
+  building: ApprovedBuilding;
+  xzRing: XY[];
+  minX: number;
+  maxX: number;
+  minZ: number;
+  maxZ: number;
+}
+
+const PRISMS_MODEL: readonly PrismModel[] = APPROVED_FOOTPRINT_BUILDINGS.map((building) => {
+  const ringPts = building.polygon.slice(0, -1);
+  const xzRing = ringPts.map((pt) => toModelMetres(pt));
+  let minX = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let minZ = Number.POSITIVE_INFINITY;
+  let maxZ = Number.NEGATIVE_INFINITY;
+  for (const [x, z] of xzRing) {
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (z < minZ) minZ = z;
+    if (z > maxZ) maxZ = z;
+  }
+  return { building, xzRing, minX, maxX, minZ, maxZ };
+});
+
 /**
- * Obstruction-fade opacity (A8) for Stage 5 Southern Plaza buildings when looking across them
- * northward toward Al-Masjid an-Nabawi in tilted 3D view (`0.25–0.35`), else `1`.
+ * Ray-vs-prism intersection in model metres (`+X` east, `+Y` up, `+Z` south) so tapping any
+ * approved 3D hotel facade or roof picks that building cleanly without GPU readback.
  */
-export function urbanOpacityForCamera(bearingDeg: number, pitchDeg: number): number {
+export function pickApprovedBuildingRay(
+  origin: readonly [number, number, number],
+  dir: readonly [number, number, number],
+): ApprovedBuilding | null {
+  const [ox, oy, oz] = origin;
+  const [dx, dy, dz] = dir;
+  let bestT = Number.POSITIVE_INFINITY;
+  let best: ApprovedBuilding | null = null;
+
+  for (const prism of PRISMS_MODEL) {
+    const h = prism.building.heightM;
+    if (h <= 0) continue;
+
+    // 1. Fast 3D AABB slab reject
+    let tMin = 0;
+    let tMax = bestT;
+    const slabs: readonly [number, number, number, number][] = [
+      [ox, dx, prism.minX, prism.maxX],
+      [oy, dy, 0, h],
+      [oz, dz, prism.minZ, prism.maxZ],
+    ];
+    let hitBox = true;
+    for (const [o, d, lo, hi] of slabs) {
+      if (Math.abs(d) < 1e-8) {
+        if (o < lo || o > hi) {
+          hitBox = false;
+          break;
+        }
+      } else {
+        let t0 = (lo - o) / d;
+        let t1 = (hi - o) / d;
+        if (t0 > t1) [t0, t1] = [t1, t0];
+        if (t0 > tMin) tMin = t0;
+        if (t1 < tMax) tMax = t1;
+        if (tMin > tMax) {
+          hitBox = false;
+          break;
+        }
+      }
+    }
+    if (!hitBox) continue;
+
+    // 2. Roof cap (y = h)
+    if (Math.abs(dy) > 1e-6) {
+      const tRoof = (h - oy) / dy;
+      if (tRoof > 0 && tRoof < bestT) {
+        const hx = ox + tRoof * dx;
+        const hz = oz + tRoof * dz;
+        if (pointInRing([hx, hz], prism.xzRing)) {
+          bestT = tRoof;
+          best = prism.building;
+        }
+      }
+    }
+
+    // 3. Vertical extruded wall quads
+    const ring = prism.xzRing;
+    const n = ring.length;
+    for (let i = 0; i < n; i++) {
+      const [ax, az] = ring[i];
+      const [bx, bz] = ring[(i + 1) % n];
+      const ex = bx - ax;
+      const ez = bz - az;
+      const det = dz * ex - dx * ez;
+      if (Math.abs(det) < 1e-8) continue;
+      const rx = ax - ox;
+      const rz = az - oz;
+      const t = (rz * ex - rx * ez) / det;
+      if (t <= 0 || t >= bestT) continue;
+      const s = (dx * rz - dz * rx) / det;
+      if (s < -1e-4 || s > 1 + 1e-4) continue;
+      const hy = oy + t * dy;
+      if (hy >= 0 && hy <= h) {
+        bestT = t;
+        best = prism.building;
+      }
+    }
+  }
+
+  return best;
+}
+
+/**
+ * Obstruction-fade opacity (A8) for Stage 6 Plaza buildings when looking across them
+ * toward Al-Masjid an-Nabawi in tilted 3D view (`0.25–0.35`), else `1`:
+ *   - `'south'` faces North (`0°`) across Southern Plaza buildings.
+ *   - `'west'` faces East (`90°`) across Western Plaza buildings.
+ */
+export function urbanOpacityForCamera(bearingDeg: number, pitchDeg: number, zone: 'south' | 'west' = 'south'): number {
   if (pitchDeg < 30) return 1;
-  const b = ((((bearingDeg + 180) % 360) + 360) % 360) - 180;
-  if (Math.abs(b) > 55) return 1;
-  return Math.abs(b) <= 35 && pitchDeg >= 45 ? 0.28 : 0.32;
+  const targetDeg = zone === 'west' ? 90 : 0;
+  const diff = Math.abs((((bearingDeg - targetDeg + 180) % 360) + 360) % 360 - 180);
+  if (diff > 55) return 1;
+  return diff <= 35 && pitchDeg >= 45 ? 0.28 : 0.32;
 }
