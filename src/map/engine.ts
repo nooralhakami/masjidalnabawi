@@ -621,6 +621,7 @@ export class MapEngine {
         if (!this.mode3d || urbanToken !== this.urbanToken || this.map !== m) return;
         const urbanBefore = m.getLayer('inner-dots') ? 'inner-dots' : undefined;
         this.urban = mountUrban3D(m, this.currentLight(), urbanBefore);
+        this.urban.setSelectedPoiId(this.selected);
       });
     } else {
       if (this.lightTimer) clearInterval(this.lightTimer);
@@ -801,6 +802,7 @@ export class MapEngine {
   select(id: number | null): void {
     const changed = id !== this.selected;
     this.selected = id;
+    this.urban?.setSelectedPoiId(id);
     if (this.map.getLayer('facilities')) this.applyView();
     // A short gold ring on the newly chosen marker: «this one» (UI plan phase 3).
     const p = id !== null && changed ? this.poi(id) : undefined;

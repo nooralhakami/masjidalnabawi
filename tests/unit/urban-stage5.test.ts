@@ -20,7 +20,8 @@ import {
 } from '../../src/domain/urban-approval';
 import { visiblePois } from '../../src/domain/visible';
 import { lngLatFromMetres, parseGlbBuffer } from '../../src/map/glb-layer';
-import { type UrbanZoneId, validateUrbanGlb } from '../../src/map/urban-3d';
+import { sceneLight } from '../../src/map/scene-light';
+import { Urban3DLayer, type UrbanZoneId, validateUrbanGlb } from '../../src/map/urban-3d';
 import { fullPath, planRoutes } from '../../src/routing/plan';
 import { restroomDoor } from '../../src/routing/walk';
 
@@ -286,6 +287,14 @@ describe('Stage 6 Zones 1–4 (South + West + North + Southwest) urban slice & 3
     const camX = x226 - (rdx / rlen) * 80;
     const camZ = z226 - (rdz / rlen) * 80;
     expect(pickApprovedBuildingRay([camX, 15, camZ], [rdx / rlen, 0, rdz / rlen])?.poiId).toBe(2226);
+
+    // 5. Urban3DLayer tracks selected / routed hotel POI ID for 3D warm amber highlight
+    const layer = new Urban3DLayer(sceneLight({ altitude: 45, azimuth: 180 }));
+    expect(layer.getSelectedPoiId()).toBeNull();
+    layer.setSelectedPoiId(2371);
+    expect(layer.getSelectedPoiId()).toBe(2371);
+    layer.setSelectedPoiId(null);
+    expect(layer.getSelectedPoiId()).toBeNull();
   });
 
   it('walk and drive routes to original + representative South, West, North & SW hotels end <= 3 m from entrance with 0 polygon intersections', async () => {

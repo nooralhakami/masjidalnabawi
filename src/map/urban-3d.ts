@@ -227,6 +227,7 @@ uniform vec3 u_fog;
 uniform float u_night;
 uniform vec4 u_color;
 uniform vec4 u_meta; // x=seed, y=tint, z=kind (0=building, 1=street, 2=prop, 3=lamp_glow), w=useTex
+uniform float u_selected;
 uniform sampler2D u_albedo;
 uniform sampler2D u_mask;
 out vec4 fragColor;
@@ -315,6 +316,15 @@ void main() {
     }
   }
 
+  // Selected / routed hotel tower warm amber architectural highlight & rim halo
+  if (u_selected > 0.5) {
+    vec3 V = normalize(u_eye - v_worldPos);
+    float rim = pow(1.0 - max(dot(n, V), 0.0), 2.1);
+    vec3 amber = vec3(1.0, 0.72, 0.24);
+    lit = mix(lit, amber, 0.22 + 0.34 * rim);
+    lit += amber * (0.28 * rim + 0.35 * glowMask + 0.24 * roomMask);
+  }
+
   // Subtle atmospheric haze only at long distance (> 1.2 km), keeping near/mid facades crisp like haram-3d
   float dist = length(u_eye - v_worldPos);
   float fogF = smoothstep(1200.0, 4800.0, dist) * 0.45;
@@ -331,6 +341,7 @@ interface GpuPart {
   color: [number, number, number, number];
   kind: number; // 0=building, 1=street, 2=prop, 3=lamp_glow
   zone: UrbanZoneId;
+  poiId: number;
   seed: number;
   tint: number;
   useTex: boolean;
@@ -431,8 +442,10 @@ export class Urban3DLayer implements CustomLayerInterface {
   private uNight: WebGLUniformLocation | null = null;
   private uColor: WebGLUniformLocation | null = null;
   private uMeta: WebGLUniformLocation | null = null;
+  private uSelected: WebGLUniformLocation | null = null;
   private uAlbedo: WebGLUniformLocation | null = null;
   private uMask: WebGLUniformLocation | null = null;
+  private selectedPoiId: number | null = null;
   private pendingZones: PendingLoad[] = [];
   private parts: GpuPart[] = [];
   private vaos: WebGLVertexArrayObject[] = [];
@@ -449,6 +462,17 @@ export class Urban3DLayer implements CustomLayerInterface {
   setLight(light: SceneLight): void {
     this.light = light;
     this.map?.triggerRepaint();
+  }
+
+  /** Highlight a selected or routed hotel tower with a warm amber 3D halo (`null` clears). */
+  setSelectedPoiId(poiId: number | null): void {
+    if (this.selectedPoiId === poiId) return;
+    this.selectedPoiId = poiId;
+    this.map?.triggerRepaint();
+  }
+
+  getSelectedPoiId(): number | null {
+    return this.selectedPoiId;
   }
 
   onAdd(map: MLMap, gl: WebGL2RenderingContext): void {
@@ -505,6 +529,7 @@ export class Urban3DLayer implements CustomLayerInterface {
     this.uNight = gl.getUniformLocation(prog, 'u_night');
     this.uColor = gl.getUniformLocation(prog, 'u_color');
     this.uMeta = gl.getUniformLocation(prog, 'u_meta');
+    this.uSelected = gl.getUniformLocation(prog, 'u_selected');
     this.uAlbedo = gl.getUniformLocation(prog, 'u_albedo');
     this.uMask = gl.getUniformLocation(prog, 'u_mask');
   }
@@ -611,6 +636,7 @@ export class Urban3DLayer implements CustomLayerInterface {
       const isStreet = name.startsWith(streetPrefix);
       const isLampGlow = name === lampGlowName;
       const kind = isBuilding ? 0 : isStreet ? 1 : isLampGlow ? 3 : 2;
+      const poiId = isBuilding ? Number(node.extras?.poiId ?? 0) : 0;
       const seed = Number(node.extras?.seed ?? 0);
       const tint = Number(node.extras?.tint ?? 0);
 
@@ -671,6 +697,7 @@ export class Urban3DLayer implements CustomLayerInterface {
           color: baseColor,
           kind,
           zone,
+          poiId,
           seed,
           tint,
           useTex,
@@ -752,15 +779,17 @@ export class Urban3DLayer implements CustomLayerInterface {
     gl.bindTexture(gl.TEXTURE_2D, this.maskTex);
     gl.uniform1i(this.uMask, 1);
 
-    // Pass 1: Opaque streets, props, and un-faded buildings
+    // Pass 1: Opaque streets, props, selected building, and un-faded buildings
     gl.disable(gl.BLEND);
     gl.depthMask(true);
     for (const part of this.parts) {
       if (part.kind === 3) continue;
-      const alpha = part.kind === 0 ? part.color[3] * zoneFade[part.zone] : part.color[3];
+      const isSelected = part.kind === 0 && part.poiId > 0 && part.poiId === this.selectedPoiId;
+      const alpha = part.kind === 0 ? (isSelected ? 1 : part.color[3] * zoneFade[part.zone]) : part.color[3];
       if (alpha < 0.99) continue;
       gl.uniform4f(this.uColor, part.color[0], part.color[1], part.color[2], alpha);
       gl.uniform4f(this.uMeta, part.seed, part.tint, part.kind, part.useTex ? 1 : 0);
+      gl.uniform1f(this.uSelected, isSelected ? 1 : 0);
       gl.bindVertexArray(part.vao);
       gl.drawElements(gl.TRIANGLES, part.count, part.indexType, 0);
     }
@@ -769,9 +798,11 @@ export class Urban3DLayer implements CustomLayerInterface {
     gl.enable(gl.BLEND);
     gl.depthMask(false);
     gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.uniform1f(this.uSelected, 0);
     for (const part of this.parts) {
       if (part.kind === 3) continue;
-      const alpha = part.kind === 0 ? part.color[3] * zoneFade[part.zone] : part.color[3];
+      const isSelected = part.kind === 0 && part.poiId > 0 && part.poiId === this.selectedPoiId;
+      const alpha = part.kind === 0 ? (isSelected ? 1 : part.color[3] * zoneFade[part.zone]) : part.color[3];
       if (alpha >= 0.99) continue;
       gl.uniform4f(this.uColor, part.color[0], part.color[1], part.color[2], alpha);
       gl.uniform4f(this.uMeta, part.seed, part.tint, part.kind, part.useTex ? 1 : 0);
