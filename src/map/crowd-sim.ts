@@ -394,31 +394,34 @@ export class Crowd {
     this.menDoorGoals = [];
     this.womenDoorGoals = [];
 
-    const pending: Array<{ bay: DoorwayBayInput; outerWalk: 1 | 2 }> = [];
+    const pending: Array<{ bay: DoorwayBayInput; outerWalk: 1 | 2; outerDist: number }> = [];
     for (const bay of bays) {
       if (!bay.open) continue;
       const [ox, oz] = bay.outward;
       const [tx, tz] = bay.tangent;
       let outerWalk: 0 | 1 | 2 = 0;
-      for (const dist of [2.5, 3.5, 4.5]) {
+      let outerDist = 2.5;
+      for (const dist of [2.5, 4.0, 5.5, 7.0, 9.0, 12.0, 15.0, 18.0]) {
         const oi = Math.floor((bay.x + ox * dist - x0) / CELL);
         const oj = Math.floor((bay.y + oz * dist - z0) / CELL);
         if (oi >= 0 && oj >= 0 && oi < w && oj < h) {
           const v = this.walkBase[oj * w + oi];
           if (v === 1 || v === 2) {
             outerWalk = v;
+            outerDist = dist;
             break;
           }
         }
       }
       if (outerWalk === 0) continue;
-      // Only allocate women-zone doorway cells for women's bays so men never cross into women's plazas.
+      // Carve a narrow apron strip across the shaded portico up to the outer plaza without bridging men/women zones or carpets.
       const otherZone = outerWalk === 2 ? 1 : 2;
-      const halfU = Math.max(0.8, bay.widthM * 0.36);
-      const minX = Math.min(bay.x - tx * halfU - ox * 1.6, bay.x + tx * halfU + ox * 1.6, bay.x - tx * halfU + ox * 1.6, bay.x + tx * halfU - ox * 1.6);
-      const maxX = Math.max(bay.x - tx * halfU - ox * 1.6, bay.x + tx * halfU + ox * 1.6, bay.x - tx * halfU + ox * 1.6, bay.x + tx * halfU - ox * 1.6);
-      const minZ = Math.min(bay.y - tz * halfU - oz * 1.6, bay.y + tz * halfU + oz * 1.6, bay.y - tz * halfU + oz * 1.6, bay.y + tz * halfU - oz * 1.6);
-      const maxZ = Math.max(bay.y - tz * halfU - oz * 1.6, bay.y + tz * halfU + oz * 1.6, bay.y - tz * halfU + oz * 1.6, bay.y + tz * halfU - oz * 1.6);
+      const halfU = Math.max(1.1, bay.widthM * 0.38);
+      const maxS = outerDist + 1.2;
+      const minX = Math.min(bay.x - tx * halfU - ox * 1.6, bay.x + tx * halfU + ox * maxS, bay.x - tx * halfU + ox * maxS, bay.x + tx * halfU - ox * 1.6);
+      const maxX = Math.max(bay.x - tx * halfU - ox * 1.6, bay.x + tx * halfU + ox * maxS, bay.x - tx * halfU + ox * maxS, bay.x + tx * halfU - ox * 1.6);
+      const minZ = Math.min(bay.y - tz * halfU - oz * 1.6, bay.y + tz * halfU + oz * maxS, bay.y - tz * halfU + oz * maxS, bay.y + tz * halfU - oz * 1.6);
+      const maxZ = Math.max(bay.y - tz * halfU - oz * 1.6, bay.y + tz * halfU + oz * maxS, bay.y - tz * halfU + oz * maxS, bay.y + tz * halfU - oz * 1.6);
       const i0 = Math.max(1, Math.floor((minX - x0) / CELL));
       const i1 = Math.min(w - 2, Math.ceil((maxX - x0) / CELL));
       const j0 = Math.max(1, Math.floor((minZ - z0) / CELL));
@@ -431,29 +434,24 @@ export class Crowd {
           const cz = z0 + (j + 0.5) * CELL;
           const s = (cx - bay.x) * ox + (cz - bay.y) * oz;
           const u = (cx - bay.x) * tx + (cz - bay.y) * tz;
-          if (s < -1.6 || s > 1.6 || Math.abs(u) > halfU) continue;
-          if (
-            this.walkBase[k - 1] === otherZone ||
-            this.walkBase[k + 1] === otherZone ||
-            this.walkBase[k - w] === otherZone ||
-            this.walkBase[k + w] === otherZone
-          ) {
+          if (s < -1.6 || s > maxS || Math.abs(u) > halfU) continue;
+          if (this.walk[k - 1] === otherZone || this.walk[k + 1] === otherZone || this.walk[k - w] === otherZone || this.walk[k + w] === otherZone) {
             continue;
           }
           this.walk[k] = outerWalk;
         }
       }
-      pending.push({ bay, outerWalk });
+      pending.push({ bay, outerWalk, outerDist });
     }
 
     this.recomputeFlowWalk();
     const [forWomen, forMen] = this.flowWalk;
-    for (const { bay, outerWalk } of pending) {
+    for (const { bay, outerWalk, outerDist } of pending) {
       const [ox, oz] = bay.outward;
       const [tx, tz] = bay.tangent;
-      const gx = bay.x + ox * 1.4;
-      const gz = bay.y + oz * 1.4;
-      const c = this.nearestFlowCell(gx, gz, 6, (k) => (outerWalk === 2 ? forWomen[k] === 1 && this.zone[k] === 1 : forMen[k] === 1));
+      const gx = bay.x + ox * outerDist;
+      const gz = bay.y + oz * outerDist;
+      const c = this.nearestFlowCell(gx, gz, 8, (k) => (outerWalk === 2 ? forWomen[k] === 1 && this.zone[k] === 1 : forMen[k] === 1));
       if (c < 0) continue;
       const key = `${bay.gateId}:${bay.bayIndex}`;
       let g = this.doorGoalByKey.get(key);
@@ -916,6 +914,45 @@ export class Crowd {
     this.goal[a] = this.pickGoal(a);
   }
 
+  /**
+   * Moves a walker who stepped inside an open doorway vestibule out through another matching active
+   * open bay (preferring one inside the active viewport and clear of neighbours), or turns outward.
+   */
+  private transferThroughDoorway(a: number, entry: ActiveDoorPortal): void {
+    const man = !this.woman[a];
+    const peers = this.doorPortals.filter((p) => p.women === entry.women && (p.gateId !== entry.gateId || p.bayIndex !== entry.bayIndex));
+    const keep = this.lastKeep;
+    const inView = keep ? peers.filter((p) => (p.x - keep[0]) ** 2 + (p.z - keep[1]) ** 2 <= (keep[2] * 1.25) ** 2) : [];
+    const pool = inView.length ? inView : peers;
+    if (pool.length) {
+      const startIdx = Math.floor(this.rnd() * pool.length);
+      for (let t = 0; t < Math.min(6, pool.length); t++) {
+        const exit = pool[(startIdx + t) % pool.length];
+        for (const dist of [0.2, 0.9, 1.6]) {
+          const ex = exit.x + exit.ox * dist;
+          const ez = exit.z + exit.oz * dist;
+          if (!this.standable(ex, ez, man, true)) continue;
+          let clear = true;
+          for (let b = 0; b < this.n && clear; b++) {
+            if (b !== a && !Number.isNaN(this.px[b]) && (this.px[b] - ex) ** 2 + (this.pz[b] - ez) ** 2 < 0.72) clear = false;
+          }
+          if (!clear) continue;
+          this.px[a] = ex;
+          this.pz[a] = ez;
+          this.vx[a] = exit.ox * this.pref[a] * 0.85;
+          this.vz[a] = exit.oz * this.pref[a] * 0.85;
+          this.heading[a] = Math.atan2(exit.oz, exit.ox);
+          this.goal[a] = this.pickOuterGoal(a);
+          return;
+        }
+      }
+    }
+    this.vx[a] = entry.ox * this.pref[a] * 0.7;
+    this.vz[a] = entry.oz * this.pref[a] * 0.7;
+    this.heading[a] = Math.atan2(entry.oz, entry.ox);
+    this.goal[a] = this.pickOuterGoal(a);
+  }
+
   /** Advance every walker by `dt` seconds (split into steps of at most 50 ms). */
   step(dt: number): void {
     let left = Math.min(dt, 0.25);
@@ -971,7 +1008,12 @@ export class Crowd {
         near1 = Math.min(1, od);
       } else if (this.mode[a] === LED && this.arrived[a]) {
         way = null;
-      } else if (portal && (x - portal.x) * portal.ox + (z - portal.z) * portal.oz > -1.4 && (x - portal.x) * portal.ox + (z - portal.z) * portal.oz < 4.5 && Math.abs((x - portal.x) * portal.tx + (z - portal.z) * portal.tz) < 4.5) {
+      } else if (
+        portal &&
+        (x - portal.x) * portal.ox + (z - portal.z) * portal.oz > -1.4 &&
+        (x - portal.x) * portal.ox + (z - portal.z) * portal.oz < 4.5 &&
+        Math.abs((x - portal.x) * portal.tx + (z - portal.z) * portal.tz) < 4.5
+      ) {
         // Steer straight through the open leaves toward the vestibule throat (`-1.25 m` inside).
         const gx = portal.x - portal.ox * 1.25 - x;
         const gz = portal.z - portal.oz * 1.25 - z;
@@ -1068,7 +1110,7 @@ export class Crowd {
       px[a] = nx;
       pz[a] = nz;
       if (portal && (nx - portal.x) * portal.ox + (nz - portal.z) * portal.oz <= -0.8) {
-        this.transferThroughDoorway(a, portal, others, near);
+        this.transferThroughDoorway(a, portal);
       }
       const s = Math.hypot(vx[a], vz[a]);
       if (s > 0.08) {

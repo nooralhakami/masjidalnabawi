@@ -931,10 +931,16 @@ export class CrowdLayer implements CustomLayerInterface {
     this.rehalVao = rvao;
     this.rehalInst = rinst;
     this.buffers = [vbo, inst, look, wPack, wrPack, bvbo, binst, wInst, wLook, wPose, rvbo, rinst];
+    this.unsubDoors = subscribeMosqueDoors(() => {
+      this.crowd?.syncOpenDoors(allDoorwayBayPortals());
+      this.map?.triggerRepaint();
+    });
   }
 
   onRemove(_map: MLMap, gl: WebGL2RenderingContext): void {
     this.kitDisposed = true;
+    this.unsubDoors?.();
+    this.unsubDoors = null;
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
     if (this.vao) gl.deleteVertexArray(this.vao);

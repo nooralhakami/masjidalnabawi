@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
+import { ALHARAMAIN_MODELS } from '../../src/data-next/alharamain-3d';
 import {
   ARCHETYPE_COUNT,
   assignCrowdProfiles,
@@ -13,7 +14,10 @@ import {
   resolveInitialCrowdTier,
 } from '../../src/domain/crowd-profiles';
 import { BONE_COUNT, buildBoneAnimationTexture, CLIP_COUNT, CROWD_CLIP, FRAMES_PER_CLIP, sampleBonePosition } from '../../src/domain/crowd-rig';
-import { parseGlbBuffer } from '../../src/map/glb-layer';
+import { ALWAYS_CLOSED_GATES, allDoorwayBayPortals, resetMosqueDoors, toggleGateBay } from '../../src/domain/mosque-doors';
+import { Crowd } from '../../src/map/crowd-sim';
+import { crowdInput } from '../../src/map/crowd-world';
+import { nodePositions, parseGlbBuffer } from '../../src/map/glb-layer';
 
 describe('Stage 5 crowd profiles & adaptive performance', () => {
   it('generates all 7 cultural archetypes while strictly respecting men/women segregation', () => {
@@ -154,6 +158,50 @@ describe('Stage 5 haram-crowd-kit.glb asset & PERF budget gate', () => {
         }
         expect(wSum).toBe(255);
       }
+    }
+  });
+});
+
+describe('Stage 5 live open-bay doorway crowd interaction', () => {
+  const canopiesFile = readFileSync(resolve(__dirname, '../../public/models/haram-canopies.glb'));
+  const { gltf } = parseGlbBuffer(canopiesFile.buffer.slice(canopiesFile.byteOffset, canopiesFile.byteOffset + canopiesFile.byteLength) as ArrayBuffer);
+  const columnsLL = nodePositions(ALHARAMAIN_MODELS.find((m) => m.url.includes('canopies'))!, gltf);
+
+  it('routes crowd strictly toward open doorway bays (e.g. bays 1 & 2 of Gate 8) and updates dynamically on toggle', () => {
+    resetMosqueDoors();
+    try {
+      const crowd = new Crowd(crowdInput(columnsLL), 320, 9);
+      const active = crowd.getActiveDoorPortals();
+      expect(active.length).toBeGreaterThan(20);
+
+      // Gate 8 has 5 bays: only central bays 1 & 2 are open by default, never closed bays 0, 3, 4
+      const g8Bays = active
+        .filter((p) => p.gateId === 8)
+        .map((p) => p.bayIndex)
+        .sort((a, b) => a - b);
+      expect(g8Bays).toEqual([1, 2]);
+
+      // Always-closed inner gates never appear as open portals
+      for (const closedGateId of ALWAYS_CLOSED_GATES) {
+        expect(active.some((p) => p.gateId === closedGateId)).toBe(false);
+      }
+
+      // Close Gate 8 bay 1 dynamically and sync crowd
+      toggleGateBay(8, 1);
+      crowd.syncOpenDoors(allDoorwayBayPortals());
+      const afterClose = crowd
+        .getActiveDoorPortals()
+        .filter((p) => p.gateId === 8)
+        .map((p) => p.bayIndex);
+      expect(afterClose).toEqual([2]);
+
+      for (let t = 0; t < 5; t += 1 / 30) crowd.step(1 / 30);
+      for (let a = 0; a < crowd.n; a++) {
+        if (Number.isNaN(crowd.px[a])) continue;
+        expect(crowd.standable(crowd.px[a], crowd.pz[a], !crowd.woman[a], true)).toBe(true);
+      }
+    } finally {
+      resetMosqueDoors();
     }
   });
 });
