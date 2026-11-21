@@ -434,14 +434,19 @@ def build_hotel_mesh(b: dict, mat_facade: bpy.types.Material) -> bpy.types.Objec
     mep_hx = max(1.4, min(4.2, (max(xs) - min(xs)) * 0.16))
     mep_hy = max(1.4, min(4.2, (max(ys) - min(ys)) * 0.16))
     if point_in_poly((cx, cy), tower_pts):
-        add_box(
-            bm,
-            uv_layer,
-            (-mep_hx, -mep_hy, h),
-            (mep_hx, mep_hy, h + 0.38),
-            center_xy=(cx, cy),
-            uv_side=UV_ROOF_PATCH,
-        )
+        # 5-face MEP penthouse on roof (omit bottom face touching roof deck)
+        x0, x1, y0, y1, z0, z1 = cx - mep_hx, cx + mep_hx, cy - mep_hy, cy + mep_hy, h, h + 0.38
+        u0, u1, yp0, yp1 = UV_ROOF_PATCH
+        vp0, vp1 = v_px(yp1), v_px(yp0)
+        suv = ((u0, vp0), (u1, vp0), (u1, vp1), (u0, vp1))
+        for coords in (
+            ((x0, y0, z0), (x1, y0, z0), (x1, y0, z1), (x0, y0, z1)),
+            ((x1, y0, z0), (x1, y1, z0), (x1, y1, z1), (x1, y0, z1)),
+            ((x1, y1, z0), (x0, y1, z0), (x0, y1, z1), (x1, y1, z1)),
+            ((x0, y1, z0), (x0, y0, z0), (x0, y0, z1), (x0, y1, z1)),
+            ((x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1)),
+        ):
+            add_uv_quad(bm, uv_layer, coords, suv)
 
     north_edge = max(
         range(len(tower_pts)),
@@ -451,15 +456,21 @@ def build_hotel_mesh(b: dict, mat_facade: bpy.types.Material) -> bpy.types.Objec
     ndx, ndy = nb[0] - na[0], nb[1] - na[1]
     nlen = math.hypot(ndx, ndy)
     if nlen >= 4.0:
-        sign_w = min(7.0, nlen * 0.5)
-        add_box(
+        sign_hw = min(3.5, nlen * 0.25)
+        yaw_s = math.atan2(ndy, ndx)
+        ca_s, sa_s = math.cos(yaw_s), math.sin(yaw_s)
+        scx, scy = 0.5 * (na[0] + nb[0]), 0.5 * (na[1] + nb[1])
+        # Outward normal offset 0.14 m north of parapet face (single crisp glowing sign strip)
+        ox, oy = sa_s * 0.14, -ca_s * 0.14
+        sx0, sy0 = scx + ox - ca_s * sign_hw, scy + oy - sa_s * sign_hw
+        sx1, sy1 = scx + ox + ca_s * sign_hw, scy + oy + sa_s * sign_hw
+        gu0, gu1, gy0, gy1 = UV_GLOW_PATCH
+        gv0, gv1 = v_px(gy1), v_px(gy0)
+        add_uv_quad(
             bm,
             uv_layer,
-            (-sign_w * 0.5, -0.20, h - 0.90),
-            (sign_w * 0.5, 0.0, h - 0.12),
-            yaw_rad=math.atan2(ndy, ndx),
-            center_xy=(0.5 * (na[0] + nb[0]), 0.5 * (na[1] + nb[1])),
-            uv_side=UV_GLOW_PATCH,
+            ((sx0, sy0, h - 0.90), (sx1, sy1, h - 0.90), (sx1, sy1, h - 0.12), (sx0, sy0, h - 0.12)),
+            ((gu0, gv0), (gu1, gv0), (gu1, gv1), (gu0, gv1)),
         )
 
     bmesh.ops.triangulate(bm, faces=bm.faces[:], quad_method="BEAUTY", ngon_method="BEAUTY")
@@ -633,29 +644,31 @@ def build_props(
         for k in range(3):
             kn = (k + 1) % 3
             bm_pole.faces.new((b_v[k], b_v[kn], t_v[kn], t_v[k]))
-        # Crossarm V-blade (two angled quads)
+        # Single slim crossarm blade (CULL_FACE is off in Urban3DLayer)
         px, py = -sa * 0.06, ca * 0.06
         arm_l = 1.05
-        for z_off in (7.30, 7.42):
-            v0 = bm_pole.verts.new((cx - ca * arm_l - px, cy - sa * arm_l - py, z_off))
-            v1 = bm_pole.verts.new((cx + ca * arm_l - px, cy + sa * arm_l - py, z_off))
-            v2 = bm_pole.verts.new((cx + ca * arm_l + px, cy + sa * arm_l + py, z_off))
-            v3 = bm_pole.verts.new((cx - ca * arm_l + px, cy - sa * arm_l + py, z_off))
-            bm_pole.faces.new((v0, v1, v2, v3))
+        v0 = bm_pole.verts.new((cx - ca * arm_l - px, cy - sa * arm_l - py, 7.36))
+        v1 = bm_pole.verts.new((cx + ca * arm_l - px, cy + sa * arm_l - py, 7.36))
+        v2 = bm_pole.verts.new((cx + ca * arm_l + px, cy + sa * arm_l + py, 7.36))
+        v3 = bm_pole.verts.new((cx - ca * arm_l + px, cy - sa * arm_l + py, 7.36))
+        bm_pole.faces.new((v0, v1, v2, v3))
 
-        # Twin compact 4-sided lantern heads (5 verts each) + 1 radial ground light pool quad (4 verts)
+        # Twin compact glowing lantern heads (2 crossed glow quads = 8 verts per lamp) + radial pool
         for sgn in (-1.0, 1.0):
             hx, hy = cx + ca * sgn * 1.0, cy + sa * sgn * 1.0
-            r_l = 0.20
-            b0 = bm_glow.verts.new((hx - r_l, hy - r_l, 7.05))
-            b1 = bm_glow.verts.new((hx + r_l, hy - r_l, 7.05))
-            b2 = bm_glow.verts.new((hx + r_l, hy + r_l, 7.05))
-            b3 = bm_glow.verts.new((hx - r_l, hy + r_l, 7.05))
-            apex = bm_glow.verts.new((hx, hy, 7.28))
-            for tri in ((b0, b1, apex), (b1, b2, apex), (b2, b3, apex), (b3, b0, apex), (b3, b2, b1, b0)):
-                f = bm_glow.faces.new(tri)
-                for loop in f.loops:
-                    loop[uv_glow].uv = (0.5, 0.5)
+            r_l = 0.22
+            for dx_l, dy_l in ((r_l, 0.0), (0.0, r_l)):
+                add_uv_quad(
+                    bm_glow,
+                    uv_glow,
+                    (
+                        (hx - dx_l, hy - dy_l, 7.05),
+                        (hx + dx_l, hy + dy_l, 7.05),
+                        (hx + dx_l, hy + dy_l, 7.30),
+                        (hx - dx_l, hy - dy_l, 7.30),
+                    ),
+                    ((0.5, 0.5), (0.5, 0.5), (0.5, 0.5), (0.5, 0.5)),
+                )
 
         pool_r = 2.3
         add_uv_quad(
@@ -688,7 +701,7 @@ def build_props(
     bpy.context.collection.objects.link(o_glow)
     o_glow["kind"] = "lamp_glow"
 
-    # 3. Madinah Date Palms (4-sided tapered trunks sharing verts + 5 arched frond blades)
+    # 3. Madinah Date Palms (3-sided tapered trunks + 4 arched frond blades)
     bm_palm = bmesh.new()
     for pm in props.get("palms", []):
         cx, cy = to_blender_xy(pm["lng"], pm["lat"])
@@ -699,25 +712,25 @@ def build_props(
 
         b_v = []
         t_v = []
-        for k in range(4):
-            a = rot0 + (2.0 * math.pi * k) / 4.0
+        for k in range(3):
+            a = rot0 + (2.0 * math.pi * k) / 3.0
             ca, sa = math.cos(a), math.sin(a)
             b_v.append(bm_palm.verts.new((cx + rb * ca, cy + rb * sa, 0.18)))
             t_v.append(bm_palm.verts.new((cx + rt * ca, cy + rt * sa, th)))
-        for k in range(4):
-            kn = (k + 1) % 4
+        for k in range(3):
+            kn = (k + 1) % 3
             f = bm_palm.faces.new((b_v[k], b_v[kn], t_v[kn], t_v[k]))
             f.material_index = 0
 
         v_root = bm_palm.verts.new((cx, cy, th))
-        for k in range(5):
-            fa = rot0 + (2.0 * math.pi * k) / 5.0
+        for k in range(4):
+            fa = rot0 + (2.0 * math.pi * k) / 4.0
             cf, sf = math.cos(fa), math.sin(fa)
             px, py = -sf, cf
             l1, l2 = 1.45 * sc, 2.75 * sc
             z_apex = th + 0.72 * sc
             z_tip = th - 0.55 * sc
-            w_mid = 0.48 * sc
+            w_mid = 0.50 * sc
 
             v_l = bm_palm.verts.new((cx + cf * l1 + px * w_mid, cy + sf * l1 + py * w_mid, z_apex))
             v_r = bm_palm.verts.new((cx + cf * l1 - px * w_mid, cy + sf * l1 - py * w_mid, z_apex))

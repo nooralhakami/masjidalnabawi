@@ -169,7 +169,8 @@ export const DATA_PROVENANCE: Readonly<Record<DataSourceId, DataSourceRecord>> =
     tier: 'verified',
     routingAllowed: true,
     path: 'data/urban-approved.json',
-    description: 'Stage 5 owner-approved Southern Plaza buildings (7 hotels, flat pending owner floors, western facade entrances) and verified OSM street corridors.',
+    description:
+      'Stage 6 Zone 1 South owner-approved buildings (57 Authority 2026 South hotels + Stage 5 slice: 52 footprinted with 4 OSM levels and 48 display-only 3D heights + 5 pin-only) and 171 verified OSM street corridors.',
   },
   'navq-interior-floor': {
     id: 'navq-interior-floor',

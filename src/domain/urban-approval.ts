@@ -5,26 +5,38 @@ import { fromWalkMetres, toWalkMetres, type XY } from './frames';
 export interface ApprovedBuilding {
   buildingId: string;
   poiId: number;
+  guideNumber: number | null;
+  zone: string;
   name_ar: string;
   osm: string | null;
   areaM2: number;
   center: LatLng;
-  entranceSide: 'west';
-  /** Western facade street door (`الواجهة الغربية على الشارع`). */
+  entranceSide: 'north' | 'south' | 'east' | 'west';
+  /** Street-facing facade entrance (`الواجهة على الشارع`). */
   entrance: LatLng;
-  /** Adjacent western street kerb / dropoff for driving routes. */
+  /** Adjacent drivable street kerb / dropoff for driving routes. */
   dropoff: LatLng;
-  /** Floor count deferred pending owner input; flat footprint when `null`. */
-  levels: null;
+  hasFootprint: boolean;
+  footprintSplit: 'single' | 'provisional_pin_partition' | 'none';
+  /** Verified OSM/owner floor count when known; `null` when only display-estimated or pin-only. */
+  levels: number | null;
+  /** Display-only 3D height tiers (`10..14` for unmeasured Markaziyah towers); never shown as verified facts. */
+  displayFloors: number | null;
   heightM: number;
-  heightSource: 'flat_pending_owner_floors';
-  /** Closed GeoJSON ring (`[lng, lat][]`). */
+  heightSource: 'osm_levels' | 'estimated_display_only' | 'owner_verified' | 'none';
+  confidence: 'osm' | 'display_only' | 'owner' | 'none';
+  styleId: number;
+  seed: number;
+  tint: number;
+  /** Closed GeoJSON ring (`[lng, lat][]`), empty for pin-only hotels (`hasFootprint === false`). */
   polygon: readonly (readonly [number, number])[];
 }
 
 const VERIFIED = tier === 'verified' && approvedBy === 'owner';
 
 export const APPROVED_BUILDINGS: readonly ApprovedBuilding[] = VERIFIED ? (buildings as unknown as ApprovedBuilding[]) : [];
+
+export const APPROVED_FOOTPRINT_BUILDINGS: readonly ApprovedBuilding[] = APPROVED_BUILDINGS.filter((b) => b.hasFootprint && b.polygon.length >= 4);
 
 export const APPROVED_BY_POI_ID: ReadonlyMap<number, ApprovedBuilding> = new Map(APPROVED_BUILDINGS.map((b) => [b.poiId, b]));
 
@@ -74,7 +86,7 @@ function convexHull2D(pts: readonly XY[]): XY[] {
   return [...lower.slice(0, -1), ...upper.slice(0, -1)];
 }
 
-const POLYS_M: readonly PolyMetres[] = APPROVED_BUILDINGS.map((building) => {
+const POLYS_M: readonly PolyMetres[] = APPROVED_FOOTPRINT_BUILDINGS.map((building) => {
   const open = building.polygon.slice(0, -1).map(([lng, lat]) => toWalkMetres([lat, lng]));
   const xs = open.map((p) => p[0]);
   const ys = open.map((p) => p[1]);

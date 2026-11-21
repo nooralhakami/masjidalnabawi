@@ -3,7 +3,7 @@ import { elevatorBadge, isClosed, pairOf, type Facilities } from '../../domain/f
 import { nearestOuterGate } from '../../domain/nearby';
 import { lotLevels, parkingSectionsForLot } from '../../domain/parking';
 import { rawdahState } from '../../domain/rawdah';
-import { isApprovedHotel } from '../../domain/urban-approval';
+import { approvedHotelInfo, isApprovedHotel } from '../../domain/urban-approval';
 import { num } from '../../i18n';
 import { lookOf } from '../../presentation/markers';
 import { kindLabel } from '../../presentation/search-view';

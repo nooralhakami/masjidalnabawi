@@ -320,8 +320,8 @@ def build_textures() -> None:
         print(f"Saved {out_path} ({out_path.stat().st_size} bytes)")
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    save_jpeg(albedo, OUT_ATLAS, quality=86)
-    save_jpeg(mask, OUT_MASK, quality=84)
+    save_jpeg(albedo, OUT_ATLAS, quality=78)
+    save_jpeg(mask, OUT_MASK, quality=76)
 
 
 if __name__ == "__main__":
