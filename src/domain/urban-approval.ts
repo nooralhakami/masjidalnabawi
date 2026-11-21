@@ -166,38 +166,43 @@ function polyPerimeterLen(pts: readonly XY[]): number {
 }
 
 function detourOnePoly(a: XY, b: XY, poly: PolyMetres, margin: number): XY[] | null {
-  const ring = expandRing(poly.hull, margin);
-  const n = ring.length;
-  const nearestIdx = (p: XY) => {
-    let best = 0;
-    let bestD = Infinity;
-    for (let i = 0; i < n; i++) {
-      const d = Math.hypot(ring[i][0] - p[0], ring[i][1] - p[1]);
-      if (d < bestD) {
-        bestD = d;
-        best = i;
+  for (const m of [margin, 0.35, 0.15]) {
+    const ring = expandRing(poly.hull, m);
+    const n = ring.length;
+    const nearestIdx = (p: XY) => {
+      let best = 0;
+      let bestD = Infinity;
+      for (let i = 0; i < n; i++) {
+        const d = Math.hypot(ring[i][0] - p[0], ring[i][1] - p[1]);
+        if (d < bestD) {
+          bestD = d;
+          best = i;
+        }
       }
+      return best;
+    };
+    const ia = nearestIdx(a);
+    const ib = nearestIdx(b);
+    const cw: XY[] = [a];
+    for (let k = ia; ; k = (k + 1) % n) {
+      cw.push(ring[k]);
+      if (k === ib) break;
     }
-    return best;
-  };
-  const ia = nearestIdx(a);
-  const ib = nearestIdx(b);
-  const cw: XY[] = [a];
-  for (let k = ia; ; k = (k + 1) % n) {
-    cw.push(ring[k]);
-    if (k === ib) break;
+    cw.push(b);
+    const ccw: XY[] = [a];
+    for (let k = ia; ; k = (k - 1 + n) % n) {
+      ccw.push(ring[k]);
+      if (k === ib) break;
+    }
+    ccw.push(b);
+    const candidates = [cw, ccw].filter((cand) => cand.every((pt, idx) => idx === 0 || !segmentCrossesRing(cand[idx - 1], pt, poly)));
+    if (!candidates.length) continue;
+    candidates.sort((x, y) => polyPerimeterLen(x) - polyPerimeterLen(y));
+    const cleanAll = candidates.find((cand) => cand.every((pt, idx) => idx === 0 || POLYS_M.every((other) => !segmentCrossesRing(cand[idx - 1], pt, other))));
+    if (cleanAll) return cleanAll;
+    if (m === 0.15) return candidates[0];
   }
-  cw.push(b);
-  const ccw: XY[] = [a];
-  for (let k = ia; ; k = (k - 1 + n) % n) {
-    ccw.push(ring[k]);
-    if (k === ib) break;
-  }
-  ccw.push(b);
-  const candidates = [cw, ccw].filter((cand) => cand.every((pt, idx) => idx === 0 || !segmentCrossesRing(cand[idx - 1], pt, poly)));
-  if (!candidates.length) return null;
-  candidates.sort((x, y) => polyPerimeterLen(x) - polyPerimeterLen(y));
-  return candidates[0];
+  return null;
 }
 
 /** Whether a point lies inside any Stage 5 approved hotel footprint. */
@@ -228,35 +233,47 @@ export function pathHitsApprovedBuilding(path: readonly LatLng[]): boolean {
 export function clearApprovedBuildings(path: readonly LatLng[], clearanceM = 1.2): LatLng[] {
   if (path.length < 2 || POLYS_M.length === 0) return [...path];
   let pts = path.map(toWalkMetres);
-  for (const poly of POLYS_M) {
-    if (pointInRing(pts[0], poly.ring) || pointInRing(pts[pts.length - 1], poly.ring)) continue;
-    const out: XY[] = [pts[0]];
-    let i = 1;
-    while (i < pts.length) {
-      if (i < pts.length - 1 && pointInRing(pts[i], poly.ring)) {
-        let j = i;
-        while (j < pts.length - 1 && pointInRing(pts[j], poly.ring)) j++;
+  for (let pass = 0; pass < 3; pass++) {
+    let changed = false;
+    for (const poly of POLYS_M) {
+      if (pointInRing(pts[0], poly.ring) || pointInRing(pts[pts.length - 1], poly.ring)) continue;
+      const out: XY[] = [pts[0]];
+      let i = 1;
+      while (i < pts.length) {
+        if (i < pts.length - 1 && pointInRing(pts[i], poly.ring)) {
+          let j = i;
+          while (j < pts.length - 1 && pointInRing(pts[j], poly.ring)) j++;
+          const prev = out[out.length - 1];
+          const after = pts[j];
+          const detour = detourOnePoly(prev, after, poly, clearanceM);
+          if (detour) {
+            out.push(...detour.slice(1));
+            changed = true;
+          } else {
+            out.push(after);
+          }
+          i = j + 1;
+          continue;
+        }
         const prev = out[out.length - 1];
-        const after = pts[j];
-        const detour = detourOnePoly(prev, after, poly, clearanceM);
-        if (detour) out.push(...detour.slice(1));
-        else out.push(after);
-        i = j + 1;
-        continue;
-      }
-      const prev = out[out.length - 1];
-      const next = pts[i];
-      if (!segmentCrossesRing(prev, next, poly)) {
-        out.push(next);
+        const next = pts[i];
+        if (!segmentCrossesRing(prev, next, poly)) {
+          out.push(next);
+          i++;
+          continue;
+        }
+        const detour = detourOnePoly(prev, next, poly, clearanceM);
+        if (detour) {
+          out.push(...detour.slice(1));
+          changed = true;
+        } else {
+          out.push(next);
+        }
         i++;
-        continue;
       }
-      const detour = detourOnePoly(prev, next, poly, clearanceM);
-      if (detour) out.push(...detour.slice(1));
-      else out.push(next);
-      i++;
+      pts = out;
     }
-    pts = out;
+    if (!changed) break;
   }
   return pts.map(fromWalkMetres);
 }

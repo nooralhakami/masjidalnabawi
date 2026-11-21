@@ -482,14 +482,15 @@ async function planDrive(from: LatLng, to: Poi, level: Level = 'B', heading?: nu
     }
     if (k < 0) k = bestNear(S, r, driveDest, 'drive');
     if (!Number.isFinite(r.dist[k])) return [];
-    const drive = streetPath(S, r, k, from, false);
+    const rawDrive = streetPath(S, r, k, from, false);
     const rawKerb = fromM(S.xy[k]);
     if (hotel) {
       const kerbGap = len([rawKerb, hotel.dropoff]);
       if (kerbGap > 1 && kerbGap <= 60 && !pathHitsApprovedBuilding([rawKerb, hotel.dropoff])) {
-        drive.push(hotel.dropoff);
+        rawDrive.push(hotel.dropoff);
       }
     }
+    const drive = hotel ? clearApprovedBuildings(rawDrive) : rawDrive;
     const kerb = drive[drive.length - 1];
     const rawWalk = len([kerb, walkDest]) > 2 ? await walkLegs(kerb, walkDest) : [];
     const walk = hotel && rawWalk.length ? clearApprovedBuildings(rawWalk) : rawWalk;

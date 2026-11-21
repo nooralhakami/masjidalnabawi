@@ -64,11 +64,11 @@ describe('inner gate names and descriptions', () => {
 });
 
 describe('pois.json', () => {
-  it('has 464 POIs with unique ids (including 20 west expansion outer gates 401–420 as 1401–1420 and Stage 6 South+West+North hotels)', () => {
-    expect(POIS).toHaveLength(464);
+  it('has 534 POIs with unique ids (including 20 west expansion outer gates 401–420 as 1401–1420 and Stage 6 South+West+North+SW hotels)', () => {
+    expect(POIS).toHaveLength(534);
     expect(POI_BY_ID.has(523)).toBe(false);
     expect(POI_BY_ID.has(524)).toBe(false);
-    expect(POI_BY_ID.size).toBe(464);
+    expect(POI_BY_ID.size).toBe(534);
     expect(POI_BY_ID.has(409)).toBe(false);
     expect(POI_BY_ID.has(410)).toBe(false);
     expect(POI_BY_ID.get(604)?.category).toBe('landmarks');
@@ -82,7 +82,7 @@ describe('pois.json', () => {
     ['wheelchair', 8],
     ['emergency', 9],
     ['women', 2],
-    ['hotels', 162],
+    ['hotels', 232],
     ['food', 44],
     ['shopping', 15],
   ] as const)('category %s has %i POIs', (cat, n) => {

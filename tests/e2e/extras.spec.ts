@@ -108,8 +108,8 @@ test.describe('languages', () => {
       await item.click();
       await expect(page.locator('html')).toHaveAttribute('lang', code);
       await expect(page.locator('html')).toHaveAttribute('dir', dir);
-      expect(await pillCount(page), code).toBe('394');
-      await expect.poll(() => page.evaluate(() => (window as any).__engine.view.ids.length), { message: code }).toBe(394);
+      expect(await pillCount(page), code).toBe('465');
+      await expect.poll(() => page.evaluate(() => (window as any).__engine.view.ids.length), { message: code }).toBe(465);
     }
   });
 
