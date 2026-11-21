@@ -688,9 +688,11 @@ def main() -> None:
                         cand_xy = (mx + nx * push, my + ny * push)
                         if not outside_all_polys_and_haram(cand_xy, 0.15):
                             continue
-                        d_st = min(dist_pt_seg(cand_xy, sp0, sp1)[0] for sp0, sp1, _m in surface_all_segs)
+                        d_road = min(dist_pt_seg(cand_xy, sp0, sp1)[0] for sp0, sp1, _m, _w in surface_drivable_segs)
+                        d_foot = min(dist_pt_seg(cand_xy, sp0, sp1)[0] for sp0, sp1, _m in surface_all_segs)
+                        d_st = min(d_road, d_foot + 4.0)
                         d_pin = math.hypot(cand_xy[0] - pin_xy[0], cand_xy[1] - pin_xy[1])
-                        south_bonus = -1.5 if side == "south" else 0.0
+                        south_bonus = -1.5 if (side == "south" and center_latlng[0] <= 24.4715) else 0.0
                         score = d_st * 2.0 + 0.12 * d_pin + push * 0.5 + south_bonus
                         if score < best_score:
                             best_score = score
@@ -761,10 +763,20 @@ def main() -> None:
             area_m2 = 0.0
             ring_lnglat = []
             entrance_side = "south"
-            # Existing POI 710 / 720 are on OSM streets outside buildings; keep safe exterior coords
-            ent_src = [existing_poi["lat"], existing_poi["lng"]] if existing_poi else center_latlng
-            entrance_ll = [round(ent_src[0], 7), round(ent_src[1], 7)]
-            ent_xy = to_xy(entrance_ll[1], entrance_ll[0])
+            # Use Stage 1 street pin (center_latlng) and enforce strictly exterior street clearance
+            ent_xy = to_xy(center_latlng[1], center_latlng[0])
+            if not outside_all_polys_and_haram(ent_xy, 0.25):
+                best_d = float("inf")
+                best_pt = ent_xy
+                for sp0, sp1, _m in surface_all_segs:
+                    d, proj = dist_pt_seg(ent_xy, sp0, sp1)
+                    if outside_all_polys_and_haram(proj, 0.25) and d < best_d:
+                        best_d = d
+                        best_pt = proj
+                ent_xy = best_pt
+            assert outside_all_polys_and_haram(ent_xy, 0.15), f"Pin-only entrance #{gnum} inside building or fence"
+            elng, elat = from_xy(*ent_xy)
+            entrance_ll = [round(elat, 7), round(elng, 7)]
             drp_lat, drp_lng = nearest_drivable_dropoff(ent_xy)
             dropoff_ll = [drp_lat, drp_lng]
             levels = None

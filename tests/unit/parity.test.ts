@@ -57,7 +57,7 @@ describe('parity: driving to the car park under the Haram', () => {
 describe('parity: search', () => {
   const ids = (q: string) => search(POIS, q).map((p) => p.id);
   it('215 and ٢١٥ find restroom 215 first', () => {
-    expect(ids('215')).toEqual([215, 2215, 906, 907]);
+    expect(ids('215')).toEqual([215, 2215, 2151, 2154, 2157, 906, 907]);
     expect(ids('٢١٥')).toEqual(ids('215'));
   });
   it('«Al Baik» finds the five branches', () => expect(ids('Al Baik')).toEqual([824, 827, 828, 829, 830]));
