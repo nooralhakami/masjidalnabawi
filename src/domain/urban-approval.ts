@@ -373,7 +373,7 @@ export function pickApprovedBuildingRay(origin: readonly [number, number, number
   return best;
 }
 
-export type UrbanZone = 'south' | 'west' | 'north';
+export type UrbanZone = 'south' | 'west' | 'north' | 'sw';
 
 /**
  * Obstruction-fade opacity (A8) for Stage 6 Plaza buildings when looking across them
@@ -381,10 +381,11 @@ export type UrbanZone = 'south' | 'west' | 'north';
  *   - `'south'` faces North (`0°`) across Southern Plaza buildings.
  *   - `'west'` faces East (`90°`) across Western Plaza buildings.
  *   - `'north'` faces South (`180°`) across Northern Plaza buildings.
+ *   - `'sw'` faces Northeast (`45°`) across Southwestern Plaza buildings.
  */
 export function urbanOpacityForCamera(bearingDeg: number, pitchDeg: number, zone: UrbanZone = 'south'): number {
   if (pitchDeg < 30) return 1;
-  const targetDeg = zone === 'west' ? 90 : zone === 'north' ? 180 : 0;
+  const targetDeg = zone === 'west' ? 90 : zone === 'north' ? 180 : zone === 'sw' ? 45 : 0;
   const diff = Math.abs(((((bearingDeg - targetDeg + 180) % 360) + 360) % 360) - 180);
   if (diff > 55) return 1;
   return diff <= 35 && pitchDeg >= 45 ? 0.28 : 0.32;

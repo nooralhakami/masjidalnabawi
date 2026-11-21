@@ -15,11 +15,13 @@ import type { SceneLight } from './scene-light';
 export const URBAN_GLB_URL = './models/urban-south-stage6.glb';
 export const URBAN_WEST_GLB_URL = './models/urban-west-stage6.glb';
 export const URBAN_NORTH_GLB_URL = './models/urban-north-stage6.glb';
+export const URBAN_SW_GLB_URL = './models/urban-sw-stage6.glb';
 export const URBAN_LAYER_ID = 'urban-south-3d';
 export const URBAN_ZONES = [
   { id: 'south', url: URBAN_GLB_URL },
   { id: 'west', url: URBAN_WEST_GLB_URL },
   { id: 'north', url: URBAN_NORTH_GLB_URL },
+  { id: 'sw', url: URBAN_SW_GLB_URL },
 ] as const;
 export type UrbanZoneId = (typeof URBAN_ZONES)[number]['id'];
 export const URBAN_STREETS_SOURCE_ID = 'urban-south-streets';
@@ -726,6 +728,7 @@ export class Urban3DLayer implements CustomLayerInterface {
       south: urbanOpacityForCamera(bearing, pitch, 'south'),
       west: urbanOpacityForCamera(bearing, pitch, 'west'),
       north: urbanOpacityForCamera(bearing, pitch, 'north'),
+      sw: urbanOpacityForCamera(bearing, pitch, 'sw'),
     };
     const eye = cameraEye(this.map);
 
