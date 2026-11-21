@@ -93,7 +93,7 @@ def paint_window_pane(
         half_w = max(1.0, gw * 0.5)
         upper = yy < arch_h
         rel_y = (arch_h - yy) / float(arch_h)
-        max_dx = half_w * np.sqrt(np.clip(1.0 - rel_y ** 1.6, 0.0, 1.0))
+        max_dx = half_w * np.sqrt(np.clip(1.0 - np.maximum(rel_y, 0.0) ** 1.6, 0.0, 1.0))
         inside = (~upper) | (np.abs(xx - cx) <= max_dx)
 
     # Set glass albedo + R glass mask
