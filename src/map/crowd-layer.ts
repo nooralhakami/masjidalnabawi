@@ -12,6 +12,7 @@ import {
   resolveInitialCrowdTier,
 } from '../domain/crowd-profiles';
 import { buildBoneAnimationTexture, CROWD_CLIP } from '../domain/crowd-rig';
+import { allDoorwayBayPortals, subscribeMosqueDoors } from '../domain/mosque-doors';
 import type { PrayerDemoOverride } from '../domain/prayer-session';
 import { Flows } from './crowd-flows';
 import { Crowd, POSTURE_CODE, Worshippers, worshipperPose } from './crowd-sim';
@@ -753,6 +754,7 @@ export class CrowdLayer implements CustomLayerInterface {
   private perfGuard: CrowdPerfGuard;
   private animClockStart = 0;
   private lastTickWall = 0;
+  private unsubDoors: (() => void) | null = null;
 
   /** `demo` names a prayer scene for a preview link (`?prayerDemo=fajr`); without it, the clock. */
   constructor(

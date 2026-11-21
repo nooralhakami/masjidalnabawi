@@ -282,6 +282,39 @@ export function subscribeMosqueDoors(fn: () => void): () => void {
   return () => listeners.delete(fn);
 }
 
+export interface DoorwayBayPortal {
+  gateId: number;
+  bayIndex: number;
+  open: boolean;
+  women: boolean;
+  x: number;
+  y: number;
+  widthM: number;
+  outward: readonly [number, number];
+  tangent: readonly [number, number];
+}
+
+/** All 83 Mosque doorway bays with live open/closed state, orientation vectors, and access polarity. */
+export function allDoorwayBayPortals(): DoorwayBayPortal[] {
+  const out: DoorwayBayPortal[] = [];
+  for (const gate of doorStates) {
+    for (const bay of gate.bays) {
+      out.push({
+        gateId: gate.id,
+        bayIndex: bay.bayIndex,
+        open: gate.open && bay.open,
+        women: gate.women,
+        x: bay.x,
+        y: bay.y,
+        widthM: bay.widthM,
+        outward: gate.outward,
+        tangent: gate.tangent,
+      });
+    }
+  }
+  return out;
+}
+
 export function openDoorwayBayCentres(): Array<{
   gateId: number;
   bayIndex: number;

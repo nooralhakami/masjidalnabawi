@@ -26,6 +26,31 @@ import {
 
 export type XY = readonly [number, number];
 
+export interface DoorwayBayInput {
+  gateId: number;
+  bayIndex: number;
+  open: boolean;
+  women: boolean;
+  x: number;
+  y: number;
+  widthM: number;
+  outward: XY;
+  tangent: XY;
+}
+
+interface ActiveDoorPortal {
+  gateId: number;
+  bayIndex: number;
+  women: boolean;
+  x: number;
+  z: number;
+  ox: number;
+  oz: number;
+  tx: number;
+  tz: number;
+  goalIndex: number;
+}
+
 export interface CrowdInput {
   /** Where people may walk (the plazas). */
   walkable: readonly (readonly XY[])[];
@@ -39,6 +64,8 @@ export interface CrowdInput {
   columns: readonly XY[];
   /** Where people walk to: the gates. */
   goals: readonly XY[];
+  /** Live Mosque inner doorway bays (carved into walkable floor only when `open`). */
+  doorBays?: readonly DoorwayBayInput[];
   /**
    * For women only (owner, 2026-11-07): men never stand here; women come and go through the
    * gaps left between the `fences`.
@@ -139,6 +166,16 @@ export class Crowd {
   /** The goals a man may walk to, and those in the women's areas. */
   private readonly menGoals: number[];
   private readonly womenGoals: number[];
+  private readonly walkBase: Uint8Array;
+  private readonly blockedMask: Uint8Array;
+  private readonly fenceCells: readonly number[];
+  private readonly zone: Uint8Array;
+  private lastKeep: [number, number, number] | null = null;
+  private doorPortals: ActiveDoorPortal[] = [];
+  private readonly doorGoalByKey = new Map<string, number>();
+  private readonly doorGoalMap = new Map<number, ActiveDoorPortal>();
+  private menDoorGoals: number[] = [];
+  private womenDoorGoals: number[] = [];
   /** 2 m cells within MEN_CLEAR of a women's area. */
   private readonly nearWomen: Uint8Array;
   /** 1 where no free walker is placed. */
@@ -225,6 +262,9 @@ export class Crowd {
     // A clear disc round each column (its body plus a walker's).
     this.columns = input.columns;
     const reach = COLUMN_R + BODY_R;
+    const blocked = new Uint8Array(w * h);
+    for (let k = 0; k < w * h; k++) if (B[k] && !O[k]) blocked[k] = 1;
+    for (const k of fenceCells) blocked[k] = 1;
     for (const [cx, cz] of input.columns) {
       const i0 = Math.floor((cx - reach - x0) / CELL);
       const j0 = Math.floor((cz - reach - z0) / CELL);
@@ -233,10 +273,16 @@ export class Crowd {
           if (i < 0 || j < 0 || i >= w || j >= h) continue;
           const dx = x0 + (i + 0.5) * CELL - cx;
           const dz = z0 + (j + 0.5) * CELL - cz;
-          if (dx * dx + dz * dz < reach * reach) this.walk[j * w + i] = 0;
+          if (dx * dx + dz * dz < reach * reach) {
+            this.walk[j * w + i] = 0;
+            blocked[j * w + i] = 1;
+          }
         }
       }
     }
+    this.blockedMask = blocked;
+    this.fenceCells = fenceCells;
+    this.walkBase = this.walk.slice();
     input.columns.forEach(([cx, cz], k) => {
       const key = this.colKey(cx, cz);
       const list = this.colHash.get(key) ?? [];
@@ -247,41 +293,11 @@ export class Crowd {
     // The way: a 2 m cell is walkable when most of it is.
     this.fw = w / FLOW;
     this.fh = h / FLOW;
-    const forWomen = new Uint8Array(this.fw * this.fh);
-    const forMen = new Uint8Array(this.fw * this.fh);
-    const forHeld = new Uint8Array(this.fw * this.fh);
-    const zone = new Uint8Array(this.fw * this.fh);
-    for (let fj = 0; fj < this.fh; fj++) {
-      for (let fi = 0; fi < this.fw; fi++) {
-        let all = 0;
-        let men = 0;
-        let only = 0;
-        let held = 0;
-        for (let j = 0; j < FLOW; j++) {
-          for (let i = 0; i < FLOW; i++) {
-            const v = this.walk[(fj * FLOW + j) * w + fi * FLOW + i];
-            if (v === 1 || v === 2) all++;
-            if (v === 1) men++;
-            if (v === 2) only++;
-            if (v === 1 || v === 4) held++;
-          }
-        }
-        const c = fj * this.fw + fi;
-        forWomen[c] = all >= (FLOW * FLOW) / 2 ? 1 : 0;
-        // A man's way keeps off any 2 m cell that touches a women's area, so it never leads him
-        // along its edge to push at it (the crush by block 215, owner 2026-11-07).
-        forMen[c] = men >= (FLOW * FLOW) / 2 && only === 0 ? 1 : 0;
-        forHeld[c] = held >= (FLOW * FLOW) / 2 && only === 0 ? 1 : 0;
-        zone[c] = only > 0 ? 1 : 0;
-      }
-    }
-    // The way never leads through a fence, however thin.
-    for (const k of fenceCells) {
-      const i = k % w;
-      const c = Math.floor((k - i) / w / FLOW) * this.fw + Math.floor(i / FLOW);
-      forWomen[c] = forMen[c] = forHeld[c] = 0;
-    }
-    this.flowWalk = [forWomen, forMen, forHeld];
+    this.flowWalk = [new Uint8Array(this.fw * this.fh), new Uint8Array(this.fw * this.fh), new Uint8Array(this.fw * this.fh)];
+    this.zone = new Uint8Array(this.fw * this.fh);
+    this.recomputeFlowWalk();
+    const [forWomen, forMen] = this.flowWalk;
+    const zone = this.zone;
     // Within MEN_CLEAR of the women's areas (a spread over the 2 m cells).
     this.nearWomen = zone.slice();
     for (let r = 0; r < Math.ceil(MEN_CLEAR / (CELL * FLOW)); r++) {
@@ -328,7 +344,160 @@ export class Crowd {
     this.tz = new Float64Array(count);
     this.space = new Float32Array(count).fill(1);
     this.corridor = new Uint8Array(count);
+    if (input.doorBays?.length) this.syncOpenDoors(input.doorBays, true);
     for (let a = 0; a < count; a++) this.spawn(a);
+  }
+
+  private recomputeFlowWalk(): void {
+    const { w, fw, fh, walk } = this;
+    const [forWomen, forMen, forHeld] = this.flowWalk;
+    const zone = this.zone;
+    for (let fj = 0; fj < fh; fj++) {
+      for (let fi = 0; fi < fw; fi++) {
+        let all = 0;
+        let men = 0;
+        let only = 0;
+        let held = 0;
+        for (let j = 0; j < FLOW; j++) {
+          for (let i = 0; i < FLOW; i++) {
+            const v = walk[(fj * FLOW + j) * w + fi * FLOW + i];
+            if (v === 1 || v === 2) all++;
+            if (v === 1) men++;
+            if (v === 2) only++;
+            if (v === 1 || v === 4) held++;
+          }
+        }
+        const c = fj * fw + fi;
+        forWomen[c] = all >= (FLOW * FLOW) / 2 ? 1 : 0;
+        forMen[c] = men >= (FLOW * FLOW) / 2 && only === 0 ? 1 : 0;
+        forHeld[c] = held >= (FLOW * FLOW) / 2 && only === 0 ? 1 : 0;
+        zone[c] = only > 0 ? 1 : 0;
+      }
+    }
+    for (const k of this.fenceCells) {
+      const i = k % w;
+      const c = Math.floor((k - i) / w / FLOW) * fw + Math.floor(i / FLOW);
+      forWomen[c] = forMen[c] = forHeld[c] = 0;
+    }
+  }
+
+  /**
+   * Synchronizes the crowd navigation grid and doorway goals with live open/closed doorway bays
+   * so walkers enter and emerge strictly through currently open bays (and never closed ones).
+   */
+  syncOpenDoors(bays: readonly DoorwayBayInput[], initial = false): void {
+    const { w, h, x0, z0 } = this;
+    const prevDoorGoals = new Set(this.doorGoalMap.keys());
+    this.walk.set(this.walkBase);
+    this.doorPortals = [];
+    this.doorGoalMap.clear();
+    this.menDoorGoals = [];
+    this.womenDoorGoals = [];
+
+    const pending: Array<{ bay: DoorwayBayInput; outerWalk: 1 | 2 }> = [];
+    for (const bay of bays) {
+      if (!bay.open) continue;
+      const [ox, oz] = bay.outward;
+      const [tx, tz] = bay.tangent;
+      let outerWalk: 0 | 1 | 2 = 0;
+      for (const dist of [2.5, 3.5, 4.5]) {
+        const oi = Math.floor((bay.x + ox * dist - x0) / CELL);
+        const oj = Math.floor((bay.y + oz * dist - z0) / CELL);
+        if (oi >= 0 && oj >= 0 && oi < w && oj < h) {
+          const v = this.walkBase[oj * w + oi];
+          if (v === 1 || v === 2) {
+            outerWalk = v;
+            break;
+          }
+        }
+      }
+      if (outerWalk === 0) continue;
+      // Only allocate women-zone doorway cells for women's bays so men never cross into women's plazas.
+      const otherZone = outerWalk === 2 ? 1 : 2;
+      const halfU = Math.max(0.8, bay.widthM * 0.36);
+      const minX = Math.min(bay.x - tx * halfU - ox * 1.6, bay.x + tx * halfU + ox * 1.6, bay.x - tx * halfU + ox * 1.6, bay.x + tx * halfU - ox * 1.6);
+      const maxX = Math.max(bay.x - tx * halfU - ox * 1.6, bay.x + tx * halfU + ox * 1.6, bay.x - tx * halfU + ox * 1.6, bay.x + tx * halfU - ox * 1.6);
+      const minZ = Math.min(bay.y - tz * halfU - oz * 1.6, bay.y + tz * halfU + oz * 1.6, bay.y - tz * halfU + oz * 1.6, bay.y + tz * halfU - oz * 1.6);
+      const maxZ = Math.max(bay.y - tz * halfU - oz * 1.6, bay.y + tz * halfU + oz * 1.6, bay.y - tz * halfU + oz * 1.6, bay.y + tz * halfU - oz * 1.6);
+      const i0 = Math.max(1, Math.floor((minX - x0) / CELL));
+      const i1 = Math.min(w - 2, Math.ceil((maxX - x0) / CELL));
+      const j0 = Math.max(1, Math.floor((minZ - z0) / CELL));
+      const j1 = Math.min(h - 2, Math.ceil((maxZ - z0) / CELL));
+      for (let j = j0; j <= j1; j++) {
+        for (let i = i0; i <= i1; i++) {
+          const k = j * w + i;
+          if (this.blockedMask[k] || this.walkBase[k] >= 3) continue;
+          const cx = x0 + (i + 0.5) * CELL;
+          const cz = z0 + (j + 0.5) * CELL;
+          const s = (cx - bay.x) * ox + (cz - bay.y) * oz;
+          const u = (cx - bay.x) * tx + (cz - bay.y) * tz;
+          if (s < -1.6 || s > 1.6 || Math.abs(u) > halfU) continue;
+          if (
+            this.walkBase[k - 1] === otherZone ||
+            this.walkBase[k + 1] === otherZone ||
+            this.walkBase[k - w] === otherZone ||
+            this.walkBase[k + w] === otherZone
+          ) {
+            continue;
+          }
+          this.walk[k] = outerWalk;
+        }
+      }
+      pending.push({ bay, outerWalk });
+    }
+
+    this.recomputeFlowWalk();
+    const [forWomen, forMen] = this.flowWalk;
+    for (const { bay, outerWalk } of pending) {
+      const [ox, oz] = bay.outward;
+      const [tx, tz] = bay.tangent;
+      const gx = bay.x + ox * 1.4;
+      const gz = bay.y + oz * 1.4;
+      const c = this.nearestFlowCell(gx, gz, 6, (k) => (outerWalk === 2 ? forWomen[k] === 1 && this.zone[k] === 1 : forMen[k] === 1));
+      if (c < 0) continue;
+      const key = `${bay.gateId}:${bay.bayIndex}`;
+      let g = this.doorGoalByKey.get(key);
+      if (g === undefined) {
+        g = this.goalCells.length;
+        this.goalCells.push(c);
+        for (const f of this.fields) f.push(null);
+        this.doorGoalByKey.set(key, g);
+      } else {
+        this.goalCells[g] = c;
+      }
+      const portal: ActiveDoorPortal = {
+        gateId: bay.gateId,
+        bayIndex: bay.bayIndex,
+        women: outerWalk === 2,
+        x: bay.x,
+        z: bay.y,
+        ox,
+        oz,
+        tx,
+        tz,
+        goalIndex: g,
+      };
+      this.doorPortals.push(portal);
+      this.doorGoalMap.set(g, portal);
+      if (outerWalk === 2) this.womenDoorGoals.push(g);
+      else this.menDoorGoals.push(g);
+    }
+
+    if (!initial) {
+      for (const f of this.fields) f.fill(null);
+      for (let a = 0; a < this.n; a++) {
+        if (this.mode[a] !== FREE) continue;
+        if (prevDoorGoals.has(this.goal[a]) && !this.doorGoalMap.has(this.goal[a])) this.goal[a] = this.pickGoal(a);
+        if (!Number.isNaN(this.px[a]) && !this.standable(this.px[a], this.pz[a], !this.woman[a], true)) {
+          if (!this.place(a, this.px[a], this.pz[a])) this.px[a] = Number.NaN;
+        }
+      }
+    }
+  }
+
+  /** Currently active open doorway portals that walkers route into and emerge from. */
+  getActiveDoorPortals(): ReadonlyArray<{ gateId: number; bayIndex: number; x: number; z: number; women: boolean }> {
+    return this.doorPortals.map((p) => ({ gateId: p.gateId, bayIndex: p.bayIndex, x: p.x, z: p.z, women: p.women }));
   }
 
   private colKey(x: number, z: number): number {
@@ -414,9 +583,23 @@ export class Crowd {
     return this.woman[a] ? 0 : this.corridor[a] && this.mode[a] === LED ? 2 : 1;
   }
 
-  /** Somewhere to walk to: a man to a gate open to him; a woman, one time in two, inside her areas. */
+  /** Somewhere to walk to: open Mosque doorway bays + outer gates for men; inside/doorways for women. */
   private pickGoal(a: number): number {
-    const list = this.woman[a] ? (this.womenGoals.length && this.rnd() < 0.5 ? this.womenGoals : this.goalCells.map((_, g) => g)) : this.menGoals;
+    if (this.woman[a]) {
+      const u = this.rnd();
+      if (this.womenDoorGoals.length && u < 0.35) return this.womenDoorGoals[Math.floor(this.rnd() * this.womenDoorGoals.length)];
+      const list = this.womenGoals.length && this.rnd() < 0.55 ? this.womenGoals : this.goalCells.map((_, g) => g);
+      return list.length ? list[Math.floor(this.rnd() * list.length)] : -1;
+    }
+    if (this.menDoorGoals.length && this.rnd() < 0.55) {
+      return this.menDoorGoals[Math.floor(this.rnd() * this.menDoorGoals.length)];
+    }
+    return this.menGoals.length ? this.menGoals[Math.floor(this.rnd() * this.menGoals.length)] : -1;
+  }
+
+  /** Pick an outer/plaza destination after emerging through an open Mosque doorway bay. */
+  private pickOuterGoal(a: number): number {
+    const list = this.woman[a] ? (this.womenGoals.length ? this.womenGoals : this.goalCells.map((_, g) => g)) : this.menGoals;
     return list.length ? list[Math.floor(this.rnd() * list.length)] : -1;
   }
 
@@ -475,6 +658,7 @@ export class Crowd {
    * edge of the view, where a newcomer is seen arriving, not appearing), clear of the others.
    */
   keepNear(cx: number, cz: number, r: number, inner = 0.7 * r): void {
+    this.lastKeep = [cx, cz, r];
     const far = (1.3 * r) ** 2;
     // As many as the open ground in view has room for (owner, 2026-11-08: the barriers round the
     // Rawdah close much of it, and the crowd must not pile into what is left).
@@ -549,7 +733,7 @@ export class Crowd {
     let j = Math.floor((z - this.z0) / size);
     if (i < 0 || j < 0 || i >= fw || j >= fh) return null;
     const here = d[j * fw + i];
-    if (here <= 1) {
+    if (here <= 1 && !this.doorGoalMap.has(g)) {
       // Arrived: on to another gate, or (led) wait to be told.
       if (this.mode[a] === LED) this.arrived[a] = 1;
       else this.goal[a] = this.pickGoal(a);
@@ -778,6 +962,7 @@ export class Crowd {
       let way: [number, number] | null;
       // Steered: straight to its point, slowing over the last metre and stopping there.
       let near1 = 1;
+      const portal = this.mode[a] === FREE ? this.doorGoalMap.get(this.goal[a]) : undefined;
       if (steered) {
         const ox = this.tx[a] - x;
         const oz = this.tz[a] - z;
@@ -786,6 +971,12 @@ export class Crowd {
         near1 = Math.min(1, od);
       } else if (this.mode[a] === LED && this.arrived[a]) {
         way = null;
+      } else if (portal && (x - portal.x) * portal.ox + (z - portal.z) * portal.oz > -1.4 && (x - portal.x) * portal.ox + (z - portal.z) * portal.oz < 4.5 && Math.abs((x - portal.x) * portal.tx + (z - portal.z) * portal.tz) < 4.5) {
+        // Steer straight through the open leaves toward the vestibule throat (`-1.25 m` inside).
+        const gx = portal.x - portal.ox * 1.25 - x;
+        const gz = portal.z - portal.oz * 1.25 - z;
+        const gd = Math.hypot(gx, gz);
+        way = gd > 0.12 ? [gx / gd, gz / gd] : [-portal.ox, -portal.oz];
       } else {
         way = this.way(a, x, z);
       }
@@ -876,6 +1067,9 @@ export class Crowd {
       }
       px[a] = nx;
       pz[a] = nz;
+      if (portal && (nx - portal.x) * portal.ox + (nz - portal.z) * portal.oz <= -0.8) {
+        this.transferThroughDoorway(a, portal, others, near);
+      }
       const s = Math.hypot(vx[a], vz[a]);
       if (s > 0.08) {
         // The body turns toward where it goes, over about a third of a second.

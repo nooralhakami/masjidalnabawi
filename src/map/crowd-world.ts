@@ -2,7 +2,7 @@ import { POIS } from '../data';
 import { alharamainPlaza } from '../data-next/alharamain-3d';
 import { PRAYER_CLEARINGS } from '../data-next/alharamain-prayers';
 import { WOMEN_AREAS } from '../data-next/women-areas';
-import { openDoorwayBayCentres } from '../domain/mosque-doors';
+import { allDoorwayBayPortals, openDoorwayBayCentres } from '../domain/mosque-doors';
 import type { CrowdInput, XY } from './crowd-sim';
 import { metresFromOrigin } from './glb-layer';
 import { MOSQUE_MAIN, MOSQUE_SOUTH, restroomFootprints, restroomWalkways } from './prayer-layout';
@@ -103,7 +103,8 @@ export function crowdInput(columns: readonly (readonly [number, number])[]): Cro
     // Buildings stay closed even where a cleared corridor crosses them.
     solid: [box(MOSQUE_MAIN, 0.5), box(MOSQUE_SOUTH, 0.5), ...restroomFootprints(0.5)],
     columns: columns.map(m),
-    goals: [...POIS.filter((p) => p.category === 'gates').map((p) => m([p.lng, p.lat])), ...buildDoorwayGoals(columns)],
+    goals: POIS.filter((p) => p.category === 'gates' && p.subCategory !== 'gate_inner').map((p) => m([p.lng, p.lat])),
+    doorBays: allDoorwayBayPortals(),
     womenOnly: WOMEN_AREAS.map((a) => a.zone.map(mLatLng)),
     // The women's barriers, the rails of the Rawdah's queues and the greeting's barriers (owner, 2026-11-08).
     // And those that close the ground from the queue's head to Gate 38 (owner, 2026-11-18).
