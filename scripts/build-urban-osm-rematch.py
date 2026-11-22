@@ -69,6 +69,9 @@ NOT_TOWERS_OSM_IDS = {"w625518412"}
 LOW_RISE_NAME = re.compile(r"متحف|بستان|سوق|محكمة|حديقة|museum|market|garden", re.IGNORECASE)
 TUNNEL_NAME = re.compile(r"tunnel|نفق", re.IGNORECASE)
 NAME_MATCH_RADIUS_M = 80.0
+# The western plaza's paved floor (west, south, east, north): its walkways are the grey granite bands
+# drawn with Saqifat Bani Sa'idah's model, so no OSM footway line is drawn across it (owner, 2026-11-22).
+WEST_PLAZA_FLOOR = (39.6051, 24.46815, 39.6078, 24.47085)
 # Open plazas outside the Haram fence where no gap tower may be added (lng, lat), traced on the imagery:
 # the western courtyard (with the Saqifah garden) and the square at Bab al-Salam / Masjid al-Ghamamah.
 OPEN_PLAZAS: list[list[tuple[float, float]]] = [
@@ -800,6 +803,35 @@ def main() -> None:
                 else:
                     dropped += 1
             props[kind] = keep
+    # --- 6b. Footway lines across the western plaza's floor are cut away -----------------------
+    w0, s0, e0, n0 = WEST_PLAZA_FLOOR
+
+    def on_floor(a: list[float], c: list[float]) -> bool:
+        mx, my = (a[0] + c[0]) / 2, (a[1] + c[1]) / 2
+        return w0 <= mx <= e0 and s0 <= my <= n0
+
+    kept: list[dict] = []
+    cut = 0
+    for c in urban["streetCorridors"]:
+        if c.get("road"):
+            kept.append(c)
+            continue
+        pieces: list[list[list[float]]] = [[]]
+        for a, b2 in zip(c["coords"], c["coords"][1:]):
+            if on_floor(a, b2):
+                cut += 1
+                if pieces[-1]:
+                    pieces.append([])
+                continue
+            if not pieces[-1]:
+                pieces[-1].append(a)
+            pieces[-1].append(b2)
+        for pc in pieces:
+            if len(pc) >= 2:
+                kept.append({**c, "coords": pc})
+    urban["streetCorridors"] = kept
+    print(f"footway segments cut from the western plaza floor: {cut} ({len(kept)} corridors kept)")
+
     if "urbanProps" in urban and "south" in (urban.get("urbanPropsByZone") or {}):
         urban["urbanProps"] = urban["urbanPropsByZone"]["south"]
     print(f"props dropped under new footprints: {dropped}")
