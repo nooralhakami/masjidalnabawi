@@ -1,4 +1,5 @@
 import type { Feature, FeatureCollection, Polygon } from 'geojson';
+import layout from '../../data/saqifah-westplaza.json';
 import { pointInApprovedBuilding, pointInContextBuilding } from '../domain/urban-approval';
 
 /**
@@ -8,13 +9,16 @@ import { pointInApprovedBuilding, pointInContextBuilding } from '../domain/urban
  * - Four heritage structures (ways 775419642..775419645) and 45 surrounding West-zone buildings
  *   are extracted directly from docs/routes/osm/buildings-2026-10-08.json (excluding plaza
  *   restroom blocks 209..222, which already have bespoke GLB 3D models).
- * - Enclosure walls, garden lawns, stone pathways, and 28 trees model the walled historical
- *   garden at POI 515 (24.4703318, 39.6068586) between OSM pedestrian bounds.
+ * - The garden itself (outline, fountain, fence, palms and trees, gate kiosk) and the old building
+ *   on its south side (775419642/3) are a model since 2026-11-22 (`saqifah-westplaza.glb`, from
+ *   `scripts/build-saqifah-westplaza-glb.py`); this file draws them flat for the 2D map from the same
+ *   layout (`data/saqifah-westplaza.json`), and in 3D only the two small heritage blocks 775419644/5
+ *   and the surrounding boxes no other layer draws.
  */
 
 export interface Saqifah2DProps {
   id: string;
-  kind: 'garden-base' | 'lawn' | 'path' | 'wall' | 'heritage' | 'tree-crown';
+  kind: 'garden-base' | 'fountain' | 'wall' | 'heritage' | 'tree-crown';
   color: string;
   opacity: number;
 }
@@ -42,16 +46,6 @@ const M_PER_LNG = 111_320 * Math.cos((24.47 * Math.PI) / 180);
 
 function toPoly(ring: readonly (readonly [number, number])[]): [number, number][][] {
   return [ring.map(([lng, lat]) => [lng, lat])];
-}
-
-function rectRing(w: number, s: number, e: number, n: number): [number, number][] {
-  return [
-    [w, s],
-    [e, s],
-    [e, n],
-    [w, n],
-    [w, s],
-  ];
 }
 
 function circleRing(lng: number, lat: number, radiusM: number, sides = 8): [number, number][] {
@@ -758,71 +752,8 @@ const SURROUNDING_OSM_BUILDINGS: readonly OsmBuildingRecord[] = [
   },
 ];
 
-/** Perimeter enclosure walls around Saqifat Bani Sa'idah (open southern gateway). */
-const GARDEN_WALLS: readonly { id: string; a: readonly [number, number]; b: readonly [number, number] }[] = [
-  { id: 'saqifah-wall-west', a: [39.60646, 24.46992], b: [39.60641, 24.47066] },
-  { id: 'saqifah-wall-north', a: [39.60641, 24.47066], b: [39.60718, 24.47064] },
-  { id: 'saqifah-wall-east', a: [39.60718, 24.47064], b: [39.60718, 24.4699] },
-  { id: 'saqifah-wall-south-west', a: [39.60646, 24.46992], b: [39.60675, 24.46991] },
-  { id: 'saqifah-wall-south-east', a: [39.60691, 24.46991], b: [39.60718, 24.4699] },
-];
-
-const GARDEN_BASE_RING: readonly (readonly [number, number])[] = [
-  [39.60646, 24.46992],
-  [39.60718, 24.4699],
-  [39.60718, 24.47064],
-  [39.60641, 24.47066],
-  [39.60646, 24.46992],
-];
-
-const GARDEN_LAWNS: readonly { id: string; ring: [number, number][] }[] = [
-  { id: 'saqifah-lawn-nw', ring: rectRing(39.60646, 24.4704, 39.60675, 24.47061) },
-  { id: 'saqifah-lawn-ne', ring: rectRing(39.60691, 24.4704, 39.60714, 24.47061) },
-  { id: 'saqifah-lawn-sw', ring: rectRing(39.60649, 24.47009, 39.60675, 24.47028) },
-  { id: 'saqifah-lawn-se', ring: rectRing(39.60691, 24.47009, 39.60714, 24.47028) },
-];
-
-const GARDEN_PATHS: readonly { id: string; ring: [number, number][] }[] = [
-  { id: 'saqifah-path-ns', ring: rectRing(39.60678, 24.46991, 39.60688, 24.47062) },
-  { id: 'saqifah-path-ew', ring: rectRing(39.60648, 24.4703, 39.60715, 24.47038) },
-  { id: 'saqifah-path-plaza', ring: circleRing(39.60683, 24.47034, 9.5, 10) },
-];
-
-/** 28 palm & shade trees distributed cleanly across the four planted beds and entrance forecourt. */
-const GARDEN_TREES: readonly { id: string; lng: number; lat: number }[] = [
-  // NW bed (7)
-  { id: 'saqifah-tree-01', lng: 39.60651, lat: 24.47056 },
-  { id: 'saqifah-tree-02', lng: 39.6066, lat: 24.47056 },
-  { id: 'saqifah-tree-03', lng: 39.60669, lat: 24.47056 },
-  { id: 'saqifah-tree-04', lng: 39.60652, lat: 24.47049 },
-  { id: 'saqifah-tree-05', lng: 39.60663, lat: 24.47049 },
-  { id: 'saqifah-tree-06', lng: 39.60651, lat: 24.47043 },
-  { id: 'saqifah-tree-07', lng: 39.6067, lat: 24.47044 },
-  // NE bed (7)
-  { id: 'saqifah-tree-08', lng: 39.60695, lat: 24.47056 },
-  { id: 'saqifah-tree-09', lng: 39.60703, lat: 24.47056 },
-  { id: 'saqifah-tree-10', lng: 39.6071, lat: 24.47056 },
-  { id: 'saqifah-tree-11', lng: 39.60696, lat: 24.47049 },
-  { id: 'saqifah-tree-12', lng: 39.60708, lat: 24.47049 },
-  { id: 'saqifah-tree-13', lng: 39.60695, lat: 24.47043 },
-  { id: 'saqifah-tree-14', lng: 39.6071, lat: 24.47043 },
-  // SW bed (7)
-  { id: 'saqifah-tree-15', lng: 39.60653, lat: 24.47024 },
-  { id: 'saqifah-tree-16', lng: 39.60663, lat: 24.47024 },
-  { id: 'saqifah-tree-17', lng: 39.60671, lat: 24.47024 },
-  { id: 'saqifah-tree-18', lng: 39.60653, lat: 24.47017 },
-  { id: 'saqifah-tree-19', lng: 39.60665, lat: 24.47017 },
-  { id: 'saqifah-tree-20', lng: 39.60654, lat: 24.47012 },
-  { id: 'saqifah-tree-21', lng: 39.60671, lat: 24.47012 },
-  // SE bed (7)
-  { id: 'saqifah-tree-22', lng: 39.60695, lat: 24.47024 },
-  { id: 'saqifah-tree-23', lng: 39.60704, lat: 24.47024 },
-  { id: 'saqifah-tree-24', lng: 39.60711, lat: 24.47024 },
-  { id: 'saqifah-tree-25', lng: 39.60696, lat: 24.47017 },
-  { id: 'saqifah-tree-26', lng: 39.60709, lat: 24.47017 },
-  { id: 'saqifah-tree-27', lng: 39.60695, lat: 24.47012 },
-  { id: 'saqifah-tree-28', lng: 39.6071, lat: 24.47012 },
-];
+/** The two heritage blocks the garden model does not draw (it draws the old building 775419642/3). */
+const MODELLED_HERITAGE = new Set(['775419642', '775419643']);
 
 const BUILDING_COLORS: Record<OsmBuildingRecord['kind'], string> = {
   heritage: '#cbb593',
@@ -841,12 +772,18 @@ export function saqifahGround2D(): FeatureCollection<Polygon, Saqifah2DProps> {
     });
   };
 
-  push('saqifah-garden-base', 'garden-base', '#ece3d2', 0.88, GARDEN_BASE_RING);
-  for (const lawn of GARDEN_LAWNS) push(lawn.id, 'lawn', '#4c8647', 0.85, lawn.ring);
-  for (const p of GARDEN_PATHS) push(p.id, 'path', '#e4d8c4', 0.92, p.ring);
-  for (const w of GARDEN_WALLS) push(w.id, 'wall', '#ccbda4', 0.95, wallSegmentRing(w.a, w.b, 0.75));
+  const fence = layout.garden as [number, number][];
+  push('saqifah-garden-base', 'garden-base', '#8a7357', 0.82, fence);
+  for (let i = 0; i + 1 < fence.length; i++) push(`saqifah-fence-${i}`, 'wall', '#d9d6cf', 0.95, wallSegmentRing(fence[i], fence[i + 1], 0.25));
+  const [fLng, fLat] = layout.fountain.at as [number, number];
+  push('saqifah-fountain-rim', 'fountain', '#5c7a92', 0.95, circleRing(fLng, fLat, layout.fountain.radiusM, 20));
+  push('saqifah-fountain-water', 'fountain', '#1c2a32', 0.95, circleRing(fLng, fLat, layout.fountain.radiusM - 0.4, 20));
   for (const h of HERITAGE_OSM_BUILDINGS) push(h.id, 'heritage', '#c9b28f', 0.95, h.ring);
-  for (const t of GARDEN_TREES) push(`${t.id}-canopy`, 'tree-crown', '#2d6832', 0.82, circleRing(t.lng, t.lat, 2.2, 8));
+  layout.plants.forEach((pl, i) => {
+    const [lng, lat] = pl.at as [number, number];
+    const color = pl.kind === 'shrub' ? '#4f7a3a' : pl.kind === 'tree' ? '#3d6b2e' : '#2f5d2a';
+    push(`saqifah-plant-${i}`, 'tree-crown', color, 0.85, circleRing(lng, lat, pl.crownM, 8));
+  });
 
   return { type: 'FeatureCollection', features };
 }
@@ -883,14 +820,8 @@ export function saqifahAndSurroundings3D(): FeatureCollection<Polygon, Saqifah3D
     });
   };
 
-  for (const lawn of GARDEN_LAWNS) push(lawn.id, 'lawn', '#3b7339', 0, 0.26, 0.96, lawn.ring);
-  for (const p of GARDEN_PATHS) push(p.id, 'path', '#e3d7c3', 0, 0.28, 0.98, p.ring);
-  for (const w of GARDEN_WALLS) push(w.id, 'wall', '#d8cab4', 0, 3.2, 0.98, wallSegmentRing(w.a, w.b, 0.75));
-  for (const h of HERITAGE_OSM_BUILDINGS) push(h.id, 'heritage', BUILDING_COLORS.heritage, 0, h.height, 0.98, h.ring);
-
-  for (const t of GARDEN_TREES) {
-    push(`${t.id}-trunk`, 'tree-trunk', '#6b4c35', 0, 2.6, 1, circleRing(t.lng, t.lat, 0.45, 6));
-    push(`${t.id}-crown`, 'tree-crown', '#2f6a34', 2.3, 6.2, 0.95, circleRing(t.lng, t.lat, 2.3, 8));
+  for (const h of HERITAGE_OSM_BUILDINGS) {
+    if (!MODELLED_HERITAGE.has(h.id)) push(h.id, 'heritage', BUILDING_COLORS.heritage, 0, h.height, 0.98, h.ring);
   }
 
   for (const b of SURROUNDING_OSM_BUILDINGS) {

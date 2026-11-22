@@ -42,10 +42,11 @@ describe('the Al-Haramain 3D view: plaza areas and 3D files', () => {
     }
   });
 
-  it('every listed 3D file exists as glTF 2.0, stands at 43 places, and the Mosque comes first', () => {
+  it('every listed 3D file exists as glTF 2.0, stands at 44 places, and the Mosque comes first', () => {
     expect(ALHARAMAIN_MODELS[0].url).toContain('haram-3d.glb');
-    // 42 from navQ and the restroom blocks, and the outer fence (owner, 2026-11-08).
-    expect(ALHARAMAIN_MODELS.reduce((n, m) => n + m.anchors.length, 0)).toBe(43);
+    // 42 from navQ and the restroom blocks, the outer fence (owner, 2026-11-08), and Saqifat Bani
+    // Sa'idah with the western plaza's masts (owner, 2026-11-22).
+    expect(ALHARAMAIN_MODELS.reduce((n, m) => n + m.anchors.length, 0)).toBe(44);
     for (const model of ALHARAMAIN_MODELS) {
       const glb = readFileSync(resolve(__dirname, '../../public', model.url));
       expect(glb.readUInt32LE(0)).toBe(0x46546c67); // 'glTF'
