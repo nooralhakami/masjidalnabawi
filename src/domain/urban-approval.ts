@@ -17,8 +17,12 @@ export interface ApprovedBuilding {
   /** Adjacent drivable street kerb / dropoff for driving routes. */
   dropoff: LatLng;
   hasFootprint: boolean;
-  /** `single`: the hotel's own OSM outline; `osm_split`: one real OSM outline shared by neighbouring hotels, cut between their guide pins. */
-  footprintSplit: 'single' | 'osm_split' | 'provisional_pin_partition' | 'none';
+  /**
+   * `single`: the hotel's own OSM outline; `osm_split`: one real OSM outline shared by neighbouring hotels, cut
+   * between their guide pins; `ms_shifted`: OSM has no building there, so the Microsoft outline by the pin, moved
+   * by its measured offset onto the imagery and cut clear of the neighbours.
+   */
+  footprintSplit: 'single' | 'osm_split' | 'ms_shifted' | 'provisional_pin_partition' | 'none';
   /** Verified OSM/owner floor count when known; `null` when only display-estimated or pin-only. */
   levels: number | null;
   /** Display-only 3D height tiers (`10..14` for unmeasured Markaziyah towers); never shown as verified facts. */

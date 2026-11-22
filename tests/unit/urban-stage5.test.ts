@@ -50,20 +50,22 @@ function insideRing(lng: number, lat: number, ring: readonly (readonly [number, 
 }
 
 describe('Stage 6 Zones 1–4 (South + West + North + Southwest) urban slice & 3D pick verification', () => {
-  it('A7 gate reveals 228 owner-approved South+West+North+SW hotels (225 on satellite-aligned OSM footprints, 3 pin-only) and hides 4 unapproved hotels, food, and wheelchair', () => {
+  it('A7 gate reveals 228 owner-approved South+West+North+SW hotels (226 on satellite-aligned footprints, 2 pin-only) and hides 4 unapproved hotels, food, and wheelchair', () => {
     expect(APPROVED_BUILDINGS).toHaveLength(228);
     expect(APPROVED_BUILDINGS.filter((b) => b.zone === 'south')).toHaveLength(57);
     expect(APPROVED_BUILDINGS.filter((b) => b.zone === 'west')).toHaveLength(39);
     expect(APPROVED_BUILDINGS.filter((b) => b.zone === 'north')).toHaveLength(61);
     expect(APPROVED_BUILDINGS.filter((b) => b.zone === 'sw')).toHaveLength(71);
-    expect(APPROVED_FOOTPRINT_BUILDINGS).toHaveLength(225);
+    expect(APPROVED_FOOTPRINT_BUILDINGS).toHaveLength(226);
     expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.zone === 'south')).toHaveLength(57);
     expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.zone === 'west')).toHaveLength(38);
-    expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.zone === 'north')).toHaveLength(60);
+    expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.zone === 'north')).toHaveLength(61);
     expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.zone === 'sw')).toHaveLength(70);
-    expect(APPROVED_BUILDINGS.filter((b) => !b.hasFootprint).map((b) => b.guideNumber)).toEqual([206, 104, 374]);
-    // Stage 7: no provisional pin partition is left; every outline is a real OSM building (or its share of one).
-    expect(APPROVED_FOOTPRINT_BUILDINGS.every((b) => b.footprintSplit === 'single' || b.footprintSplit === 'osm_split')).toBe(true);
+    expect(APPROVED_BUILDINGS.filter((b) => !b.hasFootprint).map((b) => b.guideNumber)).toEqual([206, 374]);
+    // Stage 7: no provisional pin partition is left; every outline is a real OSM building (or its share of one),
+    // except #104, whose tower OSM lacks: its Microsoft outline moved onto the imagery.
+    expect(APPROVED_FOOTPRINT_BUILDINGS.every((b) => b.footprintSplit === 'single' || b.footprintSplit === 'osm_split')).toBe(false);
+    expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.footprintSplit === 'ms_shifted').map((b) => b.guideNumber)).toEqual([104]);
     expect(APPROVED_HOTEL_IDS.size).toBe(228);
     for (const id of ORIGINAL_IDS) expect(APPROVED_HOTEL_IDS.has(id)).toBe(true);
 
@@ -92,7 +94,7 @@ describe('Stage 6 Zones 1–4 (South + West + North + Southwest) urban slice & 3
   it.each([
     ['south', SOUTH_GLB_PATH, 57],
     ['west', WEST_GLB_PATH, 38],
-    ['north', NORTH_GLB_PATH, 60],
+    ['north', NORTH_GLB_PATH, 61],
     ['sw', SW_GLB_PATH, 70],
   ] as readonly [UrbanZoneId, string, number][])(
     'A9 provenance guard validates urban-%s-stage6.glb under <= 250 KiB gzip with %d tiered buildings',
@@ -145,11 +147,11 @@ describe('Stage 6 Zones 1–4 (South + West + North + Southwest) urban slice & 3
     },
   );
 
-  it('height provenance & zero Haram fence intrusion across all 225 footprinted South+West+North+SW hotels', () => {
+  it('height provenance & zero Haram fence intrusion across all 226 footprinted South+West+North+SW hotels', () => {
     const est = APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.heightSource === 'estimated_display_only');
     const osm = APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.heightSource === 'osm_levels');
     expect(osm.length).toBe(9);
-    expect(est.length).toBe(216);
+    expect(est.length).toBe(217);
     for (const b of est) {
       expect(b.levels).toBeNull();
       expect(b.displayFloors).toBeGreaterThanOrEqual(10);
