@@ -13,6 +13,7 @@
  *   step is pushed apart, and no step lands off the walkable ground.
  */
 
+import { type CrowdOccasion, crowdOccasionAt, OCCASION_CROWD } from '../domain/crowd-occasion';
 import {
   generateWorshipperPlacements,
   prayerSessionKey,
@@ -1201,23 +1202,28 @@ const QUIET_MAX = 420;
 export class Worshippers {
   /** The session the places were laid out for (null before the first look at the clock). */
   session: PrayerSessionState | null = null;
+  /** The occasion they were laid out for (ordinary day, Ramadan night, Eid morning). */
+  occasion: CrowdOccasion = 'regular';
   placements: readonly WorshipperPlacement[] = [];
   /** What `placements` were laid out for. */
   key = '';
   private checkedAt = Number.NEGATIVE_INFINITY;
 
   /** Read the prayer now, and lay the worshippers out again only when the scene has changed. */
-  sync(now: Date, demo: PrayerDemoOverride | null, opts: GenerateOptions = {}): boolean {
+  sync(now: Date, demo: PrayerDemoOverride | null, opts: GenerateOptions = {}, occasionOverride: CrowdOccasion | null = null): boolean {
     const t = now.getTime();
-    if (t - this.checkedAt < (demo ? 0 : SESSION_EVERY_MS)) return false;
+    if (t - this.checkedAt < (demo || occasionOverride ? 0 : SESSION_EVERY_MS)) return false;
     this.checkedAt = t;
     const session = resolvePrayerSession(now, undefined, demo);
     this.session = session;
-    const key = prayerSessionKey(session);
+    const occasion = occasionOverride ?? crowdOccasionAt(now);
+    const key = `${prayerSessionKey(session)}|${occasion}`;
     if (key === this.key) return false;
     this.key = key;
-    const quiet = session.phase === 'off_prayer' || session.phase === 'iqamah_wait';
-    this.placements = generateWorshipperPlacements(session, { ...opts, maxTotal: opts.maxTotal ?? (quiet ? QUIET_MAX : CONGREGATION_MAX) });
+    this.occasion = occasion;
+    const quiet = (session.phase === 'off_prayer' || session.phase === 'iqamah_wait') && occasion !== 'eid';
+    const base = quiet ? QUIET_MAX : CONGREGATION_MAX;
+    this.placements = generateWorshipperPlacements(session, { ...opts, occasion, maxTotal: opts.maxTotal ?? Math.round(base * OCCASION_CROWD[occasion].scale) });
     return true;
   }
 }

@@ -13,6 +13,7 @@ import {
   APPROVED_BUILDINGS,
   APPROVED_FOOTPRINT_BUILDINGS,
   APPROVED_HOTEL_IDS,
+  CONTEXT_BUILDINGS,
   isApprovedHotel,
   pathHitsApprovedBuilding,
   pickApprovedBuildingRay,
@@ -30,6 +31,7 @@ const SOUTH_GLB_PATH = resolve(ROOT, 'public/models/urban-south-stage6.glb');
 const WEST_GLB_PATH = resolve(ROOT, 'public/models/urban-west-stage6.glb');
 const NORTH_GLB_PATH = resolve(ROOT, 'public/models/urban-north-stage6.glb');
 const SW_GLB_PATH = resolve(ROOT, 'public/models/urban-sw-stage6.glb');
+const CONTEXT_GLB_PATH = resolve(ROOT, 'public/models/urban-context-stage7.glb');
 
 const ORIGINAL_IDS = [701, 705, 706, 710, 711, 713, 716, 720, 722, 724, 725, 728, 732, 734, 735, 738, 741, 743];
 const SAMPLE_SOUTH_IDS = [2402, 2420, 2441, 2449, 2475];
@@ -48,18 +50,22 @@ function insideRing(lng: number, lat: number, ring: readonly (readonly [number, 
 }
 
 describe('Stage 6 Zones 1–4 (South + West + North + Southwest) urban slice & 3D pick verification', () => {
-  it('A7 gate reveals 228 owner-approved South+West+North+SW hotels (219 footprinted, 9 pin-only) and hides 4 unapproved hotels, food, and wheelchair', () => {
+  it('A7 gate reveals 228 owner-approved South+West+North+SW hotels (226 on satellite-aligned footprints, 2 pin-only) and hides 4 unapproved hotels, food, and wheelchair', () => {
     expect(APPROVED_BUILDINGS).toHaveLength(228);
     expect(APPROVED_BUILDINGS.filter((b) => b.zone === 'south')).toHaveLength(57);
     expect(APPROVED_BUILDINGS.filter((b) => b.zone === 'west')).toHaveLength(39);
     expect(APPROVED_BUILDINGS.filter((b) => b.zone === 'north')).toHaveLength(61);
     expect(APPROVED_BUILDINGS.filter((b) => b.zone === 'sw')).toHaveLength(71);
-    expect(APPROVED_FOOTPRINT_BUILDINGS).toHaveLength(219);
-    expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.zone === 'south')).toHaveLength(52);
+    expect(APPROVED_FOOTPRINT_BUILDINGS).toHaveLength(226);
+    expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.zone === 'south')).toHaveLength(57);
     expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.zone === 'west')).toHaveLength(38);
-    expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.zone === 'north')).toHaveLength(59);
+    expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.zone === 'north')).toHaveLength(61);
     expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.zone === 'sw')).toHaveLength(70);
-    expect(APPROVED_BUILDINGS.filter((b) => !b.hasFootprint)).toHaveLength(9);
+    expect(APPROVED_BUILDINGS.filter((b) => !b.hasFootprint).map((b) => b.guideNumber)).toEqual([206, 374]);
+    // Stage 7: no provisional pin partition is left; every outline is a real OSM building (or its share of one),
+    // except #104, whose tower OSM lacks: its Microsoft outline moved onto the imagery.
+    expect(APPROVED_FOOTPRINT_BUILDINGS.every((b) => b.footprintSplit === 'single' || b.footprintSplit === 'osm_split')).toBe(false);
+    expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.footprintSplit === 'ms_shifted').map((b) => b.guideNumber)).toEqual([104]);
     expect(APPROVED_HOTEL_IDS.size).toBe(228);
     for (const id of ORIGINAL_IDS) expect(APPROVED_HOTEL_IDS.has(id)).toBe(true);
 
@@ -86,9 +92,9 @@ describe('Stage 6 Zones 1–4 (South + West + North + Southwest) urban slice & 3
   });
 
   it.each([
-    ['south', SOUTH_GLB_PATH, 52],
+    ['south', SOUTH_GLB_PATH, 57],
     ['west', WEST_GLB_PATH, 38],
-    ['north', NORTH_GLB_PATH, 59],
+    ['north', NORTH_GLB_PATH, 61],
     ['sw', SW_GLB_PATH, 70],
   ] as readonly [UrbanZoneId, string, number][])(
     'A9 provenance guard validates urban-%s-stage6.glb under <= 250 KiB gzip with %d tiered buildings',
@@ -141,11 +147,11 @@ describe('Stage 6 Zones 1–4 (South + West + North + Southwest) urban slice & 3
     },
   );
 
-  it('height provenance & zero Haram fence intrusion across all 219 footprinted South+West+North+SW hotels', () => {
+  it('height provenance & zero Haram fence intrusion across all 226 footprinted South+West+North+SW hotels', () => {
     const est = APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.heightSource === 'estimated_display_only');
     const osm = APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.heightSource === 'osm_levels');
-    expect(osm.length).toBe(7);
-    expect(est.length).toBe(212);
+    expect(osm.length).toBe(9);
+    expect(est.length).toBe(217);
     for (const b of est) {
       expect(b.levels).toBeNull();
       expect(b.displayFloors).toBeGreaterThanOrEqual(10);
@@ -161,6 +167,33 @@ describe('Stage 6 Zones 1–4 (South + West + North + Southwest) urban slice & 3
         expect(insideRing(lng, lat, haramRing), `${b.buildingId} inside Haram fence`).toBe(false);
       }
     }
+  });
+
+  it('Stage 7 context GLB carries exactly the central-area non-hotel buildings, clear of hotels and the Haram fence', () => {
+    expect(CONTEXT_BUILDINGS.length).toBe(34);
+    expect(new Set(CONTEXT_BUILDINGS.map((c) => c.buildingId)).size).toBe(CONTEXT_BUILDINGS.length);
+    for (const c of CONTEXT_BUILDINGS) {
+      expect(['south', 'west', 'north', 'sw']).toContain(c.zone);
+      expect(c.heightM).toBeGreaterThanOrEqual(10);
+      expect(c.heightM).toBeLessThanOrEqual(72);
+      expect(c.source === 'osm' ? typeof c.osm : c.osm).toBe(c.source === 'osm' ? 'string' : null);
+      // Not clickable: a context outline never contains a hotel centre.
+      for (const h of APPROVED_FOOTPRINT_BUILDINGS) expect(insideRing(h.center[1], h.center[0], c.polygon), `${c.buildingId} over ${h.buildingId}`).toBe(false);
+    }
+    const haramRing = (fence.runs as { path: number[][] }[]).flatMap((r) => r.path as [number, number][]);
+    for (const c of CONTEXT_BUILDINGS) for (const [lng, lat] of c.polygon) expect(insideRing(lng, lat, haramRing), `${c.buildingId} inside Haram fence`).toBe(false);
+
+    const buf = readFileSync(CONTEXT_GLB_PATH);
+    expect(gzipSync(buf).length).toBeLessThanOrEqual(250 * 1024);
+    const { gltf } = parseGlbBuffer(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
+    const res = validateUrbanGlb(gltf, 'context');
+    expect(res.ok, res.reason).toBe(true);
+    expect(res.buildingCount).toBe(CONTEXT_BUILDINGS.length);
+    expect(validateUrbanGlb(gltf, 'south').ok).toBe(false);
+
+    const spoofed = structuredClone(gltf) as unknown as { nodes: { name?: string; extras?: Record<string, unknown> }[] };
+    spoofed.nodes.push({ name: 'urban-context-Cw999', extras: { buildingId: 'Cw999', zone: 'south', heightSource: 'estimated_display_only' } });
+    expect(validateUrbanGlb(spoofed, 'context').ok).toBe(false);
   });
 
   it('A8 obstruction fade dims South looking North (0°), West looking East (90°), North looking South (180°), and SW looking NE (45°) independently', () => {

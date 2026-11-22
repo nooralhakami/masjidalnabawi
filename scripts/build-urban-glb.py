@@ -1,6 +1,6 @@
 """
-Build Stage 6 Zones 1 & 2 (South 401-475 + 735, West 203-256) 3D GLBs
-(`public/models/urban-{south,west}-stage6.glb`) from `data/urban-approved.json`
+Build the Stage 6 hotel zone GLBs (`public/models/urban-{south,west,north,sw}-stage6.glb`) and the
+Stage 7 context GLB (`public/models/urban-context-stage7.glb`) from `data/urban-approved.json`
 and the architectural Trim Sheet Atlas (`scripts/urban-facade-atlas.jpg`
 & `scripts/urban-facade-mask.jpg`) in Blender 5.3.0.
 
@@ -380,8 +380,8 @@ def build_hotel_mesh(b: dict, mat_facade: bpy.types.Material) -> bpy.types.Objec
     else:
         add_cap_poly(bm, uv_layer, pts, cornice_h, UV_STONE_PATCH, flip_down=False)
 
-    # 2. Hotel Entrance Canopy on edge closest to `entrance`
-    ex, ey = to_blender_xy(b["entrance"][1], b["entrance"][0])
+    # 2. Hotel Entrance Canopy on edge closest to `entrance` (context buildings have none)
+    ex, ey = to_blender_xy(b["entrance"][1], b["entrance"][0]) if b.get("entrance") else (float("inf"), float("inf"))
     best_edge = 0
     best_d = float("inf")
     best_proj = pts[0]
@@ -401,7 +401,7 @@ def build_hotel_mesh(b: dict, mat_facade: bpy.types.Material) -> bpy.types.Objec
     ea, eb = pts[best_edge], pts[(best_edge + 1) % len(pts)]
     edx, edy = eb[0] - ea[0], eb[1] - ea[1]
     elen = math.hypot(edx, edy)
-    if elen >= 2.6:
+    if elen >= 2.6 and b.get("entrance"):
         canopy_w = min(4.6, elen * 0.55)
         add_box(
             bm,
@@ -477,7 +477,8 @@ def build_hotel_mesh(b: dict, mat_facade: bpy.types.Material) -> bpy.types.Objec
 
     bmesh.ops.triangulate(bm, faces=bm.faces[:], quad_method="BEAUTY", ngon_method="BEAUTY")
 
-    name = f"urban-hotel-{b['poiId']}-{b['buildingId']}"
+    is_context = b.get("kind") == "context"
+    name = f"urban-context-{b['buildingId']}" if is_context else f"urban-hotel-{b['poiId']}-{b['buildingId']}"
     mesh = bpy.data.meshes.new(name)
     bm.to_mesh(mesh)
     bm.free()
@@ -485,16 +486,19 @@ def build_hotel_mesh(b: dict, mat_facade: bpy.types.Material) -> bpy.types.Objec
 
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(obj)
-    obj["poiId"] = int(b["poiId"])
+    if not is_context:
+        obj["poiId"] = int(b["poiId"])
+        obj["footprintSplit"] = b["footprintSplit"]
+    else:
+        obj["source"] = b["source"]
     obj["buildingId"] = b["buildingId"]
     obj["zone"] = b.get("zone", "south")
     obj["heightM"] = float(h)
     obj["heightSource"] = b["heightSource"]
-    obj["footprintSplit"] = b["footprintSplit"]
     obj["styleId"] = style_id
     obj["seed"] = float(b["seed"])
     obj["tint"] = float(b["tint"])
-    obj["kind"] = "building"
+    obj["kind"] = "context" if is_context else "building"
     return obj
 
 
@@ -881,6 +885,8 @@ def build_zone(zone: str, data: dict, fence: dict) -> None:
             raise RuntimeError(f"Invalid height provenance for {b['buildingId']}: {b['heightSource']} / {b['heightM']}")
         building_polys.append(clean_polygon(b["polygon"]))
         build_hotel_mesh(b, mat_facade)
+    # Sidewalks also stop at the Stage 7 context buildings (drawn by their own GLB).
+    building_polys += [clean_polygon(c["polygon"]) for c in data.get("contextBuildings") or []]
 
     haram_poly = [to_blender_xy(lng, lat) for run in fence["runs"] for (lng, lat) in run["path"]]
     zone_corridors = [c for c in data["streetCorridors"] if c.get("zone", "south") == zone]
@@ -924,10 +930,73 @@ def build_zone(zone: str, data: dict, fence: dict) -> None:
     patch_and_verify_glb(output_glb, data, zone, zone_buildings, footprinted)
 
 
+def build_context(data: dict) -> None:
+    """Stage 7: the central-area buildings that are not listed hotels, in their own lazy GLB."""
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    mat_facade = make_facade_material()
+    ctx = data.get("contextBuildings") or []
+    if not ctx:
+        raise RuntimeError("No contextBuildings in data/urban-approved.json")
+    for b in ctx:
+        if b.get("heightSource") not in ("osm_levels", "estimated_display_only") or b["heightM"] < 10.0:
+            raise RuntimeError(f"Invalid height provenance for {b['buildingId']}: {b['heightSource']} / {b['heightM']}")
+        build_hotel_mesh(b, mat_facade)
+
+    output_glb = ROOT / "public" / "models" / "urban-context-stage7.glb"
+    bpy.ops.export_scene.gltf(
+        filepath=str(output_glb),
+        export_format="GLB",
+        export_yup=True,
+        export_normals=True,
+        export_texcoords=True,
+        export_materials="EXPORT",
+        export_extras=True,
+        export_apply=True,
+        export_image_format="JPEG",
+        export_image_quality=80,
+        export_draco_mesh_compression_enable=False,
+    )
+    raw = output_glb.read_bytes()
+    magic, version, _ = struct.unpack_from("<3I", raw, 0)
+    json_len, json_type = struct.unpack_from("<2I", raw, 12)
+    gltf = json.loads(raw[20 : 20 + json_len].decode("utf-8").rstrip("\x00 "))
+    rest = raw[20 + json_len :]
+    gltf.setdefault("asset", {})["extras"] = {
+        "schema": data["schema"],
+        "stage": data["stage"],
+        "tier": data["tier"],
+        "approvedBy": data["approvedBy"],
+        "approvedAt": data["approvedAt"],
+        "heightMode": data["heightMode"],
+        "zone": "context",
+        "buildingCount": len(ctx),
+        "contextBuildingIds": [b["buildingId"] for b in ctx],
+    }
+    accs = gltf.get("accessors", [])
+    meshes = gltf.get("meshes", [])
+    expected_h = {b["buildingId"]: float(b["heightM"]) for b in ctx}
+    checked = 0
+    for node in gltf.get("nodes", []):
+        bid = node["extras"]["buildingId"]
+        max_y = max(accs[prim["attributes"]["POSITION"]]["max"][1] for prim in meshes[node["mesh"]]["primitives"])
+        if abs(max_y - expected_h[bid]) > 1.5:
+            raise RuntimeError(f"Height mismatch for {node['name']}: got maxY={max_y:.2f} vs expected {expected_h[bid]:.2f}")
+        checked += 1
+    assert checked == len(ctx)
+    new_json = json.dumps(gltf, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    new_json += b" " * ((4 - (len(new_json) % 4)) % 4)
+    final = struct.pack("<3I", magic, version, 12 + 8 + len(new_json) + len(rest)) + struct.pack("<2I", len(new_json), json_type) + new_json + rest
+    output_glb.write_bytes(final)
+    gz = len(gzip.compress(final))
+    print(f"Exported {output_glb}: raw={len(final)} B, gzip={gz} B ({gz / 1024:.1f} KiB), context buildings={checked}")
+    if gz > MAX_GZIP_BYTES:
+        raise RuntimeError(f"GLB gzip size {gz} B exceeds {MAX_GZIP_BYTES} B budget")
+
+
 def main() -> None:
     argv = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
     parser = argparse.ArgumentParser()
-    parser.add_argument("--zone", choices=["south", "west", "north", "sw", "all"], default="south")
+    parser.add_argument("--zone", choices=["south", "west", "north", "sw", "context", "all"], default="south")
     args = parser.parse_args(argv)
 
     data = json.loads(INPUT_JSON.read_text("utf-8"))
@@ -935,9 +1004,12 @@ def main() -> None:
     if data.get("tier") != "verified" or data.get("approvedBy") != "owner" or data.get("schema") != "haram-urban-approved-v2":
         raise RuntimeError("Refusing build: data/urban-approved.json failed A7/v2 approval check")
 
-    zones = ["south", "west", "north", "sw"] if args.zone == "all" else [args.zone]
+    zones = ["south", "west", "north", "sw", "context"] if args.zone == "all" else [args.zone]
     for zone in zones:
-        build_zone(zone, data, fence)
+        if zone == "context":
+            build_context(data)
+        else:
+            build_zone(zone, data, fence)
 
 
 if __name__ == "__main__":

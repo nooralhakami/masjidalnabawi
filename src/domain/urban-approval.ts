@@ -1,4 +1,4 @@
-import { approvedBy, buildings, tier } from '../../data/urban-approved.json';
+import { approvedBy, buildings, contextBuildings, tier } from '../../data/urban-approved.json';
 import type { LatLng, Poi } from '../data/types';
 import { fromWalkMetres, toModelMetres, toWalkMetres, type XY } from './frames';
 
@@ -17,7 +17,12 @@ export interface ApprovedBuilding {
   /** Adjacent drivable street kerb / dropoff for driving routes. */
   dropoff: LatLng;
   hasFootprint: boolean;
-  footprintSplit: 'single' | 'provisional_pin_partition' | 'none';
+  /**
+   * `single`: the hotel's own OSM outline; `osm_split`: one real OSM outline shared by neighbouring hotels, cut
+   * between their guide pins; `ms_shifted`: OSM has no building there, so the Microsoft outline by the pin, moved
+   * by its measured offset onto the imagery and cut clear of the neighbours.
+   */
+  footprintSplit: 'single' | 'osm_split' | 'ms_shifted' | 'provisional_pin_partition' | 'none';
   /** Verified OSM/owner floor count when known; `null` when only display-estimated or pin-only. */
   levels: number | null;
   /** Display-only 3D height tiers (`10..14` for unmeasured Markaziyah towers); never shown as verified facts. */
@@ -32,11 +37,41 @@ export interface ApprovedBuilding {
   polygon: readonly (readonly [number, number])[];
 }
 
+/**
+ * A central-area building that is not a listed hotel (offices, museums, markets, unlisted towers),
+ * drawn so the 3D city matches the satellite imagery (Stage 7). Never clickable, never routed to.
+ */
+export interface ContextBuilding {
+  buildingId: string;
+  osm: string | null;
+  /** `osm`: OSM outline; `ms_shifted`: a Microsoft outline moved by its measured offset to the imagery. */
+  source: 'osm' | 'ms_shifted';
+  /** The side of the Haram it stands on, for the A8 view fade. */
+  zone: 'south' | 'west' | 'north' | 'sw';
+  kind: 'context';
+  name?: string;
+  areaM2: number;
+  center: LatLng;
+  levels: number | null;
+  displayFloors: number;
+  heightM: number;
+  heightSource: 'osm_levels' | 'estimated_display_only';
+  confidence: 'osm' | 'display_only';
+  styleId: number;
+  seed: number;
+  tint: number;
+  polygon: readonly (readonly [number, number])[];
+}
+
 const VERIFIED = tier === 'verified' && approvedBy === 'owner';
 
 export const APPROVED_BUILDINGS: readonly ApprovedBuilding[] = VERIFIED ? (buildings as unknown as ApprovedBuilding[]) : [];
 
 export const APPROVED_FOOTPRINT_BUILDINGS: readonly ApprovedBuilding[] = APPROVED_BUILDINGS.filter((b) => b.hasFootprint && b.polygon.length >= 4);
+
+export const CONTEXT_BUILDINGS: readonly ContextBuilding[] = VERIFIED ? ((contextBuildings ?? []) as unknown as ContextBuilding[]) : [];
+
+export const CONTEXT_BY_ID: ReadonlyMap<string, ContextBuilding> = new Map(CONTEXT_BUILDINGS.map((b) => [b.buildingId, b]));
 
 export const APPROVED_BY_POI_ID: ReadonlyMap<number, ApprovedBuilding> = new Map(APPROVED_BUILDINGS.map((b) => [b.poiId, b]));
 
@@ -212,6 +247,19 @@ export function pointInApprovedBuilding(ll: LatLng): ApprovedBuilding | null {
     if (pointInRing(p, poly.ring)) return poly.building;
   }
   return null;
+}
+
+const CONTEXT_RINGS_M: readonly { ring: XY[]; bounds: [number, number, number, number] }[] = CONTEXT_BUILDINGS.map((b) => {
+  const ring = b.polygon.slice(0, -1).map(([lng, lat]) => toWalkMetres([lat, lng]));
+  const xs = ring.map((p) => p[0]);
+  const ys = ring.map((p) => p[1]);
+  return { ring, bounds: [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)] };
+});
+
+/** Whether a point lies inside a Stage 7 context (non-hotel) building footprint. */
+export function pointInContextBuilding(ll: LatLng): boolean {
+  const p = toWalkMetres(ll);
+  return CONTEXT_RINGS_M.some(({ ring, bounds: [x0, y0, x1, y1] }) => p[0] >= x0 && p[0] <= x1 && p[1] >= y0 && p[1] <= y1 && pointInRing(p, ring));
 }
 
 /** Whether a polyline crosses inside any Stage 5 approved hotel footprint. */

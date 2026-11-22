@@ -88,7 +88,7 @@ export interface AlharamainModel {
 }
 
 /**
- * Venue 4 and the campus POIs carrying a `threeDModel`: 42 placements of 6 files (41 from navQ, one added), and the outer fence (one file, one placement). The
+ * Venue 4 and the campus POIs carrying a `threeDModel`: 42 placements of 6 files (41 from navQ, one added), the outer fence (one file, one placement), and Saqifat Bani Sa'idah with the western plaza's masts (one file, one placement). The
  * restroom blocks stand where navQ puts its plain service boxes, drawn instead with a model made
  * from the owner's photographs (`scripts/restroom-model.mjs`, 2026-11-06). Its entrance is one end
  * only, so each block uses the file turned the way it opens (owner, 2026-11-06): towards the Mosque
@@ -118,6 +118,10 @@ export const ALHARAMAIN_MODELS: readonly AlharamainModel[] = [
   // made from the owner's photographs by scripts/fence-model.mjs, in true metres from the Mosque's
   // anchor, so it is placed there unturned.
   { url: './models/haram-fence.glb', anchors: [[39.611752, 24.466806]], rotation: 0 },
+  // Saqifat Bani Sa'idah's garden as it is (OSM outline and fountain, planting and fence from the
+  // owner's photograph) and the western plaza's 32 high masts and booths read off the imagery
+  // (owner, 2026-11-22): scripts/build-saqifah-westplaza-glb.py, in true metres from the anchor.
+  { url: './models/saqifah-westplaza.glb', anchors: [[39.611752, 24.466806]], rotation: 0 },
   {
     url: './models/haram-restroom-a-east.glb',
     rotation: 1,

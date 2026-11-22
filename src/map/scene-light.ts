@@ -220,6 +220,20 @@ export function materialGlow(file: string, material: string | undefined): Materi
     // Its white marble is lit less than the Mosque's cream walls, or it burns out and loses its joints.
     if (name !== 'steel' && name !== 'dark') return { color: scale(FLOOD, 0.42), tint: 1, rise: 1 };
   }
+  // Saqifat Bani Sa'idah and the western plaza (scripts/build-saqifah-westplaza-glb.py), as the
+  // owner's night photograph shows them: the masts' floodlight heads burn near white, the booths and
+  // the gate kiosk glow from inside, the old building and the fence's white panels take the
+  // floodlights, the palms and trees show green under the masts, the earth and steel stay dim.
+  if (file.includes('saqifah')) {
+    if (name === 'sq_lamp') return { color: scale(LANTERN, 2.6), tint: 0, rise: 0 };
+    if (name === 'sq_kiosk' || name === 'sq_sign') return { color: scale(FLOOD, 0.75), tint: 1, rise: 0 };
+    if (name === 'sq_plaster' || name === 'sq_panel' || name === 'sq_curb') return { color: scale(FLOOD, 0.62), tint: 1, rise: 1 };
+    if (name === 'sq_window') return { color: scale(INSIDE, 0.35), tint: 0, rise: 0 };
+    if (name === 'sq_mast') return { color: scale(FLOOD, 0.55), tint: 1, rise: -1 };
+    if (/^sq_(leaf|frond|fan|dry|grass)/.test(name)) return { color: scale(FLOOD, 0.42), tint: 1, rise: 0 };
+    if (name === 'sq_barrier' || name === 'sq_maroon' || name === 'sq_rim') return { color: scale(FLOOD, 0.45), tint: 1, rise: 0 };
+    return { color: scale(FLOOD, 0.28), tint: 1, rise: 0 };
+  }
   // The outer fence (scripts/fence-model.mjs): its brass lanterns lit, the orange gate boards lit
   // from inside as at night in the owner's photographs, the granite under the floodlights, and the
   // dark green steel only catching some of their light.

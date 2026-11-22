@@ -5,11 +5,12 @@ import { ALHARAMAIN_PRAYERS } from '../../src/data-next/alharamain-prayers';
 import { interiorCorridors, interiorPrayerAreas } from '../../src/map/interior-layout';
 import { WOMEN_RAWDAH_CORRIDOR_BOUNDS } from '../../src/map/rawdah-layout';
 import { buildInterCarpetAisles, rugLayout } from '../../src/map/rug-layout';
+import saqifahLayout from '../../data/saqifah-westplaza.json';
 import { saqifahAndSurroundings3D, saqifahGround2D } from '../../src/map/saqifah-3d';
 import { womenRawdahCorridorBarriers } from '../../src/map/women-barriers';
 import { walkPath, walkShortcutPath } from '../../src/routing/walk';
 import { SHORTCUT_PAINT, shortcutBadgeMeta } from '../../src/map/route';
-import { pointInApprovedBuilding } from '../../src/domain/urban-approval';
+import { pointInApprovedBuilding, pointInContextBuilding } from '../../src/domain/urban-approval';
 
 function pointInPolygon([lat, lng]: [number, number], ring: readonly [number, number][]): boolean {
   let inside = false;
@@ -20,6 +21,16 @@ function pointInPolygon([lat, lng]: [number, number], ring: readonly [number, nu
     if (hit) inside = !inside;
   }
   return inside;
+}
+
+function insideLngLat([x, y]: readonly [number, number], ring: readonly (readonly [number, number])[]): boolean {
+  let c = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
+  }
+  return c;
 }
 
 describe('Phase 1-B resolution, inter-carpet aisles, interior routing, and Saqifah 3D', () => {
@@ -97,22 +108,30 @@ describe('Phase 1-B resolution, inter-carpet aisles, interior routing, and Saqif
   it('builds 2D and 3D Saqifat Bani Sa idah Garden and surrounding West OSM buildings excluding restroom blocks', () => {
     const g2d = saqifahGround2D();
     expect(g2d.features.length).toBeGreaterThan(30);
+    // The garden as it is (owner, 2026-11-22): OSM's outline and fountain, the fence round it, and the
+    // planting of the owner's photograph, every plant inside the outline.
+    const garden = saqifahLayout.garden as [number, number][];
+    expect(g2d.features.filter((f) => f.properties.kind === 'wall')).toHaveLength(garden.length - 1);
+    expect(g2d.features.filter((f) => f.properties.kind === 'fountain')).toHaveLength(2);
+    expect(saqifahLayout.plants.length).toBeGreaterThanOrEqual(30);
+    for (const pl of saqifahLayout.plants) expect(insideLngLat(pl.at as [number, number], garden), pl.kind).toBe(true);
+    expect(saqifahLayout.masts).toHaveLength(32);
+    expect(saqifahLayout.booths).toHaveLength(6);
+    for (const [lng, lat] of saqifahLayout.masts as [number, number][]) expect(insideLngLat([lng, lat], garden)).toBe(false);
 
     const f3d = saqifahAndSurroundings3D();
     const byKind = (kind: string) => f3d.features.filter((f) => f.properties.kind === kind);
 
-    expect(byKind('wall')).toHaveLength(5);
-    expect(byKind('lawn')).toHaveLength(4);
-    expect(byKind('path')).toHaveLength(3);
-
+    // The garden and its old building are the model now (saqifah-westplaza.glb): no flat walls,
+    // lawns or extruded trees are left, only the two small heritage blocks it does not draw.
+    for (const k of ['wall', 'lawn', 'path', 'tree-trunk', 'tree-crown']) expect(byKind(k)).toHaveLength(0);
     const heritage = byKind('heritage');
-    expect(heritage.map((f) => f.properties.id).sort()).toEqual(['775419642', '775419643', '775419644', '775419645']);
+    expect(heritage.map((f) => f.properties.id).sort()).toEqual(['775419644', '775419645']);
 
-    expect(byKind('tree-trunk')).toHaveLength(28);
-    expect(byKind('tree-crown')).toHaveLength(28);
-
+    // Stage 7 draws the central-area buildings from OSM itself (hotels + context towers), so only the
+    // few outside that set stay as plain boxes here.
     const surrounding = [...byKind('hotel'), ...byKind('civic'), ...byKind('building')];
-    expect(surrounding).toHaveLength(10);
+    expect(surrounding).toHaveLength(3);
 
     for (const f of surrounding) {
       expect(/^(209|21\d|22[0-2])$/.test((f.properties.name ?? '').trim())).toBe(false);
@@ -120,6 +139,7 @@ describe('Phase 1-B resolution, inter-carpet aisles, interior routing, and Saqif
       const clat = pts.reduce((s, p) => s + p[1], 0) / pts.length;
       const clng = pts.reduce((s, p) => s + p[0], 0) / pts.length;
       expect(pointInApprovedBuilding([clat, clng]), f.properties.id).toBeNull();
+      expect(pointInContextBuilding([clat, clng]), f.properties.id).toBe(false);
     }
 
     // Ensure GLB canopy anchor constant was not dropped

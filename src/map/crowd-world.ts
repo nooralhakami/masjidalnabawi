@@ -1,3 +1,4 @@
+import saqifah from '../../data/saqifah-westplaza.json';
 import { POIS } from '../data';
 import { alharamainPlaza } from '../data-next/alharamain-3d';
 import { PRAYER_CLEARINGS } from '../data-next/alharamain-prayers';
@@ -75,6 +76,17 @@ function inside(ring: readonly XY[], step = 25): XY[] {
   return out;
 }
 
+/** Saqifat Bani Sa'idah's garden (its fence line) and the old building on its south side, closed to walkers. */
+const SAQIFAH_SOLID: XY[][] = [
+  (saqifah.garden as [number, number][]).slice(0, -1).map(m),
+  [
+    [39.606563, 24.470064],
+    [39.607052, 24.470061],
+    [39.607051, 24.469977],
+    [39.606564, 24.469978],
+  ].map((ll) => m(ll as [number, number])),
+];
+
 /**
  * Where the courtyards' walkers may go, built from the map's own data (owner, 2026-11-06): the
  * plazas (the five sectors and the western annex); not the prayer carpets (the courtyards' and the
@@ -100,9 +112,11 @@ export function crowdInput(columns: readonly (readonly [number, number])[]): Cro
       ...rugLayout(columns).blocked,
     ],
     open: [...restroomWalkways(), ...PRAYER_CLEARINGS.map((r) => r.map(m))],
-    // Buildings stay closed even where a cleared corridor crosses them.
-    solid: [box(MOSQUE_MAIN, 0.5), box(MOSQUE_SOUTH, 0.5), ...restroomFootprints(0.5)],
-    columns: columns.map(m),
+    // Buildings stay closed even where a cleared corridor crosses them; so does Saqifat Bani Sa'idah's
+    // fenced garden with its old building (owner, 2026-11-22: it is closed to visitors).
+    solid: [box(MOSQUE_MAIN, 0.5), box(MOSQUE_SOUTH, 0.5), ...restroomFootprints(0.5), ...SAQIFAH_SOLID],
+    // Round the canopy and lamp columns, and the western plaza's high masts.
+    columns: [...columns, ...(saqifah.masts as [number, number][])].map(m),
     goals: POIS.filter((p) => p.category === 'gates' && p.subCategory !== 'gate_inner').map((p) => m([p.lng, p.lat])),
     doorBays: allDoorwayBayPortals(),
     womenOnly: WOMEN_AREAS.map((a) => a.zone.map(mLatLng)),

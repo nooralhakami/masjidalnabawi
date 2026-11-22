@@ -11,6 +11,7 @@ import {
   parseCrowdSeasonOverride,
   resolveInitialCrowdTier,
 } from '../domain/crowd-profiles';
+import { type CrowdOccasion, OCCASION_CROWD, parseCrowdOccasionOverride } from '../domain/crowd-occasion';
 import { buildBoneAnimationTexture, CROWD_CLIP } from '../domain/crowd-rig';
 import { allDoorwayBayPortals, subscribeMosqueDoors } from '../domain/mosque-doors';
 import type { PrayerDemoOverride } from '../domain/prayer-session';
@@ -568,8 +569,11 @@ function rehalMesh(): { data: Float32Array; count: number } {
 /** The rehal's wood and its pages, for its draw. */
 const REHAL_WOOD: [number, number, number] = [0.36, 0.24, 0.14];
 const REHAL_PAGES: [number, number, number] = [0.9, 0.88, 0.82];
-/** The most figures at prayer the layer keeps places for (about what the scene draws well). */
-const MAX_WORSHIPPERS = 1200;
+/**
+ * The most figures at prayer the layer keeps places for: the ordinary day's 900 rows, doubled on Eid
+ * morning (`OCCASION_CROWD`); what a frame draws is still capped by the quality tier.
+ */
+const MAX_WORSHIPPERS = 1800;
 
 /**
  * Who each walker is: robe, height, headwear, woman or man, skin (`data`, 8 floats each); and
@@ -751,6 +755,8 @@ export class CrowdLayer implements CustomLayerInterface {
   private worshipBatch: CrowdProfileBatch | null = null;
   private packedWorshipCount = -1;
   private season: ReturnType<typeof parseCrowdSeasonOverride>;
+  /** A fixed occasion for a preview link (`?crowdOccasion=eid`); null follows the Hijri calendar. */
+  private occasionOverride: CrowdOccasion | null;
   private perfGuard: CrowdPerfGuard;
   private animClockStart = 0;
   private lastTickWall = 0;
@@ -764,6 +770,7 @@ export class CrowdLayer implements CustomLayerInterface {
     const search = typeof location !== 'undefined' ? location.search : '';
     const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.season = parseCrowdSeasonOverride(search);
+    this.occasionOverride = parseCrowdOccasionOverride(search);
     this.perfGuard = new CrowdPerfGuard(resolveInitialCrowdTier(reduced, parseCrowdQualityOverride(search)));
     this.who = looks(CROWD_SIZE, 1234, { season: this.season });
   }
@@ -1147,7 +1154,7 @@ export class CrowdLayer implements CustomLayerInterface {
     const crowd = this.crowd;
     const clock = new Date();
     // The worshippers at prayer (owner, 2026-11-09): laid out when the scene changes, then drawn as they are.
-    if (this.worshippers.sync(clock, this.demo, { columns: this.columns ?? [] })) this.buildWorshippers(gl);
+    if (this.worshippers.sync(clock, this.demo, { columns: this.columns ?? [] }, this.occasionOverride)) this.buildWorshippers(gl);
     const prayer = this.worshippers.session;
     // At the congregational prayer the courtyards are the rows; the walkers wait for it to end.
     const congregational = prayer != null && (prayer.phase === 'fard_prayer' || prayer.phase === 'friday_khutbah' || prayer.phase === 'friday_prayer');
@@ -1159,7 +1166,8 @@ export class CrowdLayer implements CustomLayerInterface {
     this.last = now;
 
     const k = Math.min(crowd.n, activeCaps.walkers);
-    const wCount = Math.min(this.worshipCount, activeCaps.worshippers);
+    // Ramadan nights and Eid morning draw proportionally more rows (the street overflow comes last).
+    const wCount = Math.min(this.worshipCount, Math.round(activeCaps.worshippers * OCCASION_CROWD[this.worshippers.occasion].scale));
     const mvp = new Float64Array(16);
     mulMat4(mvp, projMatrix as unknown as ArrayLike<number>, this.frame);
     const mvpF32 = new Float32Array(mvp);

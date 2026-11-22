@@ -3,6 +3,8 @@ import {
   approvedFootprintBuildingsForZone,
   APPROVED_BUILDINGS,
   APPROVED_BY_POI_ID,
+  CONTEXT_BUILDINGS,
+  CONTEXT_BY_ID,
   pickApprovedBuildingRay,
   pointInApprovedBuilding,
   urbanOpacityForCamera,
@@ -16,14 +18,19 @@ export const URBAN_GLB_URL = './models/urban-south-stage6.glb';
 export const URBAN_WEST_GLB_URL = './models/urban-west-stage6.glb';
 export const URBAN_NORTH_GLB_URL = './models/urban-north-stage6.glb';
 export const URBAN_SW_GLB_URL = './models/urban-sw-stage6.glb';
+/** Stage 7: the central-area buildings that are not listed hotels, so the 3D city matches the imagery. */
+export const URBAN_CONTEXT_GLB_URL = './models/urban-context-stage7.glb';
 export const URBAN_LAYER_ID = 'urban-south-3d';
 export const URBAN_ZONES = [
   { id: 'south', url: URBAN_GLB_URL },
   { id: 'west', url: URBAN_WEST_GLB_URL },
   { id: 'north', url: URBAN_NORTH_GLB_URL },
   { id: 'sw', url: URBAN_SW_GLB_URL },
+  { id: 'context', url: URBAN_CONTEXT_GLB_URL },
 ] as const;
 export type UrbanZoneId = (typeof URBAN_ZONES)[number]['id'];
+/** The side of the Haram a building stands on: what the A8 view fade keys on. */
+export type UrbanFadeZone = Exclude<UrbanZoneId, 'context'>;
 export const URBAN_STREETS_SOURCE_ID = 'urban-south-streets';
 export const URBAN_STREETS_LAYER_ID = 'urban-south-streets-line';
 
@@ -127,6 +134,7 @@ export function validateUrbanGlb(rawGltf: unknown, expectedZone?: UrbanZoneId): 
     };
   }
   const zoneId = glbZone as UrbanZoneId;
+  if (zoneId === 'context') return validateContextGlb(gltf);
   const expectedFootprintIds = approvedFootprintBuildingsForZone(zoneId).map((b) => b.poiId);
   const streetPrefix = `urban-street-${zoneId}-`;
   const propPrefix = `urban-prop-${zoneId}-`;
@@ -184,6 +192,40 @@ export function validateUrbanGlb(rawGltf: unknown, expectedZone?: UrbanZoneId): 
   }
 
   return { ok: true, buildingCount: seenBuildings.size, maxHeightM };
+}
+
+/**
+ * A9 guard for the Stage 7 context GLB: every node is one `contextBuildings` entry of
+ * `data/urban-approved.json` (same id, side and display height), and every entry is present.
+ */
+function validateContextGlb(gltf: UrbanGlbJson): GlbValidationResult {
+  const meshes = gltf.meshes ?? [];
+  const accessors = gltf.accessors ?? [];
+  const seen = new Set<string>();
+  let maxHeightM = 0;
+  for (const node of gltf.nodes ?? []) {
+    const name = node.name ?? '';
+    const c = CONTEXT_BY_ID.get(String(node.extras?.buildingId ?? ''));
+    const src = String(node.extras?.heightSource ?? '');
+    if (!c || name !== `urban-context-${c.buildingId}` || node.extras?.zone !== c.zone || !VALID_HEIGHT_SOURCES.has(src)) {
+      return { ok: false, reason: `Unapproved context node "${name}" rejected by A9 guard`, buildingCount: 0, maxHeightM };
+    }
+    if (typeof node.mesh === 'number') {
+      for (const prim of meshes[node.mesh]?.primitives ?? []) {
+        const maxY = accessors[prim.attributes.POSITION]?.max?.[1];
+        if (typeof maxY !== 'number') continue;
+        maxHeightM = Math.max(maxHeightM, maxY);
+        if (maxY < 10.0 || maxY > 72.0 || Math.abs(maxY - c.heightM) > 4.0) {
+          return { ok: false, reason: `Out-of-bounds height (${maxY.toFixed(2)} m vs ${c.heightM} m) for "${name}"`, buildingCount: 0, maxHeightM };
+        }
+      }
+    }
+    seen.add(c.buildingId);
+  }
+  if (seen.size !== CONTEXT_BUILDINGS.length) {
+    return { ok: false, reason: `Expected ${CONTEXT_BUILDINGS.length} context buildings, got ${seen.size}`, buildingCount: seen.size, maxHeightM };
+  }
+  return { ok: true, buildingCount: seen.size, maxHeightM };
 }
 
 /** Verified OSM street corridors around Zone 1 South (lazy-loaded only in 3D). */
@@ -314,6 +356,11 @@ void main() {
     if (glowMask > 0.08) {
       lit += vec3(1.0, 0.82, 0.52) * (glowMask * smoothstep(0.08, 0.75, u_night) * 1.10);
     }
+    // Facade floodlights (owner's night photographs, 2026-11-22): the stone reads cream-white, lit
+    // strongest above the arcade and fading up the tower, in the Haram's near-white flood colour.
+    float stone = 1.0 - glassMask;
+    float rise = 1.0 - smoothstep(9.0, 70.0, v_worldPos.y);
+    lit += baseRgb * vec3(1.0, 0.95, 0.87) * (nStr * stone * (0.30 + 0.30 * rise));
   }
 
   // Selected / routed hotel tower warm amber architectural highlight & rim halo
@@ -340,7 +387,7 @@ interface GpuPart {
   indexType: number;
   color: [number, number, number, number];
   kind: number; // 0=building, 1=street, 2=prop, 3=lamp_glow
-  zone: UrbanZoneId;
+  zone: UrbanFadeZone;
   poiId: number;
   seed: number;
   tint: number;
@@ -632,11 +679,13 @@ export class Urban3DLayer implements CustomLayerInterface {
     for (const node of gltf.nodes ?? []) {
       if (typeof node.mesh !== 'number') continue;
       const name = node.name ?? '';
-      const isBuilding = name.startsWith('urban-hotel-');
+      const isContext = name.startsWith('urban-context-');
+      const isBuilding = isContext || name.startsWith('urban-hotel-');
       const isStreet = name.startsWith(streetPrefix);
       const isLampGlow = name === lampGlowName;
       const kind = isBuilding ? 0 : isStreet ? 1 : isLampGlow ? 3 : 2;
-      const poiId = isBuilding ? Number(node.extras?.poiId ?? 0) : 0;
+      const poiId = isBuilding && !isContext ? Number(node.extras?.poiId ?? 0) : 0;
+      const fadeZone = (zone === 'context' ? String(node.extras?.zone ?? 'south') : zone) as UrbanFadeZone;
       const seed = Number(node.extras?.seed ?? 0);
       const tint = Number(node.extras?.tint ?? 0);
 
@@ -696,7 +745,7 @@ export class Urban3DLayer implements CustomLayerInterface {
           indexType: idxAcc.componentType,
           color: baseColor,
           kind,
-          zone,
+          zone: fadeZone,
           poiId,
           seed,
           tint,
@@ -751,7 +800,7 @@ export class Urban3DLayer implements CustomLayerInterface {
 
     const bearing = this.map.getBearing();
     const pitch = this.map.getPitch();
-    const zoneFade: Record<UrbanZoneId, number> = {
+    const zoneFade: Record<UrbanFadeZone, number> = {
       south: urbanOpacityForCamera(bearing, pitch, 'south'),
       west: urbanOpacityForCamera(bearing, pitch, 'west'),
       north: urbanOpacityForCamera(bearing, pitch, 'north'),
