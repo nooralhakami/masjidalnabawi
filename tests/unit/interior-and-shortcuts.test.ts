@@ -9,7 +9,7 @@ import { saqifahAndSurroundings3D, saqifahGround2D } from '../../src/map/saqifah
 import { womenRawdahCorridorBarriers } from '../../src/map/women-barriers';
 import { walkPath, walkShortcutPath } from '../../src/routing/walk';
 import { SHORTCUT_PAINT, shortcutBadgeMeta } from '../../src/map/route';
-import { pointInApprovedBuilding } from '../../src/domain/urban-approval';
+import { pointInApprovedBuilding, pointInContextBuilding } from '../../src/domain/urban-approval';
 
 function pointInPolygon([lat, lng]: [number, number], ring: readonly [number, number][]): boolean {
   let inside = false;
@@ -111,8 +111,10 @@ describe('Phase 1-B resolution, inter-carpet aisles, interior routing, and Saqif
     expect(byKind('tree-trunk')).toHaveLength(28);
     expect(byKind('tree-crown')).toHaveLength(28);
 
+    // Stage 7 draws the central-area buildings from OSM itself (hotels + context towers), so only the
+    // few outside that set stay as plain boxes here.
     const surrounding = [...byKind('hotel'), ...byKind('civic'), ...byKind('building')];
-    expect(surrounding).toHaveLength(10);
+    expect(surrounding).toHaveLength(3);
 
     for (const f of surrounding) {
       expect(/^(209|21\d|22[0-2])$/.test((f.properties.name ?? '').trim())).toBe(false);
@@ -120,6 +122,7 @@ describe('Phase 1-B resolution, inter-carpet aisles, interior routing, and Saqif
       const clat = pts.reduce((s, p) => s + p[1], 0) / pts.length;
       const clng = pts.reduce((s, p) => s + p[0], 0) / pts.length;
       expect(pointInApprovedBuilding([clat, clng]), f.properties.id).toBeNull();
+      expect(pointInContextBuilding([clat, clng]), f.properties.id).toBe(false);
     }
 
     // Ensure GLB canopy anchor constant was not dropped

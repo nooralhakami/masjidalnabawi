@@ -356,6 +356,11 @@ void main() {
     if (glowMask > 0.08) {
       lit += vec3(1.0, 0.82, 0.52) * (glowMask * smoothstep(0.08, 0.75, u_night) * 1.10);
     }
+    // Facade floodlights (owner's night photographs, 2026-11-22): the stone reads cream-white, lit
+    // strongest above the arcade and fading up the tower, in the Haram's near-white flood colour.
+    float stone = 1.0 - glassMask;
+    float rise = 1.0 - smoothstep(9.0, 70.0, v_worldPos.y);
+    lit += baseRgb * vec3(1.0, 0.95, 0.87) * (nStr * stone * (0.30 + 0.30 * rise));
   }
 
   // Selected / routed hotel tower warm amber architectural highlight & rim halo

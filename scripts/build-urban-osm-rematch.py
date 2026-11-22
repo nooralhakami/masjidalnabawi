@@ -612,7 +612,11 @@ def main() -> None:
                 return latlng(best_pt)
         raise RuntimeError("no drivable street for drop-off")
 
-    def entrance_for(poly: list[XY], pin: XY) -> tuple[XY, str]:
+    def entrance_for(poly: list[XY], pin: XY, keep: XY | None = None) -> tuple[XY, str]:
+        """The street-facing door. With `keep` (the approved Stage 6 door, if it is still within 20 m of
+        the new outline) the door stays on that facade, only moved onto the corrected outline."""
+        if keep is not None and dist_pt_poly_edges(keep, poly) > 20.0:
+            keep = None
         cand_best, best_score = None, float("inf")
         cen = centroid_xy(poly)
         roads = near_segs(drive_segs, cen, 90.0)
@@ -635,7 +639,11 @@ def main() -> None:
                         continue
                     d_road = min((dist_pt_seg(c, s0, s1)[0] for s0, s1 in roads), default=90.0)
                     d_foot = min((dist_pt_seg(c, s0, s1)[0] for s0, s1 in walks), default=90.0)
-                    score = min(d_road, d_foot + 4.0) * 2.0 + 0.12 * math.hypot(c[0] - pin[0], c[1] - pin[1]) + push * 0.5
+                    street = min(d_road, d_foot + 4.0)
+                    if keep is not None:
+                        score = 3.0 * math.hypot(c[0] - keep[0], c[1] - keep[1]) + 0.5 * street + 0.3 * push
+                    else:
+                        score = street * 2.0 + 0.12 * math.hypot(c[0] - pin[0], c[1] - pin[1]) + push * 0.5
                     if score < best_score:
                         best_score, cand_best = score, (c, entrance_side_from_normal(nx, ny))
         if cand_best is None:
@@ -668,10 +676,14 @@ def main() -> None:
         b["center"] = latlng(centroid_xy(poly))
         if o.get("osm"):
             b["osm"] = o["osm"]
-        ent, side = entrance_for(poly, pin)
+        ent, side = entrance_for(poly, pin, to_xy(b["entrance"][1], b["entrance"][0]) if b.get("entrance") else None)
         b["entrance"] = latlng(ent)
         b["entranceSide"] = side
-        b["dropoff"] = dropoff_for(ent)
+        # The approved kerb stays while it is still clear and by the door; the route planner's drive
+        # leg was tuned on it.
+        old_drop = to_xy(b["dropoff"][1], b["dropoff"][0]) if b.get("dropoff") else None
+        if old_drop is None or math.hypot(old_drop[0] - ent[0], old_drop[1] - ent[1]) > 30.0 or not clear_of_buildings(old_drop, 0.2):
+            b["dropoff"] = dropoff_for(ent)
         lv = osm_levels(o.get("tags") or {})
         if lv is not None:
             b.update({"levels": lv, "displayFloors": max(3, min(18, lv)), "heightM": display_height(max(3, min(18, lv))), "heightSource": "osm_levels", "confidence": "osm"})

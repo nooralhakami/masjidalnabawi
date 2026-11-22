@@ -28,12 +28,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4651849,
+        24.4651477,
         39.6085451
       ],
       "dropoff": [
         24.4654257,
-        39.6085486
+        39.6085491
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -80,14 +80,14 @@
         24.4644652,
         39.6116269
       ],
-      "entranceSide": "north",
+      "entranceSide": "west",
       "entrance": [
-        24.4646751,
-        39.611597
+        24.4642954,
+        39.6107268
       ],
       "dropoff": [
-        24.4647297,
-        39.6115963
+        24.4642603,
+        39.6105994
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -254,14 +254,14 @@
         24.46428,
         39.6092721
       ],
-      "entranceSide": "south",
+      "entranceSide": "west",
       "entrance": [
-        24.4641777,
-        39.6092477
+        24.4642543,
+        39.6091653
       ],
       "dropoff": [
-        24.4641229,
-        39.6092482
+        24.464108,
+        39.60899
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -308,14 +308,14 @@
         24.4638755,
         39.6101126
       ],
-      "entranceSide": "east",
+      "entranceSide": "west",
       "entrance": [
-        24.4639366,
-        39.6103994
+        24.4638144,
+        39.6098259
       ],
       "dropoff": [
-        24.4639371,
-        39.6104588
+        24.4638365,
+        39.609741
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -364,12 +364,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4637856,
-        39.6114604
+        24.4636387,
+        39.6114614
       ],
       "dropoff": [
-        24.4641616,
-        39.6114564
+        24.4633467,
+        39.6114496
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -426,12 +426,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4647513,
-        39.6073696
+        24.4647238,
+        39.6073637
       ],
       "dropoff": [
-        24.4647596,
-        39.6073181
+        24.4647019,
+        39.6073069
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -482,14 +482,14 @@
         24.464489,
         39.6069682
       ],
-      "entranceSide": "east",
+      "entranceSide": "west",
       "entrance": [
-        24.4644049,
-        39.6071211
+        24.4644495,
+        39.6068
       ],
       "dropoff": [
-        24.4644032,
-        39.6072969
+        24.4641341,
+        39.6067918
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -546,8 +546,8 @@
         39.6073519
       ],
       "dropoff": [
-        24.4643324,
-        39.6072961
+        24.4645081,
+        39.6072981
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -604,12 +604,12 @@
       ],
       "entranceSide": "north",
       "entrance": [
-        24.4640408,
-        39.6075941
+        24.4640318,
+        39.607527
       ],
       "dropoff": [
-        24.4640403,
-        39.6077289
+        24.464072,
+        39.607729
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -672,14 +672,14 @@
         24.4636963,
         39.607508
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.463671,
-        39.6076457
+        24.4635817,
+        39.6074764
       ],
       "dropoff": [
-        24.4636707,
-        39.6077271
+        24.4634989,
+        39.6074383
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -726,14 +726,14 @@
         24.4641999,
         39.608025
       ],
-      "entranceSide": "east",
+      "entranceSide": "west",
       "entrance": [
-        24.4643166,
-        39.6081489
+        24.4643076,
+        39.6078284
       ],
       "dropoff": [
-        24.4643527,
-        39.608202
+        24.4643313,
+        39.6077296
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -780,14 +780,14 @@
         24.4651572,
         39.6083276
       ],
-      "entranceSide": "west",
+      "entranceSide": "south",
       "entrance": [
-        24.4650133,
-        39.6082284
+        24.4649796,
+        39.6083254
       ],
       "dropoff": [
-        24.4649759,
-        39.6081731
+        24.4648886,
+        39.6082444
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -857,7 +857,7 @@
       ],
       "dropoff": [
         24.4654189,
-        39.6091253
+        39.6091237
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -906,12 +906,12 @@
       ],
       "entranceSide": "east",
       "entrance": [
-        24.4652196,
-        39.6096748
+        24.4651484,
+        39.6096614
       ],
       "dropoff": [
         24.465417,
-        39.6096748
+        39.6096614
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -960,12 +960,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4652152,
-        39.6096833
+        24.4652153,
+        39.6096961
       ],
       "dropoff": [
-        24.4654169,
-        39.6096854
+        24.4654168,
+        39.6096998
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -1014,12 +1014,12 @@
       ],
       "entranceSide": "north",
       "entrance": [
-        24.4653126,
-        39.6099157
+        24.465301,
+        39.6099156
       ],
       "dropoff": [
-        24.4654154,
-        39.6099163
+        24.4654158,
+        39.609841
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -1068,12 +1068,12 @@
       ],
       "entranceSide": "east",
       "entrance": [
-        24.4651815,
-        39.6104389
+        24.4651545,
+        39.6104254
       ],
       "dropoff": [
-        24.4651816,
-        39.6104518
+        24.4651542,
+        39.610452
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -1124,14 +1124,14 @@
         24.4648937,
         39.6103092
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4649289,
-        39.6104294
+        24.4647584,
+        39.6102792
       ],
       "dropoff": [
-        24.4649291,
-        39.610454
+        24.4647025,
+        39.6102348
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -1184,8 +1184,8 @@
         39.6098802
       ],
       "dropoff": [
-        24.4646985,
-        39.6098809
+        24.464683,
+        39.6097527
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -1293,7 +1293,7 @@
       ],
       "dropoff": [
         24.4647015,
-        39.6088137
+        39.6088101
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -1346,8 +1346,8 @@
         39.6085786
       ],
       "dropoff": [
-        24.4644169,
-        39.6084791
+        24.4644448,
+        39.6084558
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -1404,8 +1404,8 @@
         39.6090777
       ],
       "dropoff": [
-        24.4647001,
-        39.6090788
+        24.4646997,
+        39.6091539
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -1455,11 +1455,11 @@
       "entranceSide": "south",
       "entrance": [
         24.4647469,
-        39.609197
+        39.6092209
       ],
       "dropoff": [
-        24.4646995,
-        39.6091967
+        24.4646993,
+        39.6092319
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -1506,14 +1506,14 @@
         24.4644981,
         39.6094192
       ],
-      "entranceSide": "east",
+      "entranceSide": "north",
       "entrance": [
-        24.4644567,
-        39.6096935
+        24.4645931,
+        39.6094699
       ],
       "dropoff": [
-        24.4644557,
-        39.6097479
+        24.4646981,
+        39.6094604
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -1564,14 +1564,14 @@
         24.4642822,
         39.6095135
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4642882,
-        39.6096891
+        24.4641792,
+        39.6094556
       ],
       "dropoff": [
-        24.4642873,
-        39.6097444
+        24.4641242,
+        39.609456
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -1622,14 +1622,14 @@
         24.4642849,
         39.6089112
       ],
-      "entranceSide": "south",
+      "entranceSide": "west",
       "entrance": [
-        24.4642155,
-        39.6087906
+        24.4643163,
+        39.6087534
       ],
       "dropoff": [
-        24.4641531,
-        39.6086868
+        24.4642621,
+        39.6086077
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -1680,14 +1680,14 @@
         24.4639202,
         39.6092764
       ],
-      "entranceSide": "north",
+      "entranceSide": "west",
       "entrance": [
-        24.4640756,
-        39.6092617
+        24.4638319,
+        39.609155
       ],
       "dropoff": [
-        24.4641229,
-        39.6092613
+        24.4637817,
+        39.6090744
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -1740,12 +1740,12 @@
       ],
       "entranceSide": "north",
       "entrance": [
-        24.4640779,
-        39.6095045
+        24.4640662,
+        39.6095046
       ],
       "dropoff": [
-        24.4641245,
-        39.6095041
+        24.464003,
+        39.609741
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -1898,14 +1898,14 @@
         24.4641355,
         39.6129554
       ],
-      "entranceSide": "south",
+      "entranceSide": "north",
       "entrance": [
-        24.4638465,
-        39.6129208
+        24.4644165,
+        39.6129609
       ],
       "dropoff": [
-        24.4638247,
-        39.6129207
+        24.4645771,
+        39.6129451
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -1956,14 +1956,14 @@
         24.4641406,
         39.6134955
       ],
-      "entranceSide": "south",
+      "entranceSide": "north",
       "entrance": [
-        24.4638467,
-        39.6134226
+        24.4644216,
+        39.6134688
       ],
       "dropoff": [
-        24.4638213,
-        39.6134224
+        24.4645809,
+        39.6134696
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -2018,14 +2018,14 @@
         24.4641386,
         39.6132033
       ],
-      "entranceSide": "south",
+      "entranceSide": "north",
       "entrance": [
-        24.4638466,
-        39.6131652
+        24.4644189,
+        39.6132031
       ],
       "dropoff": [
-        24.463823,
-        39.613165
+        24.464579,
+        39.6132017
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -2072,14 +2072,14 @@
         24.4640418,
         39.6127794
       ],
-      "entranceSide": "south",
+      "entranceSide": "west",
       "entrance": [
-        24.4638464,
-        39.6127674
+        24.4638928,
+        39.6126909
       ],
       "dropoff": [
-        24.4638257,
-        39.6127673
+        24.463826,
+        39.6127266
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -2128,12 +2128,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4636043,
-        39.6123946
+        24.4636016,
+        39.6124071
       ],
       "dropoff": [
-        24.4636162,
-        39.6123536
+        24.4636322,
+        39.6123593
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -2190,8 +2190,8 @@
         39.6131026
       ],
       "dropoff": [
-        24.4632669,
-        39.6130996
+        24.4632695,
+        39.613029
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -2240,12 +2240,12 @@
       ],
       "entranceSide": "north",
       "entrance": [
-        24.4637035,
-        39.6131717
+        24.4636918,
+        39.6131714
       ],
       "dropoff": [
-        24.4638229,
-        39.6131727
+        24.4638228,
+        39.6131965
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -2292,14 +2292,14 @@
         24.4635484,
         39.6135606
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.463537,
-        39.61369
+        24.4633867,
+        39.6135255
       ],
       "dropoff": [
-        24.4635368,
-        39.6137528
+        24.463316,
+        39.6135504
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -2360,12 +2360,12 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4634065,
-        39.6139428
+        24.4634324,
+        39.6140344
       ],
       "dropoff": [
-        24.463406,
-        39.6139429
+        24.4634436,
+        39.6140955
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -2426,8 +2426,8 @@
         39.6138052
       ],
       "dropoff": [
-        24.46392,
-        39.6137545
+        24.4638685,
+        39.6137543
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -2476,12 +2476,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4646124,
-        39.6137941
+        24.4645374,
+        39.6138086
       ],
       "dropoff": [
-        24.4646126,
-        39.6137582
+        24.4645535,
+        39.6137578
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -2530,12 +2530,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4647698,
-        39.6137907
+        24.4647416,
+        39.6138041
       ],
       "dropoff": [
-        24.4647699,
-        39.613759
+        24.4647319,
+        39.6137588
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -2592,12 +2592,12 @@
       ],
       "entranceSide": "east",
       "entrance": [
-        24.4647488,
-        39.6144484
+        24.4647301,
+        39.6144353
       ],
       "dropoff": [
-        24.464749,
-        39.6144809
+        24.4647238,
+        39.6144811
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -2652,14 +2652,14 @@
         24.4645504,
         39.6142925
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4645161,
-        39.6144459
+        24.4644336,
+        39.6143308
       ],
       "dropoff": [
-        24.4645164,
-        39.614483
+        24.4644802,
+        39.6144833
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -2708,12 +2708,12 @@
       ],
       "entranceSide": "east",
       "entrance": [
-        24.464031,
-        39.6143823
+        24.4639755,
+        39.6143695
       ],
       "dropoff": [
-        24.4640319,
-        39.6144875
+        24.4639975,
+        39.6144878
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -2760,14 +2760,14 @@
         24.4635856,
         39.6141707
       ],
-      "entranceSide": "south",
+      "entranceSide": "east",
       "entrance": [
-        24.4634655,
-        39.6141637
+        24.463653,
+        39.6143236
       ],
       "dropoff": [
-        24.4634655,
-        39.6141637
+        24.4637679,
+        39.6144844
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -2828,12 +2828,12 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4645527,
-        39.6151353
+        24.4645297,
+        39.6150716
       ],
       "dropoff": [
-        24.4644885,
-        39.6151702
+        24.4644438,
+        39.6150711
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -2882,12 +2882,12 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4646431,
-        39.615352
+        24.4646323,
+        39.6153283
       ],
       "dropoff": [
-        24.4645847,
-        39.6153837
+        24.4645743,
+        39.6153606
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -2940,12 +2940,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4647301,
-        39.6145245
+        24.4647065,
+        39.6145249
       ],
       "dropoff": [
-        24.4647297,
-        39.614481
+        24.4647008,
+        39.6144813
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -2998,12 +2998,12 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4650064,
-        39.614291
+        24.4650059,
+        39.614213
       ],
       "dropoff": [
-        24.4649576,
-        39.6142902
+        24.4649587,
+        39.6142101
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -3058,14 +3058,14 @@
         24.4651796,
         39.6154149
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4653375,
-        39.6154139
+        24.4650228,
+        39.6153896
       ],
       "dropoff": [
-        24.4654129,
-        39.6154144
+        24.4649413,
+        39.6152491
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -3112,14 +3112,14 @@
         24.4651805,
         39.6151326
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4653375,
-        39.61519
+        24.4650246,
+        39.6150737
       ],
       "dropoff": [
-        24.4654139,
-        39.6151904
+        24.4649469,
+        39.6149339
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -3166,14 +3166,14 @@
         24.4651659,
         39.615731
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4653357,
-        39.6157025
+        24.4650101,
+        39.6155949
       ],
       "dropoff": [
-        24.4653905,
-        39.6157145
+        24.4649353,
+        39.6155844
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -3228,14 +3228,14 @@
         24.4650295,
         39.6160309
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4651819,
-        39.6161009
+        24.4648685,
+        39.6159219
       ],
       "dropoff": [
-        24.4652365,
-        39.6161376
+        24.4647886,
+        39.6159089
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -3284,12 +3284,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4644347,
-        39.6161929
+        24.4643827,
+        39.6162256
       ],
       "dropoff": [
-        24.4644164,
-        39.6161566
+        24.4643303,
+        39.6162089
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -3338,12 +3338,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4641994,
-        39.6163484
+        24.4641558,
+        39.6163777
       ],
       "dropoff": [
-        24.4641763,
-        39.6163026
+        24.4641127,
+        39.6163412
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -3394,14 +3394,14 @@
         24.4640537,
         39.6153993
       ],
-      "entranceSide": "north",
+      "entranceSide": "west",
       "entrance": [
-        24.4642822,
-        39.6150168
+        24.463775,
+        39.6147824
       ],
       "dropoff": [
-        24.4643923,
-        39.6149569
+        24.4637851,
+        39.6144851
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -3496,14 +3496,14 @@
         24.4677784,
         39.6057474
       ],
-      "entranceSide": "south",
+      "entranceSide": "east",
       "entrance": [
-        24.4676303,
-        39.6058072
+        24.4677325,
+        39.605966
       ],
       "dropoff": [
-        24.4674533,
-        39.6058063
+        24.4680122,
+        39.6059648
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -3643,12 +3643,12 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4676432,
-        39.604332
+        24.4676434,
+        39.6043965
       ],
       "dropoff": [
-        24.4674735,
-        39.604331
+        24.4674732,
+        39.6043999
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -3699,14 +3699,14 @@
         24.4678085,
         39.6038124
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4679704,
-        39.603833
+        24.4676463,
+        39.6038121
       ],
       "dropoff": [
-        24.4679973,
-        39.6038331
+        24.467476,
+        39.6038082
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -3753,14 +3753,14 @@
         24.4678088,
         39.6035958
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.467971,
-        39.6035961
+        24.4676467,
+        39.6036376
       ],
       "dropoff": [
-        24.4679976,
-        39.6035961
+        24.4674767,
+        39.6036721
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -3807,14 +3807,14 @@
         24.4678697,
         39.6032485
       ],
-      "entranceSide": "north",
+      "entranceSide": "east",
       "entrance": [
-        24.4679635,
-        39.6032856
+        24.467778,
+        39.6033862
       ],
       "dropoff": [
-        24.4680088,
-        39.6032994
+        24.4679979,
+        39.6033866
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -3867,12 +3867,12 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4676478,
-        39.6031438
+        24.4676894,
+        39.6028573
       ],
       "dropoff": [
-        24.4674793,
-        39.6031428
+        24.4674807,
+        39.6028525
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -3923,14 +3923,14 @@
         24.4682811,
         39.6032508
       ],
-      "entranceSide": "south",
+      "entranceSide": "west",
       "entrance": [
-        24.4681004,
-        39.6032047
+        24.4682128,
+        39.6031339
       ],
       "dropoff": [
-        24.4680664,
-        39.6031759
+        24.4681688,
+        39.6030811
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -4007,8 +4007,8 @@
         39.6035118
       ],
       "dropoff": [
-        24.4679978,
-        39.6035117
+        24.4679977,
+        39.6035247
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -4071,14 +4071,14 @@
         24.4682231,
         39.6038757
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4682807,
-        39.604035
+        24.4680507,
+        39.603818
       ],
       "dropoff": [
-        24.4682805,
-        39.6040473
+        24.4679973,
+        39.6038251
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -4136,7 +4136,7 @@
       ],
       "dropoff": [
         24.4680034,
-        39.6044482
+        39.6044481
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -4299,14 +4299,14 @@
         24.4690608,
         39.6043992
       ],
-      "entranceSide": "east",
+      "entranceSide": "north",
       "entrance": [
-        24.4690853,
-        39.6046698
+        24.4691675,
+        39.6044741
       ],
       "dropoff": [
-        24.4690865,
-        39.6047146
+        24.4691742,
+        39.6047116
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -4355,12 +4355,12 @@
       ],
       "entranceSide": "east",
       "entrance": [
-        24.4694605,
-        39.6046635
+        24.4694601,
+        39.6046507
       ],
       "dropoff": [
-        24.4694603,
-        39.6047118
+        24.4694474,
+        39.6047117
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -4407,14 +4407,14 @@
         24.4697555,
         39.604541
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4697319,
-        39.604667
+        24.4696501,
+        39.6045428
       ],
       "dropoff": [
-        24.4697318,
-        39.6047124
+        24.4696051,
+        39.604712
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -4461,14 +4461,14 @@
         24.4702883,
         39.6043829
       ],
-      "entranceSide": "west",
+      "entranceSide": "south",
       "entrance": [
-        24.4703413,
-        39.6041103
+        24.4701018,
+        39.6044557
       ],
       "dropoff": [
-        24.4703416,
-        39.6040751
+        24.4700407,
+        39.6047138
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -4517,12 +4517,12 @@
       ],
       "entranceSide": "east",
       "entrance": [
-        24.4707544,
-        39.6046804
+        24.4706597,
+        39.6046692
       ],
       "dropoff": [
-        24.4707543,
-        39.6047157
+        24.4706596,
+        39.6047154
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -4575,12 +4575,12 @@
       ],
       "entranceSide": "east",
       "entrance": [
-        24.4708624,
-        39.6040382
+        24.4708524,
+        39.6040249
       ],
       "dropoff": [
-        24.4708608,
-        39.6040898
+        24.4708088,
+        39.6040879
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -4631,14 +4631,14 @@
         24.4707293,
         39.6042645
       ],
-      "entranceSide": "west",
+      "entranceSide": "south",
       "entrance": [
-        24.4706764,
-        39.6041138
+        24.4705381,
+        39.6042975
       ],
       "dropoff": [
-        24.4706773,
-        39.6040828
+        24.4704698,
+        39.6040766
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -4695,11 +4695,11 @@
       ],
       "entranceSide": "east",
       "entrance": [
-        24.4699136,
-        39.6046616
+        24.4699133,
+        39.6046487
       ],
       "dropoff": [
-        24.4699134,
+        24.4699181,
         39.6047133
       ],
       "hasFootprint": true,
@@ -4747,14 +4747,14 @@
         24.4695428,
         39.6042418
       ],
-      "entranceSide": "west",
+      "entranceSide": "north",
       "entrance": [
-        24.4695531,
-        39.6041052
+        24.4696032,
+        39.6042403
       ],
       "dropoff": [
-        24.4695534,
-        39.604068
+        24.4696027,
+        39.6040686
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -4803,12 +4803,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4694055,
-        39.6041068
+        24.4693684,
+        39.60412
       ],
       "dropoff": [
-        24.4694059,
-        39.6040663
+        24.4693586,
+        39.6040658
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -4861,8 +4861,8 @@
         39.6041254
       ],
       "dropoff": [
-        24.4688312,
-        39.6040567
+        24.4688447,
+        39.604057
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -4911,12 +4911,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4686352,
-        39.6041136
+        24.4686048,
+        39.6041141
       ],
       "dropoff": [
-        24.4686362,
-        39.6040529
+        24.4686108,
+        39.6040524
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -4965,12 +4965,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4684365,
-        39.6041167
+        24.4684113,
+        39.6041171
       ],
       "dropoff": [
-        24.4684373,
-        39.6040497
+        24.4684235,
+        39.6040495
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -5017,14 +5017,14 @@
         24.4687637,
         39.6038619
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4687615,
-        39.6040201
+        24.4686904,
+        39.6037549
       ],
       "dropoff": [
-        24.4687609,
-        39.6040554
+        24.4686021,
+        39.6037773
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -5081,12 +5081,12 @@
       ],
       "entranceSide": "east",
       "entrance": [
-        24.4689398,
-        39.6040243
+        24.4689401,
+        39.6040114
       ],
       "dropoff": [
-        24.4689393,
-        39.6040589
+        24.4689526,
+        39.6040591
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -5133,14 +5133,14 @@
         24.4689178,
         39.6034261
       ],
-      "entranceSide": "west",
+      "entranceSide": "north",
       "entrance": [
-        24.4689645,
-        39.6031959
+        24.4691644,
+        39.6034484
       ],
       "dropoff": [
-        24.4689713,
-        39.6031394
+        24.4692111,
+        39.6031747
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -5195,14 +5195,14 @@
         24.4698223,
         39.6038688
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4698607,
-        39.604024
+        24.4696641,
+        39.6038652
       ],
       "dropoff": [
-        24.4698604,
-        39.6040705
+        24.4696122,
+        39.6040687
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -5251,12 +5251,12 @@
       ],
       "entranceSide": "north",
       "entrance": [
-        24.470078,
-        39.6038343
+        24.4700654,
+        39.603874
       ],
       "dropoff": [
-        24.4700767,
-        39.604072
+        24.4699874,
+        39.6040713
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -5305,12 +5305,12 @@
       ],
       "entranceSide": "east",
       "entrance": [
-        24.4683984,
-        39.6040393
+        24.4684353,
+        39.6040054
       ],
       "dropoff": [
-        24.4683983,
-        39.6040491
+        24.4684058,
+        39.6040492
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -5361,14 +5361,14 @@
         24.468559,
         39.6028404
       ],
-      "entranceSide": "east",
+      "entranceSide": "west",
       "entrance": [
-        24.468498,
-        39.603031
+        24.4685453,
+        39.6026387
       ],
       "dropoff": [
-        24.4684934,
-        39.6030714
+        24.4685143,
+        39.6025314
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -5415,14 +5415,14 @@
         24.4688069,
         39.6028725
       ],
-      "entranceSide": "east",
+      "entranceSide": "west",
       "entrance": [
-        24.4688207,
-        39.6030737
+        24.4687936,
+        39.6026705
       ],
       "dropoff": [
-        24.4688155,
-        39.6031169
+        24.4688159,
+        39.6025636
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -5469,14 +5469,14 @@
         24.4701475,
         39.6031751
       ],
-      "entranceSide": "east",
+      "entranceSide": "west",
       "entrance": [
-        24.4701301,
-        39.603381
+        24.4701995,
+        39.6029957
       ],
       "dropoff": [
-        24.4701173,
-        39.6034249
+        24.4702321,
+        39.6028846
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -5523,14 +5523,14 @@
         24.4703861,
         39.6032596
       ],
-      "entranceSide": "east",
+      "entranceSide": "west",
       "entrance": [
-        24.4703294,
-        39.603452
+        24.4704123,
+        39.6030563
       ],
       "dropoff": [
-        24.4703168,
-        39.6034952
+        24.4704469,
+        39.6029567
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -5655,14 +5655,14 @@
         24.4707382,
         39.6038372
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.470773,
-        39.6040341
+        24.4706223,
+        39.6037646
       ],
       "dropoff": [
-        24.4707713,
-        39.6040864
+        24.4705634,
+        39.6037541
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -5851,14 +5851,14 @@
         24.4711993,
         39.611856
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4713176,
-        39.6119703
+        24.4710818,
+        39.6118549
       ],
       "dropoff": [
-        24.4713273,
-        39.6123107
+        24.47132,
+        39.612311
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -5941,11 +5941,11 @@
       "entranceSide": "west",
       "entrance": [
         24.4716446,
-        39.6124027
+        39.6124156
       ],
       "dropoff": [
-        24.4716417,
-        39.6122999
+        24.4716392,
+        39.6123
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -6046,14 +6046,14 @@
         24.4721817,
         39.6134171
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4721699,
-        39.6136817
+        24.471912,
+        39.6133765
       ],
       "dropoff": [
-        24.4721662,
-        39.6137129
+        24.4718636,
+        39.6133546
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -6110,12 +6110,12 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.471917,
-        39.6128554
+        24.4719185,
+        39.6126903
       ],
       "dropoff": [
-        24.4718682,
-        39.6128544
+        24.4718718,
+        39.6126451
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -6164,12 +6164,12 @@
       ],
       "entranceSide": "east",
       "entrance": [
-        24.4720988,
-        39.6130718
+        24.4720989,
+        39.613059
       ],
       "dropoff": [
-        24.4718645,
-        39.613067
+        24.4718647,
+        39.6130542
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -6218,12 +6218,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4723674,
-        39.6124808
+        24.4723673,
+        39.6124936
       ],
       "dropoff": [
-        24.4725865,
-        39.6124849
+        24.4725854,
+        39.6125495
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -6273,11 +6273,11 @@
       "entranceSide": "south",
       "entrance": [
         24.4719248,
-        39.6121583
+        39.6122052
       ],
       "dropoff": [
-        24.4718728,
-        39.612158
+        24.4718724,
+        39.6122201
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -6342,8 +6342,8 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4717851,
-        39.6114407
+        24.4717897,
+        39.6115445
       ],
       "dropoff": [
         24.471943,
@@ -6398,14 +6398,14 @@
         24.4729368,
         39.6116353
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4730079,
-        39.6119167
+        24.4726821,
+        39.6115951
       ],
       "dropoff": [
-        24.4732781,
-        39.6119183
+        24.4725996,
+        39.6115031
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -6460,14 +6460,14 @@
         24.4728002,
         39.6121018
       ],
-      "entranceSide": "west",
+      "entranceSide": "south",
       "entrance": [
-        24.4727767,
-        39.6119623
+        24.4726887,
+        39.6120609
       ],
       "dropoff": [
-        24.4725938,
-        39.6119592
+        24.472593,
+        39.6120217
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -6516,12 +6516,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4730669,
-        39.6119753
+        24.473033,
+        39.6119749
       ],
       "dropoff": [
-        24.4732784,
-        39.6119713
+        24.4732782,
+        39.6119107
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -6568,14 +6568,14 @@
         24.4727937,
         39.6123993
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4728169,
-        39.6125948
+        24.4726793,
+        39.6123932
       ],
       "dropoff": [
-        24.4725848,
-        39.6125905
+        24.4725878,
+        39.6123961
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -6622,14 +6622,14 @@
         24.4730283,
         39.6124461
       ],
-      "entranceSide": "east",
+      "entranceSide": "north",
       "entrance": [
-        24.473058,
-        39.612599
+        24.473161,
+        39.6124066
       ],
       "dropoff": [
-        24.4732882,
-        39.6125946
+        24.4732852,
+        39.6124043
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -6676,14 +6676,14 @@
         24.4728518,
         39.6128425
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4728296,
-        39.6130329
+        24.4726741,
+        39.6127742
       ],
       "dropoff": [
-        24.4728294,
-        39.6130597
+        24.4725825,
+        39.6127678
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -6734,14 +6734,14 @@
         24.472865,
         39.6133428
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4730312,
-        39.6133864
+        24.4726978,
+        39.6133267
       ],
       "dropoff": [
-        24.473034,
-        39.6130618
+        24.4725757,
+        39.6132751
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -6852,12 +6852,12 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4733424,
-        39.612797
+        24.4733413,
+        39.6128454
       ],
       "dropoff": [
-        24.4732916,
-        39.612798
+        24.473247,
+        39.612957
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -6960,12 +6960,12 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4733461,
-        39.6121075
+        24.4733494,
+        39.6120209
       ],
       "dropoff": [
-        24.4732806,
-        39.6121087
+        24.4732791,
+        39.6120192
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -7080,12 +7080,12 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4733256,
-        39.6108252
+        24.4733255,
+        39.6107804
       ],
       "dropoff": [
         24.47326,
-        39.6108252
+        39.6107772
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -7154,8 +7154,8 @@
         39.6099045
       ],
       "dropoff": [
-        24.4740072,
-        39.6099098
+        24.4740082,
+        39.6098541
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -7204,12 +7204,12 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4733443,
-        39.6101694
+        24.4733445,
+        39.6100935
       ],
       "dropoff": [
-        24.47326,
-        39.6101694
+        24.4732607,
+        39.6101099
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -7256,14 +7256,14 @@
         24.4736387,
         39.6096446
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4735577,
-        39.6098409
+        24.4733456,
+        39.6096463
       ],
       "dropoff": [
-        24.4732642,
-        39.6098372
+        24.4732661,
+        39.6096509
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -7310,14 +7310,14 @@
         24.473474,
         39.6090466
       ],
-      "entranceSide": "west",
+      "entranceSide": "south",
       "entrance": [
-        24.4734341,
-        39.6088174
+        24.4733291,
+        39.6090489
       ],
       "dropoff": [
-        24.473274,
-        39.608817
+        24.4732735,
+        39.6090304
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -7364,14 +7364,14 @@
         24.4735354,
         39.6086459
       ],
-      "entranceSide": "west",
+      "entranceSide": "north",
       "entrance": [
-        24.4735146,
-        39.6084903
+        24.4736176,
+        39.6086051
       ],
       "dropoff": [
-        24.473281,
-        39.608491
+        24.4732782,
+        39.608594
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -7424,8 +7424,8 @@
         39.6086082
       ],
       "dropoff": [
-        24.4732779,
-        39.6086069
+        24.4732777,
+        39.6086146
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -7474,12 +7474,12 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4733145,
-        39.6083179
+        24.4733148,
+        39.6082746
       ],
       "dropoff": [
-        24.4732749,
-        39.6083196
+        24.4732731,
+        39.6082694
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -7594,11 +7594,11 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4730684,
-        39.6076086
+        24.473068,
+        39.6075696
       ],
       "dropoff": [
-        24.4730684,
+        24.473068,
         39.607225
       ],
       "hasFootprint": true,
@@ -7710,8 +7710,8 @@
         39.6079122
       ],
       "dropoff": [
-        24.47265,
-        39.6079108
+        24.4726502,
+        39.6078939
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -7766,14 +7766,14 @@
         24.4729543,
         39.6085146
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4728795,
-        39.6087793
+        24.4727279,
+        39.6085366
       ],
       "dropoff": [
-        24.4726382,
-        39.6087764
+        24.4726412,
+        39.6085407
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -7860,14 +7860,14 @@
         24.4729631,
         39.6099374
       ],
-      "entranceSide": "north",
+      "entranceSide": "west",
       "entrance": [
-        24.473219,
-        39.6099049
+        24.4729604,
+        39.6097318
       ],
       "dropoff": [
-        24.4732633,
-        39.6099056
+        24.4729864,
+        39.6096672
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -7922,14 +7922,14 @@
         24.4727777,
         39.6105757
       ],
-      "entranceSide": "west",
+      "entranceSide": "south",
       "entrance": [
-        24.4727894,
-        39.6101613
+        24.472721,
+        39.6104413
       ],
       "dropoff": [
-        24.4726191,
-        39.6101584
+        24.4726145,
+        39.6104562
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -7980,14 +7980,14 @@
         24.4731109,
         39.6105755
       ],
-      "entranceSide": "west",
+      "entranceSide": "north",
       "entrance": [
-        24.4731302,
-        39.6101641
+        24.4731881,
+        39.6104451
       ],
       "dropoff": [
         24.47326,
-        39.6101641
+        39.6104477
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -8038,14 +8038,14 @@
         24.4729349,
         39.6105839
       ],
-      "entranceSide": "west",
+      "entranceSide": "east",
       "entrance": [
-        24.4729014,
-        39.6101623
+        24.4729012,
+        39.6109924
       ],
       "dropoff": [
-        24.4726191,
-        39.6101574
+        24.4726055,
+        39.6109864
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -8092,14 +8092,14 @@
         24.4721071,
         39.6107989
       ],
-      "entranceSide": "south",
+      "entranceSide": "west",
       "entrance": [
-        24.4717832,
-        39.610845
+        24.4719974,
+        39.6106239
       ],
       "dropoff": [
-        24.47183,
-        39.610503
+        24.4719587,
+        39.6105002
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -8226,8 +8226,8 @@
         39.6097187
       ],
       "dropoff": [
-        24.4717608,
-        39.6097173
+        24.471761,
+        39.6096773
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -8274,14 +8274,14 @@
         24.4721814,
         39.6094533
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4721002,
-        39.6096669
+        24.4718924,
+        39.6093951
       ],
       "dropoff": [
-        24.471761,
-        39.6096651
+        24.4717625,
+        39.6093315
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -8328,14 +8328,14 @@
         24.4721801,
         39.6089598
       ],
-      "entranceSide": "west",
+      "entranceSide": "south",
       "entrance": [
-        24.4722236,
-        39.6087759
+        24.4718834,
+        39.6089322
       ],
       "dropoff": [
-        24.4722245,
-        39.608689
+        24.4717666,
+        39.6089293
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -8422,14 +8422,14 @@
         24.4713445,
         39.6104006
       ],
-      "entranceSide": "south",
+      "entranceSide": "west",
       "entrance": [
-        24.4710518,
-        39.6102468
+        24.4714084,
+        39.6099014
       ],
       "dropoff": [
-        24.4717614,
-        39.6102437
+        24.4717602,
+        39.6098999
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -8486,12 +8486,12 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4710651,
-        39.6096028
+        24.4710657,
+        39.6095309
       ],
       "dropoff": [
-        24.4717613,
-        39.6096064
+        24.4717616,
+        39.6095345
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -8538,10 +8538,10 @@
         24.4713519,
         39.6087731
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4715921,
-        39.6086721
+        24.4711134,
+        39.6086673
       ],
       "dropoff": [
         24.471648,
@@ -8594,12 +8594,12 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4718931,
-        39.6086062
+        24.4718578,
+        39.6085149
       ],
       "dropoff": [
-        24.4718799,
-        39.6086197
+        24.471826,
+        39.608556
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -8660,12 +8660,12 @@
       ],
       "entranceSide": "east",
       "entrance": [
-        24.472326,
-        39.6086567
+        24.4722904,
+        39.6086433
       ],
       "dropoff": [
-        24.4723257,
-        39.6086902
+        24.472302,
+        39.6086899
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -8784,8 +8784,8 @@
         39.6069521
       ],
       "dropoff": [
-        24.4710686,
-        39.6069521
+        24.4710687,
+        39.6069896
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -8964,14 +8964,14 @@
         24.4723916,
         39.6066759
       ],
-      "entranceSide": "west",
+      "entranceSide": "south",
       "entrance": [
-        24.4723482,
-        39.6065503
+        24.4722236,
+        39.6067064
       ],
       "dropoff": [
-        24.4723493,
-        39.6064709
+        24.4721822,
+        39.606468
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -9018,14 +9018,14 @@
         24.4728447,
         39.6067446
       ],
-      "entranceSide": "north",
+      "entranceSide": "west",
       "entrance": [
-        24.4730486,
-        39.6066971
+        24.4727884,
+        39.6065695
       ],
       "dropoff": [
-        24.473045,
-        39.6064664
+        24.4728057,
+        39.6064709
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -9072,14 +9072,14 @@
         24.4736543,
         39.6069893
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4736319,
-        39.6071617
+        24.4734856,
+        39.607032
       ],
       "dropoff": [
-        24.4736317,
-        39.6072255
+        24.4734605,
+        39.607225
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -9130,13 +9130,13 @@
         24.4736409,
         39.6067013
       ],
-      "entranceSide": "south",
+      "entranceSide": "west",
       "entrance": [
-        24.4734875,
-        39.6066585
+        24.4735746,
+        39.6065428
       ],
       "dropoff": [
-        24.4734869,
+        24.4735006,
         39.6064579
       ],
       "hasFootprint": true,
@@ -9188,14 +9188,14 @@
         24.4732763,
         39.6062175
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4732365,
-        39.6064279
+        24.4731203,
+        39.6062751
       ],
       "dropoff": [
-        24.4732371,
-        39.6064626
+        24.4731017,
+        39.6064653
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -9242,14 +9242,14 @@
         24.4723637,
         39.6062153
       ],
-      "entranceSide": "east",
+      "entranceSide": "west",
       "entrance": [
-        24.4723358,
-        39.6063832
+        24.4723106,
+        39.6060597
       ],
       "dropoff": [
-        24.4723346,
-        39.6064706
+        24.472272,
+        39.6059626
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -9304,14 +9304,14 @@
         24.4720706,
         39.6062674
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4720362,
-        39.606421
+        24.4718873,
+        39.6062503
       ],
       "dropoff": [
-        24.4720356,
-        39.6064656
+        24.4718081,
+        39.6062836
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -9424,14 +9424,14 @@
         24.4670034,
         39.6056434
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.46715,
-        39.6056013
+        24.4668583,
+        39.6056047
       ],
       "dropoff": [
-        24.467331,
-        39.6056017
+        24.4667036,
+        39.6055189
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -9478,14 +9478,14 @@
         24.467004,
         39.6054039
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.46715,
-        39.6054033
+        24.4668573,
+        39.6053761
       ],
       "dropoff": [
-        24.4673314,
-        39.6054037
+        24.4667834,
+        39.6053133
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -9532,14 +9532,14 @@
         24.4669962,
         39.605081
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4671374,
-        39.6050458
+        24.4668523,
+        39.6050695
       ],
       "dropoff": [
-        24.4671354,
-        39.6048352
+        24.4667876,
+        39.6050139
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -9590,14 +9590,14 @@
         24.4670056,
         39.604536
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4670622,
-        39.6046691
+        24.4668493,
+        39.6045146
       ],
       "dropoff": [
-        24.4670629,
-        39.6047034
+        24.4667911,
+        39.6045245
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -9650,12 +9650,12 @@
       ],
       "entranceSide": "north",
       "entrance": [
-        24.4671574,
-        39.6041885
+        24.4671691,
+        39.6041888
       ],
       "dropoff": [
-        24.4673461,
-        39.6041907
+        24.4673459,
+        39.6042068
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -9702,14 +9702,14 @@
         24.4670145,
         39.6040119
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4671617,
-        39.6040142
+        24.4668507,
+        39.6040293
       ],
       "dropoff": [
-        24.4673477,
-        39.6040163
+        24.4667895,
+        39.6041886
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -9756,14 +9756,14 @@
         24.4667196,
         39.602767
       ],
-      "entranceSide": "north",
+      "entranceSide": "west",
       "entrance": [
-        24.4668557,
-        39.6028225
+        24.4666441,
+        39.6025871
       ],
       "dropoff": [
-        24.466724,
-        39.603058
+        24.4666151,
+        39.6025053
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -9818,14 +9818,14 @@
         24.4656848,
         39.6028761
       ],
-      "entranceSide": "south",
+      "entranceSide": "west",
       "entrance": [
-        24.465531,
-        39.6029412
+        24.4655243,
+        39.6027442
       ],
       "dropoff": [
-        24.4654943,
-        39.6029495
+        24.4654214,
+        39.6026296
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -9880,14 +9880,14 @@
         24.4652365,
         39.6029561
       ],
-      "entranceSide": "north",
+      "entranceSide": "west",
       "entrance": [
-        24.4653965,
-        39.602897
+        24.4651451,
+        39.602795
       ],
       "dropoff": [
-        24.4654809,
-        39.602878
+        24.4650732,
+        39.602706
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -9942,14 +9942,14 @@
         24.4644692,
         39.6031998
       ],
-      "entranceSide": "west",
+      "entranceSide": "south",
       "entrance": [
-        24.4643996,
-        39.6030544
+        24.4643226,
+        39.6030996
       ],
       "dropoff": [
-        24.4643656,
-        39.6029727
+        24.4643002,
+        39.6030097
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -10014,8 +10014,8 @@
         39.6032591
       ],
       "dropoff": [
-        24.4640392,
-        39.6031767
+        24.4640274,
+        39.6031854
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -10062,14 +10062,14 @@
         24.4647504,
         39.6037983
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4649965,
-        39.6038144
+        24.4645389,
+        39.6037951
       ],
       "dropoff": [
-        24.4649949,
-        39.6040589
+        24.4644139,
+        39.6038069
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -10124,14 +10124,14 @@
         24.4647691,
         39.6036164
       ],
-      "entranceSide": "west",
+      "entranceSide": "south",
       "entrance": [
-        24.4646118,
-        39.6035126
+        24.4645509,
+        39.6035763
       ],
       "dropoff": [
-        24.4645895,
-        39.6034588
+        24.4644823,
+        39.6035272
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -10194,14 +10194,14 @@
         24.4648817,
         39.6034579
       ],
-      "entranceSide": "north",
+      "entranceSide": "west",
       "entrance": [
-        24.4649963,
-        39.6034302
+        24.4648217,
+        39.6034213
       ],
       "dropoff": [
-        24.4649708,
-        39.6033054
+        24.4647962,
+        39.6033554
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -10248,14 +10248,14 @@
         24.4647713,
         39.6039288
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4647364,
-        39.6040285
+        24.4645883,
+        39.6039966
       ],
       "dropoff": [
-        24.4647362,
-        39.6040567
+        24.4646352,
+        39.6040559
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -10312,12 +10312,12 @@
       ],
       "entranceSide": "north",
       "entrance": [
-        24.4661845,
-        39.6035969
+        24.4661728,
+        39.6035966
       ],
       "dropoff": [
         24.4662749,
-        39.6035957
+        39.6035953
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -10366,12 +10366,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4660472,
-        39.60311
+        24.4659886,
+        39.6031181
       ],
       "dropoff": [
-        24.4660433,
-        39.6030743
+        24.4659298,
+        39.6030891
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -10424,12 +10424,12 @@
       ],
       "entranceSide": "north",
       "entrance": [
-        24.4661892,
-        39.6033525
+        24.4661778,
+        39.6033403
       ],
       "dropoff": [
-        24.4662723,
-        39.6033515
+        24.4662721,
+        39.6033381
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -10478,12 +10478,12 @@
       ],
       "entranceSide": "north",
       "entrance": [
-        24.466188,
-        39.6034175
+        24.4661763,
+        39.6034172
       ],
       "dropoff": [
         24.466273,
-        39.6034164
+        39.6034159
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -10586,12 +10586,12 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4663051,
-        39.6032576
+        24.466305,
+        39.60324
       ],
       "dropoff": [
-        24.4662713,
-        39.6032581
+        24.466241,
+        39.6030486
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -10648,12 +10648,12 @@
       ],
       "entranceSide": "north",
       "entrance": [
-        24.4661858,
-        39.6035304
+        24.4661745,
+        39.6035061
       ],
       "dropoff": [
-        24.4662742,
-        39.6035292
+        24.4662739,
+        39.6035048
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -10702,12 +10702,12 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4663056,
-        39.6033404
+        24.4663072,
+        39.6034707
       ],
       "dropoff": [
-        24.4662722,
-        39.6033409
+        24.4662735,
+        39.6034711
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -10844,14 +10844,14 @@
         24.4664951,
         39.6038779
       ],
-      "entranceSide": "south",
+      "entranceSide": "east",
       "entrance": [
-        24.4662932,
-        39.6038555
+        24.4664989,
+        39.6040131
       ],
       "dropoff": [
-        24.4662776,
-        39.6038557
+        24.4664887,
+        39.6040797
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -10908,12 +10908,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4665869,
-        39.6041299
+        24.4665649,
+        39.6041301
       ],
       "dropoff": [
-        24.4665876,
-        39.6040814
+        24.4665575,
+        39.6040809
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -10964,14 +10964,14 @@
         24.4660624,
         39.6041994
       ],
-      "entranceSide": "north",
+      "entranceSide": "west",
       "entrance": [
-        24.4662662,
-        39.6041822
+        24.4661159,
+        39.6041346
       ],
       "dropoff": [
-        24.4662672,
-        39.6040759
+        24.4660942,
+        39.6040739
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -11018,14 +11018,14 @@
         24.4660503,
         39.6043184
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4662683,
-        39.6042874
+        24.4658596,
+        39.6043369
       ],
       "dropoff": [
-        24.4662703,
-        39.6040759
+        24.4658292,
+        39.6040709
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -11080,14 +11080,14 @@
         24.4657143,
         39.6042454
       ],
-      "entranceSide": "west",
+      "entranceSide": "north",
       "entrance": [
-        24.4657411,
-        39.6041123
+        24.4658249,
+        39.604245
       ],
       "dropoff": [
-        24.4657416,
-        39.6040697
+        24.465827,
+        39.6040709
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -11194,7 +11194,7 @@
         39.6041099
       ],
       "dropoff": [
-        24.4652628,
+        24.4652607,
         39.6040629
       ],
       "hasFootprint": true,
@@ -11246,14 +11246,14 @@
         24.4652068,
         39.6043069
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4653982,
-        39.6043201
+        24.4650264,
+        39.6042943
       ],
       "dropoff": [
-        24.465401,
-        39.6040651
+        24.4651325,
+        39.6040609
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -11302,8 +11302,8 @@
       ],
       "entranceSide": "north",
       "entrance": [
-        24.4653933,
-        39.6045099
+        24.465393,
+        39.6045417
       ],
       "dropoff": [
         24.465401,
@@ -11376,12 +11376,12 @@
       ],
       "entranceSide": "east",
       "entrance": [
-        24.4655071,
-        39.6046715
+        24.4655712,
+        39.6046581
       ],
       "dropoff": [
-        24.4655068,
-        39.6047132
+        24.4656098,
+        39.6047143
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -11428,14 +11428,14 @@
         24.4657351,
         39.6045407
       ],
-      "entranceSide": "north",
+      "entranceSide": "east",
       "entrance": [
-        24.4658359,
-        39.6045398
+        24.4657111,
+        39.6046571
       ],
       "dropoff": [
-        24.4658343,
-        39.6047169
+        24.4657178,
+        39.6047156
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -11482,14 +11482,14 @@
         24.4660674,
         39.6046127
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4660146,
-        39.6046774
+        24.465865,
+        39.6046045
       ],
       "dropoff": [
-        24.4660147,
-        39.6047162
+        24.4658279,
+        39.6047168
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -11536,14 +11536,14 @@
         24.466062,
         39.604498
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4662692,
-        39.6045145
+        24.4658628,
+        39.6044974
       ],
       "dropoff": [
-        24.46627,
-        39.6047151
+        24.4658259,
+        39.6047168
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -11598,14 +11598,14 @@
         24.466504,
         39.6045412
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4665379,
-        39.6046759
+        24.4663099,
+        39.6045426
       ],
       "dropoff": [
-        24.4665382,
-        39.6047125
+        24.4662596,
+        39.6047151
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -11656,14 +11656,14 @@
         24.466485,
         39.6050453
       ],
-      "entranceSide": "south",
+      "entranceSide": "west",
       "entrance": [
-        24.4662894,
-        39.6050319
+        24.4665207,
+        39.6049805
       ],
       "dropoff": [
-        24.4662879,
-        39.6048439
+        24.4665058,
+        39.6048418
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -11772,14 +11772,14 @@
         24.4660605,
         39.6052407
       ],
-      "entranceSide": "south",
+      "entranceSide": "west",
       "entrance": [
-        24.465868,
-        39.6051622
+        24.4660656,
+        39.6049722
       ],
       "dropoff": [
-        24.4658686,
-        39.604843
+        24.4660669,
+        39.6048435
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -11826,14 +11826,14 @@
         24.4657407,
         39.6051185
       ],
-      "entranceSide": "north",
+      "entranceSide": "west",
       "entrance": [
-        24.4658473,
-        39.6051691
+        24.4655637,
+        39.605244
       ],
       "dropoff": [
-        24.46585,
-        39.604843
+        24.465412,
+        39.6052373
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -11898,12 +11898,12 @@
       ],
       "entranceSide": "east",
       "entrance": [
-        24.4649227,
-        39.6059586
+        24.4648636,
+        39.605979
       ],
       "dropoff": [
-        24.4649466,
-        39.6060038
+        24.464892,
+        39.6060386
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -11950,14 +11950,14 @@
         24.4656494,
         39.605376
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4658459,
-        39.6053485
+        24.4654508,
+        39.6053776
       ],
       "dropoff": [
-        24.4658423,
-        39.6055789
+        24.4654159,
+        39.6053667
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -12010,11 +12010,11 @@
       ],
       "entranceSide": "south",
       "entrance": [
-        24.4662903,
-        39.6052354
+        24.4662905,
+        39.6052633
       ],
       "dropoff": [
-        24.4662833,
+        24.466284,
         39.6055891
       ],
       "hasFootprint": true,
@@ -12078,14 +12078,14 @@
         24.4664764,
         39.6054024
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4665739,
-        39.6055251
+        24.4662909,
+        39.6053746
       ],
       "dropoff": [
-        24.4665892,
-        39.6055903
+        24.4662604,
+        39.6055886
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -12146,12 +12146,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4664434,
-        39.6056457
+        24.4664041,
+        39.605645
       ],
       "dropoff": [
-        24.4664445,
-        39.605593
+        24.4663664,
+        39.6055911
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -12204,12 +12204,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4662047,
-        39.6056375
+        24.4661769,
+        39.6056373
       ],
       "dropoff": [
-        24.4662057,
-        39.6055873
+        24.4661545,
+        39.6055861
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -12258,12 +12258,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4660416,
-        39.6056362
+        24.466015,
+        39.605636
       ],
       "dropoff": [
-        24.4660427,
-        39.6055835
+        24.4660052,
+        39.6055826
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -12312,12 +12312,12 @@
       ],
       "entranceSide": "west",
       "entrance": [
-        24.4657815,
-        39.6056333
+        24.4657579,
+        39.6056336
       ],
       "dropoff": [
-        24.4657824,
-        39.6055778
+        24.4657089,
+        39.6055764
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -12364,14 +12364,14 @@
         24.4655502,
         39.6058171
       ],
-      "entranceSide": "west",
+      "entranceSide": "south",
       "entrance": [
-        24.4655562,
-        39.6056476
+        24.4654581,
+        39.6058014
       ],
       "dropoff": [
-        24.4655574,
-        39.6055735
+        24.465422,
+        39.605571
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -12428,8 +12428,8 @@
         39.6058842
       ],
       "dropoff": [
-        24.4644074,
-        39.6058946
+        24.4643922,
+        39.6058605
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -12500,14 +12500,14 @@
         24.4647357,
         39.6056501
       ],
-      "entranceSide": "north",
+      "entranceSide": "west",
       "entrance": [
-        24.4648371,
-        39.6055835
+        24.464668,
+        39.6055922
       ],
       "dropoff": [
-        24.4650307,
-        39.6059502
+        24.4644572,
+        39.6053654
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -12554,14 +12554,14 @@
         24.4652172,
         39.6067432
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4654131,
-        39.6068374
+        24.4649751,
+        39.6068207
       ],
       "dropoff": [
-        24.4654132,
-        39.6068374
+        24.4649175,
+        39.6068715
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -12628,14 +12628,14 @@
         24.4643483,
         39.606227
       ],
-      "entranceSide": "west",
+      "entranceSide": "south",
       "entrance": [
-        24.4642996,
-        39.6059655
+        24.4642335,
+        39.6062386
       ],
       "dropoff": [
-        24.4642993,
-        39.6059175
+        24.4641461,
+        39.6062343
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -12717,12 +12717,12 @@
       ],
       "entranceSide": "east",
       "entrance": [
-        24.4636996,
-        39.6071077
+        24.4636997,
+        39.6071028
       ],
       "dropoff": [
-        24.4636957,
-        39.6072828
+        24.4637132,
+        39.6072833
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -12829,12 +12829,12 @@
       ],
       "entranceSide": "east",
       "entrance": [
-        24.4638685,
-        39.60711
+        24.4638559,
+        39.6071049
       ],
       "dropoff": [
-        24.4638646,
-        39.6072874
+        24.4638345,
+        39.6072866
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -12885,14 +12885,14 @@
         24.4637485,
         39.6063703
       ],
-      "entranceSide": "east",
+      "entranceSide": "south",
       "entrance": [
-        24.4637829,
-        39.6064325
+        24.4635603,
+        39.6063573
       ],
       "dropoff": [
-        24.4637827,
-        39.606494
+        24.4635087,
+        39.6064928
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -12943,14 +12943,14 @@
         24.4637631,
         39.6062211
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4639644,
-        39.6061949
+        24.4635625,
+        39.6062173
       ],
       "dropoff": [
-        24.4640222,
-        39.6061947
+        24.4635084,
+        39.6064928
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -12997,14 +12997,14 @@
         24.4634403,
         39.606238
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4635391,
-        39.6061904
+        24.4633355,
+        39.606187
       ],
       "dropoff": [
-        24.4632887,
-        39.6062043
+        24.4632164,
+        39.6061716
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -13051,14 +13051,14 @@
         24.4634433,
         39.6059836
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4635372,
-        39.6059607
+        24.4633382,
+        39.6059576
       ],
       "dropoff": [
-        24.4635391,
-        39.605793
+        24.463205,
+        39.6059406
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -13111,8 +13111,8 @@
         39.6059665
       ],
       "dropoff": [
-        24.4635685,
-        39.6057934
+        24.4635134,
+        39.6057924
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -13163,14 +13163,14 @@
         24.4637666,
         39.6060592
       ],
-      "entranceSide": "north",
+      "entranceSide": "south",
       "entrance": [
-        24.4639677,
-        39.6060788
+        24.4635651,
+        39.6060554
       ],
       "dropoff": [
-        24.4640277,
-        39.6060885
+        24.463568,
+        39.6057934
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -13223,8 +13223,8 @@
         39.6057442
       ],
       "dropoff": [
-        24.463533,
-        39.6057929
+        24.4636427,
+        39.6057944
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -13271,14 +13271,14 @@
         24.4635067,
         39.6055315
       ],
-      "entranceSide": "south",
+      "entranceSide": "north",
       "entrance": [
-        24.4634045,
-        39.6055627
+        24.463598,
+        39.6055595
       ],
       "dropoff": [
-        24.4632845,
-        39.605631
+        24.4635779,
+        39.6057935
       ],
       "hasFootprint": true,
       "footprintSplit": "osm_split",
@@ -13327,12 +13327,12 @@
       ],
       "entranceSide": "east",
       "entrance": [
-        24.4637162,
-        39.6057437
+        24.4637161,
+        39.6057309
       ],
       "dropoff": [
-        24.4637156,
-        39.6057954
+        24.4637245,
+        39.6057955
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
@@ -13443,8 +13443,8 @@
         39.6039302
       ],
       "dropoff": [
-        24.4633606,
-        39.6039046
+        24.4633264,
+        39.6039824
       ],
       "hasFootprint": true,
       "footprintSplit": "single",
