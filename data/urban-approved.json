@@ -5900,31 +5900,52 @@
       "zone": "north",
       "name_ar": "الأندلس الفاخر",
       "osm": null,
-      "areaM2": 0.0,
+      "areaM2": 1090.1,
       "center": [
-        24.4715679,
-        39.6114019
+        24.471508,
+        39.6116236
       ],
-      "entranceSide": "south",
+      "entranceSide": "north",
       "entrance": [
-        24.4715679,
-        39.6114019
+        24.4717354,
+        39.6115894
       ],
       "dropoff": [
         24.471943,
         39.611814
       ],
-      "hasFootprint": false,
-      "footprintSplit": "none",
+      "hasFootprint": true,
+      "footprintSplit": "ms_shifted",
       "levels": null,
-      "displayFloors": null,
-      "heightM": 0.0,
-      "heightSource": "none",
-      "confidence": "none",
+      "displayFloors": 12,
+      "heightM": 42.5,
+      "heightSource": "estimated_display_only",
+      "confidence": "display_only",
       "styleId": 2,
       "seed": 0.2939,
       "tint": 0.0133,
-      "polygon": []
+      "polygon": [
+        [
+          39.611741,
+          24.4717152
+        ],
+        [
+          39.6115076,
+          24.4717158
+        ],
+        [
+          39.6115063,
+          24.4713
+        ],
+        [
+          39.6117396,
+          24.4713009
+        ],
+        [
+          39.611741,
+          24.4717152
+        ]
+      ]
     },
     {
       "buildingId": "N106",

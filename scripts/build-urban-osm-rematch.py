@@ -349,6 +349,26 @@ def covered_share(poly: list[XY], others: list[list[XY]]) -> float:
     return hit / tot if tot else 0.0
 
 
+def clip_away(poly: list[XY], other: list[XY], gap: float = 0.45) -> list[XY]:
+    """`poly` without the part inside `other`: cut along the wall of `other` that leaves the most of
+    `poly` outside it (a 0.45 m seam). Enough for two neighbouring blocks; empty if no wall does."""
+    best: list[XY] = []
+    n = len(other)
+    for i in range(n):
+        a, b = other[i], other[(i + 1) % n]
+        ex, ey = b[0] - a[0], b[1] - a[1]
+        elen = math.hypot(ex, ey)
+        if elen < 2.0:
+            continue
+        nx, ny = ey / elen, -ex / elen
+        if point_in_poly((0.5 * (a[0] + b[0]) + nx * 0.3, 0.5 * (a[1] + b[1]) + ny * 0.3), other):
+            nx, ny = -nx, -ny
+        cell = clip_halfplane(poly, a, (-nx, -ny), -gap)
+        if cell and covered_share(cell, [other]) <= 0.02 and abs(poly_area(cell)) > abs(poly_area(best) if best else 0.0):
+            best = cell
+    return best
+
+
 def build_haram_fence_polygon(fence: dict) -> list[XY]:
     pts = [(pt[0], pt[1]) for run in fence["runs"] for pt in run["path"]]
     cx = sum(p[0] for p in pts) / len(pts)
@@ -492,40 +512,6 @@ def main() -> None:
         for key, cell in parts.items():
             resolved[key] = (cell, "osm_split", o)
 
-    # Hotels whose pin sits on no OSM building keep their Stage 6 outline only if it is clear of
-    # every OSM building; otherwise they stay pin-only (marker only, no invented tower).
-    taken = [r[0] for r in resolved.values()]
-    for b in unmatched:
-        if b["hasFootprint"] and len(b["polygon"]) >= 4:
-            poly = clean_ring_xy([to_xy(c[0], c[1]) for c in b["polygon"][:-1]])
-            if covered_share(poly, [o["ring"] for o in osm] + taken) < 0.15:
-                resolved[b["poiId"]] = (poly, b["footprintSplit"] if b["footprintSplit"] != "provisional_pin_partition" else "single", {})
-                continue
-        print(f"  pin-only (no building under the guide pin): #{b['guideNumber']} {b['name_ar']}")
-
-    used_osm = set(groups)
-    hotel_polys = {pid: r[0] for pid, r in resolved.items()}
-    for pid, poly in hotel_polys.items():
-        for pt in poly:
-            assert not point_in_poly(pt, fence_poly), f"hotel {pid} intrudes the Haram fence"
-
-    # --- 2. Context buildings: every other central OSM building -------------------------------
-    context: list[dict] = []
-    hotel_list = list(hotel_polys.values())
-    for o in osm:
-        if o["osm"] in used_osm:
-            continue
-        if o["area"] < MIN_CONTEXT_AREA_M2 or o["tags"].get("building") in SKIP_BUILDING_VALUES or o["osm"] in NOT_TOWERS_OSM_IDS:
-            continue
-        if TUNNEL_NAME.search(o["tags"].get("name", "") + o["tags"].get("name:en", "")):
-            continue
-        poly = simplify_ring(o["ring"])
-        if any(point_in_poly(pt, fence_poly) for pt in poly):
-            continue
-        if covered_share(poly, hotel_list + [c["_xy"] for c in context]) > 0.15:
-            continue
-        context.append({"_xy": poly, "_osm": o})
-
     # --- 3. Street segments for entrances and drop-offs ---------------------------------------
     zone_xy = [to_xy(lng, lat) for lng, lat in CENTRAL_ZONE]
     zx0, zy0, zx1, zy1 = bbox(zone_xy)
@@ -566,8 +552,68 @@ def main() -> None:
     sx = sorted(s[0] for s in shifts)[len(shifts) // 2]
     sy = sorted(s[1] for s in shifts)[len(shifts) // 2]
     print(f"MS -> OSM shift from {len(shifts)} pairs: {sx:+.1f} m east, {sy:+.1f} m north")
-    plaza_xy = [[to_xy(lng, lat) for lng, lat in pz] for pz in OPEN_PLAZAS]
     road_pts = [(a[0] + (b2[0] - a[0]) * t, a[1] + (b2[1] - a[1]) * t) for a, b2 in drive_segs for t in (0.0, 0.25, 0.5, 0.75)]
+
+    # Hotels whose pin sits on no OSM building: the Microsoft outline by the pin, shifted onto the
+    # imagery, with any part already drawn as another building cut away along that building's facing
+    # wall (`footprintSplit: ms_shifted`), if the pin is within 15 m of what remains and no road
+    # crosses it. Otherwise pin-only: a marker, never an invented tower.
+    taken = [r[0] for r in resolved.values()]
+    others = [o["ring"] for o in osm] + taken
+    for b in unmatched:
+        pin_ll = pins.get(b["guideNumber"]) or (poi_by_id[b["poiId"]]["lng"], poi_by_id[b["poiId"]]["lat"])
+        pin = to_xy(*pin_ll)
+        best, best_d = None, float("inf")
+        for r in ms_rings:
+            poly = [(x + sx, y + sy) for x, y in r]
+            if not point_in_poly(pin, poly) and dist_pt_poly_edges(pin, poly) > MATCH_RADIUS_M:
+                continue
+            cut: list[XY] = poly
+            for other in others:
+                if not cut:
+                    break
+                if covered_share(cut, [other]) > 0.0:
+                    cut = clip_away(cut, other)
+            if not cut or abs(poly_area(cut)) < MIN_CONTEXT_AREA_M2 or covered_share(cut, others) > 0.02:
+                continue
+            x0, y0, x1, y1 = bbox(cut)
+            if any(x0 < q[0] < x1 and y0 < q[1] < y1 and point_in_poly(q, cut) for q in road_pts):
+                continue
+            d = 0.0 if point_in_poly(pin, cut) else dist_pt_poly_edges(pin, cut)
+            if d <= MATCH_RADIUS_M and d < best_d:
+                best, best_d = simplify_ring(clean_ring_xy(cut)), d
+        if best is not None:
+            resolved[b["poiId"]] = (best, "ms_shifted", {})
+            taken.append(best)
+            others.append(best)
+            print(f"  from the shifted MS outline (pin {best_d:.1f} m away): #{b['guideNumber']} {b['name_ar']}")
+            continue
+        print(f"  pin-only (no building under the guide pin): #{b['guideNumber']} {b['name_ar']}")
+
+    used_osm = set(groups)
+    hotel_polys = {pid: r[0] for pid, r in resolved.items()}
+    for pid, poly in hotel_polys.items():
+        for pt in poly:
+            assert not point_in_poly(pt, fence_poly), f"hotel {pid} intrudes the Haram fence"
+
+    # --- 2. Context buildings: every other central OSM building -------------------------------
+    context: list[dict] = []
+    hotel_list = list(hotel_polys.values())
+    for o in osm:
+        if o["osm"] in used_osm:
+            continue
+        if o["area"] < MIN_CONTEXT_AREA_M2 or o["tags"].get("building") in SKIP_BUILDING_VALUES or o["osm"] in NOT_TOWERS_OSM_IDS:
+            continue
+        if TUNNEL_NAME.search(o["tags"].get("name", "") + o["tags"].get("name:en", "")):
+            continue
+        poly = simplify_ring(o["ring"])
+        if any(point_in_poly(pt, fence_poly) for pt in poly):
+            continue
+        if covered_share(poly, hotel_list + [c["_xy"] for c in context]) > 0.15:
+            continue
+        context.append({"_xy": poly, "_osm": o})
+
+    plaza_xy = [[to_xy(lng, lat) for lng, lat in pz] for pz in OPEN_PLAZAS]
     gap_added = 0
     for r in ms_rings:
         poly = simplify_ring([(x + sx, y + sy) for x, y in r])
