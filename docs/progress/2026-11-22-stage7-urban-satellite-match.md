@@ -46,7 +46,14 @@
 | `urban-context-stage7.glb` (جديد) | `34` | `119.4 KiB` |
 
 ## 5. التحقق
-انظر سجل التحقق في آخر هذا الملف (يُستكمل بعد التشغيل).
+- `npx tsc --noEmit`: `0` أخطاء. `npm run lint`: `0` أخطاء عبر `276` ملفًا (التحذير المسبق الوحيد في `scripts/fence-model.mjs:395`).
+- `npx vitest run --maxWorkers=1`: **`52 passed (52)`، `1412 passed | 3 expected fail (1415)`** (`173.87s`)، منها `tests/unit/crowd-occasion.test.ts` الجديد (5/5) واختبار المجسم السياقي في `urban-stage5.test.ts`.
+- `npm run build` + `check-build.mjs`: ناجح (`✓ built in 1.59s`، `74` مدخلة `6682.20 KiB`، و`models/**` خارج التخزين المسبق).
+- `build-urban-osm-rematch.py` مرتين متتاليتين: الملفان `data/urban-approved.json` و`data/pois.json` متطابقان بايتًا ببايت (قابل لإعادة التشغيل).
+- Chrome/Metal 1280×800: الملفات الخمسة `200`، `0` أخطاء صفحة، الإطار `16.7 / 16.8 ms` نهارًا و`16.7 / 16.7 ms` ليلًا (`docs/PERF.md`).
+- Playwright (`landing`، `main-screen`، `extras`) على Chrome الجهاز (`CHROME=…/Google Chrome`): **`49 / 49` ناجحًا** (`35 passed + 14 flaky` نجحت في الإعادة؛ أسباب المحاولة الأولى كلها «Target page, context or browser has been closed» من SwiftShader).
+- بصريًا: لوحة قبل/بعد فوق صورة Esri، ولقطات 3D نهارًا وليلًا، ومقارنة الزحام (عادي/رمضان/عيد).
+- **لم يُشغَّل:** باقي ملفات e2e الـ13، والقياس على `vivo V2250`.
 
 ## 6. يحتاج قرار المالك
 - **عتبة اختبار واحدة:** في `tests/unit/streets.test.ts` رُفعت عتبة مشي «القيادة إلى فندق هيلتون (705)» من 150 م إلى 160 م، لأن بابه الغربي على مخططه الحقيقي أبعد ~9 م عن الطريق الدائري من المخطط القديم المزاح (النتيجة الآن 154 م). سلوك التخطيط نفسه لم يتغير. تُعاد إلى 150 إن لم يوافق المالك.
