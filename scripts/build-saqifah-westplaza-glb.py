@@ -9,6 +9,8 @@ Sources:
   - The 32 high-mast lights of the western plaza: their bases read off the Esri/Maxar imagery, where
     each mast shows as a V (the leaning pole and its shadow meeting at the foot).
   - The six security booths: the small cabins visible on the same imagery.
+  - The plaza's grey granite bands between the white squares, and the diagonal walkway: traced on the
+    same imagery, cut clear of the owner-approved prayer areas.
   - Everything else (the palms and trees, the fence with its white panels, the gate kiosk, the red
     barriers, the rooftop frame): the owner's photograph, placed in the outline by eye.
 
@@ -67,6 +69,32 @@ BOOTHS = [
     (39.6061273, 24.4702487), (39.6075878, 24.4707614),
 ]
 MAST_H = 26.0
+# The western plaza's grey granite bands between its white squares, traced on the Esri/Maxar imagery
+# (west, south, east, north). The squares stay the plaza layer's white concrete.
+BANDS = {
+    "north": (39.6058581, 24.4707182, 39.6072542, 24.4708354),
+    "west-of-garden": (39.6051621, 24.4700407, 39.6063852, 24.4701579),
+    "middle": (39.6051943, 24.4694695, 39.6077129, 24.4695866),
+    "south": (39.6051621, 24.4686821, 39.6076605, 24.4688103),
+    "edge-south-a": (39.6055161, 24.4681218, 39.6073186, 24.4682537),
+    "edge-south-b": (39.6066426, 24.4682537, 39.6073186, 24.4683233),
+    "v-west": (39.6056328, 24.4682244, 39.6057575, 24.4708427),
+    "v-garden": (39.6063852, 24.4695866, 39.6064817, 24.4700407),
+    "v-mid": (39.6066507, 24.4683233, 39.6067473, 24.4694695),
+    "v-east": (39.6076726, 24.4683233, 39.6077370, 24.4705937),
+    "garden-north": (39.6063852, 24.4706156, 39.6067473, 24.4707145),
+}
+# The diagonal walkway from the garden's north-east corner to the plaza's east edge (9.5 m wide).
+DIAGONAL = ((39.6070863, 24.4704995), (39.6075986, 24.4702969), 9.5)
+# The owner-approved prayer areas of the western plaza (`src/data-next/alharamain-3d.ts`, 23-36): the
+# carpets are drawn on the ground under the model, so no band may cover them.
+PRAYER_AREAS = [
+    (39.605134, 24.470178, 39.60564, 24.470832),
+    (39.605734, 24.470173, 39.606365, 24.470708),
+    (39.60722, 24.468835, 39.607652, 24.469458),
+    (39.60516, 24.468818, 39.605619, 24.46946),
+    (39.605732, 24.468813, 39.607062, 24.469465),
+]
 
 
 def _mx(lng: float) -> float:
@@ -124,6 +152,7 @@ PALETTE = {
     "sq_mast": (0.62, 0.64, 0.66, 1.0),
     "sq_lamp": (0.95, 0.94, 0.88, 1.0),
     "sq_boothroof": (0.22, 0.23, 0.25, 1.0),
+    "sq_band": (0.60, 0.60, 0.59, 1.0),
 }
 
 
@@ -213,6 +242,25 @@ def quad_uv(u: float, v: float) -> tuple[float, float]:
     a = (p00[0] + (p10[0] - p00[0]) * u, p00[1] + (p10[1] - p00[1]) * u)
     b = (p01[0] + (p11[0] - p01[0]) * u, p01[1] + (p11[1] - p01[1]) * u)
     return a[0] + (b[0] - a[0]) * v, a[1] + (b[1] - a[1]) * v
+
+
+def subtract_rect(r: tuple[float, float, float, float], hole: tuple[float, float, float, float]) -> list[tuple[float, float, float, float]]:
+    """`r` minus `hole` (both west, south, east, north) as up to four rectangles."""
+    w, s, e, n = r
+    hw, hs, he, hn = hole
+    if he <= w or hw >= e or hn <= s or hs >= n:
+        return [r]
+    out = []
+    if hs > s:
+        out.append((w, s, e, hs))
+    if hn < n:
+        out.append((w, hn, e, n))
+    ms, mn = max(s, hs), min(n, hn)
+    if hw > w:
+        out.append((w, ms, hw, mn))
+    if he < e:
+        out.append((he, ms, e, mn))
+    return [q for q in out if q[2] - q[0] > 1e-7 and q[3] - q[1] > 1e-7]
 
 
 def point_in(pt: tuple[float, float], ring: list[tuple[float, float]]) -> bool:
@@ -475,6 +523,25 @@ def main() -> None:
         bo.face([(x - 0.5, y - 1.11, 0.05), (x + 0.5, y - 1.11, 0.05), (x + 0.5, y - 1.11, 2.0), (x - 0.5, y - 1.11, 2.0)], "sq_dark")
     bo.finish("booth")
 
+    # 7. The grey granite bands, a few centimetres proud of the white squares, clear of the carpets.
+    bd = Builder("WestPlazaBands")
+    pieces = list(BANDS.values())
+    for hole in PRAYER_AREAS:
+        pieces = [q for r in pieces for q in subtract_rect(r, hole)]
+    band_rects = []
+    for w, s_, e, n in pieces:
+        x0, y0 = bxy(w, s_)
+        x1, y1 = bxy(e, n)
+        bd.face([(x0, y0, 0.05), (x1, y0, 0.05), (x1, y1, 0.05), (x0, y1, 0.05)], "sq_band")
+        band_rects.append([w, s_, e, n])
+    (a_ll, c_ll, width) = DIAGONAL
+    ax, ay = bxy(*a_ll)
+    cx2, cy2 = bxy(*c_ll)
+    L = math.hypot(cx2 - ax, cy2 - ay)
+    ox, oy = -(cy2 - ay) / L * width / 2, (cx2 - ax) / L * width / 2
+    bd.face([(ax - ox, ay - oy, 0.05), (cx2 - ox, cy2 - oy, 0.05), (cx2 + ox, cy2 + oy, 0.05), (ax + ox, ay + oy, 0.05)], "sq_band")
+    bd.finish("band")
+
     OUT_GLB.parent.mkdir(parents=True, exist_ok=True)
     bpy.ops.export_scene.gltf(
         filepath=str(OUT_GLB),
@@ -503,6 +570,8 @@ def main() -> None:
                 "masts": [list(m) for m in MASTS],
                 "mastHeightM": MAST_H,
                 "booths": [list(b) for b in BOOTHS],
+                "bands": band_rects,
+                "diagonal": {"from": list(DIAGONAL[0]), "to": list(DIAGONAL[1]), "widthM": DIAGONAL[2]},
             },
             ensure_ascii=False,
             indent=2,

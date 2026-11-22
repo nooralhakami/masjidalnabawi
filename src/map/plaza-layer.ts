@@ -105,11 +105,12 @@ void main() {
     // 2026-11-07); here only the paving under them shows.
     discard;
   } else if (v_kind > 0.5) {
-    // The western plaza: polished concrete in large white squares, nothing else (owner, 2026-11-04).
+    // The western plaza: polished concrete in large white squares (owner, 2026-11-04), cut into 3 m
+    // slabs by faint joints. Its grey bands are traced from the imagery and drawn with Saqifat Bani
+    // Sa'idah's model (scripts/build-saqifah-westplaza-glb.py, owner 2026-11-22), not a fixed grid.
     color = vec3(0.92, 0.91, 0.88);
     alpha = 0.72;
-    float grid = joints(p, vec2(48.0), 0.1);
-    color = mix(color, vec3(0.62, 0.62, 0.61), grid);
+    color = mix(color, vec3(0.8, 0.8, 0.78), joints(v_pos, vec2(3.0), 0.02) * 0.5);
     gloss = 0.5;
   } else {
     // Round the Mosque, inside the line the owner drew: white square tiles.
