@@ -1,4 +1,5 @@
 import { WOMEN_AREAS } from '../data-next/women-areas';
+import { type CrowdOccasion, OCCASION_CROWD } from './crowd-occasion';
 import { fromModelMetres, toModelMetres } from './frames';
 import { QIBLA_BEARING_DEG } from './geo';
 import { INTERIOR_MAIN_BOUNDS, INTERIOR_SOUTH_BOUNDS, RAWDAH_INTERIOR_BOUNDS, interiorColumnCentres, isPointOnInteriorWalkway } from './interior-layout';
@@ -60,6 +61,8 @@ export interface WorshipperPlacement {
 export interface GenerateOptions {
   columns?: readonly (readonly [number, number])[];
   maxTotal?: number;
+  /** Ramadan nights and Eid morning fill more rows and the streets (`crowd-occasion.ts`); default `regular`. */
+  occasion?: CrowdOccasion;
 }
 
 const VALID_DEMOS = new Set<PrayerDemoOverride>(['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', 'jummah_khutbah', 'jummah_prayer', 'off_prayer']);
@@ -277,8 +280,15 @@ export function generateWorshipperPlacements(session: PrayerSessionState, opts: 
   const layout = opts.columns ? rugLayout(opts.columns) : currentRugLayout();
   const cols = interiorColumnCentres();
   const out: WorshipperPlacement[] = [];
-  const cap = opts.maxTotal ?? (session.streetOverflow ? 2200 : session.phase === 'fard_prayer' ? 1600 : 700);
+  const occasion = opts.occasion ?? 'regular';
+  const occ = OCCASION_CROWD[occasion];
+  // Eid morning: between its prayers the Haram sits in rows for the takbeer, the Eid prayer and its sermon.
+  const eidRows = occasion === 'eid' && (session.phase === 'off_prayer' || session.phase === 'iqamah_wait');
+  if (eidRows) session = { ...session, phase: 'friday_khutbah', posture: 'juloos' };
   const congregational = session.phase === 'fard_prayer' || session.phase === 'friday_khutbah' || session.phase === 'friday_prayer';
+  const streetOverflow = session.streetOverflow || (occ.streets && congregational);
+  const packed = session.isFriday || occ.scale > 1;
+  const cap = opts.maxTotal ?? Math.round((streetOverflow ? 2200 : session.phase === 'fard_prayer' ? 1600 : 700) * occ.scale);
 
   const nearInteriorColumn = (x: number, z: number) => cols.some(([cx, cz]) => Math.hypot(x - cx, z - cz) < 1.5);
 
@@ -325,13 +335,13 @@ export function generateWorshipperPlacements(session: PrayerSessionState, opts: 
     }
 
     // 2. Courtyard & Western Annex rugs (men/women segregated strictly by WOMEN_AREAS)
-    const rugStep = session.isFriday ? 1 : 2;
-    for (let i = 0; i < layout.rugs.length && out.length < (session.streetOverflow ? cap * 0.82 : cap); i += rugStep) {
+    const rugStep = packed ? 1 : 2;
+    for (let i = 0; i < layout.rugs.length && out.length < (streetOverflow ? cap * 0.82 : cap); i += rugStep) {
       const rug = layout.rugs[i];
       const women = isWomenCourtyardPoint(rug.x, rug.z);
-      const offsets = session.isFriday ? [-1.6, 0, 1.6] : [-1.2, 1.2];
+      const offsets = packed ? [-1.6, 0, 1.6] : [-1.2, 1.2];
       for (const ox of offsets) {
-        if (out.length >= (session.streetOverflow ? cap * 0.82 : cap)) break;
+        if (out.length >= (streetOverflow ? cap * 0.82 : cap)) break;
         out.push({
           x: rug.x + ox,
           z: rug.z,
@@ -347,8 +357,8 @@ export function generateWorshipperPlacements(session: PrayerSessionState, opts: 
       }
     }
 
-    // 3. Friday street overflow onto surrounding West and North streets
-    if (session.streetOverflow) {
+    // 3. Friday (and Ramadan-night / Eid) street overflow onto surrounding West and North streets
+    if (streetOverflow) {
       // West road (immediately west of Courtyard Sector 4 / Abu Bakr road)
       for (let z = -158; z <= 70 && out.length < cap * 0.91; z += 4.2) {
         for (let x = -444; x <= -406; x += 3.8) {

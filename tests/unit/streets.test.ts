@@ -176,7 +176,9 @@ describe('driving to a hotel outside the Haram', () => {
     expect(p.mode).toBe('drive');
     expect(p.lot).toBeUndefined();
     expect(p.legs[0].kind).toBe('drive');
-    expect(p.walkM).toBeLessThan(150);
+    // 160 m (was 150): Stage 7 put the Hilton on its real OSM outline, whose west door stands ~9 m
+    // east of the old offset footprint's; the car still stops on the ring road by it (2026-11-22).
+    expect(p.walkM).toBeLessThan(160);
     const last = p.legs[p.legs.length - 1].path;
     expect(last[last.length - 1][0]).toBeCloseTo(approvedHotelTarget(P(705), 'walk')[0], 6);
   });
