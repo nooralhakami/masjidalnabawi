@@ -31,6 +31,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 from collections import defaultdict
 from pathlib import Path
 
@@ -54,22 +55,40 @@ COS_ORIGIN = math.cos(math.radians(ORIGIN_LAT))
 CENTRAL_ZONE: list[tuple[float, float]] = [
     (39.602602, 24.470432), (39.603031, 24.471311), (39.603760, 24.472287), (39.604726, 24.473342),
     (39.605799, 24.473947), (39.606228, 24.474045), (39.610949, 24.474094), (39.611592, 24.474045),
-    (39.614167, 24.473801), (39.614275, 24.471213), (39.616206, 24.471213), (39.616313, 24.468772),
-    (39.613523, 24.468625), (39.613523, 24.465598), (39.616957, 24.465647), (39.617600, 24.464963),
+    (39.614167, 24.473801), (39.614275, 24.471213), (39.613523, 24.468625), (39.613523, 24.465598), (39.616957, 24.465647), (39.617600, 24.464963),
     (39.617386, 24.463694), (39.616313, 24.463352), (39.603438, 24.463303), (39.602687, 24.464035),
     (39.602419, 24.465159), (39.602419, 24.467112), (39.602473, 24.469065),
 ]
 
 # Saqifat Bani Sa'idah heritage structures are modelled by `src/map/saqifah-3d.ts`.
 HERITAGE_OSM_IDS = {"w775419642", "w775419643", "w775419644", "w775419645"}
+# The low red-roofed arcade south of the south courtyards (one 17,000 m2 outline): its roofs already
+# read correctly on the imagery, and a tower block over them would hide them.
+NOT_TOWERS_OSM_IDS = {"w625518412"}
+# Low-rise civic buildings (museums, markets, gardens, courts) when OSM gives no level count.
+LOW_RISE_NAME = re.compile(r"متحف|بستان|سوق|محكمة|حديقة|museum|market|garden", re.IGNORECASE)
+TUNNEL_NAME = re.compile(r"tunnel|نفق", re.IGNORECASE)
+NAME_MATCH_RADIUS_M = 80.0
+# Open plazas outside the Haram fence where no gap tower may be added (lng, lat), traced on the imagery:
+# the western courtyard (with the Saqifah garden) and the square at Bab al-Salam / Masjid al-Ghamamah.
+OPEN_PLAZAS: list[list[tuple[float, float]]] = [
+    [(39.605101, 24.471067), (39.607891, 24.471067), (39.607891, 24.468186), (39.607301, 24.468186),
+     (39.607301, 24.467624), (39.606657, 24.467624), (39.606657, 24.468137), (39.605101, 24.468137)],
+    [(39.606121, 24.467307), (39.607381, 24.467307), (39.607381, 24.46633), (39.607435, 24.466233),
+     (39.607435, 24.465549), (39.606603, 24.465549), (39.606121, 24.466135)],
+]
 SKIP_BUILDING_VALUES = {"construction", "roof", "mosque", "kiosk", "toilets"}
+MS_FOOTPRINTS = STAGE1 / "hotels" / "footprints" / "ms-haram-bbox-2026-11-11.json"
 MIN_CONTEXT_AREA_M2 = 150.0
 MATCH_RADIUS_M = 15.0
 SIMPLIFY_TOL_M = 0.45
+# Guide #169 has no Google link in the Authority guide: its Stage 6 marker stands in for the pin
+# (fixed here so re-runs do not chase the marker this script moves).
+FALLBACK_PINS: dict[int, tuple[float, float]] = {169: (39.6070051, 24.4723609)}
 
 
 # ---------------------------------------------------------------------------------------------
-# Geometry (frame identical to `src/domain/frames.ts`: x = east m, y = south m from the origin)
+# Geometry: local Web-Mercator metres from the origin, x = east, y = north
 # ---------------------------------------------------------------------------------------------
 def _mercator_x(lng: float) -> float:
     return (180.0 + lng) / 360.0
@@ -200,10 +219,9 @@ def bbox(poly: list[XY]) -> tuple[float, float, float, float]:
 
 
 def entrance_side_from_normal(nx: float, ny: float) -> str:
-    # y grows southwards in this frame.
     if abs(nx) >= abs(ny):
         return "east" if nx >= 0 else "west"
-    return "south" if ny >= 0 else "north"
+    return "north" if ny >= 0 else "south"
 
 
 def clip_halfplane(poly: list[XY], origin: XY, normal: XY, offset: float) -> list[XY]:
@@ -359,6 +377,15 @@ def osm_levels(tags: dict) -> int | None:
         return None
 
 
+def norm_name(name: str) -> str:
+    """Arabic hotel name reduced for exact comparison: no diacritics/tatweel, unified alef/ya/ta,
+    Latin digits, no punctuation and no leading "فندق"."""
+    s = re.sub(r"[\u064B-\u0652\u0640]", "", name or "")
+    s = s.translate(str.maketrans("أإآةى٠١٢٣٤٥٦٧٨٩", "اااهي0123456789"))
+    s = re.sub(r"[()\[\]\-ـ،,.]", " ", s)
+    return " ".join(t for t in s.split() if t != "فندق")
+
+
 def display_height(floors: int) -> float:
     """Same storey model as Stage 6: 8.8 m arcade podium + 3.15 m floors + 2.2 m crown."""
     return round(8.8 + max(floors - 2, 2) * 3.15 + 2.2, 1)
@@ -408,24 +435,35 @@ def main() -> None:
     streets = json.loads(STREETS_JSON.read_text("utf-8"))
     joined = json.loads((STAGE1 / "hotels/hotels-joined.json").read_text("utf-8"))
     pins = {h["number"]: (h["lng"], h["lat"]) for h in joined if h.get("lat") is not None}
+    pins.update({n: p for n, p in FALLBACK_PINS.items() if n not in pins})
     poi_by_id = {p["id"]: p for p in pois}
 
     fence_poly = build_haram_fence_polygon(fence)
     osm = [b for b in load_osm_buildings(fence_poly) if b["osm"] not in HERITAGE_OSM_IDS and not b["worship"]]
     print(f"OSM buildings inside the central zone (not Haram / worship / heritage): {len(osm)}")
 
-    # --- 1. Link every approved hotel's guide pin to its OSM building -------------------------
+    # --- 1. Link every approved hotel to its OSM building --------------------------------------
+    # An OSM building named exactly like the hotel (within 80 m of its guide pin) wins; otherwise
+    # the building under the guide pin, or the nearest one within 15 m.
+    osm_by_name: dict[str, list[dict]] = defaultdict(list)
+    for o in osm:
+        for nm in {norm_name(o["tags"][k]) for k in ("name", "name:ar") if o["tags"].get(k)}:
+            osm_by_name[nm].append(o)
     hotels = urban["buildings"]
     groups: dict[str, list[dict]] = defaultdict(list)
     unmatched: list[dict] = []
+    stats_link: dict[str, int] = defaultdict(int)
     for b in hotels:
         pin = pins.get(b["guideNumber"])
         if pin is None:
             poi = poi_by_id[b["poiId"]]
             pin = (poi["lng"], poi["lat"])
         p = to_xy(*pin)
+        named = [o for o in osm_by_name.get(norm_name(b["name_ar"]), []) if dist_pt_poly_edges(p, o["ring"]) <= NAME_MATCH_RADIUS_M]
         hit = [o for o in osm if point_in_poly(p, o["ring"])]
-        best = min(hit, key=lambda o: o["area"]) if hit else None
+        best = named[0] if len(named) == 1 else min(hit, key=lambda o: o["area"]) if hit else None
+        if len(named) == 1:
+            stats_link["name"] += 1
         if best is None:
             near = [
                 (dist_pt_poly_edges(p, o["ring"]), o)
@@ -440,6 +478,7 @@ def main() -> None:
             continue
         groups[best["osm"]].append({"key": b["poiId"], "xy": p, "building": b})
 
+    print(f"hotels linked by exact OSM name: {stats_link['name']}")
     osm_by_id = {o["osm"]: o for o in osm}
     resolved: dict[int, tuple[list[XY], str, dict]] = {}
     for oid, members in groups.items():
@@ -476,7 +515,9 @@ def main() -> None:
     for o in osm:
         if o["osm"] in used_osm:
             continue
-        if o["area"] < MIN_CONTEXT_AREA_M2 or o["tags"].get("building") in SKIP_BUILDING_VALUES:
+        if o["area"] < MIN_CONTEXT_AREA_M2 or o["tags"].get("building") in SKIP_BUILDING_VALUES or o["osm"] in NOT_TOWERS_OSM_IDS:
+            continue
+        if TUNNEL_NAME.search(o["tags"].get("name", "") + o["tags"].get("name:en", "")):
             continue
         poly = simplify_ring(o["ring"])
         if any(point_in_poly(pt, fence_poly) for pt in poly):
@@ -505,6 +546,45 @@ def main() -> None:
             walk_segs.append((a, b2))
             if mode & 1:
                 drive_segs.append((a, b2))
+
+    # --- 3b. Towers in the imagery that OSM has not mapped yet ---------------------------------
+    # Microsoft footprints sit a steady few metres south-west of the OSM (imagery-aligned) outlines.
+    # The shift is measured here from one-to-one pairs; shifted back, an MS outline that no mapped
+    # building covers and no road crosses fills the gap (`source: ms_shifted`).
+    ms_feats = json.loads(MS_FOOTPRINTS.read_text("utf-8"))["features"]
+    ms_rings = [clean_ring_xy([to_xy(c[0], c[1]) for c in f["geometry"]["coordinates"][0]]) for f in ms_feats]
+    ms_rings = [r for r in ms_rings if len(r) >= 3]
+    osm_cen = [(centroid_xy(o["ring"]), o["area"]) for o in osm]
+    shifts: list[XY] = []
+    for r in ms_rings:
+        c, a = centroid_xy(r), abs(poly_area(r))
+        if a < 200 or not point_in_poly(c, zone_xy):
+            continue
+        cand = [oc for oc, oa in osm_cen if math.hypot(oc[0] - c[0], oc[1] - c[1]) < 25 and 0.7 < oa / a < 1.4]
+        if len(cand) == 1:
+            shifts.append((cand[0][0] - c[0], cand[0][1] - c[1]))
+    sx = sorted(s[0] for s in shifts)[len(shifts) // 2]
+    sy = sorted(s[1] for s in shifts)[len(shifts) // 2]
+    print(f"MS -> OSM shift from {len(shifts)} pairs: {sx:+.1f} m east, {sy:+.1f} m north")
+    plaza_xy = [[to_xy(lng, lat) for lng, lat in pz] for pz in OPEN_PLAZAS]
+    road_pts = [(a[0] + (b2[0] - a[0]) * t, a[1] + (b2[1] - a[1]) * t) for a, b2 in drive_segs for t in (0.0, 0.25, 0.5, 0.75)]
+    gap_added = 0
+    for r in ms_rings:
+        poly = simplify_ring([(x + sx, y + sy) for x, y in r])
+        c, a = centroid_xy(poly), abs(poly_area(poly))
+        if a < 200 or not point_in_poly(c, zone_xy) or any(point_in_poly(pt, fence_poly) for pt in poly):
+            continue
+        x0, y0, x1, y1 = bbox(poly)
+        if any(x0 < p[0] < x1 and y0 < p[1] < y1 and point_in_poly(p, poly) for p in road_pts):
+            continue
+        if covered_share(poly, [o["ring"] for o in osm] + list(hotel_polys.values()) + [k["_xy"] for k in context]) > 0.12:
+            continue
+        # Open plazas carry canopies, kiosks and paving patterns that MS mistakes for roofs.
+        if any(point_in_poly(c, pz) for pz in plaza_xy):
+            continue
+        context.append({"_xy": poly, "_osm": {"osm": None, "tags": {}, "ms": f"ms{round(c[0])}_{round(c[1])}"}})
+        gap_added += 1
+    print(f"gap towers from shifted MS footprints: {gap_added}")
 
     all_polys = list(hotel_polys.values()) + [c["_xy"] for c in context]
     all_boxes = [bbox(p) for p in all_polys]
@@ -544,7 +624,7 @@ def main() -> None:
             elen = math.hypot(ex, ey)
             if elen < 2.0:
                 continue
-            nx, ny = ey / elen, -ex / elen  # outward for a CCW ring in this (y-south) frame
+            nx, ny = ey / elen, -ex / elen  # outward for a CCW ring (flipped below if not)
             if point_in_poly((0.5 * (a[0] + b2[0]) + nx * 0.5, 0.5 * (a[1] + b2[1]) + ny * 0.5), poly):
                 nx, ny = -nx, -ny
             for u in (0.5, 0.35, 0.65):
@@ -557,7 +637,7 @@ def main() -> None:
                     d_foot = min((dist_pt_seg(c, s0, s1)[0] for s0, s1 in walks), default=90.0)
                     score = min(d_road, d_foot + 4.0) * 2.0 + 0.12 * math.hypot(c[0] - pin[0], c[1] - pin[1]) + push * 0.5
                     if score < best_score:
-                        best_score, cand_best = score, (c, entrance_side_from_normal(nx, -ny))
+                        best_score, cand_best = score, (c, entrance_side_from_normal(nx, ny))
         if cand_best is None:
             raise RuntimeError("no clear entrance on any facade")
         return cand_best
@@ -611,22 +691,25 @@ def main() -> None:
     # --- 5. Context buildings records ---------------------------------------------------------
     hotel_centres = [(to_xy(b["center"][1], b["center"][0]), b["zone"]) for b in hotels]
     ctx_out: list[dict] = []
-    for c in sorted(context, key=lambda c: c["_osm"]["osm"]):
+    for c in sorted(context, key=lambda c: c["_osm"]["osm"] or c["_osm"]["ms"]):
         o, poly = c["_osm"], c["_xy"]
         cen = centroid_xy(poly)
         zone = min(hotel_centres, key=lambda hc: math.hypot(hc[0][0] - cen[0], hc[0][1] - cen[1]))[1]
         area = abs(poly_area(poly))
         lv = osm_levels(o["tags"])
-        key = o["osm"]
+        key = o["osm"] or o["ms"]
         if lv is not None:
             floors, src, conf = max(3, min(18, lv)), "osm_levels", "osm"
         else:
             r = seeded_unit(key, 1)
             floors = (5 + int(r * 3.0)) if area < 450 else (10 + int(r * 3.0)) if area < 1000 else (11 + int(r * 3.0))
+            if LOW_RISE_NAME.search(o["tags"].get("name", "")):
+                floors = 3
             src, conf = "estimated_display_only", "display_only"
         rec = {
             "buildingId": f"C{key}",
-            "osm": key,
+            "osm": o["osm"],
+            "source": "osm" if o["osm"] else "ms_shifted",
             "zone": zone,
             "kind": "context",
             "areaM2": round(area, 1),
