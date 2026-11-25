@@ -66,7 +66,8 @@ test.describe('filters', () => {
     expect(await hotelsOnMap()).toBe(0);
     // Hotel pins only appear on the map when tapping the «hotels» pill (owner, 2026-11-25).
     await pill(page, 6).click();
-    await expect.poll(hotelsOnMap).toBe(228);
+    await expect.poll(() => mapCount(page)).toBe(228);
+    expect(await pillCount(page)).toBe(228);
 
     await pill(page, 3).click();
     await expect(page.locator('.seg')).toHaveCount(3);
