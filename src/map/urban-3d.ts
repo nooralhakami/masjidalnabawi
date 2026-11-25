@@ -7,9 +7,9 @@ import {
   CONTEXT_BY_ID,
   pickApprovedBuildingRay,
   pointInApprovedBuilding,
+  type UrbanDisplayMode,
   urbanOpacityForCamera,
 } from '../domain/urban-approval';
-import { streetCorridors } from '../../data/urban-approved.json';
 import { frameMatrix, mulMat4, parseGlbBuffer } from './glb-layer';
 import { cameraEye } from './plaza-layer';
 import type { SceneLight } from './scene-light';
@@ -31,8 +31,14 @@ export const URBAN_ZONES = [
 export type UrbanZoneId = (typeof URBAN_ZONES)[number]['id'];
 /** The side of the Haram a building stands on: what the A8 view fade keys on. */
 export type UrbanFadeZone = Exclude<UrbanZoneId, 'context'>;
-export const URBAN_STREETS_SOURCE_ID = 'urban-south-streets';
-export const URBAN_STREETS_LAYER_ID = 'urban-south-streets-line';
+
+const ZONE_URL_BY_ID: Readonly<Record<UrbanZoneId, string>> = {
+  south: URBAN_GLB_URL,
+  west: URBAN_WEST_GLB_URL,
+  north: URBAN_NORTH_GLB_URL,
+  sw: URBAN_SW_GLB_URL,
+  context: URBAN_CONTEXT_GLB_URL,
+};
 
 const VALID_HEIGHT_SOURCES = new Set(['osm_levels', 'estimated_display_only', 'owner_verified']);
 const VALID_ZONES = new Set<string>(URBAN_ZONES.map((z) => z.id));
@@ -111,9 +117,9 @@ export interface GlbValidationResult {
 }
 
 /**
- * A9 Provenance GLB Guard: validates `public/models/urban-{south,west,north}-stage6.glb` before
- * uploading to WebGL, proving it carries only owner-approved buildings (`haram-urban-approved-v2`)
- * matching its declared zone, verified or display-tagged heights within expected bounds, and approved nodes.
+ * A9 Provenance GLB Guard: validates `public/models/urban-{south,west,north,sw}-stage6.glb` before
+ * uploading to WebGL, proving it carries only owner-approved hotel buildings (`haram-urban-approved-v2`)
+ * matching its declared zone, with no street or unapproved prop meshes.
  */
 export function validateUrbanGlb(rawGltf: unknown, expectedZone?: UrbanZoneId): GlbValidationResult {
   const gltf = rawGltf as UrbanGlbJson;
@@ -136,8 +142,6 @@ export function validateUrbanGlb(rawGltf: unknown, expectedZone?: UrbanZoneId): 
   const zoneId = glbZone as UrbanZoneId;
   if (zoneId === 'context') return validateContextGlb(gltf);
   const expectedFootprintIds = approvedFootprintBuildingsForZone(zoneId).map((b) => b.poiId);
-  const streetPrefix = `urban-street-${zoneId}-`;
-  const propPrefix = `urban-prop-${zoneId}-`;
 
   const nodes = gltf.nodes ?? [];
   const meshes = gltf.meshes ?? [];
@@ -147,39 +151,34 @@ export function validateUrbanGlb(rawGltf: unknown, expectedZone?: UrbanZoneId): 
 
   for (const node of nodes) {
     const name = node.name ?? '';
-    const isHotel = name.startsWith('urban-hotel-');
-    const isStreet = name.startsWith(streetPrefix);
-    const isProp = name.startsWith(propPrefix);
-    if (!isHotel && !isStreet && !isProp) {
+    if (!name.startsWith('urban-hotel-')) {
       return { ok: false, reason: `Unapproved GLB node "${name}" rejected by A9 guard`, buildingCount: 0, maxHeightM };
     }
-    if (isHotel) {
-      const poiId = Number(node.extras?.poiId);
-      const approved = APPROVED_BY_POI_ID.get(poiId);
-      const src = String(node.extras?.heightSource ?? '');
-      if (!approved || !approved.hasFootprint || approved.zone !== zoneId || node.extras?.buildingId !== approved.buildingId || !VALID_HEIGHT_SOURCES.has(src)) {
-        return { ok: false, reason: `Unapproved or invalid hotel node "${name}"`, buildingCount: 0, maxHeightM };
-      }
-      if (typeof node.mesh === 'number') {
-        const mesh = meshes[node.mesh];
-        for (const prim of mesh?.primitives ?? []) {
-          const posAcc = accessors[prim.attributes.POSITION];
-          const maxY = posAcc?.max?.[1];
-          if (typeof maxY === 'number') {
-            maxHeightM = Math.max(maxHeightM, maxY);
-            if (maxY < 10.0 || maxY > 72.0 || Math.abs(maxY - approved.heightM) > 4.0) {
-              return {
-                ok: false,
-                reason: `Out-of-bounds height (${maxY.toFixed(2)} m vs ${approved.heightM} m) for "${name}" rejected by A9 guard`,
-                buildingCount: 0,
-                maxHeightM,
-              };
-            }
+    const poiId = Number(node.extras?.poiId);
+    const approved = APPROVED_BY_POI_ID.get(poiId);
+    const src = String(node.extras?.heightSource ?? '');
+    if (!approved || !approved.hasFootprint || approved.zone !== zoneId || node.extras?.buildingId !== approved.buildingId || !VALID_HEIGHT_SOURCES.has(src)) {
+      return { ok: false, reason: `Unapproved or invalid hotel node "${name}"`, buildingCount: 0, maxHeightM };
+    }
+    if (typeof node.mesh === 'number') {
+      const mesh = meshes[node.mesh];
+      for (const prim of mesh?.primitives ?? []) {
+        const posAcc = accessors[prim.attributes.POSITION];
+        const maxY = posAcc?.max?.[1];
+        if (typeof maxY === 'number') {
+          maxHeightM = Math.max(maxHeightM, maxY);
+          if (maxY < 10.0 || maxY > 72.0 || Math.abs(maxY - approved.heightM) > 4.0) {
+            return {
+              ok: false,
+              reason: `Out-of-bounds height (${maxY.toFixed(2)} m vs ${approved.heightM} m) for "${name}" rejected by A9 guard`,
+              buildingCount: 0,
+              maxHeightM,
+            };
           }
         }
       }
-      seenBuildings.add(poiId);
     }
+    seenBuildings.add(poiId);
   }
 
   if (seenBuildings.size !== expectedFootprintIds.length || !expectedFootprintIds.every((id) => seenBuildings.has(id))) {
@@ -228,18 +227,6 @@ function validateContextGlb(gltf: UrbanGlbJson): GlbValidationResult {
   return { ok: true, buildingCount: seen.size, maxHeightM };
 }
 
-/** Verified OSM street corridors around Zone 1 South (lazy-loaded only in 3D). */
-export function buildUrbanStreetGeoJson(): GeoJSON.FeatureCollection<GeoJSON.LineString> {
-  return {
-    type: 'FeatureCollection',
-    features: (streetCorridors as unknown as { kind: string; road?: boolean; wayIndex: number; coords: [number, number][] }[]).map((c) => ({
-      type: 'Feature',
-      properties: { kind: c.kind, road: Boolean(c.road), wayIndex: c.wayIndex },
-      geometry: { type: 'LineString', coordinates: c.coords },
-    })),
-  };
-}
-
 const VERT_SRC = `#version 300 es
 layout(location = 0) in vec3 a_pos;
 layout(location = 1) in vec3 a_normal;
@@ -268,7 +255,7 @@ uniform vec3 u_ambient;
 uniform vec3 u_fog;
 uniform float u_night;
 uniform vec4 u_color;
-uniform vec4 u_meta; // x=seed, y=tint, z=kind (0=building, 1=street, 2=prop, 3=lamp_glow), w=useTex
+uniform vec4 u_meta; // x=seed, y=tint, z=unused, w=useTex
 uniform float u_selected;
 uniform sampler2D u_albedo;
 uniform sampler2D u_mask;
@@ -279,17 +266,6 @@ float hash12(vec2 p) {
 }
 
 void main() {
-  float kind = u_meta.z;
-  if (kind > 2.5) {
-    if (u_night < 0.12) discard;
-    float r = length((v_uv - 0.5) * 2.0);
-    float falloff = smoothstep(1.0, 0.0, r);
-    float pool = falloff * falloff;
-    float nFade = smoothstep(0.12, 0.85, u_night);
-    fragColor = vec4(1.0, 0.84, 0.50, pool * nFade * 0.58);
-    return;
-  }
-
   vec2 uv = v_uv;
   vec2 duv_dx = dFdx(v_uv);
   vec2 duv_dy = dFdy(v_uv);
@@ -356,8 +332,6 @@ void main() {
     if (glowMask > 0.08) {
       lit += vec3(1.0, 0.82, 0.52) * (glowMask * smoothstep(0.08, 0.75, u_night) * 1.10);
     }
-    // Facade floodlights (owner's night photographs, 2026-11-22): the stone reads cream-white, lit
-    // strongest above the arcade and fading up the tower, in the Haram's near-white flood colour.
     float stone = 1.0 - glassMask;
     float rise = 1.0 - smoothstep(9.0, 70.0, v_worldPos.y);
     lit += baseRgb * vec3(1.0, 0.95, 0.87) * (nStr * stone * (0.30 + 0.30 * rise));
@@ -372,7 +346,6 @@ void main() {
     lit += amber * (0.28 * rim + 0.35 * glowMask + 0.24 * roomMask);
   }
 
-  // Subtle atmospheric haze only at long distance (> 1.2 km), keeping near/mid facades crisp like haram-3d
   float dist = length(u_eye - v_worldPos);
   float fogF = smoothstep(1200.0, 4800.0, dist) * 0.45;
   lit = mix(lit, u_fog, fogF);
@@ -386,7 +359,6 @@ interface GpuPart {
   count: number;
   indexType: number;
   color: [number, number, number, number];
-  kind: number; // 0=building, 1=street, 2=prop, 3=lamp_glow
   zone: UrbanFadeZone;
   poiId: number;
   seed: number;
@@ -469,7 +441,14 @@ function closeDecodedImage(img: ImageBitmap | HTMLImageElement | null): void {
   if (img && 'close' in img && typeof img.close === 'function') img.close();
 }
 
-/** Lazy WebGL2 custom layer rendering Stage 6 Zones 1–3 (South + West + North) buildings, streets, and props. */
+function sameDisplayMode(a: UrbanDisplayMode, b: UrbanDisplayMode): boolean {
+  if (a.kind !== b.kind) return false;
+  if (a.kind === 'single' && b.kind === 'single') return a.poiId === b.poiId && a.zone === b.zone;
+  if (a.kind === 'all' && b.kind === 'all') return a.selectedPoiId === b.selectedPoiId;
+  return true;
+}
+
+/** Lazy on-demand WebGL2 layer rendering hotel & context buildings only when requested. */
 export class Urban3DLayer implements CustomLayerInterface {
   readonly id = URBAN_LAYER_ID;
   readonly type = 'custom' as const;
@@ -492,7 +471,9 @@ export class Urban3DLayer implements CustomLayerInterface {
   private uSelected: WebGLUniformLocation | null = null;
   private uAlbedo: WebGLUniformLocation | null = null;
   private uMask: WebGLUniformLocation | null = null;
+  private displayMode: UrbanDisplayMode;
   private selectedPoiId: number | null = null;
+  private requestedZones = new Set<UrbanZoneId>();
   private pendingZones: PendingLoad[] = [];
   private parts: GpuPart[] = [];
   private vaos: WebGLVertexArrayObject[] = [];
@@ -502,19 +483,40 @@ export class Urban3DLayer implements CustomLayerInterface {
   private maskTex: WebGLTexture | null = null;
   private generation = 0;
 
-  constructor(light: SceneLight) {
+  constructor(light: SceneLight, initialMode: UrbanDisplayMode = { kind: 'none' }) {
     this.light = light;
+    this.displayMode = initialMode;
+    this.selectedPoiId = initialMode.kind === 'all' ? initialMode.selectedPoiId : initialMode.kind === 'single' ? initialMode.poiId : null;
   }
 
   setLight(light: SceneLight): void {
     this.light = light;
-    this.map?.triggerRepaint();
+    if (this.displayMode.kind !== 'none') this.map?.triggerRepaint();
+  }
+
+  setDisplayMode(mode: UrbanDisplayMode): void {
+    const changed = !sameDisplayMode(this.displayMode, mode);
+    this.displayMode = mode;
+    this.selectedPoiId = mode.kind === 'all' ? mode.selectedPoiId : mode.kind === 'single' ? mode.poiId : null;
+    this.requestNeededZones();
+    if (changed) this.map?.triggerRepaint();
+  }
+
+  getDisplayMode(): UrbanDisplayMode {
+    return this.displayMode;
+  }
+
+  getRequestedZones(): UrbanZoneId[] {
+    return [...this.requestedZones];
   }
 
   /** Highlight a selected or routed hotel tower with a warm amber 3D halo (`null` clears). */
   setSelectedPoiId(poiId: number | null): void {
     if (this.selectedPoiId === poiId) return;
     this.selectedPoiId = poiId;
+    if (this.displayMode.kind === 'all') {
+      this.displayMode = { kind: 'all', selectedPoiId: poiId };
+    }
     this.map?.triggerRepaint();
   }
 
@@ -525,12 +527,14 @@ export class Urban3DLayer implements CustomLayerInterface {
   onAdd(map: MLMap, gl: WebGL2RenderingContext): void {
     this.map = map;
     this.initProgram(gl);
-    const gen = ++this.generation;
-    for (const z of URBAN_ZONES) void this.loadZoneGlb(gen, z.id, z.url);
+    this.generation++;
+    this.requestedZones.clear();
+    this.requestNeededZones();
   }
 
   onRemove(_map: MLMap, gl: WebGL2RenderingContext): void {
     this.generation++;
+    this.requestedZones.clear();
     for (const pending of this.pendingZones) {
       closeDecodedImage(pending.albedoImg);
       closeDecodedImage(pending.maskImg);
@@ -549,6 +553,19 @@ export class Urban3DLayer implements CustomLayerInterface {
     this.parts = [];
     this.program = null;
     this.map = null;
+  }
+
+  private requestNeededZones(): void {
+    if (!this.map) return;
+    const gen = this.generation;
+    if (this.displayMode.kind === 'none') return;
+    const targets: readonly UrbanZoneId[] =
+      this.displayMode.kind === 'single' ? [this.displayMode.zone] : URBAN_ZONES.map((z) => z.id);
+    for (const zone of targets) {
+      if (this.requestedZones.has(zone)) continue;
+      this.requestedZones.add(zone);
+      void this.loadZoneGlb(gen, zone, ZONE_URL_BY_ID[zone]);
+    }
   }
 
   private initProgram(gl: WebGL2RenderingContext): void {
@@ -663,8 +680,6 @@ export class Urban3DLayer implements CustomLayerInterface {
     const accs = gltf.accessors ?? [];
     const mats = gltf.materials ?? [];
     const meshes = gltf.meshes ?? [];
-    const streetPrefix = `urban-street-${zone}-`;
-    const lampGlowName = `urban-prop-${zone}-lamp-glow`;
     const glBuffers = bvs.map((bv, i) => {
       const isIndex = accs.some((a) => a.bufferView === i && a.type === 'SCALAR');
       if (isIndex) return null;
@@ -680,11 +695,7 @@ export class Urban3DLayer implements CustomLayerInterface {
       if (typeof node.mesh !== 'number') continue;
       const name = node.name ?? '';
       const isContext = name.startsWith('urban-context-');
-      const isBuilding = isContext || name.startsWith('urban-hotel-');
-      const isStreet = name.startsWith(streetPrefix);
-      const isLampGlow = name === lampGlowName;
-      const kind = isBuilding ? 0 : isStreet ? 1 : isLampGlow ? 3 : 2;
-      const poiId = isBuilding && !isContext ? Number(node.extras?.poiId ?? 0) : 0;
+      const poiId = !isContext ? Number(node.extras?.poiId ?? 0) : 0;
       const fadeZone = (zone === 'context' ? String(node.extras?.zone ?? 'south') : zone) as UrbanFadeZone;
       const seed = Number(node.extras?.seed ?? 0);
       const tint = Number(node.extras?.tint ?? 0);
@@ -744,7 +755,6 @@ export class Urban3DLayer implements CustomLayerInterface {
           count: idxAcc.count,
           indexType: idxAcc.componentType,
           color: baseColor,
-          kind,
           zone: fadeZone,
           poiId,
           seed,
@@ -756,9 +766,14 @@ export class Urban3DLayer implements CustomLayerInterface {
     gl.bindVertexArray(null);
   }
 
-  /** Direct 3D ray pick against extruded Stage 6 hotel buildings at CSS pixel `[x, y]`. */
+  /** Direct 3D ray pick against currently visible Stage 6 hotel buildings at CSS pixel `[x, y]`. */
   hotelAt(x: number, y: number): number | null {
-    if (!this.map || !this.parts.length) return null;
+    if (!this.map || !this.parts.length || this.displayMode.kind === 'none') return null;
+    const filterPick = (id: number | null): number | null => {
+      if (id === null) return null;
+      if (this.displayMode.kind === 'single') return id === this.displayMode.poiId ? id : null;
+      return id;
+    };
     const canvas = this.map.getCanvas();
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
@@ -775,13 +790,13 @@ export class Urban3DLayer implements CustomLayerInterface {
           const dz = pFar[2] - pNear[2];
           const len = Math.hypot(dx, dy, dz);
           if (len > 1e-6) {
-            return pickApprovedBuildingRay(pNear, [dx / len, dy / len, dz / len])?.poiId ?? null;
+            return filterPick(pickApprovedBuildingRay(pNear, [dx / len, dy / len, dz / len])?.poiId ?? null);
           }
         }
       }
     }
     const ll = this.map.unproject([x, y]);
-    return pointInApprovedBuilding([ll.lat, ll.lng])?.poiId ?? null;
+    return filterPick(pointInApprovedBuilding([ll.lat, ll.lng])?.poiId ?? null);
   }
 
   render(gl: WebGL2RenderingContext, options: CustomRenderMethodInput): void {
@@ -790,7 +805,7 @@ export class Urban3DLayer implements CustomLayerInterface {
       for (const pending of this.pendingZones) this.upload(gl, pending);
       this.pendingZones = [];
     }
-    if (!this.parts.length) return;
+    if (this.displayMode.kind === 'none' || !this.parts.length) return;
 
     const proj = options.defaultProjectionData?.mainMatrix ?? options.modelViewProjectionMatrix;
     if (!proj) return;
@@ -798,14 +813,6 @@ export class Urban3DLayer implements CustomLayerInterface {
     mulMat4(mvp64, proj as unknown as ArrayLike<number>, this.mercatorMatrix);
     this.lastMvp = mvp64;
 
-    const bearing = this.map.getBearing();
-    const pitch = this.map.getPitch();
-    const zoneFade: Record<UrbanFadeZone, number> = {
-      south: urbanOpacityForCamera(bearing, pitch, 'south'),
-      west: urbanOpacityForCamera(bearing, pitch, 'west'),
-      north: urbanOpacityForCamera(bearing, pitch, 'north'),
-      sw: urbanOpacityForCamera(bearing, pitch, 'sw'),
-    };
     const eye = cameraEye(this.map);
 
     gl.useProgram(this.program);
@@ -828,47 +835,60 @@ export class Urban3DLayer implements CustomLayerInterface {
     gl.bindTexture(gl.TEXTURE_2D, this.maskTex);
     gl.uniform1i(this.uMask, 1);
 
-    // Pass 1: Opaque streets, props, selected building, and un-faded buildings
+    if (this.displayMode.kind === 'single') {
+      const targetId = this.displayMode.poiId;
+      gl.disable(gl.BLEND);
+      gl.depthMask(true);
+      gl.uniform1f(this.uSelected, 1);
+      for (const part of this.parts) {
+        if (part.poiId !== targetId) continue;
+        gl.uniform4f(this.uColor, part.color[0], part.color[1], part.color[2], 1);
+        gl.uniform4f(this.uMeta, part.seed, part.tint, 0, part.useTex ? 1 : 0);
+        gl.bindVertexArray(part.vao);
+        gl.drawElements(gl.TRIANGLES, part.count, part.indexType, 0);
+      }
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindVertexArray(null);
+      return;
+    }
+
+    const bearing = this.map.getBearing();
+    const pitch = this.map.getPitch();
+    const zoneFade: Record<UrbanFadeZone, number> = {
+      south: urbanOpacityForCamera(bearing, pitch, 'south'),
+      west: urbanOpacityForCamera(bearing, pitch, 'west'),
+      north: urbanOpacityForCamera(bearing, pitch, 'north'),
+      sw: urbanOpacityForCamera(bearing, pitch, 'sw'),
+    };
+    const activeSelected = this.displayMode.selectedPoiId;
+
+    // Pass 1: Opaque selected building and un-faded buildings
     gl.disable(gl.BLEND);
     gl.depthMask(true);
     for (const part of this.parts) {
-      if (part.kind === 3) continue;
-      const isSelected = part.kind === 0 && part.poiId > 0 && part.poiId === this.selectedPoiId;
-      const alpha = part.kind === 0 ? (isSelected ? 1 : part.color[3] * zoneFade[part.zone]) : part.color[3];
+      const isSelected = part.poiId > 0 && part.poiId === activeSelected;
+      const alpha = isSelected ? 1 : part.color[3] * zoneFade[part.zone];
       if (alpha < 0.99) continue;
       gl.uniform4f(this.uColor, part.color[0], part.color[1], part.color[2], alpha);
-      gl.uniform4f(this.uMeta, part.seed, part.tint, part.kind, part.useTex ? 1 : 0);
+      gl.uniform4f(this.uMeta, part.seed, part.tint, 0, part.useTex ? 1 : 0);
       gl.uniform1f(this.uSelected, isSelected ? 1 : 0);
       gl.bindVertexArray(part.vao);
       gl.drawElements(gl.TRIANGLES, part.count, part.indexType, 0);
     }
 
-    // Pass 2: A8 faded buildings + night streetlamp glow pools
+    // Pass 2: A8 faded buildings
     gl.enable(gl.BLEND);
     gl.depthMask(false);
     gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     gl.uniform1f(this.uSelected, 0);
     for (const part of this.parts) {
-      if (part.kind === 3) continue;
-      const isSelected = part.kind === 0 && part.poiId > 0 && part.poiId === this.selectedPoiId;
-      const alpha = part.kind === 0 ? (isSelected ? 1 : part.color[3] * zoneFade[part.zone]) : part.color[3];
+      const isSelected = part.poiId > 0 && part.poiId === activeSelected;
+      const alpha = isSelected ? 1 : part.color[3] * zoneFade[part.zone];
       if (alpha >= 0.99) continue;
       gl.uniform4f(this.uColor, part.color[0], part.color[1], part.color[2], alpha);
-      gl.uniform4f(this.uMeta, part.seed, part.tint, part.kind, part.useTex ? 1 : 0);
+      gl.uniform4f(this.uMeta, part.seed, part.tint, 0, part.useTex ? 1 : 0);
       gl.bindVertexArray(part.vao);
       gl.drawElements(gl.TRIANGLES, part.count, part.indexType, 0);
-    }
-
-    if (this.light.night >= 0.12) {
-      gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-      for (const part of this.parts) {
-        if (part.kind !== 3) continue;
-        gl.uniform4f(this.uColor, part.color[0], part.color[1], part.color[2], 1);
-        gl.uniform4f(this.uMeta, part.seed, part.tint, part.kind, 0);
-        gl.bindVertexArray(part.vao);
-        gl.drawElements(gl.TRIANGLES, part.count, part.indexType, 0);
-      }
-      gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     }
 
     gl.depthMask(true);
@@ -877,39 +897,14 @@ export class Urban3DLayer implements CustomLayerInterface {
   }
 }
 
-/** Add Stage 6 Zones 1–3 OSM corridor lines + Blender GLB custom layer lazily when 3D turns on. */
-export function mountUrban3D(map: MLMap, light: SceneLight, before?: string): Urban3DLayer {
-  if (!map.getSource(URBAN_STREETS_SOURCE_ID)) {
-    map.addSource(URBAN_STREETS_SOURCE_ID, { type: 'geojson', data: buildUrbanStreetGeoJson() });
-  }
-  if (!map.getLayer(URBAN_STREETS_LAYER_ID)) {
-    map.addLayer(
-      {
-        id: URBAN_STREETS_LAYER_ID,
-        type: 'line',
-        source: URBAN_STREETS_SOURCE_ID,
-        minzoom: 14.5,
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: {
-          'line-color': ['match', ['get', 'kind'], ['arterial', 'boulevard', 'local', 'service'], '#3d4550', '#c9beaa'],
-          'line-width': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            15,
-            ['match', ['get', 'kind'], 'arterial', 4, 'boulevard', 3, 2],
-            18,
-            ['match', ['get', 'kind'], 'arterial', 9, 'boulevard', 7, 5],
-          ],
-          'line-opacity': 0.72,
-        },
-      },
-      before,
-    );
-  }
+/** Mount the lazy WebGL2 hotel/building 3D layer without any street lines. */
+export function mountUrban3D(map: MLMap, light: SceneLight, before?: string, initialMode: UrbanDisplayMode = { kind: 'none' }): Urban3DLayer {
   const existing = map.getLayer(URBAN_LAYER_ID) as unknown as Urban3DLayer | undefined;
-  if (existing) return existing;
-  const layer = new Urban3DLayer(light);
+  if (existing) {
+    existing.setDisplayMode(initialMode);
+    return existing;
+  }
+  const layer = new Urban3DLayer(light, initialMode);
   map.addLayer(layer, before);
   return layer;
 }
