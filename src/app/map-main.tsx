@@ -123,8 +123,12 @@ async function main() {
   });
 
   // The map follows the state: the places of the filter and search, and the card that is open.
+  // Hotel location pins only show on the map when the «hotels» pill is active (owner, 2026-11-25);
+  // searching by name still offers every matching hotel in the dropdown and shows only the chosen one.
   effect(() => {
-    const ids = visiblePois(filter.value, toiletSub.value, query.value, fac, undefined, parkingSub.value).map((p) => p.id);
+    const ids = visiblePois(filter.value, toiletSub.value, query.value, fac, undefined, parkingSub.value)
+      .filter((p) => filter.value === 'hotels' || p.category !== 'hotels')
+      .map((p) => p.id);
     engine.setView({ ids, filter: filter.value, withFeatured: !searching.value, hidden: markersHidden.value });
   });
   effect(() => engine.select(selected.value));
