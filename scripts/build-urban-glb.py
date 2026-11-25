@@ -502,281 +502,6 @@ def build_hotel_mesh(b: dict, mat_facade: bpy.types.Material) -> bpy.types.Objec
     return obj
 
 
-def build_streets_and_sidewalks(
-    zone: str,
-    corridors: list[dict],
-    building_polys: list[list[tuple[float, float]]],
-    haram_poly: list[tuple[float, float]],
-    mat_road: bpy.types.Material,
-    mat_sidewalk: bpy.types.Material,
-    mat_promenade: bpy.types.Material,
-) -> None:
-    bm_road = bmesh.new()
-    bm_walk = bmesh.new()
-    bm_prom = bmesh.new()
-
-    def blocked_xy(pt: tuple[float, float]) -> bool:
-        if point_in_poly(pt, haram_poly):
-            return True
-        return any(point_in_poly(pt, bp) for bp in building_polys)
-
-    for c in corridors:
-        pts = simplify_polyline([to_blender_xy(lng, lat) for (lng, lat) in c["coords"]], tol=0.65)
-        hw = float(c.get("widthM", 6.0)) * 0.5
-        kind = c.get("kind", "local")
-        is_road = bool(c.get("road"))
-
-        target_bm = bm_road if is_road else bm_prom
-        z_flat = 0.05 if is_road else 0.07
-
-        for i in range(len(pts) - 1):
-            x0, y0 = pts[i]
-            x1, y1 = pts[i + 1]
-            dx, dy = x1 - x0, y1 - y0
-            slen = math.hypot(dx, dy)
-            if slen < 0.35:
-                continue
-            nx, ny = (-dy / slen), (dx / slen)
-
-            v0 = target_bm.verts.new((x0 - nx * hw, y0 - ny * hw, z_flat))
-            v1 = target_bm.verts.new((x1 - nx * hw, y1 - ny * hw, z_flat))
-            v2 = target_bm.verts.new((x1 + nx * hw, y1 + ny * hw, z_flat))
-            v3 = target_bm.verts.new((x0 + nx * hw, y0 + ny * hw, z_flat))
-            try:
-                target_bm.faces.new((v0, v1, v2, v3))
-            except ValueError:
-                pass
-
-            if kind in ("arterial", "boulevard") and slen >= 3.5:
-                sw_w = 1.9
-                for sign in (-1.0, 1.0):
-                    in_off = hw * sign
-                    out_off = (hw + sw_w) * sign
-                    mid_off = (hw + sw_w * 0.5) * sign
-                    mx = 0.5 * (x0 + x1) + nx * mid_off
-                    my = 0.5 * (y0 + y1) + ny * mid_off
-                    if blocked_xy((mx, my)):
-                        continue
-                    lo_off, hi_off = min(in_off, out_off), max(in_off, out_off)
-                    try:
-                        bm_walk.faces.new(
-                            [
-                                bm_walk.verts.new((x0 + nx * lo_off, y0 + ny * lo_off, 0.20)),
-                                bm_walk.verts.new((x1 + nx * lo_off, y1 + ny * lo_off, 0.20)),
-                                bm_walk.verts.new((x1 + nx * hi_off, y1 + ny * hi_off, 0.20)),
-                                bm_walk.verts.new((x0 + nx * hi_off, y0 + ny * hi_off, 0.20)),
-                            ]
-                        )
-                    except ValueError:
-                        pass
-
-                if kind == "arterial":
-                    mw = 0.65
-                    mx, my = 0.5 * (x0 + x1), 0.5 * (y0 + y1)
-                    if not blocked_xy((mx, my)):
-                        try:
-                            bm_walk.faces.new(
-                                [
-                                    bm_walk.verts.new((x0 - nx * mw, y0 - ny * mw, 0.26)),
-                                    bm_walk.verts.new((x1 - nx * mw, y1 - ny * mw, 0.26)),
-                                    bm_walk.verts.new((x1 + nx * mw, y1 + ny * mw, 0.26)),
-                                    bm_walk.verts.new((x0 + nx * mw, y0 + ny * mw, 0.26)),
-                                ]
-                            )
-                        except ValueError:
-                            pass
-
-    for obj_name, bm, mat in (
-        (f"urban-street-{zone}-roads", bm_road, mat_road),
-        (f"urban-street-{zone}-sidewalks", bm_walk, mat_sidewalk),
-        (f"urban-street-{zone}-promenades", bm_prom, mat_promenade),
-    ):
-        if len(bm.faces) == 0:
-            bm.free()
-            continue
-        bmesh.ops.triangulate(bm, faces=bm.faces[:])
-        mesh = bpy.data.meshes.new(obj_name)
-        bm.to_mesh(mesh)
-        bm.free()
-        mesh.materials.append(mat)
-        obj = bpy.data.objects.new(obj_name, mesh)
-        bpy.context.collection.objects.link(obj)
-        obj["kind"] = "street"
-
-
-def build_props(
-    zone: str,
-    props: dict,
-    mat_portal: bpy.types.Material,
-    mat_portal_dark: bpy.types.Material,
-    mat_pole: bpy.types.Material,
-    mat_glow: bpy.types.Material,
-    mat_trunk: bpy.types.Material,
-    mat_frond: bpy.types.Material,
-) -> None:
-    # 1. Parking portals (`omar`, `quba`, `qurban`)
-    portals = props.get("parkingPortals", [])
-    if portals:
-        bm_portal = bmesh.new()
-        for p in portals:
-            cx, cy = to_blender_xy(p["lng"], p["lat"])
-            yaw = float(p.get("headingRad", 0.0))
-            add_box(bm_portal, None, (-2.8, -4.6, 0.0), (2.8, -3.5, 4.4), yaw, (cx, cy), mat_idx=0)
-            add_box(bm_portal, None, (-2.8, 3.5, 0.0), (2.8, 4.6, 4.4), yaw, (cx, cy), mat_idx=0)
-            add_box(bm_portal, None, (-3.0, -4.8, 4.2), (3.0, 4.8, 5.2), yaw, (cx, cy), mat_idx=0)
-            add_box(bm_portal, None, (-2.6, -3.5, 0.05), (2.6, 3.5, 4.2), yaw, (cx, cy), mat_idx=1)
-
-        bmesh.ops.triangulate(bm_portal, faces=bm_portal.faces[:])
-        m_portal = bpy.data.meshes.new(f"urban-prop-{zone}-parking-portals")
-        bm_portal.to_mesh(m_portal)
-        bm_portal.free()
-        m_portal.materials.append(mat_portal)
-        m_portal.materials.append(mat_portal_dark)
-        o_portal = bpy.data.objects.new(f"urban-prop-{zone}-parking-portals", m_portal)
-        bpy.context.collection.objects.link(o_portal)
-        o_portal["kind"] = "prop"
-
-    # 2. Streetlamps (lean 3-sided bronze shafts + crossarm blades, plus compact glow pyramids & ground pools)
-    bm_pole = bmesh.new()
-    bm_glow = bmesh.new()
-    uv_glow = bm_glow.loops.layers.uv.new("UVMap")
-
-    for lmp in props.get("streetLamps", []):
-        cx, cy = to_blender_xy(lmp["lng"], lmp["lat"])
-        perp = float(lmp.get("angleRad", lmp.get("rotRad", 0.0))) + math.pi * 0.5
-        ca, sa = math.cos(perp), math.sin(perp)
-
-        # 3-sided tapered shaft sharing smooth vertices -> only 6 verts per pole!
-        r_bot, r_top, h_pole = 0.14, 0.07, 7.5
-        b_v = []
-        t_v = []
-        for k in range(3):
-            a = perp + (2.0 * math.pi * k) / 3.0
-            b_v.append(bm_pole.verts.new((cx + math.cos(a) * r_bot, cy + math.sin(a) * r_bot, 0.18)))
-            t_v.append(bm_pole.verts.new((cx + math.cos(a) * r_top, cy + math.sin(a) * r_top, h_pole)))
-        for k in range(3):
-            kn = (k + 1) % 3
-            bm_pole.faces.new((b_v[k], b_v[kn], t_v[kn], t_v[k]))
-        # Single slim crossarm blade (CULL_FACE is off in Urban3DLayer)
-        px, py = -sa * 0.06, ca * 0.06
-        arm_l = 1.05
-        v0 = bm_pole.verts.new((cx - ca * arm_l - px, cy - sa * arm_l - py, 7.36))
-        v1 = bm_pole.verts.new((cx + ca * arm_l - px, cy + sa * arm_l - py, 7.36))
-        v2 = bm_pole.verts.new((cx + ca * arm_l + px, cy + sa * arm_l + py, 7.36))
-        v3 = bm_pole.verts.new((cx - ca * arm_l + px, cy - sa * arm_l + py, 7.36))
-        bm_pole.faces.new((v0, v1, v2, v3))
-
-        # Twin compact glowing lantern heads (2 crossed glow quads = 8 verts per lamp) + radial pool
-        for sgn in (-1.0, 1.0):
-            hx, hy = cx + ca * sgn * 1.0, cy + sa * sgn * 1.0
-            r_l = 0.22
-            for dx_l, dy_l in ((r_l, 0.0), (0.0, r_l)):
-                add_uv_quad(
-                    bm_glow,
-                    uv_glow,
-                    (
-                        (hx - dx_l, hy - dy_l, 7.05),
-                        (hx + dx_l, hy + dy_l, 7.05),
-                        (hx + dx_l, hy + dy_l, 7.30),
-                        (hx - dx_l, hy - dy_l, 7.30),
-                    ),
-                    ((0.5, 0.5), (0.5, 0.5), (0.5, 0.5), (0.5, 0.5)),
-                )
-
-        pool_r = 2.3
-        add_uv_quad(
-            bm_glow,
-            uv_glow,
-            (
-                (cx - pool_r, cy - pool_r, 0.10),
-                (cx + pool_r, cy - pool_r, 0.10),
-                (cx + pool_r, cy + pool_r, 0.10),
-                (cx - pool_r, cy + pool_r, 0.10),
-            ),
-            ((0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)),
-        )
-
-    bmesh.ops.triangulate(bm_pole, faces=bm_pole.faces[:])
-    m_pole = bpy.data.meshes.new(f"urban-prop-{zone}-streetlamps")
-    bm_pole.to_mesh(m_pole)
-    bm_pole.free()
-    m_pole.materials.append(mat_pole)
-    o_pole = bpy.data.objects.new(f"urban-prop-{zone}-streetlamps", m_pole)
-    bpy.context.collection.objects.link(o_pole)
-    o_pole["kind"] = "prop"
-
-    bmesh.ops.triangulate(bm_glow, faces=bm_glow.faces[:])
-    m_glow = bpy.data.meshes.new(f"urban-prop-{zone}-lamp-glow")
-    bm_glow.to_mesh(m_glow)
-    bm_glow.free()
-    m_glow.materials.append(mat_glow)
-    o_glow = bpy.data.objects.new(f"urban-prop-{zone}-lamp-glow", m_glow)
-    bpy.context.collection.objects.link(o_glow)
-    o_glow["kind"] = "lamp_glow"
-
-    # 3. Madinah Date Palms (3-sided tapered trunks + 4 arched frond blades)
-    bm_palm = bmesh.new()
-    for pm in props.get("palms", []):
-        cx, cy = to_blender_xy(pm["lng"], pm["lat"])
-        sc = float(pm.get("scale", 1.0))
-        rot0 = float(pm.get("rotRad", 0.0))
-        th = 6.5 * sc
-        rb, rt = 0.24 * sc, 0.15 * sc
-
-        b_v = []
-        t_v = []
-        for k in range(3):
-            a = rot0 + (2.0 * math.pi * k) / 3.0
-            ca, sa = math.cos(a), math.sin(a)
-            b_v.append(bm_palm.verts.new((cx + rb * ca, cy + rb * sa, 0.18)))
-            t_v.append(bm_palm.verts.new((cx + rt * ca, cy + rt * sa, th)))
-        for k in range(3):
-            kn = (k + 1) % 3
-            f = bm_palm.faces.new((b_v[k], b_v[kn], t_v[kn], t_v[k]))
-            f.material_index = 0
-
-        v_root = bm_palm.verts.new((cx, cy, th))
-        for k in range(4):
-            fa = rot0 + (2.0 * math.pi * k) / 4.0
-            cf, sf = math.cos(fa), math.sin(fa)
-            px, py = -sf, cf
-            l1, l2 = 1.45 * sc, 2.75 * sc
-            z_apex = th + 0.72 * sc
-            z_tip = th - 0.55 * sc
-            w_mid = 0.50 * sc
-
-            v_l = bm_palm.verts.new((cx + cf * l1 + px * w_mid, cy + sf * l1 + py * w_mid, z_apex))
-            v_r = bm_palm.verts.new((cx + cf * l1 - px * w_mid, cy + sf * l1 - py * w_mid, z_apex))
-            v_tip = bm_palm.verts.new((cx + cf * l2, cy + sf * l2, z_tip))
-
-            for tri in ((v_root, v_l, v_r), (v_l, v_tip, v_r)):
-                try:
-                    f = bm_palm.faces.new(tri)
-                    f.material_index = 1
-                except ValueError:
-                    pass
-
-    bmesh.ops.triangulate(bm_palm, faces=bm_palm.faces[:])
-    m_palm = bpy.data.meshes.new(f"urban-prop-{zone}-palms")
-    bm_palm.to_mesh(m_palm)
-    bm_palm.free()
-    m_palm.materials.append(mat_trunk)
-    m_palm.materials.append(mat_frond)
-    o_palm = bpy.data.objects.new(f"urban-prop-{zone}-palms", m_palm)
-    bpy.context.collection.objects.link(o_palm)
-    o_palm["kind"] = "prop"
-
-
-def make_solid_material(name: str, rgba: tuple[float, float, float, float], roughness: float) -> bpy.types.Material:
-    mat = bpy.data.materials.new(name=name)
-    mat.use_nodes = True
-    bsdf = mat.node_tree.nodes.get("Principled BSDF")
-    if bsdf:
-        bsdf.inputs["Base Color"].default_value = rgba
-        bsdf.inputs["Roughness"].default_value = roughness
-    return mat
-
-
 def make_facade_material() -> bpy.types.Material:
     mat = bpy.data.materials.new(name="UrbanFacadeMat")
     mat.use_nodes = True
@@ -860,57 +585,20 @@ def patch_and_verify_glb(
         raise RuntimeError(f"GLB gzip size {gz} B exceeds {MAX_GZIP_BYTES} B budget")
 
 
-def build_zone(zone: str, data: dict, fence: dict) -> None:
+def build_zone(zone: str, data: dict) -> None:
     bpy.ops.wm.read_factory_settings(use_empty=True)
 
     mat_facade = make_facade_material()
-    mat_road = make_solid_material("UrbanRoadMat", (0.17, 0.19, 0.22, 1.0), 0.90)
-    mat_sidewalk = make_solid_material("UrbanSidewalkMat", (0.74, 0.69, 0.60, 1.0), 0.85)
-    mat_promenade = make_solid_material("UrbanPromenadeMat", (0.79, 0.73, 0.62, 1.0), 0.85)
-    mat_portal = make_solid_material("UrbanPortalMat", (0.58, 0.55, 0.50, 1.0), 0.75)
-    mat_portal_dark = make_solid_material("UrbanPortalDarkMat", (0.08, 0.09, 0.11, 1.0), 0.92)
-    mat_pole = make_solid_material("UrbanLampPoleMat", (0.26, 0.22, 0.17, 1.0), 0.55)
-    mat_glow = make_solid_material("UrbanLampGlowMat", (1.0, 0.84, 0.52, 1.0), 0.30)
-    mat_trunk = make_solid_material("UrbanPalmTrunkMat", (0.42, 0.31, 0.21, 1.0), 0.90)
-    mat_frond = make_solid_material("UrbanPalmFrondMat", (0.22, 0.36, 0.15, 1.0), 0.75)
 
     zone_buildings = [b for b in data["buildings"] if b.get("zone") == zone]
     footprinted = [b for b in zone_buildings if b.get("hasFootprint") and len(b.get("polygon", [])) >= 4]
     if not footprinted:
         raise RuntimeError(f"No footprinted buildings found for zone {zone!r}")
 
-    building_polys: list[list[tuple[float, float]]] = []
     for b in footprinted:
         if b.get("heightSource") not in ("osm_levels", "estimated_display_only", "owner_verified") or b["heightM"] < 10.0:
             raise RuntimeError(f"Invalid height provenance for {b['buildingId']}: {b['heightSource']} / {b['heightM']}")
-        building_polys.append(clean_polygon(b["polygon"]))
         build_hotel_mesh(b, mat_facade)
-    # Sidewalks also stop at the Stage 7 context buildings (drawn by their own GLB).
-    building_polys += [clean_polygon(c["polygon"]) for c in data.get("contextBuildings") or []]
-
-    haram_poly = [to_blender_xy(lng, lat) for run in fence["runs"] for (lng, lat) in run["path"]]
-    zone_corridors = [c for c in data["streetCorridors"] if c.get("zone", "south") == zone]
-    build_streets_and_sidewalks(
-        zone,
-        zone_corridors,
-        building_polys,
-        haram_poly,
-        mat_road,
-        mat_sidewalk,
-        mat_promenade,
-    )
-    props_by_zone = data.get("urbanPropsByZone") or {}
-    zone_props = props_by_zone.get(zone, data.get("urbanProps", {}) if zone == "south" else {})
-    build_props(
-        zone,
-        zone_props,
-        mat_portal,
-        mat_portal_dark,
-        mat_pole,
-        mat_glow,
-        mat_trunk,
-        mat_frond,
-    )
 
     output_glb = ROOT / "public" / "models" / f"urban-{zone}-stage6.glb"
     output_glb.parent.mkdir(parents=True, exist_ok=True)
@@ -1000,7 +688,6 @@ def main() -> None:
     args = parser.parse_args(argv)
 
     data = json.loads(INPUT_JSON.read_text("utf-8"))
-    fence = json.loads(FENCE_JSON.read_text("utf-8"))
     if data.get("tier") != "verified" or data.get("approvedBy") != "owner" or data.get("schema") != "haram-urban-approved-v2":
         raise RuntimeError("Refusing build: data/urban-approved.json failed A7/v2 approval check")
 
@@ -1009,7 +696,7 @@ def main() -> None:
         if zone == "context":
             build_context(data)
         else:
-            build_zone(zone, data, fence)
+            build_zone(zone, data)
 
 
 if __name__ == "__main__":
