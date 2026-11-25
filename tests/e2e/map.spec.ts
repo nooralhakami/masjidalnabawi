@@ -244,13 +244,9 @@ test.describe('map buttons', () => {
     expect(urbanRequests.filter((f) => f.endsWith('.glb'))).toEqual(['urban-north-stage6.glb']);
     await page.locator('.cat-row .cat-btn').nth(6).click();
     await expect.poll(() => page.evaluate(() => (window as any).__engine.urban?.getDisplayMode())).toEqual({ kind: 'all', selectedPoiId: null });
-    await expect.poll(() => urbanRequests.filter((f) => f.endsWith('.glb')).sort()).toEqual([
-      'urban-context-stage7.glb',
-      'urban-north-stage6.glb',
-      'urban-south-stage6.glb',
-      'urban-sw-stage6.glb',
-      'urban-west-stage6.glb',
-    ]);
+    await expect
+      .poll(() => urbanRequests.filter((f) => f.endsWith('.glb')).sort())
+      .toEqual(['urban-context-stage7.glb', 'urban-north-stage6.glb', 'urban-south-stage6.glb', 'urban-sw-stage6.glb', 'urban-west-stage6.glb']);
   });
 
   test('a tap on a marker picks that place', async ({ page, errors: _ }) => {

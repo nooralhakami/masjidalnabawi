@@ -777,10 +777,7 @@ export class MapEngine {
   private syncUrban3D(): void {
     const m = this.map;
     if (m.getLayer('saqifah-and-surroundings-3d')) {
-      m.setFilter(
-        'saqifah-and-surroundings-3d',
-        this.view.filter === 'hotels' ? null : (['==', ['get', 'kind'], 'heritage'] as FilterSpecification),
-      );
+      m.setFilter('saqifah-and-surroundings-3d', this.view.filter === 'hotels' ? null : (['==', ['get', 'kind'], 'heritage'] as FilterSpecification));
     }
     if (!this.mode3d) return;
     const mode = resolveUrban3DMode(this.view.filter, this.selected);

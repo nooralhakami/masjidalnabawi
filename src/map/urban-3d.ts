@@ -559,8 +559,7 @@ export class Urban3DLayer implements CustomLayerInterface {
     if (!this.map) return;
     const gen = this.generation;
     if (this.displayMode.kind === 'none') return;
-    const targets: readonly UrbanZoneId[] =
-      this.displayMode.kind === 'single' ? [this.displayMode.zone] : URBAN_ZONES.map((z) => z.id);
+    const targets: readonly UrbanZoneId[] = this.displayMode.kind === 'single' ? [this.displayMode.zone] : URBAN_ZONES.map((z) => z.id);
     for (const zone of targets) {
       if (this.requestedZones.has(zone)) continue;
       this.requestedZones.add(zone);
