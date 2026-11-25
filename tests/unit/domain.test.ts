@@ -20,16 +20,29 @@ beforeEach(() => {
 const shown = (filter: FilterId, toiletSub: 'all' | 'open' | 'closed' = 'all') => POIS.filter((p) => passesFilter(p, { filter, toiletSub, searching: false }, fac));
 
 describe('filters', () => {
-  it('"all" shows everything except parking and the hidden places (wheelchair zones, unapproved hotels, restaurants)', () => {
+  it('"all" shows everything except parking, hotels, and the hidden places (wheelchair zones, unapproved hotels, restaurants)', () => {
     const all = shown('all');
-    // 534 places (including 401–420 west expansion gates 1401–1420 and Stage 6 South+West+North+SW hotels),
-    // less 13 car parks, 8 wheelchair zones, 4 unapproved hotels (228 Stage 6 South+West+North+SW hotels visible), and 44 restaurants.
-    expect(all).toHaveLength(534 - 13 - 8 - 4 - 44);
+    // 534 places, less 13 car parks, 232 hotels (228 approved shown under "hotels" pill only + 4 unapproved hidden), 8 wheelchair zones, and 44 restaurants.
+    expect(all).toHaveLength(534 - 13 - 232 - 8 - 44);
     expect(all.some((p) => p.category === 'parking')).toBe(false);
+    expect(all.some((p) => p.category === 'hotels')).toBe(false);
     expect(all.some((p) => p.category === 'food')).toBe(false);
-    const visibleHotelIds = all.filter((p) => p.category === 'hotels').map((p) => p.id);
-    expect(visibleHotelIds).toHaveLength(228);
-    expect(visibleHotelIds).toEqual(expect.arrayContaining([701, 705, 711, 716, 732, 734, 735, 738, 741, 743]));
+  });
+
+  it('hotels appear only with the hotels pill or while searching in the dropdown (owner, 2026-11-25)', () => {
+    for (const f of ['all', 'gates', 'toilets', 'landmarks', 'women', 'parking'] as FilterId[]) {
+      expect(
+        shown(f).some((p) => p.category === 'hotels'),
+        f,
+      ).toBe(false);
+    }
+    const hotels = shown('hotels');
+    expect(hotels).toHaveLength(228);
+    expect(hotels.every((p) => p.category === 'hotels')).toBe(true);
+    expect(hotels.map((p) => p.id)).toEqual(expect.arrayContaining([701, 705, 711, 716, 732, 734, 735, 738, 741, 743]));
+    expect(passesFilter(P(701), { filter: 'all', toiletSub: 'all', searching: true }, fac)).toBe(true);
+    // Unapproved hotels stay hidden even while searching.
+    expect(passesFilter(P(717), { filter: 'all', toiletSub: 'all', searching: true }, fac)).toBe(false);
   });
 
   it('parking appears only with its pill or while searching', () => {

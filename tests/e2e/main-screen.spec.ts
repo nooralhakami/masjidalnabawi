@@ -28,7 +28,7 @@ test.describe('filters', () => {
   // The live app's counts (tests/e2e/app.spec.ts there), in the order of the pills. Hotels (43) and
   // restaurants (44) are hidden with their pills until the owner adds them again (2026-11-04).
   const EXPECTED: [string, number][] = [
-    ['all', 465],
+    ['all', 237],
     ['gates', 132],
     ['women', 35],
     ['toilets', 40],
@@ -57,9 +57,16 @@ test.describe('filters', () => {
     await openMap(page);
     const parks = () =>
       page.evaluate(() => (window as unknown as Win).__engine.view.ids.filter((id: number) => (window as unknown as Win).__engine.poi(id).category === 'parking').length);
+    const hotelsOnMap = () =>
+      page.evaluate(() => (window as unknown as Win).__engine.view.ids.filter((id: number) => (window as unknown as Win).__engine.poi(id).category === 'hotels').length);
     expect(await parks()).toBe(0);
+    expect(await hotelsOnMap()).toBe(0);
     await pill(page, 5).click();
     await expect.poll(parks).toBe(13);
+    expect(await hotelsOnMap()).toBe(0);
+    // Hotel pins only appear on the map when tapping the «hotels» pill (owner, 2026-11-25).
+    await pill(page, 6).click();
+    await expect.poll(hotelsOnMap).toBe(228);
 
     await pill(page, 3).click();
     await expect(page.locator('.seg')).toHaveCount(3);

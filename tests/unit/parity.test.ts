@@ -101,9 +101,10 @@ describe('parity: places and category counts (SPEC F1)', () => {
     const fac = new Facilities();
     const counts = Object.fromEntries(FILTERS.map(({ id }) => [id, visiblePois(id, 'all', '', fac, undefined, id === 'parking' ? 'all' : undefined).length]));
     // Owner, 2026-11-04 (docs/DECISIONS.md): unapproved hotels and restaurants hidden until verified;
-    // 2026-11-21: Stage 6 Zones 1–4 reveal 228 owner-approved South+West+North+SW hotels (57 South + 39 West + 61 North + 71 SW).
-    expect(counts).toEqual({ all: 465, gates: 132, women: 35, toilets: 40, hotels: 228, food: 0, shopping: 15, landmarks: 39, historic: 17, parking: 13, emergency: 9 });
-    expect(counts.all + counts.parking).toBe(478);
+    // 2026-11-21: Stage 6 Zones 1–4 reveal 228 owner-approved South+West+North+SW hotels;
+    // 2026-11-25: hotels excluded from "all" so hotel pins only appear when tapping the "hotels" pill.
+    expect(counts).toEqual({ all: 237, gates: 132, women: 35, toilets: 40, hotels: 228, food: 0, shopping: 15, landmarks: 39, historic: 17, parking: 13, emergency: 9 });
+    expect(counts.all + counts.hotels + counts.parking).toBe(478);
   });
 });
 
