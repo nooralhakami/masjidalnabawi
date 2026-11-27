@@ -718,21 +718,24 @@ def main() -> None:
         context.append({"_xy": poly, "_osm": o})
 
     plaza_xy = [[to_xy(lng, lat) for lng, lat in pz] for pz in OPEN_PLAZAS]
+    excluded_ms_xy = [to_xy(lng, lat) for lng, lat in EXCLUDED_MS_POINTS]
     gap_added = 0
     for r in ms_rings:
         poly = simplify_ring([(x + sx, y + sy) for x, y in r])
         c, a = centroid_xy(poly), abs(poly_area(poly))
-        if a < 200 or not point_in_poly(c, zone_xy) or any(point_in_poly(pt, fence_poly) for pt in poly):
+        if a < MIN_MS_TOWER_AREA_M2 or a > MAX_MS_TOWER_AREA_M2 or not point_in_poly(c, zone_xy) or any(point_in_poly(pt, fence_poly) for pt in poly):
             continue
         x0, y0, x1, y1 = bbox(poly)
         if any(x0 < p[0] < x1 and y0 < p[1] < y1 and point_in_poly(p, poly) for p in road_pts):
             continue
         if covered_share(poly, [o["ring"] for o in osm] + list(hotel_polys.values()) + [k["_xy"] for k in context]) > 0.12:
             continue
-        # Open plazas carry canopies, kiosks and paving patterns that MS mistakes for roofs.
+        # Open plazas, low-rise bazaar stalls, and visually audited 1-story pavilions carry roofs that MS mistakes for towers.
         if any(point_in_poly(c, pz) for pz in plaza_xy):
             continue
-        context.append({"_xy": poly, "_osm": {"osm": None, "tags": {}, "ms": f"ms{round(c[0])}_{round(c[1])}"}})
+        if any(math.hypot(c[0] - ex[0], c[1] - ex[1]) < 18.0 for ex in excluded_ms_xy):
+            continue
+        context.append({"_xy": poly, "_osm": {"osm": None, "tags": {}, "holes": [], "ms": f"ms{round(c[0])}_{round(c[1])}"}})
         gap_added += 1
     print(f"gap towers from shifted MS footprints: {gap_added}")
 
@@ -810,6 +813,7 @@ def main() -> None:
         if pid not in resolved:
             stats["pin_only"] += 1
             b.update({"hasFootprint": False, "footprintSplit": "none", "polygon": [], "areaM2": 0.0})
+            b.pop("holes", None)
             b.update({"levels": None, "displayFloors": None, "heightM": 0.0, "heightSource": "none", "confidence": "none"})
             ent = pin if clear_of_buildings(pin, 0.25) else entrance_for([(pin[0] - 1, pin[1] - 1), (pin[0] + 1, pin[1] - 1), (pin[0] + 1, pin[1] + 1), (pin[0] - 1, pin[1] + 1)], pin)[0]
             b["center"] = latlng(pin)
@@ -822,8 +826,17 @@ def main() -> None:
         b["hasFootprint"] = True
         b["footprintSplit"] = split
         b["polygon"] = ring_lnglat(poly)
-        b["areaM2"] = round(abs(poly_area(poly)), 1)
-        b["center"] = latlng(centroid_xy(poly))
+        b_holes = holes_inside(poly, o.get("holes") or [])
+        if b_holes:
+            b["holes"] = [ring_lnglat(h) for h in b_holes]
+        else:
+            b.pop("holes", None)
+        net_area = abs(poly_area(poly)) - sum(abs(poly_area(h)) for h in b_holes)
+        b["areaM2"] = round(max(1.0, net_area), 1)
+        cen = centroid_xy(poly)
+        if not point_in_poly(cen, poly) or any(point_in_poly(cen, h) for h in b_holes):
+            cen = interior_point(poly, b_holes)
+        b["center"] = latlng(cen)
         if o.get("osm"):
             b["osm"] = o["osm"]
         ent, side = entrance_for(poly, pin, to_xy(b["entrance"][1], b["entrance"][0]) if b.get("entrance") else None)
@@ -843,30 +856,38 @@ def main() -> None:
             b["styleId"] = int(seeded_unit(str(pid), 2) * 3.0) % 3
             b["tint"] = round((seeded_unit(str(pid), 4) - 0.5) * 0.11, 4)
         if poi is not None:
-            mark = interior_point(poly)
+            mark = interior_point(poly, b_holes)
             mlng, mlat = from_xy(*mark)
             poi["lat"], poi["lng"] = round(mlat, 7), round(mlng, 7)
             if o.get("osm"):
                 poi["osm"] = o["osm"]
-    print("hotels:", dict(stats))
+    print("hotels:", dict(stats), f"with holes: {sum(1 for b in hotels if b.get('holes'))}")
 
     # --- 5. Context buildings records ---------------------------------------------------------
     hotel_centres = [(to_xy(b["center"][1], b["center"][0]), b["zone"]) for b in hotels]
     ctx_out: list[dict] = []
     for c in sorted(context, key=lambda c: c["_osm"]["osm"] or c["_osm"]["ms"]):
         o, poly = c["_osm"], c["_xy"]
+        c_holes = holes_inside(poly, o.get("holes") or [])
         cen = centroid_xy(poly)
+        if not point_in_poly(cen, poly) or any(point_in_poly(cen, h) for h in c_holes):
+            cen = interior_point(poly, c_holes)
         zone = min(hotel_centres, key=lambda hc: math.hypot(hc[0][0] - cen[0], hc[0][1] - cen[1]))[1]
-        area = abs(poly_area(poly))
-        lv = osm_levels(o["tags"])
+        area = max(1.0, abs(poly_area(poly)) - sum(abs(poly_area(h)) for h in c_holes))
+        tags = o["tags"]
+        lv = osm_levels(tags)
         key = o["osm"] or o["ms"]
         if lv is not None:
             floors, src, conf = max(3, min(18, lv)), "osm_levels", "osm"
         else:
             r = seeded_unit(key, 1)
             floors = (5 + int(r * 3.0)) if area < 450 else (10 + int(r * 3.0)) if area < 1000 else (11 + int(r * 3.0))
-            if LOW_RISE_NAME.search(o["tags"].get("name", "")):
+            if LOW_RISE_NAME.search(tags.get("name", "")) or tags.get("shop") == "mall":
                 floors = 3
+            elif tags.get("office") == "government":
+                floors = 4
+            elif tags.get("building") == "hospital":
+                floors = 6
             src, conf = "estimated_display_only", "display_only"
         rec = {
             "buildingId": f"C{key}",
@@ -886,11 +907,13 @@ def main() -> None:
             "tint": round((seeded_unit(key, 4) - 0.5) * 0.11, 4),
             "polygon": ring_lnglat(poly),
         }
-        name = o["tags"].get("name:ar") or o["tags"].get("name")
+        if c_holes:
+            rec["holes"] = [ring_lnglat(h) for h in c_holes]
+        name = tags.get("name:ar") or tags.get("name")
         if name:
             rec["name"] = name
         ctx_out.append(rec)
-    print(f"context buildings: {len(ctx_out)} ({sum(1 for c in ctx_out if 'name' in c)} named)")
+    print(f"context buildings: {len(ctx_out)} ({sum(1 for c in ctx_out if 'name' in c)} named, {sum(1 for c in ctx_out if c.get('holes'))} with holes)")
 
     # --- 6. Props now covered by a footprint are dropped --------------------------------------
     dropped = 0
