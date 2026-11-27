@@ -1,6 +1,6 @@
 import { useComputed, useSignal } from '@preact/signals';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { ALL_POI_BY_ID, INTERIOR_BY_ID, POI_BY_ID, RULES } from '../data';
+import { poi, POI_BY_ID, RULES } from '../data';
 import type { Poi } from '../data/types';
 import type { Facilities } from '../domain/facilities';
 import { FILTERS, type FilterId, type ParkingSub, type ToiletSub } from '../domain/filters';
@@ -249,12 +249,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
 
   useEffect(() => {
     const onPick = (id: number | null) => {
-      const p =
-        id !== null
-          ? interiorView.value
-            ? (INTERIOR_BY_ID.get(id) ?? POI_BY_ID.get(id))
-            : (POI_BY_ID.get(id) ?? INTERIOR_BY_ID.get(id))
-          : undefined;
+      const p = id !== null ? poi(id, interiorView.value) : undefined;
       // On a route, a tap on a gate or a restroom block says its name for two seconds and does not open its card (owner, 2026-10-25).
       if (p && trip.active && isTapName(p)) trip.nameTapped(p.id);
       else if (p) {
@@ -316,7 +311,7 @@ export function App({ engine, fac, initial, trip, initialVisit, initialLib, admi
     }
   };
 
-  const place = selected.value !== null ? ALL_POI_BY_ID.get(selected.value) : undefined;
+  const place = selected.value !== null ? poi(selected.value, interiorView.value) : undefined;
   // Anything else on screen ends the hints: they are about the bare map.
   const hintsOn =
     hints &&

@@ -7,7 +7,7 @@ import { render } from 'preact';
 import { useState } from 'preact/hooks';
 import '../styles/fonts';
 import '../styles/main.css';
-import { ALL_POI_BY_ID, INTERIOR_BY_ID, POI_BY_ID } from '../data';
+import { poi as resolvePoi, POI_BY_ID } from '../data';
 import { Facilities } from '../domain/facilities';
 import { isHidden } from '../domain/filters';
 import { visiblePois } from '../domain/visible';
@@ -203,11 +203,7 @@ async function main() {
   // card opens it once mounted: an event sent before then would be lost.
   const params = new URLSearchParams(location.search);
   const linked = Number(params.get('poi'));
-  const shared = Number.isInteger(linked)
-    ? params.get('interior') === '1'
-      ? (INTERIOR_BY_ID.get(linked) ?? POI_BY_ID.get(linked))
-      : (POI_BY_ID.get(linked) ?? INTERIOR_BY_ID.get(linked))
-    : undefined;
+  const shared = Number.isInteger(linked) ? resolvePoi(linked, params.get('interior') === '1') : undefined;
   let initial = shared && !isHidden(shared) ? shared : undefined;
   // A shared story (?visit=543) or library entry (?lib=umar); ?admin=1 shows the status simulator.
   const visitAt = VISIT_LIST.findIndex((v) => v.poi.id === Number(params.get('visit')));

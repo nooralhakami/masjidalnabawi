@@ -12,7 +12,7 @@ import {
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
-import { ALL_POI_BY_ID, POI_BY_ID, POIS, RULES } from '../data';
+import { ALL_POI_BY_ID, INTERIOR_BY_ID, POI_BY_ID, POIS, RULES } from '../data';
 import { alharamainPlaza } from '../data-next/alharamain-3d';
 import { buildInterCarpetAisles, rugLayout } from './rug-layout';
 import { sunPosition } from '../domain/daylight';
@@ -764,7 +764,7 @@ export class MapEngine {
   }
 
   poi(id: number): Poi | undefined {
-    return ALL_POI_BY_ID.get(id);
+    return this.interiorMode ? (INTERIOR_BY_ID.get(id) ?? POI_BY_ID.get(id)) : (POI_BY_ID.get(id) ?? INTERIOR_BY_ID.get(id));
   }
 
   /**

@@ -32,6 +32,6 @@ export const I18N = i18nJson as I18n;
 /** Must-visit sites in order of importance (ids of data/pois.json). */
 export const VISITS = visitsJson as { sites: VisitSite[] };
 
-export function poi(id: number): Poi | undefined {
-  return ALL_POI_BY_ID.get(id);
+export function poi(id: number, interiorFirst = false): Poi | undefined {
+  return interiorFirst ? (INTERIOR_BY_ID.get(id) ?? POI_BY_ID.get(id)) : (POI_BY_ID.get(id) ?? INTERIOR_BY_ID.get(id));
 }
