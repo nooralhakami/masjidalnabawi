@@ -237,6 +237,7 @@ test.describe('map buttons', () => {
     await expect.poll(() => page.evaluate(() => (window as any).__engine.urban?.getDisplayMode())).toEqual({ kind: 'single', poiId: 2104, zone: 'north' });
     expect(urbanRequests.filter((f) => f.endsWith('.glb'))).toEqual(['urban-north-stage6.glb']);
     await page.locator('.sheet').getByRole('button', { name: 'إغلاق' }).click();
+    await expect(page.locator('.sheet')).toBeHidden();
     await expect.poll(() => page.evaluate(() => (window as any).__engine.urban?.getDisplayMode())).toEqual({ kind: 'none' });
 
     // Searching a hotel by name does not flood the map with hotel pins; picking it loads only its single zone GLB.
@@ -252,6 +253,7 @@ test.describe('map buttons', () => {
 
     // Closing the card hides the single hotel without fetching other zones; tapping «hotels» loads all zones.
     await page.locator('.sheet').getByRole('button', { name: 'إغلاق' }).click();
+    await expect(page.locator('.sheet')).toBeHidden();
     await expect.poll(() => page.evaluate(() => (window as any).__engine.urban?.getDisplayMode())).toEqual({ kind: 'none' });
     expect(urbanRequests.filter((f) => f.endsWith('.glb'))).toEqual(['urban-north-stage6.glb']);
     await page.locator('.cat-row .cat-btn').nth(6).click();
