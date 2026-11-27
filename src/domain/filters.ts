@@ -56,6 +56,8 @@ export function passesFilter(p: Poi, s: FilterState, fac: Facilities): boolean {
   const f = s.filter;
   // Parking only ever shows with its own pill or while searching.
   if (p.category === 'parking') return (f === 'parking' && ((s.parkingSub ?? 'all') === 'all' || parkingAccess(p) === (s.parkingSub ?? 'all'))) || s.searching;
+  // Hotels only ever show with their own pill or while searching in the dropdown (owner, 2026-11-25).
+  if (p.category === 'hotels') return f === 'hotels' || s.searching;
   switch (f) {
     case 'all':
       return true;

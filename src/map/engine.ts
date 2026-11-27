@@ -4,6 +4,7 @@ import {
   ScaleControl,
   setWorkerUrl,
   type ExpressionSpecification,
+  type FilterSpecification,
   type GeoJSONSource,
   type RasterSourceSpecification,
   type SkySpecification,
@@ -17,6 +18,7 @@ import { buildInterCarpetAisles, rugLayout } from './rug-layout';
 import { sunPosition } from '../domain/daylight';
 import type { Poi, Status } from '../data/types';
 import { isHidden } from '../domain/filters';
+import { resolveUrban3DMode } from '../domain/urban-approval';
 import { getMosqueDoors, isBayOpen, toggleGateBay, toggleGateDoor, type DoorToggleResult } from '../domain/mosque-doors';
 import { interiorReveal, type InteriorReveal } from '../domain/interior-reveal';
 import { guardMosqueCameraEntry, isInsideMosqueWall } from '../domain/mosque-entry';
@@ -143,6 +145,7 @@ export class MapEngine {
   private models: HaramGlbLayer | null = null;
   private urban: Urban3DLayer | null = null;
   private urbanToken = 0;
+  private urbanLoading = false;
   private crowd: CrowdLayer | null = null;
   private rugs: RugLayer | null = null;
   private terrain: TerrainLayer | null = null;
@@ -472,6 +475,7 @@ export class MapEngine {
             type: 'fill-extrusion',
             source: 'saqifah-3d',
             minzoom: 14.5,
+            ...(this.view.filter === 'hotels' ? {} : { filter: ['==', ['get', 'kind'], 'heritage'] as FilterSpecification }),
             paint: {
               'fill-extrusion-color': ['get', 'color'],
               'fill-extrusion-base': ['get', 'base'],
@@ -616,17 +620,12 @@ export class MapEngine {
         this.rugs?.setInteriorRugs(interiorRugs(floor, columns));
         this.models?.setInteriorProps(interiorPropMatrices(interiorPropPlacements(columns, undefined, floor)));
       });
-      const urbanToken = ++this.urbanToken;
-      void import('./urban-3d').then(({ mountUrban3D }) => {
-        if (!this.mode3d || urbanToken !== this.urbanToken || this.map !== m) return;
-        const urbanBefore = m.getLayer('inner-dots') ? 'inner-dots' : undefined;
-        this.urban = mountUrban3D(m, this.currentLight(), urbanBefore);
-        this.urban.setSelectedPoiId(this.selected);
-      });
+      this.syncUrban3D();
     } else {
       if (this.lightTimer) clearInterval(this.lightTimer);
       this.lightTimer = null;
       this.urbanToken++;
+      this.urbanLoading = false;
       this.floorToken++;
       this.models = null;
       this.urban = null;
@@ -638,7 +637,6 @@ export class MapEngine {
       for (const id of [
         ...NEAR_IMAGERY.map(([near]) => near),
         'urban-south-3d',
-        'urban-south-streets-line',
         'alharamain-3d-models',
         'mosque-interior-3d',
         'navq-interior-labels',
@@ -769,11 +767,47 @@ export class MapEngine {
     return ALL_POI_BY_ID.get(id);
   }
 
+  /**
+   * Synchronize 3D hotel & context buildings with the active filter and chosen place (owner, 2026-11-25):
+   *   - Nothing is fetched or drawn in `'all'`, `'gates'`, `'toilets'`, etc.
+   *   - Tapping the `'hotels'` pill mounts the layer and loads all 5 urban GLBs.
+   *   - Selecting a hotel from search (or a shared link) mounts the layer and loads only that hotel's zone GLB,
+   *     drawing that single hotel tower alone in 3D.
+   */
+  private syncUrban3D(): void {
+    const m = this.map;
+    if (m.getLayer('saqifah-and-surroundings-3d')) {
+      m.setFilter('saqifah-and-surroundings-3d', this.view.filter === 'hotels' ? null : (['==', ['get', 'kind'], 'heritage'] as FilterSpecification));
+    }
+    if (!this.mode3d) return;
+    const mode = resolveUrban3DMode(this.view.filter, this.selected);
+    if (this.urban) {
+      this.urban.setDisplayMode(mode);
+      return;
+    }
+    if (mode.kind === 'none' || this.urbanLoading) return;
+    const urbanToken = ++this.urbanToken;
+    this.urbanLoading = true;
+    void import('./urban-3d')
+      .then(({ mountUrban3D }) => {
+        this.urbanLoading = false;
+        if (!this.mode3d || urbanToken !== this.urbanToken || this.map !== m) return;
+        const currentMode = resolveUrban3DMode(this.view.filter, this.selected);
+        const urbanBefore = m.getLayer('inner-dots') ? 'inner-dots' : undefined;
+        this.urban = mountUrban3D(m, this.currentLight(), urbanBefore, currentMode);
+      })
+      .catch(() => {
+        this.urbanLoading = false;
+      });
+  }
+
   /** Show these places (a filter, a search): layer filters only, the data stays as it is. */
   setView(v: PoiView): void {
     // A new filter (or the markers shown again) pops them in; a search or panning doesn't (the live app's layer.ts).
     const pop = v.filter !== this.view.filter || (this.view.hidden && !v.hidden);
+    const filterChanged = v.filter !== this.view.filter;
     this.view = v;
+    if (filterChanged) this.syncUrban3D();
     if (!this.map.getLayer('facilities')) return;
     this.applyView();
     if (pop && !v.hidden) this.pop();
@@ -802,7 +836,7 @@ export class MapEngine {
   select(id: number | null): void {
     const changed = id !== this.selected;
     this.selected = id;
-    this.urban?.setSelectedPoiId(id);
+    this.syncUrban3D();
     if (this.map.getLayer('facilities')) this.applyView();
     // A short gold ring on the newly chosen marker: «this one» (UI plan phase 3).
     const p = id !== null && changed ? this.poi(id) : undefined;
@@ -865,7 +899,6 @@ export class MapEngine {
       'alharamain-3d-ground',
       'saqifah-and-surroundings-3d',
       'urban-south-3d',
-      'urban-south-streets-line',
       'saqifah-2d',
       'interior-prayer-areas',
       'interior-corridors',
@@ -891,6 +924,7 @@ export class MapEngine {
       if (this.map.getLayer(id)) this.map.removeLayer(id);
     for (const id of this.map.listImages()) if (id.endsWith(`@${old}`) && !id.startsWith('rt')) this.map.removeImage(id);
     this.urban = null;
+    this.urbanLoading = false;
     this.urbanToken++;
     this.route.restyle();
     this.addLayers();

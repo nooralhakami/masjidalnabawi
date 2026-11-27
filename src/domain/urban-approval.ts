@@ -455,3 +455,28 @@ export function urbanOpacityForCamera(bearingDeg: number, pitchDeg: number, zone
   if (diff > 55) return 1;
   return diff <= 35 && pitchDeg >= 45 ? 0.28 : 0.32;
 }
+
+export type UrbanDisplayMode =
+  | { readonly kind: 'none' }
+  | { readonly kind: 'single'; readonly poiId: number; readonly zone: UrbanZone }
+  | { readonly kind: 'all'; readonly selectedPoiId: number | null };
+
+/**
+ * Decide what the 3D urban layer draws (owner, 2026-11-25):
+ *   - `'hotels'` filter active: all 226 hotel towers + 34 context buildings.
+ *   - Any other filter with a footprinted hotel selected (search pick, shared link, active route):
+ *     only that single chosen hotel tower in 3D, loading only its own zone GLB.
+ *   - Otherwise (`all`, `gates`, `toilets`, etc.): nothing loaded and nothing drawn.
+ */
+export function resolveUrban3DMode(filter: string, selectedPoiId: number | null): UrbanDisplayMode {
+  if (filter === 'hotels') {
+    return { kind: 'all', selectedPoiId };
+  }
+  if (selectedPoiId !== null) {
+    const b = APPROVED_BY_POI_ID.get(selectedPoiId);
+    if (b?.hasFootprint && (b.zone === 'south' || b.zone === 'west' || b.zone === 'north' || b.zone === 'sw')) {
+      return { kind: 'single', poiId: selectedPoiId, zone: b.zone };
+    }
+  }
+  return { kind: 'none' };
+}

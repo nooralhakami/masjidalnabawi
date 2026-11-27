@@ -53,14 +53,15 @@ test.describe('landing', () => {
   });
 });
 
-test("the landing page's number of places is the number the map offers (All + parking)", async ({ page, errors: _ }) => {
+test("the landing page's number of places is the number the map offers (All + parking + hotels)", async ({ page, errors: _ }) => {
   await page.goto('./');
   const places = Number((await page.locator('.stats dd').first().textContent())!.trim());
   await openMap(page);
   const pill = (i: number) => page.locator('.cat-row .cat-btn').nth(i);
   const all = Number(await pill(0).locator('.cat-n').textContent());
   const parking = Number(await pill(5).locator('.cat-n').textContent());
-  expect(places).toBe(all + parking);
+  const hotels = Number(await pill(6).locator('.cat-n').textContent());
+  expect(places).toBe(all + parking + hotels);
 });
 
 test.describe('PWA', () => {

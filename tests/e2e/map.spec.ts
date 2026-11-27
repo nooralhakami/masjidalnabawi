@@ -207,13 +207,46 @@ test.describe('map buttons', () => {
   });
 
   test('the map opens in 3D, the first view of the layers button (owner, 2026-11-06)', async ({ page, errors: _ }) => {
-    await page.addInitScript(() => localStorage.setItem('lang', 'ar'));
+    const urbanRequests: string[] = [];
+    page.on('request', (req) => {
+      const u = req.url();
+      if (u.includes('urban-')) urbanRequests.push(u.split('/').pop()!);
+    });
+    await page.addInitScript(() => {
+      localStorage.setItem('lang', 'ar');
+      localStorage.setItem('hints-seen', '1');
+    });
     await page.goto('map.html');
     await page.waitForFunction(() => (window as any).__engine?.map?.loaded() && (window as any).__engine.map.getLayer('facilities'));
     expect(await page.evaluate(() => (window as unknown as Win).__engine.is3D)).toBe(true);
     await more(page);
     await expect(page.locator('.mc-layers')).toHaveAttribute('data-view', '3d');
     await expect.poll(() => page.evaluate(() => (window as unknown as Win).__engine.map.getPitch())).toBeCloseTo(45, 0);
+    // Owner, 2026-11-25: no 3D streets, and no urban buildings/hotels fetched or mounted in default "all" view.
+    expect(await page.evaluate(() => Boolean((window as unknown as Win).__engine.map.getLayer('urban-south-streets-line')))).toBe(false);
+    expect(await page.evaluate(() => Boolean((window as unknown as Win).__engine.map.getLayer('urban-south-3d')))).toBe(false);
+    expect(urbanRequests).toEqual([]);
+
+    // Searching a hotel by name does not flood the map with hotel pins; picking it loads only its single zone GLB.
+    await page.getByRole('combobox').fill('دار التقوى');
+    await expect(page.locator('#search-results')).toBeVisible();
+    expect(
+      await page.evaluate(() => (window as unknown as Win).__engine.view.ids.filter((id: number) => (window as unknown as Win).__engine.poi(id).category === 'hotels').length),
+    ).toBe(0);
+    await page.getByRole('combobox').press('Enter');
+    await expect(page.locator('.sheet .pc-title')).toContainText('دار التقوى');
+    await expect.poll(() => page.evaluate(() => (window as any).__engine.urban?.getDisplayMode())).toEqual({ kind: 'single', poiId: 701, zone: 'north' });
+    expect(urbanRequests.filter((f) => f.endsWith('.glb'))).toEqual(['urban-north-stage6.glb']);
+
+    // Closing the card hides the single hotel without fetching other zones; tapping «hotels» loads all zones.
+    await page.locator('.sheet').getByRole('button', { name: 'إغلاق' }).click();
+    await expect.poll(() => page.evaluate(() => (window as any).__engine.urban?.getDisplayMode())).toEqual({ kind: 'none' });
+    expect(urbanRequests.filter((f) => f.endsWith('.glb'))).toEqual(['urban-north-stage6.glb']);
+    await page.locator('.cat-row .cat-btn').nth(6).click();
+    await expect.poll(() => page.evaluate(() => (window as any).__engine.urban?.getDisplayMode())).toEqual({ kind: 'all', selectedPoiId: null });
+    await expect
+      .poll(() => urbanRequests.filter((f) => f.endsWith('.glb')).sort())
+      .toEqual(['urban-context-stage7.glb', 'urban-north-stage6.glb', 'urban-south-stage6.glb', 'urban-sw-stage6.glb', 'urban-west-stage6.glb']);
   });
 
   test('a tap on a marker picks that place', async ({ page, errors: _ }) => {

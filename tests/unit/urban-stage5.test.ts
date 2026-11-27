@@ -17,6 +17,7 @@ import {
   isApprovedHotel,
   pathHitsApprovedBuilding,
   pickApprovedBuildingRay,
+  resolveUrban3DMode,
   urbanOpacityForCamera,
 } from '../../src/domain/urban-approval';
 import { visiblePois } from '../../src/domain/visible';
@@ -117,6 +118,8 @@ describe('Stage 6 Zones 1–4 (South + West + North + Southwest) urban slice & 3
       const meshes = (gltf as { meshes: { primitives: { attributes: { POSITION: number } }[] }[] }).meshes;
       const nodes = (gltf as { nodes: { name?: string; mesh?: number; extras?: Record<string, unknown> }[] }).nodes;
       for (const node of nodes) {
+        // Owner, 2026-11-25: all 3D streets and street props removed from hotel GLBs; every node is an approved hotel tower.
+        expect(node.name?.startsWith('urban-hotel-'), node.name).toBe(true);
         if (!node.name?.startsWith('urban-hotel-') || typeof node.mesh !== 'number') continue;
         const b = APPROVED_FOOTPRINT_BUILDINGS.find((x) => x.poiId === Number(node.extras?.poiId))!;
         expect(b).toBeDefined();
@@ -134,6 +137,10 @@ describe('Stage 6 Zones 1–4 (South + West + North + Southwest) urban slice & 3
       const spoofed = structuredClone(gltf) as unknown as { nodes: { name?: string; mesh?: number }[] };
       spoofed.nodes.push({ name: 'osm-synthetic-tower-999' });
       expect(validateUrbanGlb(spoofed, zone).ok).toBe(false);
+
+      const spoofedStreet = structuredClone(gltf) as unknown as { nodes: { name?: string; mesh?: number }[] };
+      spoofedStreet.nodes.push({ name: `urban-street-${zone}-roads` });
+      expect(validateUrbanGlb(spoofedStreet, zone).ok).toBe(false);
 
       const extruded = structuredClone(gltf) as unknown as {
         nodes: { name?: string; mesh?: number }[];
@@ -321,13 +328,29 @@ describe('Stage 6 Zones 1–4 (South + West + North + Southwest) urban slice & 3
     const camZ = z226 - (rdz / rlen) * 80;
     expect(pickApprovedBuildingRay([camX, 15, camZ], [rdx / rlen, 0, rdz / rlen])?.poiId).toBe(2226);
 
-    // 5. Urban3DLayer tracks selected / routed hotel POI ID for 3D warm amber highlight
+    // 5. Urban3DLayer tracks selected / routed hotel POI ID and lazy display modes ('none' | 'single' | 'all')
     const layer = new Urban3DLayer(sceneLight({ elevation: 45, azimuth: 180 }));
+    expect(layer.getDisplayMode()).toEqual({ kind: 'none' });
+    expect(layer.getRequestedZones()).toEqual([]);
     expect(layer.getSelectedPoiId()).toBeNull();
     layer.setSelectedPoiId(2371);
     expect(layer.getSelectedPoiId()).toBe(2371);
     layer.setSelectedPoiId(null);
     expect(layer.getSelectedPoiId()).toBeNull();
+
+    // resolveUrban3DMode: 'none' outside hotels filter unless a footprinted hotel is selected
+    expect(resolveUrban3DMode('all', null)).toEqual({ kind: 'none' });
+    expect(resolveUrban3DMode('gates', null)).toEqual({ kind: 'none' });
+    expect(resolveUrban3DMode('toilets', 204)).toEqual({ kind: 'none' });
+    expect(resolveUrban3DMode('all', 21)).toEqual({ kind: 'none' });
+    // Pin-only approved hotel (#206 -> POI 2206) has no 3D footprint, so no GLB is needed
+    expect(resolveUrban3DMode('all', 2206)).toEqual({ kind: 'none' });
+    // Selecting a footprinted hotel from search under 'all' or 'gates' renders only that single hotel and its zone
+    expect(resolveUrban3DMode('all', 2371)).toEqual({ kind: 'single', poiId: 2371, zone: 'sw' });
+    expect(resolveUrban3DMode('gates', 701)).toEqual({ kind: 'single', poiId: 701, zone: 'north' });
+    // Tapping the 'hotels' pill renders all hotels + context buildings
+    expect(resolveUrban3DMode('hotels', null)).toEqual({ kind: 'all', selectedPoiId: null });
+    expect(resolveUrban3DMode('hotels', 2449)).toEqual({ kind: 'all', selectedPoiId: 2449 });
   });
 
   it('walk and drive routes to original + representative South, West, North & SW hotels end <= 3 m from entrance with 0 polygon intersections', async () => {
