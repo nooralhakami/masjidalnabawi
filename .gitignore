@@ -7,6 +7,8 @@ playwright-report
 .claude/*
 !.claude/skills/
 *.zip
+__pycache__/
+*.pyc
 
 # The owner's reference photographs live outside the repository (owner, 2026-11-18):
 # ~/Desktop/ملحقات المجلد المركزي/خريطة المسجد النبوي/صور مراجع/
