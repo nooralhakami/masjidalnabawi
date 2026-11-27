@@ -221,6 +221,7 @@ test.describe('map buttons', () => {
     expect(await page.evaluate(() => (window as unknown as Win).__engine.is3D)).toBe(true);
     await more(page);
     await expect(page.locator('.mc-layers')).toHaveAttribute('data-view', '3d');
+    await page.locator('.mc-more').click();
     await expect.poll(() => page.evaluate(() => (window as unknown as Win).__engine.map.getPitch())).toBeCloseTo(45, 0);
     // Owner, 2026-11-25: no 3D streets, and no urban buildings/hotels fetched or mounted in default "all" view.
     expect(await page.evaluate(() => Boolean((window as unknown as Win).__engine.map.getLayer('urban-south-streets-line')))).toBe(false);
