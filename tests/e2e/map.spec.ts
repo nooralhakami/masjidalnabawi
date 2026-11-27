@@ -221,11 +221,24 @@ test.describe('map buttons', () => {
     expect(await page.evaluate(() => (window as unknown as Win).__engine.is3D)).toBe(true);
     await more(page);
     await expect(page.locator('.mc-layers')).toHaveAttribute('data-view', '3d');
+    await page.locator('.mc-more').click();
     await expect.poll(() => page.evaluate(() => (window as unknown as Win).__engine.map.getPitch())).toBeCloseTo(45, 0);
     // Owner, 2026-11-25: no 3D streets, and no urban buildings/hotels fetched or mounted in default "all" view.
     expect(await page.evaluate(() => Boolean((window as unknown as Win).__engine.map.getLayer('urban-south-streets-line')))).toBe(false);
     expect(await page.evaluate(() => Boolean((window as unknown as Win).__engine.map.getLayer('urban-south-3d')))).toBe(false);
     expect(urbanRequests).toEqual([]);
+
+    // Owner, 2026-11-27: tapping a hotel building directly on the satellite map in default "all" mode
+    // (no hotel pins shown) opens its PlaceCard and raises ONLY that hotel's 3D tower from its single zone GLB.
+    await zoomTo(page, 18, [39.6115639, 24.4715126]);
+    const mapBox = (await page.locator('#map').boundingBox())!;
+    await page.mouse.click(mapBox.x + mapBox.width / 2, mapBox.y + mapBox.height / 2);
+    await expect(page.locator('.sheet .pc-title')).toContainText('الأندلس الفاخر');
+    await expect.poll(() => page.evaluate(() => (window as any).__engine.urban?.getDisplayMode())).toEqual({ kind: 'single', poiId: 2104, zone: 'north' });
+    expect(urbanRequests.filter((f) => f.endsWith('.glb'))).toEqual(['urban-north-stage6.glb']);
+    await page.locator('.sheet').getByRole('button', { name: 'إغلاق' }).click();
+    await expect(page.locator('.sheet')).toBeHidden();
+    await expect.poll(() => page.evaluate(() => (window as any).__engine.urban?.getDisplayMode())).toEqual({ kind: 'none' });
 
     // Searching a hotel by name does not flood the map with hotel pins; picking it loads only its single zone GLB.
     await page.getByRole('combobox').fill('دار التقوى');
@@ -240,6 +253,7 @@ test.describe('map buttons', () => {
 
     // Closing the card hides the single hotel without fetching other zones; tapping «hotels» loads all zones.
     await page.locator('.sheet').getByRole('button', { name: 'إغلاق' }).click();
+    await expect(page.locator('.sheet')).toBeHidden();
     await expect.poll(() => page.evaluate(() => (window as any).__engine.urban?.getDisplayMode())).toEqual({ kind: 'none' });
     expect(urbanRequests.filter((f) => f.endsWith('.glb'))).toEqual(['urban-north-stage6.glb']);
     await page.locator('.cat-row .cat-btn').nth(6).click();

@@ -87,9 +87,9 @@ def clean_polygon(ring_lng_lat: list[list[float]]) -> list[tuple[float, float]]:
     raw = [to_blender_xy(c[0], c[1]) for c in ring_lng_lat[:-1]]
     dedup: list[tuple[float, float]] = []
     for p in raw:
-        if not dedup or math.hypot(p[0] - dedup[-1][0], p[1] - dedup[-1][1]) > 0.70:
+        if not dedup or math.hypot(p[0] - dedup[-1][0], p[1] - dedup[-1][1]) > 0.25:
             dedup.append(p)
-    if len(dedup) >= 2 and math.hypot(dedup[0][0] - dedup[-1][0], dedup[0][1] - dedup[-1][1]) <= 0.70:
+    if len(dedup) >= 2 and math.hypot(dedup[0][0] - dedup[-1][0], dedup[0][1] - dedup[-1][1]) <= 0.25:
         dedup.pop()
     if len(dedup) < 3:
         dedup = raw[:]
@@ -110,7 +110,7 @@ def clean_polygon(ring_lng_lat: list[list[float]]) -> list[tuple[float, float]]:
             lc = math.hypot(bcx, bcy)
             if la > 1e-6 and lc > 1e-6:
                 sin_ang = abs(abx * bcy - aby * bcx) / (la * lc)
-                if sin_ang < 0.075 and (abx * bcx + aby * bcy) > 0:
+                if sin_ang < 0.025 and (abx * bcx + aby * bcy) > 0:
                     changed = True
                     continue
             nxt.append(b)
@@ -280,6 +280,162 @@ def add_wall_ring(
             )
 
 
+def _cross2(a: tuple[float, float], b: tuple[float, float], c: tuple[float, float]) -> float:
+    return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+
+
+def _pt_in_tri(p: tuple[float, float], a: tuple[float, float], b: tuple[float, float], c: tuple[float, float]) -> bool:
+    c1 = _cross2(a, b, p)
+    c2 = _cross2(b, c, p)
+    c3 = _cross2(c, a, p)
+    return c1 >= -1e-9 and c2 >= -1e-9 and c3 >= -1e-9
+
+
+def _same_pt(a: tuple[float, float], b: tuple[float, float]) -> bool:
+    return abs(a[0] - b[0]) < 1e-7 and abs(a[1] - b[1]) < 1e-7
+
+
+def _bridge_holes(outer_ccw: list[tuple[float, float]], holes_ccw: list[list[tuple[float, float]]]) -> list[tuple[float, float]]:
+    """Connect CCW inner holes into a CCW outer ring using Eberly's mutually-visible bridge cut."""
+    merged = list(outer_ccw)
+    # Process holes from rightmost maximum-X to leftmost so each +X ray only hits already-merged boundary.
+    ordered_holes = []
+    for h in holes_ccw:
+        cw = list(reversed(h)) if signed_area(h) > 0 else list(h)
+        m_idx = max(range(len(cw)), key=lambda i: (cw[i][0], cw[i][1]))
+        ordered_holes.append((cw[m_idx][0], m_idx, cw))
+    ordered_holes.sort(key=lambda t: t[0], reverse=True)
+
+    for _, m_idx, hole_cw in ordered_holes:
+        mx, my = hole_cw[m_idx]
+        n = len(merged)
+        best_x = float("inf")
+        hit_edge = -1
+        hit_vertex = -1
+        for i in range(n):
+            a = merged[i]
+            b = merged[(i + 1) % n]
+            # Consider edges straddling horizontal ray +X from (mx, my)
+            if (a[1] <= my <= b[1]) or (b[1] <= my <= a[1]):
+                if abs(a[1] - b[1]) < 1e-9:
+                    if abs(a[1] - my) < 1e-9:
+                        for vi, vp in ((i, a), ((i + 1) % n, b)):
+                            if vp[0] >= mx - 1e-9 and vp[0] < best_x:
+                                best_x = vp[0]
+                                hit_vertex = vi
+                                hit_edge = i
+                    continue
+                t = (my - a[1]) / (b[1] - a[1])
+                ix = a[0] + t * (b[0] - a[0])
+                if ix >= mx - 1e-9 and ix < best_x:
+                    best_x = ix
+                    hit_edge = i
+                    if abs(t) < 1e-9:
+                        hit_vertex = i
+                    elif abs(t - 1.0) < 1e-9:
+                        hit_vertex = (i + 1) % n
+                    else:
+                        hit_vertex = -1
+        assert hit_edge >= 0, f"Bridge ray failed for hole vertex {(mx, my)}"
+
+        if hit_vertex >= 0:
+            p_idx = hit_vertex
+        else:
+            a_i = hit_edge
+            b_i = (hit_edge + 1) % n
+            p_idx = a_i if merged[a_i][0] >= merged[b_i][0] else b_i
+            m_pt = (mx, my)
+            i_pt = (best_x, my)
+            p_pt = merged[p_idx]
+            # Orient search triangle (m_pt, i_pt, p_pt) CCW
+            tri = (m_pt, i_pt, p_pt) if _cross2(m_pt, i_pt, p_pt) >= 0 else (m_pt, p_pt, i_pt)
+            best_ang = float("inf")
+            best_dist = float("inf")
+            best_reflex = -1
+            for k in range(n):
+                if k == p_idx:
+                    continue
+                vk = merged[k]
+                if _same_pt(vk, m_pt) or _same_pt(vk, p_pt):
+                    continue
+                prev_v = merged[(k - 1) % n]
+                next_v = merged[(k + 1) % n]
+                if _cross2(prev_v, vk, next_v) < -1e-9 and _pt_in_tri(vk, *tri):
+                    dx = vk[0] - mx
+                    dy = abs(vk[1] - my)
+                    ang = math.atan2(dy, max(dx, 1e-12))
+                    dist = math.hypot(dx, dy)
+                    if ang < best_ang - 1e-9 or (abs(ang - best_ang) <= 1e-9 and dist < best_dist):
+                        best_ang = ang
+                        best_dist = dist
+                        best_reflex = k
+            if best_reflex >= 0:
+                p_idx = best_reflex
+
+        rotated_hole = hole_cw[m_idx:] + hole_cw[:m_idx]
+        merged = merged[: p_idx + 1] + rotated_hole + [hole_cw[m_idx], merged[p_idx]] + merged[p_idx + 1 :]
+    return merged
+
+
+def triangulate_poly_with_holes(
+    outer_ccw: list[tuple[float, float]], holes_ccw: list[list[tuple[float, float]]]
+) -> list[tuple[tuple[float, float], tuple[float, float], tuple[float, float]]]:
+    """Triangulate a CCW polygon with CCW holes into CCW triangles via bridge-cut + ear-clipping."""
+    ring = _bridge_holes(outer_ccw, holes_ccw)
+    pts = list(ring)
+    tris: list[tuple[tuple[float, float], tuple[float, float], tuple[float, float]]] = []
+    guard = len(pts) * len(pts) + 20
+    while len(pts) > 3 and guard > 0:
+        guard -= 1
+        n = len(pts)
+        clipped = False
+        for pass_eps in (1e-9, -1e-9):
+            for i in range(n):
+                a = pts[(i - 1) % n]
+                b = pts[i]
+                c = pts[(i + 1) % n]
+                area2 = _cross2(a, b, c)
+                if area2 <= pass_eps:
+                    continue
+                ok = True
+                for j in range(n):
+                    if j == (i - 1) % n or j == i or j == (i + 1) % n:
+                        continue
+                    v = pts[j]
+                    if _same_pt(v, a) or _same_pt(v, b) or _same_pt(v, c):
+                        continue
+                    if _pt_in_tri(v, a, b, c):
+                        ok = False
+                        break
+                if ok:
+                    if area2 > 1e-7:
+                        tris.append((a, b, c))
+                    pts.pop(i)
+                    clipped = True
+                    break
+            if clipped:
+                break
+        if not clipped:
+            # Remove zero-area collinear/bridge vertex if stalled
+            removed = False
+            for i in range(n):
+                a, b, c = pts[(i - 1) % n], pts[i], pts[(i + 1) % n]
+                if abs(_cross2(a, b, c)) <= 1e-6:
+                    pts.pop(i)
+                    removed = True
+                    break
+            if not removed:
+                break
+    if len(pts) == 3 and _cross2(pts[0], pts[1], pts[2]) > 1e-7:
+        tris.append((pts[0], pts[1], pts[2]))
+
+    expected_area = abs(signed_area(outer_ccw)) - sum(abs(signed_area(h)) for h in holes_ccw)
+    tri_area = sum(0.5 * _cross2(a, b, c) for a, b, c in tris)
+    if abs(tri_area - expected_area) > max(1.0, expected_area * 0.01):
+        raise RuntimeError(f"Holed roof triangulation area mismatch: got {tri_area:.2f} vs expected {expected_area:.2f}")
+    return tris
+
+
 def add_cap_poly(
     bm: bmesh.types.BMesh,
     uv_layer: bmesh.types.BMLayerItem,
@@ -288,6 +444,7 @@ def add_cap_poly(
     uv_patch: tuple[float, float, float, float],
     flip_down: bool = False,
     mat_idx: int = 0,
+    holes: list[list[tuple[float, float]]] | None = None,
 ) -> None:
     u0, u1, y_top, y_bot = uv_patch
     v_top, v_bot = v_px(y_top), v_px(y_bot)
@@ -296,6 +453,24 @@ def add_cap_poly(
     span_x = max(max(xs) - min(xs), 1.0)
     span_y = max(max(ys) - min(ys), 1.0)
     min_x, min_y = min(xs), min(ys)
+
+    if holes:
+        tris = triangulate_poly_with_holes(pts, holes)
+        for a, b, c in tris:
+            tri = (c, b, a) if flip_down else (a, b, c)
+            verts = [bm.verts.new((x, y, z)) for (x, y) in tri]
+            try:
+                f = bm.faces.new(verts)
+            except ValueError:
+                continue
+            f.material_index = mat_idx
+            for loop in f.loops:
+                vx, vy, _ = loop.vert.co
+                tx = (vx - min_x) / span_x
+                ty = (vy - min_y) / span_y
+                loop[uv_layer].uv = (u0 + tx * (u1 - u0), v_bot + ty * (v_top - v_bot))
+        return
+
     ring = pts[::-1] if flip_down else pts
     verts = [bm.verts.new((x, y, z)) for (x, y) in ring]
     try:
@@ -362,6 +537,8 @@ def add_box(
 
 def build_hotel_mesh(b: dict, mat_facade: bpy.types.Material) -> bpy.types.Object:
     pts = clean_polygon(b["polygon"])
+    raw_holes = [clean_polygon(hr) for hr in (b.get("holes") or []) if len(hr) >= 4]
+    holes = [hp for hp in raw_holes if len(hp) >= 3 and abs(signed_area(hp)) >= 10.0 and all(point_in_poly(p, pts) for p in hp)]
     h = float(b["heightM"])
     style_id = int(b.get("styleId", 0)) % 3
     podium_h = 8.8
@@ -373,12 +550,14 @@ def build_hotel_mesh(b: dict, mat_facade: bpy.types.Material) -> bpy.types.Objec
 
     # 1. Commercial Arcade Podium (0.0 -> 8.8 m) + projecting stone cornice (8.6 -> 9.1 m)
     add_wall_ring(bm, uv_layer, pts, 0.0, podium_h, BAND_PODIUM[1] / ATLAS_H, BAND_PODIUM[0] / ATLAS_H, inward=False)
+    for hp in holes:
+        add_wall_ring(bm, uv_layer, hp, 0.0, cornice_h, BAND_PODIUM[1] / ATLAS_H, BAND_PODIUM[0] / ATLAS_H, inward=True)
     cornice_pts = offset_polygon(pts, 0.28)
     if cornice_pts is not None:
         add_wall_ring(bm, uv_layer, cornice_pts, 8.6, cornice_h, BAND_CORNICE[1] / ATLAS_H, BAND_CORNICE[0] / ATLAS_H, inward=False)
-        add_cap_poly(bm, uv_layer, cornice_pts, cornice_h, UV_STONE_PATCH, flip_down=False)
+        add_cap_poly(bm, uv_layer, cornice_pts, cornice_h, UV_STONE_PATCH, flip_down=False, holes=holes)
     else:
-        add_cap_poly(bm, uv_layer, pts, cornice_h, UV_STONE_PATCH, flip_down=False)
+        add_cap_poly(bm, uv_layer, pts, cornice_h, UV_STONE_PATCH, flip_down=False, holes=holes)
 
     # 2. Hotel Entrance Canopy on edge closest to `entrance` (context buildings have none)
     ex, ey = to_blender_xy(b["entrance"][1], b["entrance"][0]) if b.get("entrance") else (float("inf"), float("inf"))
@@ -418,24 +597,39 @@ def build_hotel_mesh(b: dict, mat_facade: bpy.types.Material) -> bpy.types.Objec
     # Encode `v_gltf = 2.0 + style_id * 10.0 + cycles` (2 floors = 6.30 m = 1.0 cycle)
     # so the WebGL2 shader folds cleanly into the style band with exact 3.15 m/floor proportions!
     inset_m = -0.35 if b["areaM2"] >= 600 else -0.20
-    tower_pts = offset_polygon(pts, inset_m) or pts
+    cand_tower = offset_polygon(pts, inset_m)
+    if cand_tower is not None and all(all(point_in_poly(p, cand_tower) for p in hp) for hp in holes):
+        tower_pts = cand_tower
+    else:
+        tower_pts = pts
     shaft_h = crown_bot - cornice_h
     n_floors = max(1, round(shaft_h / 3.15))
     cycles = n_floors * 0.5
     v_gltf_bot = 2.0 + style_id * 10.0
     v_gltf_top = v_gltf_bot + cycles
     add_wall_ring(bm, uv_layer, tower_pts, cornice_h, crown_bot, v_gltf_bot, v_gltf_top, inward=False)
+    for hp in holes:
+        add_wall_ring(bm, uv_layer, hp, cornice_h, crown_bot, v_gltf_bot, v_gltf_top, inward=True)
 
     # 4. Islamic Parapet Crown (crown_bot -> H) & Roof + Low MEP Louver Penthouse + North Roof Sign
     add_wall_ring(bm, uv_layer, tower_pts, crown_bot, h, BAND_CROWN[1] / ATLAS_H, BAND_CROWN[0] / ATLAS_H, inward=False)
-    add_cap_poly(bm, uv_layer, tower_pts, h, UV_ROOF_PATCH, flip_down=False)
+    for hp in holes:
+        add_wall_ring(bm, uv_layer, hp, crown_bot, h, BAND_CROWN[1] / ATLAS_H, BAND_CROWN[0] / ATLAS_H, inward=True)
+    add_cap_poly(bm, uv_layer, tower_pts, h, UV_ROOF_PATCH, flip_down=False, holes=holes)
 
     cx, cy = poly_centroid(tower_pts)
     xs = [p[0] for p in tower_pts]
     ys = [p[1] for p in tower_pts]
     mep_hx = max(1.4, min(4.2, (max(xs) - min(xs)) * 0.16))
     mep_hy = max(1.4, min(4.2, (max(ys) - min(ys)) * 0.16))
-    if point_in_poly((cx, cy), tower_pts):
+    mep_corners = [
+        (cx - mep_hx, cy - mep_hy),
+        (cx + mep_hx, cy - mep_hy),
+        (cx + mep_hx, cy + mep_hy),
+        (cx - mep_hx, cy + mep_hy),
+        (cx, cy),
+    ]
+    if all(point_in_poly(p, tower_pts) and not any(point_in_poly(p, hp) for hp in holes) for p in mep_corners):
         # 5-face MEP penthouse on roof (omit bottom face touching roof deck)
         x0, x1, y0, y1, z0, z1 = cx - mep_hx, cx + mep_hx, cy - mep_hy, cy + mep_hy, h, h + 0.38
         u0, u1, yp0, yp1 = UV_ROOF_PATCH

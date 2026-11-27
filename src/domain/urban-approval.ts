@@ -35,6 +35,8 @@ export interface ApprovedBuilding {
   tint: number;
   /** Closed GeoJSON ring (`[lng, lat][]`), empty for pin-only hotels (`hasFootprint === false`). */
   polygon: readonly (readonly [number, number])[];
+  /** Optional closed GeoJSON inner courtyard rings (`[lng, lat][]`) cut out of the roof and extruded as inner walls. */
+  holes?: readonly (readonly (readonly [number, number])[])[];
 }
 
 /**
@@ -61,6 +63,7 @@ export interface ContextBuilding {
   seed: number;
   tint: number;
   polygon: readonly (readonly [number, number])[];
+  holes?: readonly (readonly (readonly [number, number])[])[];
 }
 
 const VERIFIED = tier === 'verified' && approvedBy === 'owner';
@@ -333,6 +336,7 @@ export function approvedFootprintBuildingsForZone(zone: string): readonly Approv
 interface PrismModel {
   building: ApprovedBuilding;
   xzRing: XY[];
+  xzHoles: XY[][];
   minX: number;
   maxX: number;
   minZ: number;
@@ -342,6 +346,7 @@ interface PrismModel {
 const PRISMS_MODEL: readonly PrismModel[] = APPROVED_FOOTPRINT_BUILDINGS.map((building) => {
   const ringPts = building.polygon.slice(0, -1);
   const xzRing = ringPts.map((pt) => toModelMetres(pt));
+  const xzHoles = (building.holes ?? []).map((hole) => hole.slice(0, -1).map((pt) => toModelMetres(pt)));
   let minX = Number.POSITIVE_INFINITY;
   let maxX = Number.NEGATIVE_INFINITY;
   let minZ = Number.POSITIVE_INFINITY;
@@ -352,7 +357,7 @@ const PRISMS_MODEL: readonly PrismModel[] = APPROVED_FOOTPRINT_BUILDINGS.map((bu
     if (z < minZ) minZ = z;
     if (z > maxZ) maxZ = z;
   }
-  return { building, xzRing, minX, maxX, minZ, maxZ };
+  return { building, xzRing, xzHoles, minX, maxX, minZ, maxZ };
 });
 
 /**
@@ -398,39 +403,41 @@ export function pickApprovedBuildingRay(origin: readonly [number, number, number
     }
     if (!hitBox) continue;
 
-    // 2. Roof cap (y = h)
+    // 2. Roof cap (y = h), excluding open inner courtyard holes
     if (Math.abs(dy) > 1e-6) {
       const tRoof = (h - oy) / dy;
       if (tRoof > 0 && tRoof < bestT) {
         const hx = ox + tRoof * dx;
         const hz = oz + tRoof * dz;
-        if (pointInRing([hx, hz], prism.xzRing)) {
+        if (pointInRing([hx, hz], prism.xzRing) && !prism.xzHoles.some((hole) => pointInRing([hx, hz], hole))) {
           bestT = tRoof;
           best = prism.building;
         }
       }
     }
 
-    // 3. Vertical extruded wall quads
-    const ring = prism.xzRing;
-    const n = ring.length;
-    for (let i = 0; i < n; i++) {
-      const [ax, az] = ring[i];
-      const [bx, bz] = ring[(i + 1) % n];
-      const ex = bx - ax;
-      const ez = bz - az;
-      const det = dz * ex - dx * ez;
-      if (Math.abs(det) < 1e-8) continue;
-      const rx = ax - ox;
-      const rz = az - oz;
-      const t = (rz * ex - rx * ez) / det;
-      if (t <= 0 || t >= bestT) continue;
-      const s = (dx * rz - dz * rx) / det;
-      if (s < -1e-4 || s > 1 + 1e-4) continue;
-      const hy = oy + t * dy;
-      if (hy >= 0 && hy <= h) {
-        bestT = t;
-        best = prism.building;
+    // 3. Vertical extruded outer & inner courtyard wall quads
+    const rings = prism.xzHoles.length ? [prism.xzRing, ...prism.xzHoles] : [prism.xzRing];
+    for (const ring of rings) {
+      const n = ring.length;
+      for (let i = 0; i < n; i++) {
+        const [ax, az] = ring[i];
+        const [bx, bz] = ring[(i + 1) % n];
+        const ex = bx - ax;
+        const ez = bz - az;
+        const det = dz * ex - dx * ez;
+        if (Math.abs(det) < 1e-8) continue;
+        const rx = ax - ox;
+        const rz = az - oz;
+        const t = (rz * ex - rx * ez) / det;
+        if (t <= 0 || t >= bestT) continue;
+        const s = (dx * rz - dz * rx) / det;
+        if (s < -1e-4 || s > 1 + 1e-4) continue;
+        const hy = oy + t * dy;
+        if (hy >= 0 && hy <= h) {
+          bestT = t;
+          best = prism.building;
+        }
       }
     }
   }

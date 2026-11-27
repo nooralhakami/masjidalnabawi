@@ -1,4 +1,4 @@
-import { ALL_POI_BY_ID } from '../data';
+import { poi } from '../data';
 import type { LatLng, Poi } from '../data/types';
 import { nearestByAir, nearPool, pickTwo, WEAK_FIX_M, type NearKind, type NearWho } from '../domain/near';
 import { HintPicker } from '../domain/route-hint';
@@ -15,7 +15,23 @@ import { isBehindRawdahPoi, isWomenPoi, walkShortcutPath } from '../routing/walk
 import { toModelMetres } from '../domain/frames';
 import { MOSQUE_MAIN, MOSQUE_SOUTH } from '../domain/prayer-layout';
 import { bearing } from '../presentation/route-view';
-import { accessibleRoute, garageQ, headingUp, insideMosque, level, nav, notify, route, selected, setHeadingUp, sheet, travel, whereQ, type WhereAnswer } from '../state/store';
+import {
+  accessibleRoute,
+  garageQ,
+  headingUp,
+  insideMosque,
+  interiorView,
+  level,
+  nav,
+  notify,
+  route,
+  selected,
+  setHeadingUp,
+  sheet,
+  travel,
+  whereQ,
+  type WhereAnswer,
+} from '../state/store';
 
 /** Check whether a WGS84 point `[lat, lng]` lies inside the main or old southern Mosque footprint. */
 export function isLatLngInsideMosque(lat: number, lng: number): boolean {
@@ -133,7 +149,7 @@ export class Trip {
     this.tracker.onChange((s) => {
       // Arrived: a gold ring at the place, as on choosing it (UI plan phase 4), once per arrival.
       if (s.state === 'arrived' && nav.value?.state !== 'arrived') {
-        const dest = selected.value !== null ? ALL_POI_BY_ID.get(selected.value) : undefined;
+        const dest = selected.value !== null ? poi(selected.value, interiorView.value) : undefined;
         if (dest) engine.pulse.play(dest.lng, dest.lat);
       }
       nav.value = s.state === 'stopped' ? null : { ...s };
@@ -313,7 +329,7 @@ export class Trip {
 
   /** Draw the offered routes with `plans[i]` as the one to follow, and keep the card and navigation in step. */
   private updateShortcut(from: [number, number] | null): void {
-    const dest = selected.value !== null ? ALL_POI_BY_ID.get(selected.value) : undefined;
+    const dest = selected.value !== null ? poi(selected.value, interiorView.value) : undefined;
     const active = this.plans[this.chosen];
     if (!from || !dest || !active || active.mode === 'drive') {
       this.engine.route.setShortcut(null);
@@ -357,7 +373,7 @@ export class Trip {
    */
   private reroute(from: LatLng, heading: number | null) {
     const id = selected.value;
-    const dest = id !== null ? ALL_POI_BY_ID.get(id) : undefined;
+    const dest = id !== null ? poi(id, interiorView.value) : undefined;
     if (!dest || !this.engine.route.active) return;
     // In the car park (or on the way out of it) there is no other way to plan from the streets:
     // keep the drawn route; the visitor gets back on it (GPS underground can wander).

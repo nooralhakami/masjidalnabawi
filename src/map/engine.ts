@@ -12,13 +12,13 @@ import {
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { SITE } from '../config/site.config';
-import { ALL_POI_BY_ID, POI_BY_ID, POIS, RULES } from '../data';
+import { ALL_POI_BY_ID, INTERIOR_BY_ID, POI_BY_ID, POIS, RULES } from '../data';
 import { alharamainPlaza } from '../data-next/alharamain-3d';
 import { buildInterCarpetAisles, rugLayout } from './rug-layout';
 import { sunPosition } from '../domain/daylight';
 import type { Poi, Status } from '../data/types';
 import { isHidden } from '../domain/filters';
-import { resolveUrban3DMode } from '../domain/urban-approval';
+import { pointInApprovedBuilding, resolveUrban3DMode } from '../domain/urban-approval';
 import { getMosqueDoors, isBayOpen, toggleGateBay, toggleGateDoor, type DoorToggleResult } from '../domain/mosque-doors';
 import { interiorReveal, type InteriorReveal } from '../domain/interior-reveal';
 import { guardMosqueCameraEntry, isInsideMosqueWall } from '../domain/mosque-entry';
@@ -764,7 +764,7 @@ export class MapEngine {
   }
 
   poi(id: number): Poi | undefined {
-    return ALL_POI_BY_ID.get(id);
+    return this.interiorMode ? (INTERIOR_BY_ID.get(id) ?? POI_BY_ID.get(id)) : (POI_BY_ID.get(id) ?? INTERIOR_BY_ID.get(id));
   }
 
   /**
@@ -1188,9 +1188,14 @@ export class MapEngine {
     if (place === null && this.mode3d && this.models?.toggleDomeAt(x, y)) return;
     // In 3D, a tap on no place but on a canopy opens or closes it (owner, 2026-11-06).
     if (place === null && this.mode3d && this.models?.toggleCanopyAt(x, y)) return;
-    // In 3D, tapping directly on an approved hotel tower opens its PlaceCard (owner, 2026-11-21).
+    // In 3D, tapping directly on an approved hotel tower — or on a hotel's footprint on the satellite
+    // map in "all" mode — opens its PlaceCard and raises only that hotel's 3D tower (owner, 2026-11-27).
     if (place === null && this.mode3d) {
-      const hotelId = this.urban?.hotelAt(x, y) ?? null;
+      let hotelId = this.urban?.hotelAt(x, y) ?? null;
+      if (hotelId === null && this.view.filter === 'all' && !this.interiorMode) {
+        const ll = this.map.unproject([x, y]);
+        hotelId = pointInApprovedBuilding([ll.lat, ll.lng])?.poiId ?? null;
+      }
       if (hotelId !== null) {
         this.opts.onPick?.(hotelId);
         return;

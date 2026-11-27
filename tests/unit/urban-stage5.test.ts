@@ -63,10 +63,12 @@ describe('Stage 6 Zones 1–4 (South + West + North + Southwest) urban slice & 3
     expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.zone === 'north')).toHaveLength(61);
     expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.zone === 'sw')).toHaveLength(70);
     expect(APPROVED_BUILDINGS.filter((b) => !b.hasFootprint).map((b) => b.guideNumber)).toEqual([206, 374]);
-    // Stage 7: no provisional pin partition is left; every outline is a real OSM building (or its share of one),
-    // except #104, whose tower OSM lacks: its Microsoft outline moved onto the imagery.
-    expect(APPROVED_FOOTPRINT_BUILDINGS.every((b) => b.footprintSplit === 'single' || b.footprintSplit === 'osm_split')).toBe(false);
-    expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.footprintSplit === 'ms_shifted').map((b) => b.guideNumber)).toEqual([104]);
+    // Stage 7 alignment pass (2026-11-27): no provisional pin partition and no ms_shifted hotel remain;
+    // every footprinted outline (including #104 via stitched OSM relation r9248089) is a real OSM building.
+    expect(APPROVED_FOOTPRINT_BUILDINGS.every((b) => b.footprintSplit === 'single' || b.footprintSplit === 'osm_split')).toBe(true);
+    expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => b.footprintSplit === 'ms_shifted')).toHaveLength(0);
+    expect(APPROVED_FOOTPRINT_BUILDINGS.find((b) => b.guideNumber === 104)?.osm).toBe('r9248089');
+    expect(APPROVED_FOOTPRINT_BUILDINGS.filter((b) => (b.holes?.length ?? 0) > 0)).toHaveLength(12);
     expect(APPROVED_HOTEL_IDS.size).toBe(228);
     for (const id of ORIGINAL_IDS) expect(APPROVED_HOTEL_IDS.has(id)).toBe(true);
 
@@ -177,7 +179,15 @@ describe('Stage 6 Zones 1–4 (South + West + North + Southwest) urban slice & 3
   });
 
   it('Stage 7 context GLB carries exactly the central-area non-hotel buildings, clear of hotels and the Haram fence', () => {
-    expect(CONTEXT_BUILDINGS.length).toBe(34);
+    expect(CONTEXT_BUILDINGS.length).toBe(20);
+    expect(CONTEXT_BUILDINGS.filter((c) => (c.holes?.length ?? 0) > 0).map((c) => c.buildingId)).toEqual(['Cr1021907']);
+    for (const excluded of ['Cw1357107466', 'Cw369464177', 'Cw625632624', 'Cw791137667']) {
+      expect(CONTEXT_BUILDINGS.some((c) => c.buildingId === excluded)).toBe(false);
+    }
+    expect(CONTEXT_BUILDINGS.find((c) => c.buildingId === 'Cw369085866')!.heightM).toBeLessThanOrEqual(18);
+    expect(CONTEXT_BUILDINGS.find((c) => c.buildingId === 'Cw625628207')!.heightM).toBeLessThanOrEqual(24);
+    expect(CONTEXT_BUILDINGS.find((c) => c.buildingId === 'Cw522127205')!.heightM).toBeLessThanOrEqual(15);
+    expect(CONTEXT_BUILDINGS.find((c) => c.buildingId === 'Cw369085868')!.heightM).toBeLessThanOrEqual(15);
     expect(new Set(CONTEXT_BUILDINGS.map((c) => c.buildingId)).size).toBe(CONTEXT_BUILDINGS.length);
     for (const c of CONTEXT_BUILDINGS) {
       expect(['south', 'west', 'north', 'sw']).toContain(c.zone);
@@ -270,6 +280,17 @@ describe('Stage 6 Zones 1–4 (South + West + North + Southwest) urban slice & 3
 
       // Upward ray above roof into sky returns null
       expect(pickApprovedBuildingRay([mx, b.heightM + 10, mz], [0, 1, 0])).toBeNull();
+    }
+
+    // 1b. Hollow inner courtyard rays on N158 (poiId 704) and N156 (poiId 702) pass cleanly through their courtyard opening
+    for (const pid of [704, 702]) {
+      const b = APPROVED_FOOTPRINT_BUILDINGS.find((x) => x.poiId === pid)!;
+      expect(b.holes?.length).toBe(1);
+      const hole = b.holes![0].slice(0, -1);
+      const avgLng = hole.reduce((s, p) => s + p[0], 0) / hole.length;
+      const avgLat = hole.reduce((s, p) => s + p[1], 0) / hole.length;
+      const [hx, hz] = toModelMetres([avgLat, avgLng]);
+      expect(pickApprovedBuildingRay([hx, 200, hz], [0, -1, 0])).toBeNull();
     }
 
     // 2. Angled camera rays from unobstructed Haram courtyard hitting upper facades (y = 0.65 * heightM) of West 2224, North 701, & SW 2371
