@@ -62,9 +62,20 @@ CENTRAL_ZONE: list[tuple[float, float]] = [
 
 # Saqifat Bani Sa'idah heritage structures are modelled by `src/map/saqifah-3d.ts`.
 HERITAGE_OSM_IDS = {"w775419642", "w775419643", "w775419644", "w775419645"}
-# The low red-roofed arcade south of the south courtyards (one 17,000 m2 outline): its roofs already
-# read correctly on the imagery, and a tower block over them would hide them.
-NOT_TOWERS_OSM_IDS = {"w625518412"}
+# Non-tower OSM outlines whose imagery should show through rather than be capped as hotel blocks
+# (visually audited on Esri z18, 2026-11-27):
+# - w625518412: low red-roofed arcade south of the south courtyards
+# - w1357107466: As-Safiyyah Museum & Park (open terraced garden & sunken museum)
+# - w369464177: Central Dates Market (open-air market with shade umbrellas)
+# - w625632624: low underground-parking ramp wall at Al-Ghamamah plaza
+# - w791137667: curved tunnel/parking ramp by Masjid Al-Ghamamah (overlaps road)
+NOT_TOWERS_OSM_IDS = {
+    "w625518412",
+    "w1357107466",
+    "w369464177",
+    "w625632624",
+    "w791137667",
+}
 # Low-rise civic buildings (museums, markets, gardens, courts) when OSM gives no level count.
 LOW_RISE_NAME = re.compile(r"متحف|بستان|سوق|محكمة|حديقة|museum|market|garden", re.IGNORECASE)
 TUNNEL_NAME = re.compile(r"tunnel|نفق", re.IGNORECASE)
@@ -72,19 +83,30 @@ NAME_MATCH_RADIUS_M = 80.0
 # The western plaza's paved floor (west, south, east, north): its walkways are the grey granite bands
 # drawn with Saqifat Bani Sa'idah's model, so no OSM footway line is drawn across it (owner, 2026-11-22).
 WEST_PLAZA_FLOOR = (39.6051, 24.46815, 39.6078, 24.47085)
-# Open plazas outside the Haram fence where no gap tower may be added (lng, lat), traced on the imagery:
-# the western courtyard (with the Saqifah garden) and the square at Bab al-Salam / Masjid al-Ghamamah.
+# Open plazas and low-rise traditional market stalls outside the Haram fence where no Microsoft ML
+# gap tower may be added (lng, lat), traced & audited on Esri z18:
+#   1. Western courtyard (with the Saqifah garden)
+#   2. Square at Bab al-Salam / Masjid al-Ghamamah
+#   3. North-west 1-story traditional bazaar & sidewalk canopies (MS merges stalls into 3000-6700 m2 blobs)
 OPEN_PLAZAS: list[list[tuple[float, float]]] = [
     [(39.605101, 24.471067), (39.607891, 24.471067), (39.607891, 24.468186), (39.607301, 24.468186),
      (39.607301, 24.467624), (39.606657, 24.467624), (39.606657, 24.468137), (39.605101, 24.468137)],
     [(39.606121, 24.467307), (39.607381, 24.467307), (39.607381, 24.46633), (39.607435, 24.466233),
      (39.607435, 24.465549), (39.606603, 24.465549), (39.606121, 24.466135)],
+    [(39.6025, 24.4730), (39.6057, 24.4730), (39.6057, 24.4706), (39.6025, 24.4706)],
+]
+# Visually verified non-tower MS detections (lng, lat): small 1-story domed mosque/pavilion in South
+# (463 m2, cast near-zero shadow; MS mistook it for a 10-story tower).
+EXCLUDED_MS_POINTS: list[tuple[float, float]] = [
+    (39.60949, 24.46362),
 ]
 SKIP_BUILDING_VALUES = {"construction", "roof", "mosque", "kiosk", "toilets"}
 MS_FOOTPRINTS = STAGE1 / "hotels" / "footprints" / "ms-haram-bbox-2026-11-11.json"
 MIN_CONTEXT_AREA_M2 = 150.0
+MIN_MS_TOWER_AREA_M2 = 400.0
+MAX_MS_TOWER_AREA_M2 = 1350.0
 MATCH_RADIUS_M = 15.0
-SIMPLIFY_TOL_M = 0.45
+SIMPLIFY_TOL_M = 0.18
 # Guide #169 has no Google link in the Authority guide: its Stage 6 marker stands in for the pin
 # (fixed here so re-runs do not chase the marker this script moves).
 FALLBACK_PINS: dict[int, tuple[float, float]] = {169: (39.6070051, 24.4723609)}
@@ -312,10 +334,21 @@ def split_shared_polygon(base: list[XY], members: list[dict]) -> dict[int, list[
     return res
 
 
-def interior_point(poly: list[XY]) -> XY:
-    """A point well inside the outline (max distance to its edges on a 1 m grid): the marker spot."""
+def interior_point(poly: list[XY], holes: list[list[XY]] | None = None) -> XY:
+    """A point well inside the solid roof (outside any courtyard holes, max clearance on a 1 m grid)."""
+    hs = holes or []
+
+    def in_solid(pt: XY) -> bool:
+        return point_in_poly(pt, poly) and not any(point_in_poly(pt, h) for h in hs)
+
+    def clearance(pt: XY) -> float:
+        d = dist_pt_poly_edges(pt, poly)
+        for h in hs:
+            d = min(d, dist_pt_poly_edges(pt, h))
+        return d
+
     c = centroid_xy(poly)
-    if point_in_poly(c, poly) and dist_pt_poly_edges(c, poly) >= 3.0:
+    if in_solid(c) and clearance(c) >= 3.0:
         return c
     x0, y0, x1, y1 = bbox(poly)
     best, best_d = c, -1.0
@@ -323,8 +356,8 @@ def interior_point(poly: list[XY]) -> XY:
     while y < y1:
         x = x0 + 0.5
         while x < x1:
-            if point_in_poly((x, y), poly):
-                d = dist_pt_poly_edges((x, y), poly) - 0.02 * math.hypot(x - c[0], y - c[1])
+            if in_solid((x, y)):
+                d = clearance((x, y)) - 0.02 * math.hypot(x - c[0], y - c[1])
                 if d > best_d:
                     best, best_d = (x, y), d
             x += 1.0
@@ -410,8 +443,74 @@ def norm_name(name: str) -> str:
 
 
 def display_height(floors: int) -> float:
-    """Same storey model as Stage 6: 8.8 m arcade podium + 3.15 m floors + 2.2 m crown."""
-    return round(8.8 + max(floors - 2, 2) * 3.15 + 2.2, 1)
+    """Storey model: 8.8 m arcade podium + 3.15 m floors + 2.2 m crown (3F -> 14.2 m, 4F -> 17.3 m, 6F -> 23.6 m)."""
+    return round(8.8 + max(floors - 2, 1) * 3.15 + 2.2, 1)
+
+
+def stitch_relation_rings(members: list[dict], role: str) -> list[list[XY]]:
+    """Assemble closed XY rings from OSM multipolygon members (handling both closed ways and split open chains)."""
+    seqs: list[list[XY]] = []
+    for m in members:
+        if m.get("role") != role or not m.get("geometry"):
+            continue
+        pts = [to_xy(g["lon"], g["lat"]) for g in m["geometry"]]
+        if len(pts) >= 2:
+            seqs.append(pts)
+    rings: list[list[XY]] = []
+    open_chains: list[list[XY]] = []
+    for pts in seqs:
+        if len(pts) >= 4 and math.hypot(pts[0][0] - pts[-1][0], pts[0][1] - pts[-1][1]) < 0.25:
+            r = clean_ring_xy(pts)
+            if len(r) >= 3:
+                rings.append(r)
+        else:
+            open_chains.append(pts)
+    # Chain open way segments end-to-end into closed rings (e.g. r9248089 split across two 3-node ways).
+    while open_chains:
+        chain = list(open_chains.pop(0))
+        progress = True
+        while progress:
+            progress = False
+            if len(chain) >= 4 and math.hypot(chain[0][0] - chain[-1][0], chain[0][1] - chain[-1][1]) < 0.25:
+                break
+            for idx, seg in enumerate(open_chains):
+                if math.hypot(chain[-1][0] - seg[0][0], chain[-1][1] - seg[0][1]) < 0.25:
+                    chain.extend(seg[1:])
+                    open_chains.pop(idx)
+                    progress = True
+                    break
+                if math.hypot(chain[-1][0] - seg[-1][0], chain[-1][1] - seg[-1][1]) < 0.25:
+                    chain.extend(reversed(seg[:-1]))
+                    open_chains.pop(idx)
+                    progress = True
+                    break
+                if math.hypot(chain[0][0] - seg[-1][0], chain[0][1] - seg[-1][1]) < 0.25:
+                    chain = seg[:-1] + chain
+                    open_chains.pop(idx)
+                    progress = True
+                    break
+                if math.hypot(chain[0][0] - seg[0][0], chain[0][1] - seg[0][1]) < 0.25:
+                    chain = list(reversed(seg[1:])) + chain
+                    open_chains.pop(idx)
+                    progress = True
+                    break
+        if len(chain) >= 4 and math.hypot(chain[0][0] - chain[-1][0], chain[0][1] - chain[-1][1]) < 0.25:
+            r = clean_ring_xy(chain)
+            if len(r) >= 3:
+                rings.append(r)
+    return rings
+
+
+def holes_inside(poly: list[XY], candidate_holes: list[list[XY]]) -> list[list[XY]]:
+    """Return simplified inner courtyard rings lying strictly inside `poly`."""
+    kept: list[list[XY]] = []
+    for raw_h in candidate_holes:
+        h = simplify_ring(raw_h)
+        if len(h) < 3 or abs(poly_area(h)) < 12.0:
+            continue
+        if all(point_in_poly(pt, poly) and dist_pt_poly_edges(pt, poly) >= 0.4 for pt in h):
+            kept.append(h)
+    return kept
 
 
 # ---------------------------------------------------------------------------------------------
@@ -421,18 +520,19 @@ def load_osm_buildings(fence_poly: list[XY]) -> list[dict]:
     out: list[dict] = []
     for e in data["elements"]:
         tags = e.get("tags") or {}
+        holes: list[list[XY]] = []
         if e["type"] == "way" and len(e.get("geometry") or []) >= 4:
-            geom = e["geometry"]
+            ring = clean_ring_xy([to_xy(g["lon"], g["lat"]) for g in e["geometry"]])
             oid = f"w{e['id']}"
         elif e["type"] == "relation":
-            outer = [m for m in e.get("members", []) if m.get("role") == "outer" and m.get("geometry")]
-            if len(outer) != 1:
+            outer_rings = stitch_relation_rings(e.get("members", []), "outer")
+            if len(outer_rings) != 1:
                 continue
-            geom = outer[0]["geometry"]
+            ring = outer_rings[0]
+            holes = stitch_relation_rings(e.get("members", []), "inner")
             oid = f"r{e['id']}"
         else:
             continue
-        ring = clean_ring_xy([to_xy(g["lon"], g["lat"]) for g in geom])
         if len(ring) < 3:
             continue
         c = centroid_xy(ring)
@@ -443,6 +543,7 @@ def load_osm_buildings(fence_poly: list[XY]) -> list[dict]:
                 "osm": oid,
                 "tags": tags,
                 "ring": ring,
+                "holes": holes,
                 "area": abs(poly_area(ring)),
                 "bbox": bbox(ring),
                 "worship": tags.get("amenity") == "place_of_worship" or "historic" in tags,
